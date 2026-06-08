@@ -25,7 +25,7 @@ def test_upsert_and_get(manifest):
     doc = DocumentInput(
         document_id="tbmm-20-1-1-19960108",
         document_type="tutanak",
-        collection_name="minutes_jina_v3",
+        collection_name="tbmm_minutes_docling_jina_v3",
         document_source="test.pdf",
         content_hash="abc123",
         document_date="1996-01-08",
@@ -39,7 +39,7 @@ def test_upsert_and_get(manifest):
     )
     manifest.upsert(doc, status="done", chunk_count=5)
     
-    record = manifest.get("tbmm-20-1-1-19960108", "minutes_jina_v3")
+    record = manifest.get("tbmm-20-1-1-19960108", "tbmm_minutes_docling_jina_v3")
     assert record is not None
     assert record.document_id == "tbmm-20-1-1-19960108"
     assert record.status == "done"
@@ -54,7 +54,7 @@ def test_diff(manifest):
     existing = DocumentInput(
         document_id="existing-doc",
         document_type="tutanak",
-        collection_name="minutes_jina_v3",
+        collection_name="tbmm_minutes_docling_jina_v3",
         content_hash="hash-v1",
     )
     manifest.upsert(existing, status="done")
@@ -62,19 +62,19 @@ def test_diff(manifest):
     new_doc = DocumentInput(
         document_id="new-doc",
         document_type="tutanak",
-        collection_name="minutes_jina_v3",
+        collection_name="tbmm_minutes_docling_jina_v3",
         content_hash="hash-new",
     )
     changed_doc = DocumentInput(
         document_id="existing-doc",
         document_type="tutanak",
-        collection_name="minutes_jina_v3",
+        collection_name="tbmm_minutes_docling_jina_v3",
         content_hash="hash-v2",
     )
     unchanged_doc = DocumentInput(
         document_id="existing-doc",
         document_type="tutanak",
-        collection_name="minutes_jina_v3",
+        collection_name="tbmm_minutes_docling_jina_v3",
         content_hash="hash-v1",
     )
     
@@ -90,14 +90,14 @@ def test_delete(manifest):
     doc = DocumentInput(
         document_id="delete-me",
         document_type="tutanak",
-        collection_name="minutes_jina_v3",
+        collection_name="tbmm_minutes_docling_jina_v3",
         content_hash="hash",
     )
     manifest.upsert(doc, status="done")
-    assert manifest.get("delete-me", "minutes_jina_v3") is not None
+    assert manifest.get("delete-me", "tbmm_minutes_docling_jina_v3") is not None
     
-    manifest.delete("delete-me", "minutes_jina_v3")
-    assert manifest.get("delete-me", "minutes_jina_v3") is None
+    manifest.delete("delete-me", "tbmm_minutes_docling_jina_v3")
+    assert manifest.get("delete-me", "tbmm_minutes_docling_jina_v3") is None
 
 
 def test_count_by_status(manifest):
@@ -106,7 +106,7 @@ def test_count_by_status(manifest):
         doc = DocumentInput(
             document_id=f"doc-{i}",
             document_type="tutanak",
-            collection_name="minutes_jina_v3",
+            collection_name="tbmm_minutes_docling_jina_v3",
             content_hash=f"hash-{i}",
         )
         manifest.upsert(doc, status=status)
@@ -122,23 +122,23 @@ def test_list_by_collection(manifest):
     doc1 = DocumentInput(
         document_id="doc-1",
         document_type="tutanak",
-        collection_name="minutes_jina_v3",
+        collection_name="tbmm_minutes_docling_jina_v3",
         content_hash="h1",
     )
     doc2 = DocumentInput(
         document_id="doc-2",
         document_type="press_clip",
-        collection_name="press_nomic",
+        collection_name="gazete_arsivi",
         content_hash="h2",
     )
     manifest.upsert(doc1, status="done")
     manifest.upsert(doc2, status="done")
     
-    minutes = manifest.list_by_collection("minutes_jina_v3")
+    minutes = manifest.list_by_collection("tbmm_minutes_docling_jina_v3")
     assert len(minutes) == 1
     assert minutes[0].document_id == "doc-1"
     
-    press = manifest.list_by_collection("press_nomic")
+    press = manifest.list_by_collection("gazete_arsivi")
     assert len(press) == 1
     assert press[0].document_id == "doc-2"
 

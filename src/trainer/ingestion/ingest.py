@@ -13,7 +13,7 @@ Examples:
     python -m src.trainer.ingestion.ingest --request ingest_d20.json
     python -m src.trainer.ingestion.ingest --request ingest_d20.json --only-changed
     python -m src.trainer.ingestion.ingest --validate ingest_d20.json
-    python -m src.trainer.ingestion.ingest --status --collection minutes_jina_v4
+    python -m src.trainer.ingestion.ingest --status --collection tbmm_minutes_docling_jina_v4
 """
 from __future__ import annotations
 
@@ -221,22 +221,35 @@ def cmd_diff(args) -> None:
 
 def cmd_list_collections(args) -> None:
     """Show available collections."""
+    import chromadb
+
     table = Table(title="Koleksiyonlar")
-    table.add_column("İsim", style="bold")
+    table.add_column("Anahtar (YAML)", style="bold")
+    table.add_column("ChromaDB Adı", style="cyan")
     table.add_column("Model")
     table.add_column("Context", justify="right")
     table.add_column("Dim", justify="right")
     table.add_column("Late Chunking")
     table.add_column("Doküman Tipi")
+    table.add_column("Chunk Sayısı", justify="right")
 
     for name, spec in COLLECTIONS.items():
+        try:
+            client = chromadb.PersistentClient(path=str(spec.db_path))
+            col = client.get_collection(spec.name)
+            chunk_count = str(col.count())
+        except Exception:
+            chunk_count = "—"
+
         table.add_row(
             name,
+            spec.name,
             spec.embed_model,
             str(spec.max_context_tokens),
             str(spec.embed_dim),
             "✓" if spec.supports_late_chunking else "✗",
             spec.doc_type.value,
+            chunk_count,
         )
     console.print(table)
 
@@ -332,7 +345,7 @@ def cmd_delete(args) -> None:
     console.print(f"[green]{args.delete} silindi ({args.collection}). {deleted} parça kaldırıldı.[/green]")
 
 
-def _wiz_text(step: int, total: int, title: str, hint: str, prompt_label: str) -> str:
+def _wiz_text(step: int, total: int, title: str, hint: str, prompt_label: str, default: str | None = None) -> str:
     while True:
         console.print()
         console.print(Panel(
@@ -340,7 +353,7 @@ def _wiz_text(step: int, total: int, title: str, hint: str, prompt_label: str) -
             title=f"[bold]Adım {step} / {total}  —  {title}[/bold]",
             border_style="blue",
         ))
-        value = Prompt.ask(f"  [bold cyan]>[/bold cyan] {prompt_label}").strip()
+        value = Prompt.ask(f"  [bold cyan]>[/bold cyan] {prompt_label}", default=default).strip()
         if value:
             return value
         console.print("  [red]✗ Boş bırakılamaz.[/red]")
@@ -371,7 +384,7 @@ def cmd_add_collection(args) -> None:
     from src.config.collections import _MODELS_YAML, CollectionSpec
     from src.config.document_types import DocumentType
 
-    TOTAL = 6
+    TOTAL = 5
 
     console.print(Panel(
         "[bold]models.yaml'a yeni bir koleksiyon kaydı ekler.[/bold]\n"
@@ -391,29 +404,21 @@ def cmd_add_collection(args) -> None:
             t.add_row(k, spec.name, spec.embed_model.split("/")[-1], spec.doc_type.value)
         console.print(t)
 
-    # Step 1 — registry key
+    # Step 1 — collection_name (hem ChromaDB adı hem registry key)
+    existing_names = {spec.name for spec in COLLECTIONS.values()}
     while True:
-        registry_key = _wiz_text(1, TOTAL, "Koleksiyon Anahtarı",
-            "models.yaml'daki kayıt anahtarı. snake_case, benzersiz olmalı.\n  Örnek: press_jina_v4, tutanaklar_jina_v3",
-            "Koleksiyon anahtarı")
-        if not re.match(r'^[a-z][a-z0-9_]*$', registry_key):
+        collection_name = _wiz_text(1, TOTAL, "Koleksiyon Adı",
+            "ChromaDB koleksiyon adı. ingest_request.json'da 'collection' alanına da bu yazılır.\n  snake_case, benzersiz olmalı. Örnek: tbmm_tutanaklar_jina_v4",
+            "Koleksiyon adı")
+        if not re.match(r'^[a-z][a-z0-9_]*$', collection_name):
             console.print("  [red]✗ Yalnızca küçük harf, rakam ve alt çizgi. Harf ile başlamalı.[/red]")
             continue
-        if registry_key in COLLECTIONS:
-            console.print(f"  [red]✗ '{registry_key}' zaten kayıtlı. Başka bir isim girin.[/red]")
+        if collection_name in COLLECTIONS or collection_name in existing_names:
+            console.print(f"  [red]✗ '{collection_name}' zaten kayıtlı. Başka bir isim girin.[/red]")
             continue
         break
 
-    # Step 2 — collection_name (ChromaDB name)
-    existing_names = {spec.name for spec in COLLECTIONS.values()}
-    while True:
-        collection_name = _wiz_text(2, TOTAL, "ChromaDB Koleksiyon Adı",
-            "ChromaDB'deki koleksiyon adı. Benzersiz olmalı.\n  Örnek: gazete_arsivi_jina_v4",
-            "ChromaDB koleksiyon adı")
-        if collection_name in existing_names:
-            console.print(f"  [red]✗ '{collection_name}' adlı bir ChromaDB koleksiyonu zaten var.[/red]")
-            continue
-        break
+    registry_key = collection_name
 
     # Step 3 — chroma_path
     chroma_path = _wiz_text(3, TOTAL, "ChromaDB Dizini",
@@ -476,7 +481,7 @@ def cmd_add_collection(args) -> None:
     summary.add_column("Alan", style="bold")
     summary.add_column("Değer", style="cyan")
     rows = [
-        ("registry_key", registry_key),
+        ("registry_key", f"{registry_key}  ← ingest_request.json'da 'collection' alanına yazılır"),
         ("collection_name", collection_name),
         ("chroma_path", chroma_path),
         ("embed_model", embed_model),

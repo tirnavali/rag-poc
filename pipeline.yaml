@@ -22,11 +22,11 @@ deployment_blocks:
     purpose: "planning,filter_extraction,sanitization,judge"
     models:
       planner: qwen3.5:9b
-      filter_extractor: qwen2.5:3b-instruct
+      filter_extractor: gemma4:e2b
       sanitizer: qwen3.5:9b
       judge: qwen3.5:9b
-      classifier: qwen2.5:3b-instruct
-      suggester: qwen2.5:3b-instruct
+      classifier: qwen3.5:9b
+      suggester: qwen3.5:9b
     timeout_seconds: 60
     retries: 1
 
@@ -34,7 +34,7 @@ deployment_blocks:
     host: http://localhost:11434
     purpose: "answering"
     models:
-      answer: gemma4:latest
+      answer: gemma4:e2b
     timeout_seconds: 60
     max_num_ctx: 32768
     max_num_predict: 4096
@@ -43,7 +43,7 @@ deployment_blocks:
     host: http://localhost:11434
     purpose: "expert"
     models:
-      expert: qwen3-coder:30b
+      expert: qwen3.5:9b
     timeout_seconds: 120
     max_num_ctx: 65536
     max_num_predict: 16384
@@ -201,9 +201,9 @@ agent:
     fallback:
       strategy: "broadcast"
       default_collections:
-        - tutanaklar_nomic_v2
-        - press_jina_v3
-        - onerge_jina_v3
+        - tbmm_tutanaklar_nomic_v2
+        - gazete_arsivi_jina_v3
+        - tbmm_onerge_docling_jina_v3
       default_queries:
         - text: "{original_query}"
           filters: null

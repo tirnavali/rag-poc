@@ -11,8 +11,8 @@ Kullanım:
 YAML Formatı:
     name: "Deney başlığı"
     collections:
-      - minutes_jina_v3
-      - minutes_nomic
+      - tbmm_minutes_docling_jina_v3
+      - tbmm_minutes
     fixture: tests/fixtures/eval_queries_docling_d20.json
     top_k: [1, 3, 5, 10]
     reranker: false          # true ise cross-encoder kullanır

@@ -5,7 +5,7 @@ Usage:
     python devtools/clear_collection.py <collection_name>
 
 Example:
-    python devtools/clear_collection.py tutanaklar_nomic_v2
+    python devtools/clear_collection.py tbmm_tutanaklar_nomic_v2
 """
 from __future__ import annotations
 

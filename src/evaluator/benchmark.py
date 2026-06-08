@@ -12,7 +12,7 @@ Usage:
     from src.config.collections import get_spec
     from src.evaluator.benchmark import RetrievalBenchmark
 
-    bench = RetrievalBenchmark(get_spec("minutes_jina_v3"))
+    bench = RetrievalBenchmark(get_spec("tbmm_minutes_docling_jina_v3"))
     report = bench.evaluate(fixture_queries, k_values=[1, 3, 5, 10])
 """
 from __future__ import annotations

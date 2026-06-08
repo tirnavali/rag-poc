@@ -1,8 +1,8 @@
 name: "Tutanaklar — Nomic v2 vs Jina v3-512 vs Jina v3_small (Golden Auto)"
 collections:
-  - tutanaklar_nomic_v2
-  - tutanaklar_jina_v3_512
-  - tutanaklar_jina_v3_small
+  - tbmm_tutanaklar_nomic_v2
+  - tbmm_tutanaklar_docling_jina_v3_512
+  - tbmm_tutanaklar_jina_v3_small
 fixture: tests/fixtures/golden_tutanak_auto.json
 top_k: [1, 3, 5, 10]
 reranker: false

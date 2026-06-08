@@ -24,7 +24,7 @@ RAG_ENV = os.environ.get("RAG_ENV", "local")
 OLLAMA_ENVIRONMENTS = {
     "local": {
         "host": "http://localhost:11434",
-        "llm": "gemma4:latest", # Local model name from user
+        "llm": "gemma4:e2b",
         "embed": "nomic-embed-text-v2-moe",
     },
     "remote": {
@@ -79,7 +79,7 @@ EMBED_MODEL = os.environ.get("RAG_EMBED_MODEL", _env_config["embed"])
 # FilterExtractor does structured JSON extraction (low reasoning need).
 # Decoupled from LLM_MODEL so the heavyweight generation model is unaffected.
 # qwen2.5:3b-instruct: non-reasoning instruction model — no thinking-mode latency.
-FILTER_LLM_MODEL = os.environ.get("RAG_FILTER_LLM_MODEL", _pipeline_filter_llm or "qwen2.5:3b-instruct")
+FILTER_LLM_MODEL = os.environ.get("RAG_FILTER_LLM_MODEL", _pipeline_filter_llm or "qwen3.5:9b")
 
 # --- Author Transition Cleaning Model ---
 # llm_transition_cleaner.py: OCR error correction for speaker names/roles.
@@ -219,7 +219,7 @@ PUBLICATION_KEYWORDS = [
 # --- Default collection for RAGService ---
 # Used when RAGService() is instantiated without explicit spec.
 # Override with RAG_DEFAULT_COLLECTION env var.
-DEFAULT_COLLECTION = os.environ.get("RAG_DEFAULT_COLLECTION", "tutanaklar_nomic_v2")
+DEFAULT_COLLECTION = os.environ.get("RAG_DEFAULT_COLLECTION", "tbmm_tutanaklar_nomic_v2")
 
 # --- Author Metadata Validator (LLM backstop) ---
 # Runs only on chunks where regex-based author extraction failed.

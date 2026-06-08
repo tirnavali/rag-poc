@@ -10,13 +10,13 @@ Ollama'ya prompt gönderir ve dönen pasajları `excerpts` alanı olarak yazar.
 Kullanım:
     python scripts/generate_excerpts.py \\
         --fixture tests/fixtures/eval_queries_docling_d20.json \\
-        --collection minutes_jina_v3 \\
+        --collection tbmm_minutes_docling_jina_v3 \\
         --output tests/fixtures/eval_queries_docling_d20_excerpts.json
 
     # Sadece ilk 2 sorguyu ekrana yaz, dosyaya yazma:
     python scripts/generate_excerpts.py \\
         --fixture tests/fixtures/eval_queries_docling_d20.json \\
-        --collection minutes_jina_v3 \\
+        --collection tbmm_minutes_docling_jina_v3 \\
         --dry-run
 """
 from __future__ import annotations

@@ -412,7 +412,7 @@ Six categories, target 50–70 scenarios total:
   expect:
     scope: in_scope
     intent: factual
-    collections_any_of: [press_jina_v3]
+    collections_any_of: [gazete_arsivi_jina_v3]
     filters:
       year_gte: 1983
       year_lte: 1989
@@ -423,7 +423,7 @@ Six categories, target 50–70 scenarios total:
     scope: in_scope
     intent: comparative
     collections_min_count: 2
-    collections_any_of: [press_jina_v3, tutanaklar_nomic_v2]
+    collections_any_of: [gazete_arsivi_jina_v3, tbmm_tutanaklar_nomic_v2]
 
 - id: temporal_01
   query: "1990'dan 1995'e kadar köşe yazarları ne yazdı"

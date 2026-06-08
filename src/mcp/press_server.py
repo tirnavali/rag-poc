@@ -31,7 +31,7 @@ _retriever: Optional[VectorRetriever] = None
 def _get_retriever() -> VectorRetriever:
     global _retriever
     if _retriever is None:
-        _retriever = VectorRetriever(get_spec("press_nomic"))
+        _retriever = VectorRetriever(get_spec("gazete_arsivi"))
     return _retriever
 
 

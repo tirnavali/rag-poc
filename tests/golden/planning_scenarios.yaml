@@ -28,13 +28,13 @@
   query: "Özal döneminde gazete manşetleri"
   expect:
     scope: in_scope
-    collections_any_of: [press_jina_v3]
+    collections_any_of: [gazete_arsivi_jina_v3]
 
 - id: in_scope_simple_02
   query: "1997 TBMM bütçe görüşmeleri"
   expect:
     scope: in_scope
-    collections_any_of: [tutanaklar_nomic_v2]
+    collections_any_of: [tbmm_tutanaklar_nomic_v2]
     # NOTE: ideal filter would be {year: 1997}. Planner LLM (qwen3.5:9b) emits
     # filters inconsistently in JSON mode (markdown-fenced + malformed). Filter
     # extraction reliability is tracked as a follow-up; the gate feature ships
@@ -44,7 +44,7 @@
   query: "Kanun teklifi 2/1234 metni"
   expect:
     scope: in_scope
-    collections_any_of: [onerge_jina_v3]
+    collections_any_of: [tbmm_onerge_docling_jina_v3]
 
 # ── multi_collection ─────────────────────────────────────────────────────
 - id: multi_collection_01
@@ -52,7 +52,7 @@
   expect:
     scope: in_scope
     collections_min_count: 2
-    collections_any_of: [press_jina_v3, tutanaklar_nomic_v2]
+    collections_any_of: [gazete_arsivi_jina_v3, tbmm_tutanaklar_nomic_v2]
 
 # ── temporal_filters ─────────────────────────────────────────────────────
 - id: temporal_01

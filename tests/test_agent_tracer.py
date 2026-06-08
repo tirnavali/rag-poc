@@ -49,10 +49,10 @@ def test_on_phase_callback_invoked_at_phase_start():
     t = PipelineTracer(
         on_phase=lambda name, block, model, details: seen.append((name, details.get("collection")))
     )
-    with t.phase("retrieval", details={"collection": "minutes_nomic"}):
+    with t.phase("retrieval", details={"collection": "tbmm_minutes"}):
         # callback fires at __enter__, before the body runs
-        assert seen == [("retrieval", "minutes_nomic")]
-    assert seen == [("retrieval", "minutes_nomic")]
+        assert seen == [("retrieval", "tbmm_minutes")]
+    assert seen == [("retrieval", "tbmm_minutes")]
 
 
 def test_on_phase_callback_error_does_not_break_pipeline():
@@ -69,9 +69,9 @@ def test_on_phase_callback_error_does_not_break_pipeline():
 def test_print_trace_smoke(capsys):
     t = PipelineTracer()
     with t.phase("planning", block="fast-01", model="m") as c:
-        c.update_details(intent="factual", resources="minutes_nomic")
+        c.update_details(intent="factual", resources="tbmm_minutes")
     with t.phase("retrieval") as c:
-        c.update_details(collection="minutes_nomic", result_count=2)
+        c.update_details(collection="tbmm_minutes", result_count=2)
     with t.phase("answering", block="gpu-01", model="g") as c:
         c.update_details(context_chars=120)
     with t.phase("validation") as c:

@@ -94,7 +94,7 @@ collections:
   # ------------------------------------------------------------------
   # Gazete (Newspaper) Collections
   # ------------------------------------------------------------------
-  press_nomic:
+  gazete_arsivi:
     collection_name: gazete_arsivi
     chroma_path: data_lake/press_clips_vectors
     sqlite_path: data_lake/press_clips.db
@@ -105,7 +105,7 @@ collections:
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
-  press_jina_v3:
+  gazete_arsivi_jina_v3:
     collection_name: gazete_arsivi_jina_v3
     chroma_path: data_lake/press_clips_vectors
     sqlite_path: data_lake/press_clips.db
@@ -119,7 +119,7 @@ collections:
   # ------------------------------------------------------------------
   # Tutanak (Parliament Minutes) Collections
   # ------------------------------------------------------------------
-  minutes_nomic:
+  tbmm_minutes:
     collection_name: tbmm_minutes
     chroma_path: data_lake/parliament_digital_born_minutes_vectors
     sqlite_path: data_lake/parliament_digital_born_minutes.db
@@ -130,7 +130,7 @@ collections:
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
-  minutes_jina_v3:
+  tbmm_minutes_docling_jina_v3:
     collection_name: tbmm_minutes_docling_jina_v3
     chroma_path: data_lake/parliament_digital_born_minutes_vectors
     sqlite_path: data_lake/parliament_digital_born_minutes.db
@@ -141,7 +141,7 @@ collections:
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
-  minutes_jina_v4:
+  tbmm_minutes_docling_jina_v4:
     collection_name: tbmm_minutes_docling_jina_v4
     chroma_path: data_lake/parliament_digital_born_minutes_vectors
     sqlite_path: data_lake/parliament_digital_born_minutes.db
@@ -152,7 +152,7 @@ collections:
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
-  tutanaklar_jina_v3_4k:
+  tbmm_tutanaklar_docling_jina_v3_4k:
     collection_name: tbmm_tutanaklar_docling_jina_v3_4k
     chroma_path: data_lake/parliament_digital_born_minutes_vectors
     sqlite_path: data_lake/parliament_digital_born_minutes.db
@@ -163,7 +163,7 @@ collections:
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
-  tutanaklar_jina_v3_512:
+  tbmm_tutanaklar_docling_jina_v3_512:
     collection_name: tbmm_tutanaklar_docling_jina_v3_512
     chroma_path: data_lake/parliament_digital_born_minutes_vectors
     sqlite_path: data_lake/parliament_digital_born_minutes.db
@@ -174,7 +174,7 @@ collections:
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
-  tutanaklar_nomic_v2:
+  tbmm_tutanaklar_nomic_v2:
     collection_name: tbmm_tutanaklar_nomic_v2
     chroma_path: data_lake/parliament_digital_born_minutes_vectors
     sqlite_path: data_lake/parliament_digital_born_minutes.db
@@ -185,7 +185,7 @@ collections:
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
-  tutanaklar_jina_v3_small:
+  tbmm_tutanaklar_jina_v3_small:
     collection_name: tbmm_tutanaklar_jina_v3_small
     chroma_path: data_lake/parliament_digital_born_minutes_vectors
     sqlite_path: data_lake/parliament_digital_born_minutes.db
@@ -199,7 +199,7 @@ collections:
   # ------------------------------------------------------------------
   # Önerge (Bill/Proposal) Collections
   # ------------------------------------------------------------------
-  onerge_nomic:
+  tbmm_onerge:
     collection_name: tbmm_onerge
     chroma_path: data_lake/onerge_vectors
     sqlite_path: data_lake/parliament_digital_born_minutes.db
@@ -210,7 +210,7 @@ collections:
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
-  onerge_neomotron:
+  tbmm_onerge_neomotron:
     collection_name: tbmm_onerge_neomotron
     chroma_path: data_lake/onerge_vectors
     sqlite_path: data_lake/parliament_digital_born_minutes.db
@@ -221,7 +221,7 @@ collections:
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
-  onerge_jina_v3:
+  tbmm_onerge_docling_jina_v3:
     collection_name: tbmm_onerge_docling_jina_v3
     chroma_path: data_lake/onerge_vectors
     sqlite_path: data_lake/parliament_digital_born_minutes.db
@@ -239,6 +239,6 @@ collections:
 # ---------------------------------------------------------------------------
 
 defaults:
-  gazete: press_jina_v3
-  tutanak: tutanaklar_nomic_v2
-  onerge: onerge_jina_v3
+  gazete: gazete_arsivi_jina_v3
+  tutanak: tbmm_tutanaklar_nomic_v2
+  onerge: tbmm_onerge_docling_jina_v3

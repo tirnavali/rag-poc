@@ -886,7 +886,7 @@ def _mock_config(fallbacks=None, count=3):
             "Susurluk skandalı haberleri",
         ],
         get_block=lambda name: block_cfg,
-        get_collection_catalog=lambda: "- press_jina_v3 (Gazete)\n- tutanaklar_nomic_v2 (Tutanak)",
+        get_collection_catalog=lambda: "- gazete_arsivi_jina_v3 (Gazete)\n- tbmm_tutanaklar_nomic_v2 (Tutanak)",
     )
     return cfg
 
@@ -1575,13 +1575,13 @@ Create `tests/golden/planning_scenarios.yaml`:
   query: "Özal döneminde gazete manşetleri"
   expect:
     scope: in_scope
-    collections_any_of: [press_jina_v3]
+    collections_any_of: [gazete_arsivi_jina_v3]
 
 - id: in_scope_simple_02
   query: "1997 TBMM bütçe görüşmeleri"
   expect:
     scope: in_scope
-    collections_any_of: [tutanaklar_nomic_v2]
+    collections_any_of: [tbmm_tutanaklar_nomic_v2]
     filters:
       year: 1997
 
@@ -1589,7 +1589,7 @@ Create `tests/golden/planning_scenarios.yaml`:
   query: "Kanun teklifi 2/1234 metni"
   expect:
     scope: in_scope
-    collections_any_of: [onerge_jina_v3]
+    collections_any_of: [tbmm_onerge_docling_jina_v3]
 
 # ── multi_collection ─────────────────────────────────────────────────────
 - id: multi_collection_01
@@ -1597,7 +1597,7 @@ Create `tests/golden/planning_scenarios.yaml`:
   expect:
     scope: in_scope
     collections_min_count: 2
-    collections_any_of: [press_jina_v3, tutanaklar_nomic_v2]
+    collections_any_of: [gazete_arsivi_jina_v3, tbmm_tutanaklar_nomic_v2]
 
 # ── temporal_filters ─────────────────────────────────────────────────────
 - id: temporal_01

@@ -1,6 +1,6 @@
 [
   {
-    "id": "auto-tutanaklar_jina_v3_4k-001",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-001",
     "query": "Devletin vatandaşla ilişkisi ve insan hakları ihlalleri konusunda mecliste ne tür bir açıklık ve araştırma talebi dile getirildi?",
     "excerpts": [
       "Bir taraftan işkencenin bir insanlık suçu olduğunu ifade ederken, diğer taraftan devlet eliyle işlendiği iddia edilen ağır suçlamalara muhatap olmak hukuk devletine olan güveni sarsacağı gibi, devlet ile vatandaşı karşı karşıya getirecektir. Bu olay nedeniyle tüm polis teşkilatının töhmet altında bırakılmasını doğru bulmuyoruz; ancak, diğer taraftan da, konunun acilen açıklığa kavuşturulması gerektiğine inanıyoruz. Tüm yukarıdaki nedenlerle, kamuoyunun haklı beklentisi doğrultusunda, vakit geçirmeden, olayın Yüce Meclisçe ele alınmasını, polis tarafından gözlem altına alındıktan sonra ölü olarak bulunan Metin Göktepe'nin ölümü üzerindeki esrarı ortadan kaldırmak ve faillerinin bulunmasını temin etmek amacıyla, Anayasanın 98 inci ve İçtüzüğün 102 nci maddeleri gereğince bir Meclis araştırması açılmasını arz ye teklif ederiz."
@@ -8,12 +8,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-07-19960131_39"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-07-19960131"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-002",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-002",
     "query": "Sosyal güvenlik sistemi ile ilgili meclisteki tartışma hangi sorun alanlarına odaklandı?",
     "excerpts": [
       "2 milyonu aşkın emeldi, dul ve yetim pasif iştirakçisi, 4 milyona varan aktif iştirakçisi ve bunların bağımlılarıyla birlikte, kurumun bugünkü hali ve geleceği, yaklaşık 20 milyon dargelirli vatandaşımızın geçimini, sağlığını ve istikbalini çok yakından ilgilendirmektedir.",
@@ -23,12 +23,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_39"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-003",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-003",
     "query": "Sosyal güvenlik sistemi ve sağlık tesisleri ile ilgili meclisteki tartışmalar hangi konulara odaklanmıştır?",
     "excerpts": [
       "Son 15 yılda işyeri sayısında yüzde 186, sigortalı sayısında yüzde 190, emekli dul ve yetim sayısında yüzde 242, sağlık yardımlarından yararlanan insanların sayısında yüzde 122 artış bulunmasına rağmen, sağlık tesislerinde çalışan personel sayısındaki artış sadece yüzde 35, yatak kapasitesindeki artış yüzde 43 civarında olmuştur. Bu durum, özellikle SSK sağlık tesislerindeki sorunların kaynağını açık bir şekilde ortaya koymaktadır.",
@@ -37,12 +37,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_49"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-004",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-004",
     "query": "Şekerpancarı üretimi gibi tarımsal sektörlerin sürdürülebilirliği için hangi politikaların desteklenmesi gerektiği tartışıldı?",
     "excerpts": [
       "Fevkalade meşakkatle ve uzun sürede, çok el emeğiyle elde edilen şekerpancarının üretimi, eğer, uygun politikalarla desteklenmez ise, Türkiye, çiftçisine vereceği paranın çok büyük miktarını yurtdışına verir."
@@ -50,12 +50,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_25"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-005",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-005",
     "query": "Büyük şehirlerin sorunları ve güvenlik güçlerinin durumu hakkında mecliste ne tür değerlendirmeler yapıldı?",
     "excerpts": [
       "Sayın Başkan, değerli milletvekilleri; hepinizin bildiği gibi, İstanbul'un sorunlanyla ilgili ola­ rak çok sayıda toplantı ve çalışma yapılmıştır. Devlet Planlama Teşkilatı Özel ihtisas komisyonla­ rından biri İstanbul'un sorunları üzerinde çalışmış» bir rapor hazırlamış; yine, Başbakanlıkça hazır­ lanan yirmi değişim projesi içerisinde İstanbul'un sorunlan ele alınmış; gerek İçişleri Bakanlığı ge­ rekse diğer seviyelerde çok sayıda rapor hazırlanmış; en son da, Türkiye Büyük Millet Meclisince kurulan bir araştırma komisyonunda, konu üzerinde rapor hazırlanmış ve öneriler getirilmiştir. Bu önerilerin artık, dikkate alınmasının zamanı gelmiştir ve önümüzdeki dönemlerde de ele alınacağı­ na olan inancımızı burada ifade etmek istiyoruz.",
@@ -65,12 +65,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_17"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-006",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-006",
     "query": "Meclis araştırmaları kapsamında hangi kamu kurumları ve hangi sosyal/ekonomik konular tartışma konusu yapılmıştır?",
     "excerpts": [
       "1. - Giresun Milletvekili Rasim Zaimoğlu'nun, fındık üreticilerinin alacaklarına ilişkin Baş­ bakandan yazılı soru önergesi (7/238) (Başkanlığa geliş tarihi: 26.1.1996)",
@@ -82,12 +82,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-08-19960201_2"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-08-19960201"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-007",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-007",
     "query": "Sosyal güvenlik kurumunun yönetimi ve devletle ilişkisi hakkında hangi eleştiriler dile getirildi?",
     "excerpts": [
       "Muhterem arkadaşlarım, devletin, SSK'ya katkısı yok; ama, SSK'yı devlet yönetiyor. Şimdi, size soruyorum: Hiç katkınız olmayan kurumu hangi hakla yönetiyorsunuz? (RP sıralarından alkışlar) 7 Yönetim Kurulu üyesinin 4'ünü devlet atıyor, 3'ünü işçi işveren ve emekli kuruluşları atıyor."
@@ -95,12 +95,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_63"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-008",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-008",
     "query": "Sosyal güvenlik kurumunun mali yapısını bozan temel sorunlar ve bu sorunlara yol açan yapısal eksiklikler nelerdir?",
     "excerpts": [
       "Bir kere, Sosyal Sigortalar Kurumunun aktif-pasif dengesi bozulmuştur. SSK, sınırlı kalan bir aktif sigortalı kitlesiyle, gün geçtikçe sayıları artan emekli, dul ve yetimlere bakmak gibi çarpık bir duruma düşmüş bulunmaktadır.",
@@ -110,12 +110,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_51"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-009",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-009",
     "query": "Hükümetin mali uygulamaları ve kamu fonlarının denetimi hakkında ne tür eleştiriler dile getirildi?",
     "excerpts": [
       "3417 Sayılı \"Çalışanların Tasarrufa Teşvik Edilmesi ve Bu Tasarrufların Değerlendirilmesine Dair Kanun\" hükümlerine göre çalışanların ücretlerinden yapılan kesintiler ve buna ek olarak da çalışanların lehine işveren ve devlet katkıları belirli hesaplarda toplanmakta olup, bu hesaplar, bü­ yük meblağlara ulaşmış ve birkaç yüz trilyonla ifade edilmektedir.\n\nKonuyla ilgili yasaların hazırlanmasından kaynaklanan eksiklikler dolayısıyla biriken bu pa­ ralar, uygulanacak çeşitli demokratik denetim mekanizmalarının da dışında bulunmaktadır.\n\nİdarenin özellikle ödeme zamanlarında keyfi uygulamalara ve beyanlara başvurması, kamu­ oyunda değişik olumsuz yorumların yapılmasına ve bu da yürütmenin güvenilirliğinin tartışılır ha­ le gelmesine sebep olmaktadır."
@@ -123,12 +123,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_30"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-010",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-010",
     "query": "Tarım politikaları ve gıda güvenliği konularında mecliste hangi ekonomik başarısızlıklar eleştirildi?",
     "excerpts": [
       "Geçen yıla kadar hal böyle iken, bakınız, geçen yıl mayıs ayının 18'inde, değerli milletvekili Cevat Ayhan arkadaşımız diyor ki: \"Eğer, gerekli tedbirler alınmazsa -dikkat buyurun, mayıs ayı­nın 18*inde-,Türkiye, gelecek yıl 600 bin ton şeker ithal eder ve bunun için de, dışarıya, 200 ilâ 300 milyon dolar para öder.\" [...] \"Dikkat buyurun, 18 Mayıs!.. Hemen dokuz gün sonra, 27 Mayıs 1995'te Resmî Gazetede ilan var; deniliyor ki \"Türkiye şeker ithal edecek\" 10 gün süre!.. Tabiî, ben, bunu oku- yunca, bu Hükümetin, ekonomik ve diğer meselelerde niçin bu kadar başarısız olduğunu anladım; bu kadar başarısı, ortada. (RP sıralarından alkışlar)"
@@ -136,12 +136,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_26"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-011",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-011",
     "query": "Altyapı projeleri ve enerji tesisleri için uygulanan maliyetler ve katılım payları hakkında meclisteki tartışma ne yönde gelişti?",
     "excerpts": [
       "Ayrıca, önsözleşmeler yapılırken, yeni projeler talep edilmektedir. Kanun gereği, bu projeler de mühendisler odasından geçmekte, basit bir proje de, maliyet bedeli olarak asgarî 100 milyon tutmaktadır. Dolayısıyla, güç artırımına giren bir müessese, Türkiye Elektrik Kurumuna 300 - 500 milyon ödediği gibi; ayrıca, daha önce yaptığı tesis için de proje bedeli ödeme durumunda kalmaktadır. Kanaatimiz o ki, daha önce yapılmış tesislerden katılım payının alınmaması, ek tesis projelerinin, Türkiye Elektrik Kurumunun teknik elemanlarınca sanayicimize ücretsiz çizilip teslim edilmesi, Sanayi Bakanlığımızca -belirli komisyonca yüretilen- bu katılım paylarının, listede belirtilen fiyatlarının mutlaka yeniden gözden geçirilmesi gerekmektedir.",
@@ -152,12 +152,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-08-19960201_16"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-08-19960201"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-012",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-012",
     "query": "Sosyal Sigortalar Kurumu'nun mevcut durumu ve alınması gereken tedbirler hakkında mecliste ne tür talepler dile getirildi?",
     "excerpts": [
       "İstanbul Milletvekili Emin Kul ve 10 arkadaşının, Sosyal Sigortalar Kurumunun sorunlarını ve alınması gereken tedbirleri tespit etmek amacıyla Meclis araştırması açılmasına ilişkin önergesi",
@@ -167,12 +167,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_34"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-013",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-013",
     "query": "Meclis araştırması açılması için hangi konular ve sorunlar gündeme getirildi?",
     "excerpts": [
       "İstanbul Milletvekili Emin Kul ve 10 arkadaşının, Sosyal Sigortalar Kurumunun sorunlarını ve alınması gereken tedbirleri tespit etmek amacıyla Anayasanın 98 inci, İçtüzüğün 102 ve 103 üncü maddeleri uyarınca bir Meclis araştırması açılmasına ilişkin önergesi (10/1)",
@@ -183,12 +183,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-08-19960201_33"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-08-19960201"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-014",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-014",
     "query": "Yeni yasama döneminde Türkiye'nin karşı karşıya olduğu iç ve dış sorunlar hangi başlıklar altında ele alındı?",
     "excerpts": [
       "Biraz evvel bu kürsüden de ifade edildiği gibi, Türkiye, dışarıda ve içeride çok sayıda sorunlarla karşı karşıyadır. Dışpolitikadâ sorunlarımız giderek ağırlaşmakta, içeride, terör \"bitti - bitecek\" denilmiş olmasına rağmen, halen, Meclisimizin gündeminde bile birinci sırayı işgal eder boyutta varlığını sürdürüyor. Ekonomik sıkıntılar, toplumun bütün kesimlerinin içerisinde yaşadığı bir darboğaz olmaya devam ediyor."
@@ -196,12 +196,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_18"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-015",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-015",
     "query": "Sosyal sigortalar kurumu ile ilgili meclisteki tartışma ne yönde gelişti?",
     "excerpts": [
       "İstanbul Milletvekili Emin Kul ve 9 arkadaşının, Sosyal Sigortalar Kurumunun sorunlarını ve alınması gereken tedbirleri tespit etmek amacıyla Anayasa'nın 98 inci, içtüzüğün 102 ve 103 üncü maddeleri uyarınca bir Meclis araştırması açılmasına ilişkin önergesi (10/1)"
@@ -209,12 +209,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_69"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-016",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-016",
     "query": "Sosyal güvenlik ve sağlık hizmetleri alanındaki yapısal sorunlar nelerdi?",
     "excerpts": [
       "Elbette,  Sosyal  Sigortalar  Kurumunun  sorunları  yalnızca finansman  açığıyla sınırlı  değildir. Bu sorunla doğrudan bağlantılı olan ya da olmayan daha birçok sorun yaşanmaktadır. Bilindiği gi­ bi, Sosyal Sigortalar Kurumu, bugün yurt düzeyine yayılmış hizmet üniteleriyle dev bir kuruluş ha­ line gelmiştir; ancak, Kurum, hâlâ  1946 yılında çıkartılan kuruluş yasasına göre, katı merkeziyetçi bir anlayışla yönetilmek durumundadır. Bu durum, hem sosyal sigorta ve hem de sağlık hizmetle­ rinde önemli aksamalara neden olmaktadır.\n\nKayıtdışı  ekonominin  ülkemizdeki  yaygınlığı,  Sosyal  Sigortalar  Kurumu  bakımından  da önemli bir sorun oluşturmaktadır. Şu anda sigortalı sayısı kadar, çalışan geniş bir kesimin sigorta­ sız bulunduğu tahmin edilmektedir. Böylece, hem milyonlarca yurttaşımız sosyal güvenlik olanak­ larından yoksun kalmakta, hem de Sosyal Sigortalar Kurumu ve Maliye, önemli gelir kaybına uğ­ ramaktadır.\n\nSağlık hizmetlerinde de önemli sıkıntılarımız bulunmaktadır. Özellikle 5 Nisan kararlan nede-  , niyle  yatırımlarda  kısıtlamalara  gidilmesi  ve  yeni  personel  istihdamının  sınırlanması,  bu  konuda önemli sorunları bulunan Sosyal Sigortalar Kurumunu daha da zor duruma  sokmuştur."
@@ -222,12 +222,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_48"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-017",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-017",
     "query": "Sosyal Güvenlik Kurumu'nun mevcut sorunları hakkında meclisteki eleştiriler ne yönde gelişti?",
     "excerpts": [
       "Alınan bütün bu önlemlere karşın, Sosyal Sigortalar Kurumunun sorunlarının çözümlendiğini söylemek, elbette ki olanaklı değildir; çünkü, sorunlar yapısal bir nitelik taşımaktadır; çözüm için de, köklü, yapısal önlemlere gereksinim duyulmaktadır."
@@ -235,12 +235,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_50"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-018",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-018",
     "query": "Terör olaylarının coğrafi yayılımı ve günlük yaşam üzerindeki etkileri hakkında ne tür endişeler dile getirildi?",
     "excerpts": [
       "Son aylarda, özellikle İstanbul'da ve büyük kentlerde terör olaylarında ve asayişe yönelik olaylarda, çok büyük bir tırmanış söz konusudur. Bir zamanlar, Doğu ve Güneydoğu Anadolu'da, şehirler arasındaki yollarda rastladığımız otobüs yakmaları ve otobüs yolcularına yönelik eylemleri, artık İstanbul sokaklarında görmekteyiz.",
@@ -249,12 +249,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_8"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-019",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-019",
     "query": "Büyük metropollerde kamu düzeninin sağlanması ve bu süreçte görev yapan kolluk kuvvetlerinin performansı hakkında hangi konular tartışıldı?",
     "excerpts": [
       "Durumun bu halde olmasıyla asayişin sağlanmasının da zor olduğu bir gerçektir. Buna naza­ ran, polisimiz, büyük bir özveri ve başanyla, bu, zor olan güvenlik hizmetlerini gerçekleştirmek üzere çalışmaktadır. Dünyanın diğer bölgelerinde bulunan, İstanbul'a eşdeğer metropol kentlere baktığımızda, gecenin belli bir saatinden sonra can güvenliğinin olmadığı gerekçesiyle, şehrin belirli bölgelerine girmenin ne kadar riskli olduğu, hepimiz tarafından bilinmektedir. Bu kentimizde, böyle bir durumda ne bir bölge ne de bir semt mevcut değildir. Bu da, güvenlik hizmetlerinin ne denli özveri ve başarıyla gerçekleştirildiğinin bir örneğidir.",
@@ -264,12 +264,12 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_14"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   },
   {
-    "id": "auto-tutanaklar_jina_v3_4k-020",
+    "id": "auto-tbmm_tutanaklar_docling_jina_v3_4k-020",
     "query": "Toplumsal huzuru bozan olaylar ve protestolarla ilgili meclisteki tartışmalar ne yönde gelişti?",
     "excerpts": [
       "Yine, Sabancı İşmerkezinde, Sabancı Holding Yönetim Kurulu Üyesi Özdemir Sabancı, ToyotaSa Genel Müdürü Haluk Görgün ve sekreter Nilgün Hasefe'nin hunharca katledilmeleri, bizi ve bütün kamuoyunu üzmüştür. Olayı gerçekleştiren teröristler kısa bir süre sonra tespit edilmiş, yakalama çalışmaları yoğun bir şekilde devam etmektedir. 4.2.1996 günü, İstiklal Caddesinde, bir grup, sözde, eğitimdeki özelleştirmeyi protesto etmek amacıyla toplanarak yürüyenlerin aralarına katılan provokatörler sayesinde olaylar meydana gel­miş, bunun neticesinde de, bazı işyerleri ve otomobillerin tahrip edilmesi sonucu hasar olmuş, polisin müdahalesi sonucu, olayın büyümesine meydan verilmemiştir. Bu olayla ilgili gözaltına alınanların soruşturmaları da sürdürülmektedir."
@@ -277,7 +277,7 @@
     "relevant_chunk_ids": [
       "tutanak-20-01-10-19960207_15"
     ],
-    "source_collection": "tutanaklar_jina_v3_4k",
+    "source_collection": "tbmm_tutanaklar_docling_jina_v3_4k",
     "expected_year": 1996,
     "document_id": "tutanak-20-01-10-19960207"
   }

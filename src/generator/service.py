@@ -65,12 +65,23 @@ class _noop_ctx:
 
 class RAGService:
     def __init__(self, pipeline_config_path: Optional[str] = None) -> None:
-        self.retriever = VectorRetriever(get_spec(settings.DEFAULT_COLLECTION))
+        self.retriever = self._init_retriever()
         self.generator = OllamaGenerator()
         self.filter_extractor = FilterExtractor()
         self._pipeline_config_path = pipeline_config_path
         self._agent = None
         self._orchestrator = None
+
+    @staticmethod
+    def _init_retriever() -> Optional[VectorRetriever]:
+        """Try to open the default collection; return None if it doesn't exist yet."""
+        try:
+            from chromadb.errors import InvalidCollectionException, NotFoundError
+            return VectorRetriever(get_spec(settings.DEFAULT_COLLECTION))
+        except (InvalidCollectionException, NotFoundError, ValueError):
+            return None
+        except Exception:
+            return None
 
     # ------------------------------------------------------------------
     # Retrieval — delegates to HybridRetriever
@@ -124,6 +135,12 @@ class RAGService:
         fallback_level = None
 
         # Iterate cascade candidates, stop at first non-empty result
+        if self.retriever is None:
+            raise RuntimeError(
+                f"Varsayılan koleksiyon '{settings.DEFAULT_COLLECTION}' bulunamadı. "
+                "Lütfen önce veriyi indeksleyin veya RAG_DEFAULT_COLLECTION ortam değişkenini ayarlayın."
+            )
+
         for level, where in candidates:
             with (tracer.phase("retrieval", details={"fallback_level": level or "full", "collection": self.retriever.spec.name, "where_filter_summary": _summarize_where_filter(where)}) if tracer else _noop_ctx()) as ctx:
                 result = self.retriever.retrieve(

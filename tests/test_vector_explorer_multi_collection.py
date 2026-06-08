@@ -17,9 +17,9 @@ class TestVectorExplorerMultiCollection:
         before RRF fusion can be properly flattened for UI display.
         """
         # Create specs for two different collections
-        # Use the registry keys (press_nomic, minutes_nomic) to get specs
-        spec1 = get_spec("press_nomic")
-        spec2 = get_spec("minutes_nomic")
+        # Use the registry keys (gazete_arsivi, tbmm_minutes) to get specs
+        spec1 = get_spec("gazete_arsivi")
+        spec2 = get_spec("tbmm_minutes")
 
         # Create retriever with both specs
         retriever = MultiSourceRetriever(specs=[spec1, spec2])

@@ -45,7 +45,7 @@ class DocumentInput:
     collection_name: str
     """Hedef CollectionSpec adı. COLLECTIONS kaydında mevcut olmalıdır.
     
-    Örnek: "minutes_jina_v4", "press_nomic"
+    Örnek: "tbmm_minutes_docling_jina_v4", "gazete_arsivi"
     """
 
     # ─── İçerik Kaynağı ────────────────────────────────

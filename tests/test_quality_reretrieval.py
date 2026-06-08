@@ -135,7 +135,7 @@ class TestGenerateGapFillPlan:
             "intent": "factual",
             "resources": [
                 {
-                    "collection": "tutanaklar_jina_v3_4k",
+                    "collection": "tbmm_tutanaklar_docling_jina_v3_4k",
                     "mode": "parallel",
                     "priority": 1,
                     "query_drafts": [
@@ -162,7 +162,7 @@ class TestGenerateGapFillPlan:
 
         assert result is not None
         assert isinstance(result, SearchPlan)
-        assert result.resources[0].collection == "tutanaklar_jina_v3_4k"
+        assert result.resources[0].collection == "tbmm_tutanaklar_docling_jina_v3_4k"
         assert result.resources[0].query_drafts[0].top_k == 8
 
     def test_returns_none_on_llm_error(self):

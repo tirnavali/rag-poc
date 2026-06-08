@@ -45,7 +45,7 @@ def valid_request_file(tmp_path):
     """A minimal valid ingest_request.json (uses inline press_clip — no PDF needed)."""
     data = {
         "version": "1.0",
-        "collection": "press_nomic",
+        "collection": "gazete_arsivi",
         "batch_id": "test-batch",
         "documents": [
             {
@@ -77,7 +77,7 @@ def test_list_collections_runs_without_crash(capsys):
     cmd_list_collections(Namespace())
     out = capsys.readouterr().out
     # Rich table truncates long collection names; check prefix substrings
-    assert "press_nomic" in out
+    assert "gazete_arsivi" in out
     assert "minutes_jina" in out  # truncated form acceptable
     # doc_type values must render (regression check: source_type AttributeError)
     assert "tutanak" in out
@@ -109,10 +109,10 @@ def test_status_empty_manifest(isolated_manifest, capsys):
 
 
 def test_status_with_collection_filter(isolated_manifest, capsys):
-    ns = Namespace(collection="minutes_jina_v3", document_type=None)
+    ns = Namespace(collection="tbmm_minutes_docling_jina_v3", document_type=None)
     cmd_status(ns)
     out = capsys.readouterr().out
-    assert "minutes_jina_v3" in out
+    assert "tbmm_minutes_docling_jina_v3" in out
 
 
 # ─── cmd_validate ────────────────────────────────────────────
@@ -136,7 +136,7 @@ def test_validate_missing_document_id(tmp_path):
         tmp_path,
         {
             "version": "1.0",
-            "collection": "press_nomic",
+            "collection": "gazete_arsivi",
             "documents": [{"document_type": "press_clip"}],
         },
     )
@@ -149,7 +149,7 @@ def test_validate_duplicate_document_ids(tmp_path):
         tmp_path,
         {
             "version": "1.0",
-            "collection": "press_nomic",
+            "collection": "gazete_arsivi",
             "documents": [
                 {"document_id": "x", "document_type": "press_clip"},
                 {"document_id": "x", "document_type": "press_clip"},
@@ -165,7 +165,7 @@ def test_validate_bad_document_type(tmp_path):
         tmp_path,
         {
             "version": "1.0",
-            "collection": "press_nomic",
+            "collection": "gazete_arsivi",
             "documents": [{"document_id": "x", "document_type": "nonexistent_type"}],
         },
     )
@@ -178,7 +178,7 @@ def test_validate_missing_source_file(tmp_path):
         tmp_path,
         {
             "version": "1.0",
-            "collection": "minutes_jina_v3",
+            "collection": "tbmm_minutes_docling_jina_v3",
             "documents": [
                 {
                     "document_id": "x",

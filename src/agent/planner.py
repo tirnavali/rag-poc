@@ -399,7 +399,7 @@ class PlanningAgent:
     def _fallback_plan(self, query: str) -> SearchPlan:
         """Generate a fallback plan when the planner LLM fails."""
         fb = self._config.planner
-        collections = fb.fallback_collections or ["tutanaklar_nomic_v2"]
+        collections = fb.fallback_collections or ["tbmm_tutanaklar_nomic_v2"]
 
         drafts = []
         for fq in fb.fallback_queries:

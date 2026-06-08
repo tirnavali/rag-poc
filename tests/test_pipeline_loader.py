@@ -33,7 +33,7 @@ def test_invalid_yaml_raises(tmp_path):
 def test_collection_catalog_lists_only_default_collections():
     """The planner catalog must expose only the live default collection per
     doc_type, not the experimental/comparison collections also registered in
-    models.yaml (e.g. minutes_jina_v4) — otherwise the planner routes to dead
+    models.yaml (e.g. tbmm_minutes_docling_jina_v4) — otherwise the planner routes to dead
     collections.
     """
     from src.config.collections import DEFAULT_COLLECTION_FOR_TYPE

@@ -43,7 +43,7 @@ After this design:
         │ User selects:
         │  ✓ gazete_arsivi (12,500 chunks)
         │  ✓ tbmm_tutanaklar_jina_v3 (45,200 chunks)
-        │  ✗ tbmm_tutanaklar_jina_v3_4k
+        │  ✗ tbmm_tbmm_tutanaklar_docling_jina_v3_4k
         │  ✓ onerge_collection (8,900 chunks)
         └────────┬──────────────────────────────────┘
                  │

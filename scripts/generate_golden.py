@@ -9,13 +9,13 @@ Her chunk için LLM ile hem soru hem verbatim excerpt otomatik üretilir.
 
 Kullanım:
     python scripts/generate_golden.py \\
-        --collection tutanaklar_jina_v3_4k \\
+        --collection tbmm_tutanaklar_docling_jina_v3_4k \\
         --n 20 \\
         --output tests/fixtures/golden_tutanak_auto.json
 
     # 3 örnek ekrana bas, dosyaya yazma:
     python scripts/generate_golden.py \\
-        --collection tutanaklar_jina_v3_4k \\
+        --collection tbmm_tutanaklar_docling_jina_v3_4k \\
         --n 3 \\
         --dry-run
 """
@@ -260,7 +260,7 @@ def generate_golden(
 def main() -> None:
     parser = argparse.ArgumentParser(description="ChromaDB chunk'larından golden dataset üret")
     parser.add_argument("--collection", required=True,
-                        help="Koleksiyon anahtarı (collections.py'de tanımlı, örn: tutanaklar_jina_v3_4k)")
+                        help="Koleksiyon anahtarı (collections.py'de tanımlı, örn: tbmm_tutanaklar_docling_jina_v3_4k)")
     parser.add_argument("--n", type=int, default=20,
                         help="Üretilecek entry sayısı (varsayılan: 20)")
     parser.add_argument("--output", default=None,

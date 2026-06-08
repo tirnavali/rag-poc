@@ -40,7 +40,7 @@ def _mock_config(fallbacks=None, count=3):
             "Susurluk skandalı haberleri",
         ],
         get_block=lambda name: block_cfg,
-        get_collection_catalog=lambda: "- press_jina_v3 (Gazete)\n- tutanaklar_nomic_v2 (Tutanak)",
+        get_collection_catalog=lambda: "- gazete_arsivi_jina_v3 (Gazete)\n- tbmm_tutanaklar_nomic_v2 (Tutanak)",
     )
     return cfg
 

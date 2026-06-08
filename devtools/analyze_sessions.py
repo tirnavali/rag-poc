@@ -1,7 +1,7 @@
 from src.config.collections import get_spec
 from src.retriever.vector_retriever import VectorRetriever
 
-spec = get_spec('tutanaklar_jina_v3_4k')
+spec = get_spec('tbmm_tutanaklar_docling_jina_v3_4k')
 retriever = VectorRetriever(spec)
 
 sessions = [

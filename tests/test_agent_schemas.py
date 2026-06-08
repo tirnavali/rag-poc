@@ -30,7 +30,7 @@ def test_search_query_draft_coerces_dict_filters():
 
 def test_collection_search_plan_defaults():
     p = CollectionSearchPlan(
-        collection="minutes_nomic",
+        collection="tbmm_minutes",
         query_drafts=[SearchQueryDraft(text="x")],
     )
     assert p.mode == "parallel"

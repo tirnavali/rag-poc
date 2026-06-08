@@ -16,7 +16,7 @@ Gazete yeniden ingest (jina-v3 + late chunking):
 
 ```bash
 # 1. CSV'den manifest JSON oluştur
-python -m scripts.ingest --csv gazete-rag-001.csv --collection press_jina_v3 --output gazete_ingestion.json
+python -m scripts.ingest --csv gazete-rag-001.csv --collection gazete_arsivi_jina_v3 --output gazete_ingestion.json
 
 # 2. Manifest'i pipeline'a gönder
 python -m src.trainer.ingestion.ingest --request gazete_ingestion.json

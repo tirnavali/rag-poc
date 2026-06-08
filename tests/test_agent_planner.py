@@ -91,9 +91,9 @@ def test_execute_single_passes_collection_key_and_translates_filter(monkeypatch)
         filters=FilterCriteria(year=1996, author="Deniz Baykal"),
         top_k=7,
     )
-    agent._execute_single("minutes_nomic", draft, PipelineTracer())
+    agent._execute_single("tbmm_minutes", draft, PipelineTracer())
 
-    assert captured["collection_key"] == "minutes_nomic"
+    assert captured["collection_key"] == "tbmm_minutes"
     assert captured["top_k"] == 7
     # Translated to Chroma where dict (multi-field → $and), not a raw dict.
     assert "$and" in captured["filters"]
@@ -109,7 +109,7 @@ def test_execute_single_no_filter_passes_none(monkeypatch):
 
     monkeypatch.setattr(agent._search_tool, "search", fake_search)
     draft = SearchQueryDraft(text="serbest sorgu")
-    agent._execute_single("minutes_nomic", draft, PipelineTracer())
+    agent._execute_single("tbmm_minutes", draft, PipelineTracer())
     assert captured["filters"] is None
 
 
@@ -125,7 +125,7 @@ def test_execute_plan_parallel_runs_all_drafts(monkeypatch):
     plan = SearchPlan(
         intent="factual",
         resources=[CollectionSearchPlan(
-            collection="minutes_nomic",
+            collection="tbmm_minutes",
             mode="parallel",
             query_drafts=[SearchQueryDraft(text="q1"), SearchQueryDraft(text="q2")],
         )],
@@ -146,7 +146,7 @@ def test_execute_plan_tags_re_retrieval_phase(monkeypatch):
     plan = SearchPlan(
         intent="factual",
         resources=[CollectionSearchPlan(
-            collection="minutes_nomic",
+            collection="tbmm_minutes",
             query_drafts=[SearchQueryDraft(text="q")],
         )],
         reasoning="r",

@@ -19,7 +19,7 @@ Bir collection'ı hem ChromaDB vector store'dan hem de SQLite manifest veritaban
 ```bash
 python devtools/clear_collection.py <collection_adı>
 # Örnek:
-python devtools/clear_collection.py tutanaklar_nomic_v2
+python devtools/clear_collection.py tbmm_tutanaklar_nomic_v2
 ```
 
 ---

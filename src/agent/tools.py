@@ -42,7 +42,7 @@ class SearchTool:
     def _get_search(self, collection_key: str) -> tuple[VectorSearch, CollectionSpec]:
         """Get or create a VectorSearch for the given collection key.
 
-        The collection key (e.g. 'tutanaklar_nomic_v2') maps to a CollectionSpec
+        The collection key (e.g. 'tbmm_tutanaklar_nomic_v2') maps to a CollectionSpec
         loaded from models.yaml, which includes the per-collection embedder.
         """
         if collection_key not in self._search_cache:

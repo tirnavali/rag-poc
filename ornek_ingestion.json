@@ -1,11 +1,11 @@
 {
     "version": "1.0",
-    "collection": "tutanaklar_nomic_v2",
+    "collection": "tbmm_tutanaklar_nomic_v2",
     "documents": [
         {
             "document_id": "tutanak-23-01-08-20070831",
             "document_type": "tutanak",
-            "document_source": "/Users/sercan/Projects/RAG-poc/tutanak/tbmm23001008.pdf",
+            "document_source": "https://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d23/c001/tbmm23001008.pdf",
             "document_date": "2007-08-31",
             "period": 23,
             "legislative_year": 1,
@@ -22,7 +22,7 @@
         {
             "document_id": "tutanak-20-01-02-19960108",
             "document_type": "tutanak",
-            "document_source": "/Users/sercan/Projects/RAG-poc/tutanak/tbmm20001002.pdf",
+            "document_source": "https://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d20/c001/tbmm20001001.pdf",
             "document_date": "1996-01-08",
             "period": 20,
             "legislative_year": 1,
@@ -33,13 +33,13 @@
             "metadata": {
                 "acilma_saati": "15:00",
                 "is_full_minutes": true,
-                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d20&v_yasama_yili=1&v_cilt="
+                "kaynak_url": "https://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d20/c001/tbmm20001001.pdf"
             }
         },
         {
             "document_id": "tutanak-20-01-03-19960123",
             "document_type": "tutanak",
-            "document_source": "/Users/sercan/Projects/RAG-poc/tutanak/tbmm20001003.pdf",
+            "document_source": "https://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d20/c001/tbmm20001003.pdf",
             "document_date": "1996-01-23",
             "period": 20,
             "legislative_year": 1,
@@ -56,7 +56,7 @@
         {
             "document_id": "tutanak-20-01-04-19960124",
             "document_type": "tutanak",
-            "document_source": "./tutanak/tbmm20001004.pdf",
+            "document_source": "https://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d20/c001/tbmm20001004.pdf",
             "document_date": "1996-01-24",
             "period": 20,
             "legislative_year": 1,
@@ -73,7 +73,7 @@
         {
             "document_id": "tutanak-20-01-05-19960125",
             "document_type": "tutanak",
-            "document_source": "./tutanak/tbmm20001005.pdf",
+            "document_source": "https://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d20/c001/tbmm20001005.pdf",
             "document_date": "1996-01-25",
             "period": 20,
             "legislative_year": 1,
@@ -90,7 +90,7 @@
         {
             "document_id": "tutanak-20-01-06-19960130",
             "document_type": "tutanak",
-            "document_source": "./tutanak/tbmm20001006.pdf",
+            "document_source": "https://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d20/c001/tbmm20001006.pdf",
             "document_date": "1996-01-30",
             "period": 20,
             "legislative_year": 1,
@@ -107,7 +107,7 @@
         {
             "document_id": "tutanak-20-01-07-19960131",
             "document_type": "tutanak",
-            "document_source": "./tutanak/tbmm20001007.pdf",
+            "document_source": "https://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d20/c001/tbmm20001007.pdf",
             "document_date": "1996-01-31",
             "period": 20,
             "legislative_year": 1,
@@ -124,7 +124,7 @@
         {
             "document_id": "tutanak-20-01-08-19960201",
             "document_type": "tutanak",
-            "document_source": "./tutanak/tbmm20001008.pdf",
+            "document_source": "https://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d20/c001/tbmm20001008.pdf",
             "document_date": "1996-02-01",
             "period": 20,
             "legislative_year": 1,
@@ -141,7 +141,7 @@
         {
             "document_id": "tutanak-20-01-10-19960207",
             "document_type": "tutanak",
-            "document_source": "./tutanak/tbmm20001010.pdf",
+            "document_source": "https://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d20/c001/tbmm20001010.pdf",
             "document_date": "1996-02-07",
             "period": 20,
             "legislative_year": 1,

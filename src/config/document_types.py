@@ -78,7 +78,7 @@ _LEGACY_KEY_MAP: dict[str, str] = {
 def normalize_metadata(meta: dict) -> dict:
     """Map legacy Turkish metadata keys to the canonical schema.
 
-    Older gazete collection (`gazete_arsivi`, embedder `press_nomic`) stored
+    Older gazete collection (`gazete_arsivi`, embedder `gazete_arsivi`) stored
     metadata under TR keys (gazete/tarih/yazar/baslik/konular); the canonical
     schema uses (source_name/date/author/source_title/topics) plus a derived
     `year`. This shim brings legacy records up to the canonical shape at

@@ -272,8 +272,8 @@ class PipelineConfig:
 
         Only the default (canonical) collection per document type is listed —
         the `defaults` map in models.yaml. models.yaml also registers many
-        experimental/comparison collections (e.g. minutes_jina_v4,
-        tutanaklar_jina_v3_4k) that are not the live retrieval target; exposing
+        experimental/comparison collections (e.g. tbmm_minutes_docling_jina_v4,
+        tbmm_tutanaklar_docling_jina_v3_4k) that are not the live retrieval target; exposing
         them here makes the planner route to dead collections. The planner must
         only see one active collection per doc_type.
         """
