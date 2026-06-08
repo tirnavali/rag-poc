@@ -1,0 +1,23 @@
+# pyproject.toml, modern Python projelerinde projenin yapılandırmasını, bağımlılıklarını ve 
+# kullanılan araçların ayarlarını merkezi bir yerde toplamak için kullanılan standart bir dosyadır.
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag-poc"
+version = "1.0.0"
+description = "Turkish-language RAG proof-of-concept for newspaper archive and TBMM minutes"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+include = ["src*", "scripts*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "integration: tests that hit a live Ollama model (skipped if unreachable)",
+    "slow: integration/LLM tests that hit Ollama",
+]

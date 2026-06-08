@@ -1,0 +1,296 @@
+# =============================================================================
+# RAG Pipeline Yapılandırması — Agent-Orchestrated Multi-Block Deployment
+# =============================================================================
+#
+# Bu dosya şunları tanımlar:
+#   1. deployment_blocks: LLM inference makineleri (fast, answer, expert)
+#   2. agent: planning agent, answering agent, sanitizer agent yapılandırması
+#   3. retrieval: reranker ve context oluşturma parametreleri
+#
+# Model özellikleri ve collection kaydı models.yaml dosyasındadır (tamamen veri güdümlü).
+#
+# Geçersiz kılma: --pipeline path/to/custom.yaml
+# Fallback: Bu dosya yoksa settings.py + collections.py kullanılır.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Deployment Blocks — her block, Ollama çalıştıran ayrı bir makine/servistir
+# ---------------------------------------------------------------------------
+deployment_blocks:
+  fast-01:
+    host: http://localhost:11434
+    purpose: "planning,filter_extraction,sanitization,judge"
+    models:
+      planner: qwen3.5:9b
+      filter_extractor: qwen2.5:3b-instruct
+      sanitizer: qwen3.5:9b
+      judge: qwen3.5:9b
+      classifier: qwen2.5:3b-instruct
+      suggester: qwen2.5:3b-instruct
+    timeout_seconds: 60
+    retries: 1
+
+  gpu-01:
+    host: http://localhost:11434
+    purpose: "answering"
+    models:
+      answer: gemma4:latest
+    timeout_seconds: 60
+    max_num_ctx: 32768
+    max_num_predict: 4096
+
+  gpu-02:
+    host: http://localhost:11434
+    purpose: "expert"
+    models:
+      expert: qwen3-coder:30b
+    timeout_seconds: 120
+    max_num_ctx: 65536
+    max_num_predict: 16384
+
+# ---------------------------------------------------------------------------
+# Agent Configuration
+# ---------------------------------------------------------------------------
+agent:
+  bad_words_filter:
+    enabled: true
+    response_message: |
+      Lütfen saygılı dil kullanın. Sorgunuzda uygun olmayan kelime tespit edildi.
+    bad_words:
+      - "aptal"
+      - "salak"
+      - "piç"
+      - "küfür"
+      - "amcık"
+      - "orospu"
+      - "şerefsiz"
+    bad_word_patterns:
+      - "en ağır küfür(ler)?"
+      - "bana küfür et"
+
+  classifier:
+    enabled: true
+    block: fast-01
+    model_key: classifier
+    temperature: 0.0
+    confidence_threshold: 0.6
+    think: false
+    prompt: |
+      Sen bir RAG sistemi kapı bekçisisin. Kullanıcı sorgusunu sınıflandır.
+
+      Sistem yalnızca şu konuları bilir:
+      - Türk gazete arşivi kupürleri (1970-2010 dönemi siyaset, ekonomi, toplum)
+      - TBMM tutanakları (1980-günümüz milletvekili konuşmaları, oturumlar)
+      - TBMM önergeleri ve kanun teklifleri
+
+      In_scope örnekleri:
+      - "Özal döneminde gazete manşetleri"
+      - "1997 TBMM bütçe görüşmeleri"
+      - "Kanun teklifi 2/1234 hakkında ne tartışıldı"
+      - "Doğan Avcıoğlu köşe yazıları"
+      - "Atatürk'ün vefatı"                  # tarihsel olay → in_scope
+      - "27 Mayıs 1960 darbesi"              # tarihsel siyaset → in_scope
+      - "Susurluk skandalı"                  # 1990'lar Türk siyaseti → in_scope
+
+      Off_domain örnekleri:
+      - "hava bugün nasıl"
+      - "Einstein kimdir"
+      - "Python kodu yaz"
+      - "2026 dolar kuru"
+      - "merhaba"
+
+      ÖNEMLİ — Türk siyasi/tarihsel olaylar, kişiler, devrimler, savaşlar, darbeler,
+      bürokratlar, gazeteciler ve milletvekilleri her zaman in_scope sayılır.
+      Sistemin koleksiyonları (gazete arşivi + TBMM) bu konuları kapsar.
+      Yalnızca kesinlikle alan dışı (hava, matematik, programlama, gündelik sohbet,
+      yabancı bilim insanları) sorular off_domain'dir.
+
+      JSON çıktısı:
+      {"scope": "in_scope" veya "off_domain", "confidence": 0.0-1.0, "reason": "kısa gerekçe"}
+
+  suggester:
+    block: fast-01
+    model_key: suggester
+    temperature: 0.3
+    think: false
+    suggestion_count: 3
+    prompt: |
+      Sen bir RAG sistemi öneri uzmanısın. Kullanıcının alan dışı sorgusu var.
+      Sistemin bildiği koleksiyonlardan yararlanarak 3 alternatif in-domain sorgu öner.
+
+      Mevcut koleksiyonlar:
+      {catalog}
+
+      Kurallar:
+      1. Tam 3 öneri üret
+      2. Her öneri kısa, Türkçe, doğrudan sorulabilir bir soru olsun
+      3. Mümkünse kullanıcının orijinal sorgu temasıyla bağ kur
+         (ör. "Einstein kimdir" → "Türk basınında bilim insanı haberleri")
+      4. Bağ kurulamıyorsa koleksiyonlardan örnekleyici 3 farklı tema seç
+
+      JSON çıktısı:
+      {{"suggestions": ["soru1", "soru2", "soru3"]}}
+
+  off_domain_response_template: |
+    Bu sistem yalnızca gazete arşivi ve TBMM tutanakları sorgular için tasarlandı.
+    Sorunuz bu kapsam dışında görünüyor.
+
+    Belki şunu sormak istediniz:
+    1. {suggestion_0}
+    2. {suggestion_1}
+    3. {suggestion_2}
+
+  off_domain_fallback_suggestions:
+    - "Özal döneminde gazete manşetleri"
+    - "1997 TBMM bütçe görüşmeleri"
+    - "Susurluk skandalı haberleri"
+
+  # Planning Agent — kullanıcı sorgusunu alır, kaynakları belirler, arama taslakları üretir
+  planner:
+    block: fast-01
+    model_key: planner
+    think: false
+    default_query_count: 2
+    search_strategy: "auto"  # agent, her collection için parallel mı sequential mı olacağına karar verir
+
+    plan_prompt: |
+      Sen bir RAG araştırma planlama uzmanısın. Kullanıcı sorgusunu analiz et ve
+      arama planı oluştur.
+
+      Kurallar:
+      1. Önce sorgunun amacını belirle: factual (basit bilgi), comparative (karşılaştırma),
+         analytical (derin analiz), temporal (zaman bazlı), unknown
+      2. Hangi koleksiyonların ilgili olduğunu belirle
+      3. Her koleksiyon için 2 alternatif arama sorgusu üret (farklı kelime seçimleri)
+      4. Filtreleri çıkar (yıl, yazar, kaynak, dönem, birleşim)
+      5. Arama stratejisini seç: parallel (hızlı) veya sequential (önceki sonuçlar
+         sonraki aramayı etkilesin)
+      6. Kısa bir gerekçe yaz
+
+      JSON çıktısı:
+      {
+        "intent": "factual|comparative|analytical|temporal|unknown",
+        "resources": [
+          {
+            "collection": "koleksiyon_adi",
+            "mode": "parallel|sequential",
+            "priority": 1,
+            "query_drafts": [
+              {"text": "arama_sorgusu", "filters": {"year": 1997, "author": null}, "top_k": 5}
+            ]
+          }
+        ],
+        "reasoning": "neden bu plan"
+      }
+
+    # Re-retrieval: sonuçlar yetersizse otomatik olarak tetiklenir
+    re_retrieval:
+      enabled: true
+      max_retries: 1
+      trigger_min_results: 3
+      strategy: "broaden_filters"  # yazar filtresi kaldır → yıl filtresi kaldır → yalnızca semantic
+      prompt: |
+        Önceki arama yetersiz sonuç döndürdü. Filtreleri gevşeterek yeni arama
+        sorguları üret. Daha geniş tarih aralığı, yazar filtresi kaldır, alternatif
+        kelimeler kullan.
+      on_quality_failure: true  # yanıt sorguyu karşılamadığında yeniden arama yap
+
+    # Planning tamamen başarısız olduğunda devreye giren fallback.
+    # Her doc_type için bir collection'a broadcast yapar; planner çökse bile
+    # gazete/tutanak/onerge sorguları uygun index'e ulaşmaya devam eder.
+    fallback:
+      strategy: "broadcast"
+      default_collections:
+        - tutanaklar_nomic_v2
+        - press_jina_v3
+        - onerge_jina_v3
+      default_queries:
+        - text: "{original_query}"
+          filters: null
+          top_k: 10
+
+  # Answering Agent — retrieve edilen context'ten nihai yanıtı üretir
+  answering:
+    block: gpu-01
+    model_key: answer
+    think: false
+    temperature: 0.3
+    num_ctx: 32768
+    num_predict: 4096
+
+  # Sanitizer Agent — çıktı kalitesini doğrular, hataları düzeltir veya işaretler
+  sanitizer:
+    block: fast-01
+    model_key: sanitizer
+    think: false
+    temperature: 0.0
+    max_chars: 2000
+    validation_criteria:
+      - "Cevap kullanıcının orijinal sorusunu yanıtlıyor mu?"
+      - "İddialar kaynaklarla destekleniyor mu?"
+      - "Uydurma bilgi var mı?"
+      - "Yanıt Türkçe mi?"
+    max_retries: 1
+    retry_prompt: "Cevap yetersiz veya hatalı. Kaynaklara dayanarak yeniden üret."
+
+  # Filter Extractor — doğal dil sorgularından yapısal filtreleri çıkarır
+  filter_extractor:
+    block: fast-01
+    model_key: filter_extractor
+    temperature: 0.0
+
+# ---------------------------------------------------------------------------
+# Retrieval Parametreleri
+# ---------------------------------------------------------------------------
+retrieval:
+  reranker:
+    enabled: true
+    model: cross-encoder/mmarco-mMiniLMv2-L12-H384-v1
+    fetch_k: 100
+    coarse_k: 20
+    final_k: 5
+
+  context:
+    max_chars: 4000
+    total_max_chars: 12000
+    distance_threshold: 1.8
+    window_size: 800
+    window_max_total: 3000
+
+# ---------------------------------------------------------------------------
+# Orchestrator — yeni agentic pipeline (planner → policy → allocator →
+# retrieve → assembler → judge → expander → answer → sanitizer → citations)
+# ---------------------------------------------------------------------------
+orchestrator:
+  enabled: false       # false: legacy PlanningAgent.run() / true: OrchestratorAgent.run()
+
+policy:
+  mode: session_intersection   # session-seçimi ∩ planner-önerisi
+  # auth_rules: ileride eklenecek; tüm koleksiyonlar şu an public
+
+allocation:
+  defaults:    { primary: 2, reserve: 2, fetch_k: 10 }
+  by_query_type:
+    fact:       { primary: 2, reserve: 2, fetch_k: 10 }
+    summary:    { primary: 3, reserve: 2, fetch_k: 10 }
+    comparison: { primary: 3, reserve: 2, fetch_k: 12 }
+    reasoning:  { primary: 3, reserve: 2, fetch_k: 12 }
+    policy:     { primary: 3, reserve: 3, fetch_k: 15 }
+  max_per_document: 1
+  max_total_primary: 12
+
+judge:
+  mode: hybrid
+  heuristic:
+    min_chunks: 4
+    min_collection_coverage: 2
+    min_rerank_score: 0.0
+  llm:
+    enabled: true
+    block: fast-01
+    model_key: judge
+    borderline_band: [2, 4]
+    max_borderline_score_floor: 0.35
+    timeout_seconds: 5
+  max_expand_iterations: 1
+  on_low_confidence: expand

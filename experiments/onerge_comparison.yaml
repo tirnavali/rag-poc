@@ -1,0 +1,9 @@
+name: "Onerge Embedding Model Comparison (Nomic vs Neomotron vs Jina v3)"
+collections:
+  - onerge_nomic
+  - onerge_neomotron
+  - onerge_jina_v3
+fixture: tests/fixtures/eval_queries_onerge_20.json
+top_k: [1, 3, 5, 10]
+reranker: false
+fetch_k: 100

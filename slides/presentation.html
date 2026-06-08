@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG-poc: Modern Ingestion & Retrieval Mimarisi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #020617;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --accent-primary: #0ea5e9;
+            --accent-secondary: #6366f1;
+            --accent-tertiary: #f43f5e;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --code-bg: #000000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow: hidden;
+            background: radial-gradient(circle at 0% 0%, #0f172a 0%, transparent 50%),
+                        radial-gradient(circle at 100% 100%, #1e1b4b 0%, transparent 50%);
+            height: 100vh;
+        }
+
+        .slides-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            transition: transform 0.8s cubic-bezier(0.8, 0, 0.2, 1);
+        }
+
+        .slide {
+            min-width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 6rem;
+            position: relative;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 3.5rem;
+            max-width: 1200px;
+            width: 100%;
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
+            animation: slideUp 0.6s ease-out;
+            position: relative;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 40px;
+            height: 4px;
+            background: var(--accent-primary);
+            border-radius: 2px;
+        }
+
+        h3 {
+            font-size: 1.6rem;
+            color: var(--accent-secondary);
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        p {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            color: var(--text-dim);
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        .highlight-box {
+            background: linear-gradient(90deg, rgba(14, 165, 233, 0.1), transparent);
+            border-left: 4px solid var(--accent-primary);
+            padding: 1.5rem;
+            border-radius: 0 16px 16px 0;
+            margin: 1.5rem 0;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 100px;
+            font-size: 0.9rem;
+            color: var(--accent-primary);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        pre {
+            background: #000;
+            padding: 1.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            overflow-x: auto;
+            color: #e2e8f0;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 3rem;
+            right: 3rem;
+            display: flex;
+            gap: 1.5rem;
+            z-index: 100;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: white;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:hover {
+            background: var(--accent-primary);
+            transform: scale(1.1) rotate(5deg);
+            border-color: transparent;
+            box-shadow: 0 0 30px rgba(14, 165, 233, 0.4);
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            transition: width 0.4s;
+            z-index: 1000;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 3rem;
+            left: 3.5rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            opacity: 0.5;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            border-radius: 24px;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .feature-card h4 {
+            color: var(--accent-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .list-item::before {
+            content: '✦';
+            color: var(--accent-primary);
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            align-items: start;
+        }
+
+        /* Flowchart styles */
+        .flowchart-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            height: 100%;
+        }
+
+        .flowchart-svg-wrapper {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 24px;
+            padding: 1rem;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .flowchart-step {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .flowchart-step rect, .flowchart-step circle {
+            fill: rgba(255, 255, 255, 0.02);
+            stroke: var(--glass-border);
+            stroke-width: 1.5;
+            transition: all 0.3s ease;
+        }
+
+        .flowchart-step:hover rect, .flowchart-step:hover circle {
+            fill: rgba(99, 102, 241, 0.15);
+            stroke: var(--accent-secondary);
+            filter: drop-shadow(0 0 6px var(--accent-secondary));
+        }
+
+        .flowchart-step.active rect, .flowchart-step.active circle {
+            fill: rgba(14, 165, 233, 0.2);
+            stroke: var(--accent-primary);
+            filter: drop-shadow(0 0 10px var(--accent-primary));
+        }
+
+        .info-panel {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 20px rgba(99, 102, 241, 0.05);
+        }
+
+        .info-panel h3 {
+            margin-top: 0;
+            color: var(--accent-primary);
+            font-size: 1.6rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .info-panel p {
+            font-size: 1.15rem;
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .info-panel .meta-info {
+            font-size: 0.95rem;
+            color: var(--accent-secondary);
+            font-family: 'Fira Code', monospace;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            display: inline-block;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: fit-content;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progress"></div>
+    <div class="slide-number" id="slide-num">1 / 17</div>
+
+    <div class="slides-container" id="container">
+
+        <!-- Slide 1: Giriş -->
+        <section class="slide">
+            <div class="glass-card" style="text-align: center;">
+                <div class="tag">RAG ARCHITECTURE v2.0</div>
+                <h1>Modern Veri Yükleme ve Arama Hattı</h1>
+                <p style="font-size: 1.5rem; max-width: 800px; margin: 0 auto 2rem;">
+                    Docling, Late Chunking ve Reranker ile Güçlendirilmiş Kurumsal RAG Altyapısı
+                </p>
+                <div class="grid-2" style="max-width: 900px; margin: 0 auto; text-align: left;">
+                    <div class="feature-card">
+                        <h4>End-to-End Ingestion</h4>
+                        <p style="font-size: 1rem; margin-bottom: 0;">PDF'den Vektöre tam otomatik boru hattı.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Advanced Retrieval</h4>
+                        <p style="font-size: 1rem; margin-bottom: 0;">Vector ANN Search + Cross-Encoder Reranking.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: Standardize Ingestion -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Standart Ingestion & Manifest</h2>
+                <div class="grid-2">
+                    <div>
+                        <p>Sistem tutarlılığını sağlamak için tüm veri girişi tek bir JSON şeması üzerinden yapılır.</p>
+                        <div class="highlight-box">
+                            <strong>DocumentManifest:</strong> 
+                            Her döküman <code>content_hash</code> ile takip edilir. Tekrar yüklemeler (deduplication) otomatik olarak önlenir.
+                        </div>
+                        <div class="list-item"><strong>JSON Schema:</strong> Zorunlu alanların validasyonu.</div>
+                        <div class="list-item"><strong>Adapter Pattern:</strong> Kaynak bağımsız normalizasyon.</div>
+                    </div>
+                    <pre><code>{
+  "document_id": "tbmm-20-1-1",
+  "document_type": "tutanak",
+  "document_source": "data.pdf",
+  "metadata": {
+    "author": "Mustafa Kalemli",
+    "period": 20
+  }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: Ingestion Katmanları -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Ingestion Katmanları</h2>
+                <div class="grid-2">
+                    <div class="feature-card">
+                        <h3>1. Adapters</h3>
+                        <p style="font-size: 1rem;">Farklı veri kaynaklarını (Gazete, Tutanak, Kanun Teklifi) standart bir <code>DocumentInput</code> formatına çevirir.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>2. Pipeline</h3>
+                        <p style="font-size: 1rem;">Docling -> Packer -> Embedder -> ChromaDB adımlarını orkestre eden ana motor.</p>
+                    </div>
+                </div>
+                <div class="highlight-box" style="margin-top: 2rem;">
+                    <strong>Sistem Tutarlılığı:</strong> Tüm kaynaklar ChromaDB'de aynı "Canonical Metadata" şemasında buluşur.
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: Docling Detayları -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Derinlemesine Docling</h2>
+                <div class="grid-2">
+                    <div>
+                        <p>Sıradan PDF parser'ların aksine, dökümanın <strong>yapısal hiyerarşisini</strong> anlar.</p>
+                        <div class="list-item">OCR & Layout Analysis (EasyOCR/Tesseract)</div>
+                        <div class="list-item">Başlıklar, Listeler ve Tablo tespiti</div>
+                        <div class="list-item">Markdown formatında temiz metin çıktısı</div>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Neden Docling?</h3>
+                        <p style="font-size: 1.1rem; color: #fff;">
+                            "Hiyerarşiyi korumak, RAG sisteminin dökümanın hangi bölümünün ne anlama geldiğini (örn: madde metni vs dipnot) anlamasını sağlar."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: Chunking Stratejimiz -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Chunking Stratejisi</h2>
+                <div class="grid-2">
+                    <div>
+                        <h3>Late Chunking (Jina v3)</h3>
+                        <p>Önce dökümanın <strong>tamamı</strong> modele verilir (Full-Context Encoding), ardından parçalara bölünür.</p>
+                        <div class="highlight-box">
+                            <strong>Sonuç:</strong> Her parça, dökümanın bütününe dair "bağlamsal hafıza" taşır.
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Small-to-Big Retrieval</h3>
+                        <p>Küçük parçalar (chunks) üzerinde arama yapılır, ancak modele dökümanın daha büyük bir bölümü (context) gönderilir.</p>
+                        <div class="success-box" style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 1rem; border-radius: 0 16px 16px 0;">
+                            Hassas arama + Zengin bağlam.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Ingestion Script -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Ingestion Script & Pipeline</h2>
+                <p>Tek bir komutla tüm süreç tetiklenir:</p>
+                <pre><code>python -m src.trainer.ingestion.ingest --request ornek.json</code></pre>
+                <div class="grid-2" style="margin-top: 2rem;">
+                    <div class="feature-card">
+                        <h3>Paralel İşleme</h3>
+                        <p style="font-size: 1rem;">Batch processing ile binlerce sayfa PDF dakikalar içinde vektörleştirilir.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Diferansiyel Güncelleme</h3>
+                        <p style="font-size: 1rem;">Sadece değişen veya yeni eklenen dosyalar işlenir (Time & Resource Efficiency).</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 7: Retrieval & Reranker -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Retrieval: 3 Aşamalı Filtreleme</h2>
+                <div class="grid-3">
+                    <div class="feature-card">
+                        <span class="tag">Adım 1</span>
+                        <h4>Vector ANN</h4>
+                        <p style="font-size: 0.9rem;">ChromaDB ile en yakın 100 aday (Candidates).</p>
+                    </div>
+                    <div class="feature-card" style="border-color: var(--accent-secondary);">
+                        <span class="tag">Adım 2</span>
+                        <h4>Reranker</h4>
+                        <p style="font-size: 0.9rem;">Cross-Encoder (mMiniLMv2) ile anlamsal yeniden sıralama.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="tag">Adım 3</span>
+                        <h4>Post-Process</h4>
+                        <p style="font-size: 0.9rem;">Sorgu etrafındaki dinamik pencereyi (Window) modele sunma.</p>
+                    </div>
+                </div>
+                <div class="highlight-box" style="margin-top: 2rem;">
+                    <strong>Fark:</strong> Bi-encoder (Hızlı Arama) + Cross-encoder (Hassas Sıralama) ile iki aşamalı (Two-Stage) yapı.
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: Vector Explorer -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Vector Explorer & Visualizer</h2>
+                <div class="grid-2">
+                    <div>
+                        <p>Vektör uzayındaki veriyi "canlı" olarak denetlemek için Streamlit tabanlı arayüz.</p>
+                        <div class="list-item">Koleksiyon bazlı veri tarama</div>
+                        <div class="list-item">Query simülasyonu ve Reranker etkisi</div>
+                        <div class="list-item">Vektör mesafeleri (Distance) analizi</div>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Neden Önemli?</h3>
+                        <p style="font-size: 1.1rem;">
+                            "Siyah kutu" olan vektör veritabanını şeffaf hale getirir. Retrieval hatalarını (Bad chunks) saniyeler içinde tespit etmeyi sağlar.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 9: Collection & Benchmark -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Collection Registry & A/B Benchmarking</h2>
+                <div class="grid-2">
+                    <div>
+                        <h3>CollectionSpec Registry</h3>
+                        <p>Tüm modeller ve parametreler tek bir merkezden (<code>collections.py</code>) yönetilir.</p>
+                        <pre><code>COLLECTIONS["minutes_jina_v4"] = CollectionSpec(
+    db_path=settings.MINUTES_CHROMA,
+    embed_model="jinaai/jina-embeddings-v4",
+    supports_late_chunking=True
+)</code></pre>
+                    </div>
+                    <div class="feature-card">
+                        <h3>A/B Benchmarking</h3>
+                        <p style="font-size: 1rem;">Retrieval performansını (P@K, MRR, NDCG) farklı chunking stratejileri ve modeller arasında YAML konfigürasyonu ile otomatik karşılaştırır.</p>
+                        <div class="list-item">Veriye dayalı mimari kararlar</div>
+                        <div class="list-item">Regresyon tespiti</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 10: Ingestion Alt Yapısı -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Veri Yükleme Alt Yapısı</h2>
+                <div class="grid-2">
+                    <div class="feature-card">
+                        <h3>Manifest & Deduplication</h3>
+                        <p style="font-size: 1rem;"><code>document_manifest.db</code> üzerinden sistemdeki her döküman SQLite ile takip edilir. Tekrar eden veya güncellenmeyen dökümanlar <strong>Content Hash (SHA-256)</strong> sayesinde atlanır (Skip).</p>
+                        <div class="list-item" style="margin-top: 1rem; font-size: 0.95rem;">Tekil <code>document_id</code> ve Hash takibi</div>
+                    </div>
+                    <div class="feature-card" style="border-color: var(--accent-tertiary);">
+                        <span class="tag" style="background: var(--accent-tertiary); color: white;">Two-Level Cache</span>
+                        <h3>OCR & Parse Önbelleği</h3>
+                        <p style="font-size: 1rem;">Ağır Docling işlemleri <code>data_lake/parse_cache</code> altında saklanır. Yeniden denemelerde saniyeler içinde çalışır.</p>
+                        <div class="list-item" style="font-size: 0.9rem;"><strong>Level 1:</strong> Saf OCR çıktısı (Atomlar)</div>
+                        <div class="list-item" style="font-size: 0.9rem;"><strong>Level 2:</strong> Parametrelere (min/max) bağlı nihai Chunks</div>
+                    </div>
+                </div>
+                <div class="highlight-box" style="margin-top: 2rem; font-size: 0.95rem;">
+                    <strong>Parametre Yönetimi:</strong> OCR motoru (<code>easyocr</code>, <code>mac</code>) doğrudan <code>settings.OCR_ENGINE</code> ortam değişkeninden okunur. Parçalama eşikleri ise <code>CollectionSpec</code> üzerinden dinamik geçirilir.
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 11: Agentic Orkestrasyon Giriş -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Agentic Orkestrasyon: Durum Makinesi</h2>
+                <div class="grid-2">
+                    <div>
+                        <p>RAG arama ve cevaplama süreçleri, tek aşamalı modellerin ötesinde, <strong>durum-makinesi (state-machine)</strong> tabanlı bir mimariyle yönetilir.</p>
+                        <div class="highlight-box">
+                            <strong>Neden Durum Makinesi?</strong><br>
+                            Klasik döngülü yapılar yerine her aşamanın durumu <code>OrchestratorState</code> üzerinde toplanır. Bu durum yönetimi, sistemin izlenebilirliğini, güvenlik politikalarını ve arama bütçelerini optimize eder.
+                        </div>
+                        <div class="list-item"><strong>Yapılandırılmış Durum:</strong> Hataların ve bütçelerin merkezi takibi.</div>
+                        <div class="list-item"><strong>Tam Trace Desteği:</strong> Her aşama için milisaniye seviyesinde gecikme analizi.</div>
+                    </div>
+                    <div class="grid-2" style="gap: 1.5rem; grid-template-columns: 1fr;">
+                        <div class="feature-card" style="border-left: 4px solid var(--accent-secondary);">
+                            <h4>Legacy: PlanningAgent</h4>
+                            <p style="font-size: 0.95rem; margin-bottom: 0; color: var(--text-dim);">
+                                LLM ile planlama yapıp ardından veritabanı araması koşan, yetersiz sonuçlarda veya kalite kontrollerinde LLM döngüleri (re-retrieval) çalıştıran eski monolitik yapı.
+                            </p>
+                        </div>
+                        <div class="feature-card" style="border-left: 4px solid var(--accent-primary);">
+                            <h4>Modern: OrchestratorAgent</h4>
+                            <p style="font-size: 0.95rem; margin-bottom: 0; color: var(--text-dim);">
+                                Planner → Policy → Allocator → Retrieve → Assembler → Judge → (Expand) → Answer → Sanitizer → Citation adımlarından oluşan modüler durum makinesi.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 12: Durum Makinesi Akış Şeması -->
+        <section class="slide">
+            <div class="glass-card" style="padding: 2rem 3.5rem;">
+                <h2>Durum Makinesi Akış Şeması</h2>
+                <div class="grid-2" style="align-items: center; gap: 2.5rem;">
+                    <!-- Sol Panel: Adım Detayları -->
+                    <div class="info-panel" id="step-info-panel">
+                        <div class="tag" style="margin-bottom: 0.5rem; width: fit-content; background: rgba(99, 102, 241, 0.1);">TEKNİK BİLGİ DUVARI</div>
+                        <h3 id="info-title">Planner (Planlayıcı)</h3>
+                        <p id="info-desc">LLM (fast-01) tabanlı planlayıcı. Kullanıcı sorgusunu analiz edip arama niyetini ve ilgili koleksiyonları belirler. Koleksiyonlara özel arama sorgusu taslakları ve filtreleri üretir.</p>
+                        <div class="meta-info" id="info-meta">Dosya: planner.py | Çıktı: SearchPlan</div>
+                    </div>
+                    
+                    <!-- Sağ Panel: SVG Akış Şeması -->
+                    <div class="flowchart-svg-wrapper">
+                        <svg viewBox="0 0 500 320" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                    <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#94a3b8" />
+                                </marker>
+                                <marker id="arrow-active" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                    <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#0ea5e9" />
+                                </marker>
+                                <marker id="arrow-loop" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                    <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#6366f1" />
+                                </marker>
+                            </defs>
+
+                            <!-- Bağlantı Çizgileri -->
+                            <path d="M 100 38 L 100 50" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+                            <path d="M 100 82 L 100 95" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+                            <path d="M 100 127 L 100 140" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+                            <path d="M 100 172 L 100 185" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+                            <path d="M 100 217 L 100 230" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+                            
+                            <path d="M 160 246 L 220 246" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+
+                            <path d="M 280 230 L 280 212" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+                            <path d="M 280 180 L 280 162" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+                            <path d="M 280 130 L 280 112" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+                            <path d="M 280 80 L 280 62" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+
+                            <!-- Judge Expander Döngüsü -->
+                            <path d="M 340 252 L 364 252" stroke="#f43f5e" stroke-width="1.2" marker-end="url(#arrow)" />
+                            <path d="M 370 240 L 346 240" stroke="#6366f1" stroke-width="1.2" marker-end="url(#arrow)" />
+
+                            <!-- Düğümler -->
+                            <g class="flowchart-step" data-step="query" id="step-query">
+                                <circle cx="100" cy="20" r="18" />
+                                <text x="100" y="24" fill="#f8fafc" font-size="9" font-weight="600" text-anchor="middle">Sorgu</text>
+                            </g>
+
+                            <g class="flowchart-step" data-step="planner" id="step-planner">
+                                <rect x="40" y="50" width="120" height="32" rx="8" />
+                                <text x="100" y="70" fill="#f8fafc" font-size="10" font-weight="600" text-anchor="middle">1. Planner</text>
+                            </g>
+
+                            <g class="flowchart-step" data-step="policy" id="step-policy">
+                                <rect x="40" y="95" width="120" height="32" rx="8" />
+                                <text x="100" y="115" fill="#f8fafc" font-size="10" font-weight="600" text-anchor="middle">2. Policy</text>
+                            </g>
+
+                            <g class="flowchart-step" data-step="allocator" id="step-allocator">
+                                <rect x="40" y="140" width="120" height="32" rx="8" />
+                                <text x="100" y="160" fill="#f8fafc" font-size="10" font-weight="600" text-anchor="middle">3. Allocator</text>
+                            </g>
+
+                            <g class="flowchart-step" data-step="retrieve" id="step-retrieve">
+                                <rect x="40" y="185" width="120" height="32" rx="8" />
+                                <text x="100" y="205" fill="#f8fafc" font-size="10" font-weight="600" text-anchor="middle">4. Retrieve</text>
+                            </g>
+
+                            <g class="flowchart-step" data-step="assembler" id="step-assembler">
+                                <rect x="40" y="230" width="120" height="32" rx="8" />
+                                <text x="100" y="250" fill="#f8fafc" font-size="10" font-weight="600" text-anchor="middle">5. Assembler</text>
+                            </g>
+
+                            <g class="flowchart-step" data-step="judge" id="step-judge">
+                                <rect x="220" y="230" width="120" height="32" rx="8" />
+                                <text x="280" y="250" fill="#f8fafc" font-size="10" font-weight="600" text-anchor="middle">6. Judge</text>
+                            </g>
+
+                            <g class="flowchart-step" data-step="expander" id="step-expander">
+                                <rect x="370" y="230" width="100" height="32" rx="8" />
+                                <text x="420" y="250" fill="#f8fafc" font-size="9" font-weight="600" text-anchor="middle">6b. Expander</text>
+                            </g>
+
+                            <g class="flowchart-step" data-step="answer" id="step-answer">
+                                <rect x="220" y="180" width="120" height="32" rx="8" />
+                                <text x="280" y="200" fill="#f8fafc" font-size="10" font-weight="600" text-anchor="middle">7. Answer</text>
+                            </g>
+
+                            <g class="flowchart-step" data-step="sanitizer" id="step-sanitizer">
+                                <rect x="220" y="130" width="120" height="32" rx="8" />
+                                <text x="280" y="150" fill="#f8fafc" font-size="10" font-weight="600" text-anchor="middle">8. Sanitizer</text>
+                            </g>
+
+                            <g class="flowchart-step" data-step="citation" id="step-citation">
+                                <rect x="220" y="80" width="120" height="32" rx="8" />
+                                <text x="280" y="100" fill="#f8fafc" font-size="10" font-weight="600" text-anchor="middle">9. Citation</text>
+                            </g>
+
+                            <g class="flowchart-step" data-step="result" id="step-result">
+                                <circle cx="280" cy="40" r="18" />
+                                <text x="280" y="44" fill="#f8fafc" font-size="9" font-weight="600" text-anchor="middle">Cevap</text>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 13: Niyet Tespiti ve Dinamik Yönlendirme -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Niyet Tespiti & Dinamik Yönlendirme (Planner)</h2>
+                <div class="grid-2">
+                    <div>
+                        <p>Kullanıcı sorguları, veritabanına gönderilmeden önce <strong>Planner Agent</strong> tarafından anlamsal niyet (intent) ve doküman türü analizine tabi tutulur.</p>
+                        <div class="highlight-box">
+                            <strong>1. Niyet ve Tür Sınıflandırması:</strong><br>
+                            Sorgunun amacına göre <code>intent</code> ve bütçeyi belirleyen <code>query_type</code> (fact, comparison vb.) tespit edilir:
+                            <ul style="margin-top: 0.5rem; margin-left: 1.2rem; font-size: 0.9rem; color: var(--text-dim); line-height: 1.4; list-style-type: square;">
+                                <li><strong>factual:</strong> Olgusal / Basit Bilgi</li>
+                                <li><strong>comparative:</strong> Karşılaştırmalı</li>
+                                <li><strong>analytical:</strong> Analitik / Derin Analiz</li>
+                                <li><strong>temporal:</strong> Zamansal / Dönemsel</li>
+                                <li><strong>unknown:</strong> Belirsiz</li>
+                            </ul>
+                        </div>
+                        <div class="list-item"><strong>Dinamik Bütçeler:</strong> Analitik sorgulara (reasoning) daha geniş parça bütçesi ayrılırken, basit bilgi (fact) sorguları daha dar bütçeyle hızlıca cevaplanır.</div>
+                        <div style="margin-top: 2.5rem; font-size: 0.9rem; color: var(--accent-secondary); font-family: 'Fira Code', monospace; padding: 0.5rem 1rem; background: rgba(0, 0, 0, 0.3); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05); width: fit-content;">
+                            <strong>Kod Referansları:</strong> 
+                            <a href="file:///Users/sercan/Projects/RAG-poc/src/agent/planner.py" style="color: var(--accent-primary); text-decoration: none; hover: underline;">planner.py</a> | 
+                            <a href="file:///Users/sercan/Projects/RAG-poc/src/agent/schemas.py" style="color: var(--accent-primary); text-decoration: none; hover: underline;">schemas.py</a> | 
+                            <a href="file:///Users/sercan/Projects/RAG-poc/src/agent/allocator.py" style="color: var(--accent-primary); text-decoration: none; hover: underline;">allocator.py</a>
+                        </div>
+                    </div>
+                    <div class="feature-card" style="border-color: var(--accent-secondary);">
+                        <h3>2. Doküman Tipi Bazlı Akıllı Yönlendirme</h3>
+                        <p style="font-size: 1rem; line-height: 1.5; color: var(--text-dim);">
+                            Sorgudaki anahtar kavramlara göre ilgili ChromaDB koleksiyonları otomatik seçilir:
+                        </p>
+                        <div class="list-item" style="font-size: 1rem; margin-bottom: 0.5rem;"><strong>Basın & Köşe Yazıları:</strong> Muhabir, manşet, gazete ➔ <code>doc_type=gazete</code></div>
+                        <div class="list-item" style="font-size: 1rem; margin-bottom: 0.5rem;"><strong>Meclis Tutanakları:</strong> Milletvekili, oturum, konuşma ➔ <code>doc_type=tutanak</code></div>
+                        <div class="list-item" style="font-size: 1rem; margin-bottom: 0.5rem;"><strong>Kanun & Önergeler:</strong> Kanun teklifi, taslak, yasa ➔ <code>doc_type=onerge</code></div>
+                        <div class="highlight-box" style="margin-top: 1rem; padding: 1rem; font-size: 0.95rem;">
+                            <strong>3. Filtre Çıkarma:</strong> Sorguda geçen tarihler (örn: 1997, 1990'dan beri) ve yazar adları tespit edilerek doğrudan ChromaDB filtrelerine (where_filter) çevrilir.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 14: Model Dağılımları & Konfigürasyon -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Model Dağılımları & Konfigürasyon</h2>
+                <div class="grid-2">
+                    <div>
+                        <span class="tag">SLM & AGENT EŞLEŞMELERİ</span>
+                        <p style="font-size: 1.1rem; margin-bottom: 1.5rem;">Sistem, karmaşıklığı azaltmak ve verimliliği artırmak için özelleşmiş Küçük Dil Modelleri (SLM) ve LLM'ler kullanır:</p>
+                        
+                        <div class="list-item"><strong>Planner / Sanitizer / Judge:</strong> <code>qwen3.5:9b</code> (fast-01) - Planlama, doğrulama ve bağlam yeterlilik kararları için optimize edilmiş güçlü SLM.</div>
+                        <div class="list-item"><strong>Classifier / Suggester:</strong> <code>qwen2.5:3b-instruct</code> (fast-01) - Hızlı alan dışı/içi sınıflandırma ve alternatif sorgu önerileri.</div>
+                        <div class="list-item"><strong>Filter Extractor:</strong> <code>qwen2.5:3b-instruct</code> (fast-01) - Doğal dil sorgularından tarih ve yazar filtrelerini çıkarma.</div>
+                        <div class="list-item"><strong>Answer Generator:</strong> <code>gemma4:latest</code> (gpu-01) - Zengin bağlamdan detaylı ve mantıklı Türkçe yanıt üretimi.</div>
+                    </div>
+                    <div>
+                        <span class="tag" style="border-color: var(--accent-secondary); color: var(--accent-secondary);">AYARLARIN DEĞİŞTİRİLMESİ</span>
+                        <p style="font-size: 1.1rem; margin-bottom: 1rem;">Tüm model ve ajan eşleşmeleri merkezi, veri-güdümlü bir yapı olan <code>pipeline.yaml</code> üzerinden yönetilir:</p>
+                        <pre style="font-size: 0.85rem; padding: 1rem; margin-bottom: 1rem;"><code># pipeline.yaml
+fast-01:
+  models:
+    planner: qwen3.5:9b
+    classifier: qwen2.5:3b-instruct
+agent:
+  planner:
+    block: fast-01
+    model_key: planner</code></pre>
+                        <div class="list-item"><strong>Blok Değişimi:</strong> Farklı Ollama hostları/portları <code>deployment_blocks</code> altından tanımlanır.</div>
+                        <div class="list-item"><strong>Komut Satırı Override:</strong> Farklı bir konfigürasyon dosyası yüklemek için <code>--pipeline custom.yaml</code> parametresi kullanılır.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 14: Test Stratejisi ve Kalite Güvencesi -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Test Stratejisi & Kalite Güvencesi</h2>
+                <p style="font-size: 1.15rem; margin-bottom: 2rem;">Sistemin doğruluğu, performansı ve güvenliği 60'tan fazla entegrasyon ve birim testi ile korunmaktadır.</p>
+                <div class="grid-2">
+                    <div class="feature-card">
+                        <span class="tag" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2);">MEVCUT TEST KAPSAMI</span>
+                        <div style="margin-top: 1rem;">
+                            <div class="list-item"><strong>Birim Testleri (Unit Tests):</strong> Ingestion (Docling, late chunking, manifest), Extraction (filtreler, yazar, tarihler), Ajan bileşenleri (Policy, Allocator, Assembler, Judge, Sanitizer, Citation).</div>
+                            <div class="list-item"><strong>Entegrasyon & Smoke Testleri:</strong> OrchestratorAgent gerçek veritabanı/LLM entegrasyonu, RAGService yönlendirme mantığı.</div>
+                            <div class="list-item"><strong>Golden Senaryolar (Planning Golden):</strong> 12+ gerçek sorguyla planlama doğruluğu, niyet analizi, tarih/yazar filtreleri, adversarial/off-domain/bad-word tespiti.</div>
+                        </div>
+                    </div>
+                    <div class="feature-card" style="border-color: var(--accent-tertiary);">
+                        <span class="tag" style="background: rgba(244, 63, 94, 0.1); color: var(--accent-tertiary); border-color: rgba(244, 63, 94, 0.2);">NOKSANLAR & İYİLEŞTİRMELER</span>
+                        <div style="margin-top: 1rem;">
+                            <div class="list-item"><strong>Yanıt Kalitesi (E2E) Test Eksikliği:</strong> Golden senaryolar yalnızca planlamayı test ediyor. Nihai yanıt kalitesi (doğruluk, halüsinasyon) için testler eklenecek.</div>
+                            <div class="list-item"><strong>Streaming Akış Testleri:</strong> Token bazlı akışta kesinti, gecikme ve eksik veri durumlarının doğrulanması planlanıyor.</div>
+                            <div class="list-item"><strong>Yük & Eşzamanlılık (Concurrency):</strong> Parallel search koşulsa da çoklu kullanıcı yük testleri ve indirect injection güvenlik kontrolleri iyileştirilecek.</div>
+                            <div class="list-item" style="color: var(--accent-primary);"><strong>Hedef:</strong> Ragas / TruLens entegrasyonu ile otomatik LLM-as-a-Judge kalite ölçümü.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 16: Sorgu Koruması & Golden Test Altyapısı -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Sorgu Koruması & Golden Test Altyapısı</h2>
+                <div class="grid-2">
+                    <div>
+                        <span class="tag">KAPSAM KAPISI (SCOPE GATE) MIMARISI</span>
+                        <p style="font-size: 1.1rem; margin-bottom: 1rem;">Gereksiz LLM çağrılarını önlemek ve sistemi korumak için 3 kademeli bir kapı yapısı kurulmuştur:</p>
+                        
+                        <div class="list-item"><strong>1. Bad Words Filter:</strong> Regex tabanlı deterministik küfür ve uygunsuz içerik filtrelemesi. Sıfır LLM maliyeti ile hızlı engel.</div>
+                        <div class="list-item"><strong>2. Scope Classifier:</strong> <code>qwen2.5:3b-instruct</code> modeliyle sorgunun RAG alanı içinde (in_scope) veya dışında (off_domain) olduğunu tespit eder.</div>
+                        <div class="list-item"><strong>3. Suggester:</strong> Sınıflandırma alan dışı çıktığında hata göstermek yerine, sistem uzmanlığına uygun 3 adet alternatif Türkçe sorgu üretir.</div>
+                    </div>
+                    <div>
+                        <span class="tag" style="border-color: var(--accent-secondary); color: var(--accent-secondary);">TEST & UI ENTEGRASYONU</span>
+                        <p style="font-size: 1.1rem; margin-bottom: 1rem;">Kapsam kapısı mekanizması test veri kümeleri ve arayüzle uçtan uca sıkı sıkıya bağlıdır:</p>
+                        
+                        <div class="list-item"><strong>Golden Scenarios:</strong> 9 kategoride 15 farklı senaryo (adversarial, borderline, temporal, author vb.) içeren testler, regresyonu önlemek için <code>planning_scenarios.yaml</code> üzerinden her testte doğrulanır.</div>
+                        <div class="list-item"><strong>UI Entegrasyonu:</strong> Ajanın döndürdüğü kapsam sonucuna göre chat arayüzünde otomatik engelleme veya Suggester buton panelleri render edilir.</div>
+                        
+                        <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--accent-secondary); font-family: 'Fira Code', monospace; padding: 0.5rem 1rem; background: rgba(0, 0, 0, 0.3); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05); width: fit-content;">
+                            <strong>Kod Referansları:</strong> 
+                            <a href="file:///Users/sercan/Projects/RAG-poc/src/agent/bad_words_filter.py" style="color: var(--accent-primary); text-decoration: none; hover: underline;">bad_words_filter.py</a> | 
+                            <a href="file:///Users/sercan/Projects/RAG-poc/src/agent/classifier.py" style="color: var(--accent-primary); text-decoration: none; hover: underline;">classifier.py</a> | 
+                            <a href="file:///Users/sercan/Projects/RAG-poc/tests/golden/planning_scenarios.yaml" style="color: var(--accent-primary); text-decoration: none; hover: underline;">planning_scenarios.yaml</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 17: Özet -->
+        <section class="slide">
+            <div class="glass-card" style="text-align: center;">
+                <h1>Gelecek Hazır</h1>
+                <p>Modüler, Ölçeklenebilir ve Ölçülebilir RAG Hattı</p>
+                <div class="grid-3" style="margin-top: 3rem;">
+                    <div>
+                        <h2 style="font-size: 2rem; justify-content: center;">100%</h2>
+                        <p style="font-size: 1rem;">Tutarlılık</p>
+                    </div>
+                    <div>
+                        <h2 style="font-size: 2rem; justify-content: center;">Late</h2>
+                        <p style="font-size: 1rem;">Chunking</p>
+                    </div>
+                    <div>
+                        <h2 style="font-size: 2rem; justify-content: center;">Rerank</h2>
+                        <p style="font-size: 1rem;">Precision</p>
+                    </div>
+                </div>
+                <div style="margin-top: 4rem; color: var(--accent-primary); font-weight: 800; font-size: 1.5rem;">
+                    TEŞEKKÜRLER
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <div class="controls">
+        <button class="btn" onclick="prevSlide()">←</button>
+        <button class="btn" onclick="nextSlide()">→</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 17;
+        const container = document.getElementById('container');
+        const progress = document.getElementById('progress');
+        const slideNum = document.getElementById('slide-num');
+
+        function updateSlide() {
+            container.style.transform = `translateX(-${currentSlide * 100}vw)`;
+            progress.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+            slideNum.innerText = `${currentSlide + 1} / ${totalSlides}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        // Flowchart step details
+        const stepDetails = {
+            query: {
+                title: "Kullanıcı Sorgusu",
+                desc: "Sisteme gelen doğal dil sorusu. Örneğin: '1997 yılı bütçe görüşmelerinde milletvekilleri ne dedi?' veya 'Doğan Avcıoğlu'nun köşe yazıları'.",
+                meta: "Giriş Noktası | Veri Tipi: string"
+            },
+            planner: {
+                title: "Planner (Planlayıcı)",
+                desc: "LLM (fast-01) tabanlı planlayıcı. Kullanıcı sorgusunu analiz edip sorgu niyetini (factual, comparative vb.) ve ilgili koleksiyonları belirler. Koleksiyonlara özel arama sorgusu taslakları ve filtreleri üretir.",
+                meta: "Dosya: planner.py | Çıktı: SearchPlan"
+            },
+            policy: {
+                title: "Policy Enforcer (Politika Denetleyici)",
+                desc: "Güvenlik ve erişim denetim adımı. Planlayıcının önerdiği koleksiyonları, kullanıcının aktif oturumda seçtiği koleksiyonlar (session_collections) ile kesiştirerek filtreler.",
+                meta: "Dosya: policy.py | Çıktı: PolicyResult"
+            },
+            allocator: {
+                title: "Allocation Planner (Bütçe Planlayıcı)",
+                desc: "Koleksiyon bazlı arama bütçelerini belirler. Sorgu niyetine göre birincil parça (primary) ve yedek parça (reserve) bütçelerini çıkarır, filtreleri yapılandırır.",
+                meta: "Dosya: allocator.py | Çıktı: CollectionExecutionPlan"
+            },
+            retrieve: {
+                title: "Search Retrieval (Vektör Arama & Sıralama)",
+                desc: "Belirlenen bütçelere göre ChromaDB üzerinde paralel veya sıralı arama gerçekleştirir. Çıkan sonuçları Cross-Encoder Reranker ile yeniden sıralayıp birincil ve yedek olarak gruplar.",
+                meta: "Dosya: tools.py (SearchTool) | Çıktı: RetrievalOutput"
+            },
+            assembler: {
+                title: "Context Assembler (Bağlam Birleştirici)",
+                desc: "Arama sonuçlarını döküman düzeyinde tekilleştirir. Belge başına maksimum parça limitini (max_per_document) ve toplam birincil parça limitini koruyarak dengeli bir bağlam oluşturur.",
+                meta: "Dosya: assembler.py | Çıktı: assembled_chunks"
+            },
+            judge: {
+                title: "Evidence Judge (Kanıt Değerlendirici)",
+                desc: "Bağlam parçalarının soruyu cevaplamak için yeterli olup olmadığını değerlendirir. Yetersiz veya sınırda durumlarda (borderline) LLM karar mekanizmasını çalıştırarak 'expand' (genişlet) veya 'answer' (cevapla) kararı verir.",
+                meta: "Dosya: judge.py | Çıktı: EvidenceDecision"
+            },
+            expander: {
+                title: "Expansion Planner (Bağlam Genişletici)",
+                desc: "Değerlendirici 'expand' kararı verdiğinde devreye girer. Yeni bir veritabanı sorgusu yapmadan, ilk aşamada çekilmiş olan yedek parçaları (reserve) birincil bağlama katarak zenginleştirir.",
+                meta: "Dosya: expander.py | Döngü: Back to Judge"
+            },
+            answer: {
+                title: "Answering Tool (Yanıt Üretici)",
+                desc: "Doğrulanmış ve birleştirilmiş bağlamı kullanarak cevap üretici modele (gpu-01/answer) gider. Modelin düşünme adımlarını (thinking) ve nihai cevap metnini (answer) üretir.",
+                meta: "Dosya: tools.py (AnswerTool) | Çıktı: raw_answer"
+            },
+            sanitizer: {
+                title: "Sanitizer Agent (Kalite & Halüsinasyon Kontrolü)",
+                desc: "Üretilen cevabı belirlenen kalite kriterlerine (uydurma bilgi, Türkçe dil kuralları, soruya uygunluk) göre doğrular. Hata varsa LLM ile otomatik düzeltir.",
+                meta: "Dosya: sanitizer.py | Çıktı: ValidationResult"
+            },
+            citation: {
+                title: "Citation Builder (Kaynak Eşleştirici)",
+                desc: "Cevabın dayandığı tüm bağlam parçalarını tarayarak stabil, tekrarsız ve temiz bir kaynakça / alıntı listesi oluşturur. UI'da referansların doğru gösterilmesini sağlar.",
+                meta: "Dosya: citations.py | Çıktı: stable_citations"
+            },
+            result: {
+                title: "Nihai Yanıt (Cevap)",
+                desc: "Tüm süreçlerden geçmiş, doğrulanmış ve kaynakça ataması yapılmış nihai metin. Kullanıcı arayüzünde (UI) kaynak linkleriyle birlikte gösterilir.",
+                meta: "Çıkış Noktası | Veri Tipi: AgentOutput"
+            }
+        };
+
+        function initFlowchart() {
+            const steps = document.querySelectorAll('.flowchart-step');
+            const infoTitle = document.getElementById('info-title');
+            const infoDesc = document.getElementById('info-desc');
+            const infoMeta = document.getElementById('info-meta');
+
+            // Set default active step
+            const defaultStep = document.getElementById('step-planner');
+            if (defaultStep) defaultStep.classList.add('active');
+
+            steps.forEach(step => {
+                const stepId = step.getAttribute('data-step');
+                
+                const selectStep = () => {
+                    steps.forEach(s => s.classList.remove('active'));
+                    step.classList.add('active');
+                    
+                    if (stepDetails[stepId]) {
+                        infoTitle.innerText = stepDetails[stepId].title;
+                        infoDesc.innerText = stepDetails[stepId].desc;
+                        infoMeta.innerText = stepDetails[stepId].meta;
+                    }
+                };
+
+                step.addEventListener('mouseenter', selectStep);
+                step.addEventListener('click', selectStep);
+            });
+        }
+
+        updateSlide();
+        initFlowchart();
+    </script>
+</body>
+</html>

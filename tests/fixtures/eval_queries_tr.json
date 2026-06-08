@@ -1,0 +1,680 @@
+[
+  {
+    "id": "gz-susurluk-001",
+    "query": "Hanifi Avcı'ya Susurluk sonrası ölüm tehdidi yapıldığına dair Sabah gazetesi haberi",
+    "expected_source_db": "gazete",
+    "expected_year": null,
+    "relevant_kayit_nos": [
+      324
+    ],
+    "golden_answer": "Sabah gazetesinin 18 Şubat 1997 haberine göre, Susurluk Komisyonu'nda Emniyet, MİT ve Jandarma içindeki karanlık ilişkileri açıklayan İstihbarat Dairesi Başkan Yardımcısı Hanifi Avcı'ya çok sayıda ölüm tehdidi yapıldığı öğrenildi; Avcı'nın tehditleri yapanları tanıdığı ve bazı itirafçıların onun aleyhine konuşmaları için zorlandığı belirtildi. (Kaynak: Sabah, 18.02.1997, Soner Güneş)",
+    "tags": [
+      "topic",
+      "gazete-only",
+      "date-filter",
+      "susurluk"
+    ]
+  },
+  {
+    "id": "gz-susurluk-002",
+    "query": "Susurluk komisyonu raporunda 30 isim kimlerdi?",
+    "expected_source_db": "gazete",
+    "expected_year": null,
+    "relevant_kayit_nos": [
+      1316
+    ],
+    "golden_answer": null,
+    "tags": [
+      "topic",
+      "gazete-only",
+      "susurluk"
+    ]
+  },
+  {
+    "id": "gz-susurluk-003",
+    "query": "Uğur Mumcu cinayeti ile Susurluk bağlantısı hakkında gazetede neler yazıldı?",
+    "expected_source_db": "gazete",
+    "expected_year": null,
+    "relevant_kayit_nos": [
+      2092,
+      2161,
+      2420
+    ],
+    "golden_answer": null,
+    "tags": [
+      "topic",
+      "gazete-only",
+      "susurluk"
+    ]
+  },
+  {
+    "id": "gz-susurluk-004",
+    "query": "Susurluk skandalında devlet içindeki çete iddialarına dair Sabah ve Milliyet haberleri",
+    "expected_source_db": "gazete",
+    "expected_year": null,
+    "relevant_kayit_nos": [
+      636,
+      851,
+      1313,
+      1941,
+      2608
+    ],
+    "golden_answer": null,
+    "tags": [
+      "topic",
+      "gazete-only",
+      "susurluk"
+    ]
+  },
+  {
+    "id": "gz-author-adnan-001",
+    "query": "Adnan Öksüz'ün Refah Partisi'nin lümpenleşmesi hakkındaki köşe yazısı",
+    "expected_source_db": "gazete",
+    "expected_year": null,
+    "relevant_kayit_nos": [
+      315
+    ],
+    "golden_answer": null,
+    "tags": [
+      "author-search",
+      "topic",
+      "gazete-only"
+    ]
+  },
+  {
+    "id": "gz-author-adnan-002",
+    "query": "Adnan Öksüz hangi konularda yazılar yazmış?",
+    "expected_source_db": "gazete",
+    "expected_year": null,
+    "relevant_kayit_nos": [
+      313,
+      315,
+      321,
+      329,
+      502,
+      507,
+      833,
+      862,
+      900,
+      950
+    ],
+    "golden_answer": null,
+    "tags": [
+      "author-search",
+      "gazete-only"
+    ]
+  },
+  {
+    "id": "gz-author-ahmetaltan-001",
+    "query": "Ahmet Altan Susurluk davası ve devlet sorumluluğu hakkında ne yazmış?",
+    "expected_source_db": "gazete",
+    "expected_year": null,
+    "relevant_kayit_nos": [
+      1385,
+      1403,
+      1460
+    ],
+    "golden_answer": null,
+    "tags": [
+      "author-search",
+      "topic",
+      "gazete-only",
+      "susurluk"
+    ]
+  },
+  {
+    "id": "gz-author-candundar-001",
+    "query": "Can Dündar'ın Metin Göktepe anmasına ilişkin Milliyet'teki haberi",
+    "expected_source_db": "gazete",
+    "expected_year": null,
+    "relevant_kayit_nos": [
+      1321
+    ],
+    "golden_answer": "Can Dündar'ın haberine göre, Evrensel gazetesi muhabiri Metin Göktepe'nin gözaltında polisler tarafından öldürülüşünün birinci yıldönümünde çeşitli şehirlerde anma etkinlikleri düzenlendi; mezarına giden kalabalık sloganlar atarken katillerin yargı önüne çıkarılmaması çeşitli kuruluşlarca kınandı. (Kaynak: Sabah, 09.01.1997, Can Dündar)",
+    "tags": [
+      "author-search",
+      "gazete-only"
+    ]
+  },
+  {
+    "id": "gz-date-18subat-001",
+    "query": "18 Şubat 1997 tarihinde İran ve PKK'nın darbe girişimleri hakkında Sabah gazetesi haberi",
+    "expected_source_db": "gazete",
+    "expected_year": 1997,
+    "relevant_kayit_nos": [
+      322
+    ],
+    "golden_answer": null,
+    "tags": [
+      "date-filter",
+      "date-dotted",
+      "topic",
+      "gazete-only"
+    ]
+  },
+  {
+    "id": "gz-date-28subat-001",
+    "query": "28 ŞUBAT 1997 MGK toplantısında neler yaşandı?",
+    "expected_source_db": "gazete",
+    "expected_year": 1997,
+    "relevant_kayit_nos": [
+      519
+    ],
+    "golden_answer": null,
+    "tags": [
+      "date-filter",
+      "topic",
+      "gazete-only"
+    ]
+  },
+  {
+    "id": "gz-title-turklesme-001",
+    "query": "Türkleşmek İslamlaşmak Muasırlaşmak başlıklı köşe yazısı ne anlatıyor?",
+    "expected_source_db": "gazete",
+    "expected_year": null,
+    "relevant_kayit_nos": [
+      284
+    ],
+    "golden_answer": "Süleyman Taygar'ın 4 Ocak 1997 tarihli Sabah köşe yazısında, Türkiye'nin çalışan nüfusunun yüzde 44,6'sını tarımda barındırdığı ve bilgi çağının gerekliliklerinden uzak kaldığı vurgulanarak Türkleşmek, İslamlaşmak ve Muasırlaşmak hedeflerinin ancak araştırma-geliştirmeye yatırım yapılarak gerçekleşebileceği ileri sürülmektedir. (Kaynak: Sabah, 04.01.1997, Süleyman Taygar)",
+    "tags": [
+      "title-search",
+      "topic",
+      "gazete-only"
+    ]
+  },
+  {
+    "id": "gz-erbakan-001",
+    "query": "Erbakan'ın skandal ziyareti neydi, Sabah gazetesi bu konuda ne yazdı?",
+    "expected_source_db": "gazete",
+    "expected_year": null,
+    "relevant_kayit_nos": [
+      509
+    ],
+    "golden_answer": "Sabah gazetesinin 19 Şubat 1997 haberine göre, Sincan Belediye Başkanı'nın şeriat çağrısının ardından Adalet Bakanı Şevket Kazan'ın o belediye başkanını cezaevinde ziyaret etmesinin Başbakan Erbakan'ın bilgisi dahilinde gerçekleştiği öne sürüldü ve bu ziyaretin koalisyonu çökertmek isteyenlerce kullanıldığı iddia edildi. (Kaynak: Sabah, 19.02.1997, Murat Aydın - Yasin Yağcı)",
+    "tags": [
+      "topic",
+      "gazete-only",
+      "author-search"
+    ]
+  },
+  {
+    "id": "gz-pkk-001",
+    "query": "1997 yılı Ocak ayında PKK'ya yapılan operasyonlar hakkındaki haberler",
+    "expected_source_db": "gazete",
+    "expected_year": 1997,
+    "relevant_kayit_nos": [
+      599,
+      651,
+      2541
+    ],
+    "golden_answer": null,
+    "tags": [
+      "topic",
+      "date-filter",
+      "gazete-only"
+    ]
+  },
+  {
+    "id": "gz-paper-cumhuriyet-001",
+    "query": "Cumhuriyet gazetesinin 21 Şubat 1997 tarihli haberlerinde neler yer aldı?",
+    "expected_source_db": "gazete",
+    "expected_year": 1997,
+    "relevant_kayit_nos": [
+      856,
+      857,
+      858,
+      865,
+      870,
+      877,
+      881,
+      885,
+      926,
+      929,
+      932,
+      950
+    ],
+    "golden_answer": null,
+    "tags": [
+      "paper-filter",
+      "date-filter",
+      "gazete-only"
+    ]
+  },
+  {
+    "id": "gz-kibris-001",
+    "query": "Kıbrıs füze krizi ve Çiller'in Rum tehdidine yanıtı",
+    "expected_source_db": "gazete",
+    "expected_year": null,
+    "relevant_kayit_nos": [
+      1377,
+      1383
+    ],
+    "golden_answer": null,
+    "tags": [
+      "topic",
+      "gazete-only",
+      "date-filter"
+    ]
+  },
+  {
+    "id": "gz-empty-001",
+    "query": "2050 yılındaki yapay zeka devrimi ve Türkiye ekonomisine etkisi",
+    "expected_source_db": "gazete",
+    "expected_year": 2050,
+    "relevant_kayit_nos": [],
+    "golden_answer": "Arşivde bu soruyu yanıtlayacak yeterli bilgi bulunamadı.",
+    "tags": [
+      "empty-result",
+      "date-filter"
+    ]
+  },
+  {
+    "id": "tbmm-2026-eser-001",
+    "query": "11 Mart 2026 TBMM birleşiminde Selman Oğuzhan Eser devletin bütünlüğü hakkında ne konuştu?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [3866, 3868, 3869],
+    "golden_answer": null,
+    "tags": [
+      "minutes-only",
+      "date-filter",
+      "author-search"
+    ]
+  },
+  {
+    "id": "tbmm-2026-cakirozer-001",
+    "query": "Utku Çakırözer 7 Nisan 2026 mecliste öldürülen gazeteciler konusunda ne söyledi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [1431, 1432],
+    "golden_answer": null,
+    "tags": [
+      "minutes-only",
+      "date-filter",
+      "author-search"
+    ]
+  },
+  {
+    "id": "tbmm-2026-ozel-001",
+    "query": "Özgür Özel 23 Nisan 2026 TBMM oturumunda seçim güvenliği ve demokrasi konusunda ne dedi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [1312, 1314, 1316],
+    "golden_answer": null,
+    "tags": [
+      "minutes-only",
+      "date-filter",
+      "author-search"
+    ]
+  },
+  {
+    "id": "tbmm-2026-atasehir-001",
+    "query": "22 Nisan 2026 meclis tutanağında Ataşehir Belediye Başkanı'nın gözaltına alınması konuşuldu mu?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [535, 1248],
+    "golden_answer": null,
+    "tags": [
+      "minutes-only",
+      "date-filter",
+      "topic"
+    ]
+  },
+  {
+    "id": "tbmm-2026-iran-001",
+    "query": "2026 yılı Mart ayında TBMM'de İran'a yapılan saldırılar hakkında milletvekilleri ne konuştu?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [2853, 2857, 2872, 2878, 2895],
+    "golden_answer": null,
+    "tags": [
+      "minutes-only",
+      "date-filter",
+      "topic"
+    ]
+  },
+  {
+    "id": "tbmm-2025-sakik-001",
+    "query": "Sırrı Sakik 22 Nisan 2025 mecliste Ağrı'daki karakol sorunu hakkında ne konuştu?",
+    "expected_source_db": "minutes",
+    "expected_year": 2025,
+    "relevant_kayit_nos": [2592],
+    "golden_answer": null,
+    "tags": [
+      "minutes-only",
+      "date-filter",
+      "author-search"
+    ]
+  },
+  {
+    "id": "tbmm-2023-deprem-001",
+    "query": "6 Şubat 2023 depremi sonrası TBMM'de devletin seferberliği ve millet dayanışması nasıl değerlendirildi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2023,
+    "relevant_kayit_nos": [28, 43, 66],
+    "golden_answer": null,
+    "tags": [
+      "minutes-only",
+      "date-filter",
+      "topic"
+    ]
+  },
+  {
+    "id": "tbmm-routing-komisyon-001",
+    "query": "TBMM komisyonunda çevre mevzuatı nasıl ele alındı?",
+    "expected_source_db": "minutes",
+    "expected_year": null,
+    "relevant_kayit_nos": [],
+    "golden_answer": null,
+    "tags": [
+      "minutes-only",
+      "routing-komisyon"
+    ]
+  },
+  {
+    "id": "tbmm-2026-bakırhan-001",
+    "query": "Tuncer Bakırhan 23 Nisan 2026 TBMM'de barış ve Kürt meselesi hakkında ne dedi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [1321, 1323],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "author-search", "topic"]
+  },
+  {
+    "id": "tbmm-2026-demir-001",
+    "query": "22 Nisan 2026 meclis tutanağında Kürt sorununun demokratik çözümü nasıl dile getirildi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [542, 547],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "topic"]
+  },
+  {
+    "id": "tbmm-2026-çocuk-001",
+    "query": "23 Nisan 2026 TBMM'de çocuk istismarı ve yoksulluğu hakkında neler konuşuldu?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [1347],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "topic"]
+  },
+  {
+    "id": "tbmm-2023-yargı-001",
+    "query": "Eylül 2023 TBMM birleşiminde Gökhan Günaydın siyasallaşmış yargı hakkında ne konuştu?",
+    "expected_source_db": "minutes",
+    "expected_year": 2023,
+    "relevant_kayit_nos": [180, 183],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "author-search", "topic"]
+  },
+  {
+    "id": "tbmm-2023-beştaş-001",
+    "query": "Meral Danış Beştaş Eylül 2023 TBMM oturumunda barış süreci ve yargı bağımsızlığı konusunda ne söyledi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2023,
+    "relevant_kayit_nos": [169, 174, 291],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "author-search"]
+  },
+  {
+    "id": "tbmm-2023-seçim-001",
+    "query": "Mayıs 2023 seçimlerinin ardından TBMM'de milletvekili yemin töreni nasıl gerçekleşti?",
+    "expected_source_db": "minutes",
+    "expected_year": 2023,
+    "relevant_kayit_nos": [3131, 3134],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "topic"]
+  },
+  {
+    "id": "tbmm-2002-seçim-001",
+    "query": "TBMM 2002 erken genel seçim kararı nasıl alındı?",
+    "expected_source_db": "minutes",
+    "expected_year": 2002,
+    "relevant_kayit_nos": [1407, 1408, 1409],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "topic"]
+  },
+  {
+    "id": "tbmm-2025-denetçi-001",
+    "query": "Ekim 2025 TBMM oturumunda Kamu Denetçiliği Kurumu karma komisyon raporu nasıl değerlendirildi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2025,
+    "relevant_kayit_nos": [3758],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "topic"]
+  },
+  {
+    "id": "tbmm-2026-debate-atasehir-001",
+    "query": "22 Nisan 2026'da Ataşehir Belediye Başkanı'nın gözaltına alınmasına CHP'den Seyit Torun ve DEM Parti'den Dilan Kunt Ayan meclis kürsüsünde nasıl tepki verdi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [535, 539],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "debate-chain", "topic"]
+  },
+  {
+    "id": "tbmm-2026-debate-demokrasi-001",
+    "query": "22 Nisan 2026 meclisinde 12 siyasi partinin ortak demokrasi bildirisi üzerine yapılan konuşmalar nelerdi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [539, 542, 547],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "debate-chain", "topic"]
+  },
+  {
+    "id": "tbmm-2026-debate-kripto-001",
+    "query": "TBMM'de kripto para kanunu tartışmasında CHP'nin itirazları neydi ve tasarıya diğer parti temsilcileri nasıl yanıt verdi?",
+    "expected_source_db": "minutes",
+    "expected_year": null,
+    "relevant_kayit_nos": [2482, 2488, 2490],
+    "golden_answer": null,
+    "tags": ["minutes-only", "debate-chain", "topic", "law-debate"]
+  },
+  {
+    "id": "tbmm-2023-debate-yargi-001",
+    "query": "Eylül 2023 TBMM birleşiminde yargı bağımsızlığı konusunda CHP ve DEM Parti sırayla ne söyledi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2023,
+    "relevant_kayit_nos": [180, 183, 291],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "debate-chain", "topic"]
+  },
+  {
+    "id": "tbmm-2026-debate-iran-001",
+    "query": "2026 Mart ayında İran'a yapılan saldırılar konusunda MHP ve DEM Parti mecliste birbirinden nasıl ayrışan tutumlar sergiledi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [2853, 2872, 2878, 2895],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "debate-chain", "topic"]
+  },
+  {
+    "id": "tbmm-2026-debate-23nisan-001",
+    "query": "23 Nisan 2026 TBMM oturumunda AKP, CHP ve DEM Parti genel başkanları demokrasi ve seçim güvenliği konusunda nasıl farklı tutumlar sergiledi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [1310, 1312, 1321, 1325],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "debate-chain", "party-position"]
+  },
+  {
+    "id": "tbmm-2026-party-chp-001",
+    "query": "CHP'nin 2026 yılında adalet, tutuklu seçilmişler ve seçim güvenliği konusundaki meclis tutumu neydi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [535, 1201, 1312, 1314],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "party-position"]
+  },
+  {
+    "id": "tbmm-2026-party-dem-001",
+    "query": "DEM Parti 2026 yılında TBMM'de barış süreci ve Kürt meselesinin demokratik çözümü konusunda ne savundu?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [542, 547, 1321, 1323],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "party-position"]
+  },
+  {
+    "id": "tbmm-2026-party-iyiparti-001",
+    "query": "İYİ Parti 2026 yılında çevre ve maden direnişi konusunda mecliste ne savundu?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [583, 4043],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "party-position"]
+  },
+  {
+    "id": "tbmm-2026-party-akp-001",
+    "query": "AKP grubu 2026 yılında Türkiye ekonomisi ve IMF büyüme rakamları konusunda mecliste ne savundu?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [590, 604],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "party-position"]
+  },
+  {
+    "id": "tbmm-2026-ekonomi-001",
+    "query": "2026 yılında TBMM'de IMF Dünya Ekonomik Görünümü raporu çerçevesinde Türkiye ekonomisi nasıl değerlendirildi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [604, 752],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "topic"]
+  },
+  {
+    "id": "tbmm-2026-tarim-001",
+    "query": "2026 TBMM tutanaklarında tarım sektörünün küçülmesi ve çiftçi sorunları nasıl ele alındı?",
+    "expected_source_db": "minutes",
+    "expected_year": 2026,
+    "relevant_kayit_nos": [752, 757],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "topic"]
+  },
+  {
+    "id": "tbmm-2026-enerji-001",
+    "query": "Elektrik ve doğal gaz zamlarına karşı Kırşehir milletvekili meclis kürsüsünde ne dedi?",
+    "expected_source_db": "minutes",
+    "expected_year": null,
+    "relevant_kayit_nos": [1540],
+    "golden_answer": null,
+    "tags": ["minutes-only", "topic", "author-search"]
+  },
+  {
+    "id": "tbmm-2026-cevre-001",
+    "query": "Giresun Tirebolu'daki köy maden direnişini meclis gündemine kim taşıdı ve ne talep etti?",
+    "expected_source_db": "minutes",
+    "expected_year": null,
+    "relevant_kayit_nos": [583],
+    "golden_answer": null,
+    "tags": ["minutes-only", "topic", "author-search"]
+  },
+  {
+    "id": "tbmm-2026-saglik-001",
+    "query": "Bitlis'te ağız ve diş sağlığı hastanesi olmadığına dair meclis kürsüsünde yapılan açıklama ne içeriyordu?",
+    "expected_source_db": "minutes",
+    "expected_year": null,
+    "relevant_kayit_nos": [626],
+    "golden_answer": null,
+    "tags": ["minutes-only", "topic", "author-search"]
+  },
+  {
+    "id": "tbmm-2026-kripto-001",
+    "query": "TBMM'de kripto para kanunu olarak bilinen yasa tasarısı tartışmasında muhalefet hangi temel itirazları dile getirdi?",
+    "expected_source_db": "minutes",
+    "expected_year": null,
+    "relevant_kayit_nos": [2488, 2490],
+    "golden_answer": null,
+    "tags": ["minutes-only", "topic", "law-debate"]
+  },
+  {
+    "id": "tbmm-2026-maden-001",
+    "query": "Maden işçileri denetimi ve soru önergelerine ilişkin İYİ Parti'nin meclisteki şikayetleri nelerdi?",
+    "expected_source_db": "minutes",
+    "expected_year": null,
+    "relevant_kayit_nos": [4043],
+    "golden_answer": null,
+    "tags": ["minutes-only", "topic", "procedural"]
+  },
+  {
+    "id": "tbmm-crossyear-deprem-001",
+    "query": "6 Şubat 2023 depremi hem acil oturumda hem de sonraki yasama yılı açılışında TBMM gündemine nasıl yansıdı?",
+    "expected_source_db": "minutes",
+    "expected_year": 2023,
+    "relevant_kayit_nos": [15, 28, 43, 93],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "cross-year", "topic"]
+  },
+  {
+    "id": "tbmm-crossyear-yargi-001",
+    "query": "Meclis tutanaklarında yargı bağımsızlığı 2023'te ve 2026'da farklı siyasi dönemlerde nasıl tartışıldı?",
+    "expected_source_db": "minutes",
+    "expected_year": null,
+    "relevant_kayit_nos": [183, 291, 1312],
+    "golden_answer": null,
+    "tags": ["minutes-only", "cross-year", "topic"]
+  },
+  {
+    "id": "tbmm-2023-acilis-001",
+    "query": "28'inci Dönem TBMM'nin ikinci yasama yılı Eylül 2023 açılış konuşmalarında hangi konular öne çıktı?",
+    "expected_source_db": "minutes",
+    "expected_year": 2023,
+    "relevant_kayit_nos": [95, 103, 108, 112],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "topic"]
+  },
+  {
+    "id": "tbmm-2023-secim-yemini-001",
+    "query": "Mayıs 2023 seçimi sonrası TBMM'de milletvekillerinin ant içme töreni nasıl gerçekleşti?",
+    "expected_source_db": "minutes",
+    "expected_year": 2023,
+    "relevant_kayit_nos": [3131, 3134],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "topic"]
+  },
+  {
+    "id": "tbmm-empty-2024-001",
+    "query": "Temmuz 2024 TBMM oturumlarında ekonomi paketi ve vergi düzenlemeleri nasıl tartışıldı?",
+    "expected_source_db": "minutes",
+    "expected_year": 2024,
+    "relevant_kayit_nos": [],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "empty-result"]
+  },
+  {
+    "id": "tbmm-empty-2027-001",
+    "query": "2027 bütçe müzakerelerinde TBMM'de hangi bakanlıklara en çok eleştiri yöneltildi?",
+    "expected_source_db": "minutes",
+    "expected_year": 2027,
+    "relevant_kayit_nos": [],
+    "golden_answer": null,
+    "tags": ["minutes-only", "date-filter", "empty-result"]
+  },
+  {
+    "id": "tbmm-empty-spor-001",
+    "query": "TBMM'de spor kulüplerinin borçlanma limitleri ve futbol finansmanına dair kanun önerisi tartışmaları nelerdi?",
+    "expected_source_db": "minutes",
+    "expected_year": null,
+    "relevant_kayit_nos": [],
+    "golden_answer": null,
+    "tags": ["minutes-only", "empty-result"]
+  },
+  {
+    "id": "both-refah-001",
+    "query": "Refah Partisi hakkında 1997 gazetesi ve meclis tutanaklarında neler yer alıyor?",
+    "expected_source_db": "both",
+    "expected_year": null,
+    "relevant_kayit_nos": [
+      315,
+      357,
+      509,
+      704,
+      1968
+    ],
+    "golden_answer": null,
+    "tags": [
+      "both-sources",
+      "topic"
+    ]
+  }
+]

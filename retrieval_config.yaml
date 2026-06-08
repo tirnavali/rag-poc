@@ -1,0 +1,22 @@
+# ╔═══════════════════════════════════════════════════════════════════════╗
+# ║  Retrieval Pipeline Configuration                                     ║
+# ║  Multi-collection query defaults                                      ║
+# ║  Loaded at startup by vector_explorer.py and chat.py                  ║
+# ╚═══════════════════════════════════════════════════════════════════════╝
+
+# Default collections per application
+# Can be overridden at runtime via UI
+default_collections:
+  # vector_explorer: shown as defaults in multi-select
+  vector_explorer:
+    - gazete_arsivi
+    - tbmm_tutanaklar_jina_v3
+    - onerge_collection
+
+  # chat: shown as defaults in startup prompt
+  chat:
+    - gazete_arsivi
+    - tbmm_minutes
+    - onerge_collection
+
+# Future: query rewriting, caching, rate limiting, etc.

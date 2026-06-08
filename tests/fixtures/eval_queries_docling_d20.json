@@ -1,0 +1,593 @@
+[
+  {
+    "id": "d20-kardak-001",
+    "query": "Kardak Kayalıkları krizi sırasında Dışişleri Bakanı Deniz Baykal mecliste ne açıkladı?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-06-19960130_38",
+      "tutanak-20-01-06-19960130_39"
+    ],
+    "golden_answer": "30 Ocak 1996 tarihli 6. Birleşimde Dışişleri Bakanı ve Başbakan Yardımcısı Deniz Baykal, Yunanistan'ın Kardak Kayalıklarına ilişkin tutumu ve Ege Denizindeki ada, adacık ve kayalıkların hukuki statülerine ilişkin kapsamlı bir açıklama yaptı. Sonraki birleşimde ANAP, RP, DSP, DYP ve CHP grupları görüşlerini dile getirdi.",
+    "tags": [
+      "author-search",
+      "topic",
+      "date-filter",
+      "kardak"
+    ]
+  },
+  {
+    "id": "d20-kardak-002",
+    "query": "Kardak krizinde hangi parti grupları meclis kürsüsünde görüş bildirdi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-06-19960130_38",
+      "tutanak-20-01-06-19960130_55"
+    ],
+    "golden_answer": null,
+    "tags": [
+      "topic",
+      "debate-chain",
+      "kardak"
+    ]
+  },
+  {
+    "id": "d20-cay-001",
+    "query": "Rize milletvekili Ahmet Kabil çay üreticilerinin sorunları hakkında mecliste ne konuştu?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-07-19960131_4",
+      "tutanak-20-01-07-19960131_5",
+      "tutanak-20-01-07-19960131_6",
+      "tutanak-20-01-07-19960131_7"
+    ],
+    "golden_answer": "31 Ocak 1996 tarihli 7. Birleşimde Rize Milletvekili Ahmet Kabil (ANAP), Doğu Karadeniz'deki 216 bin ailenin tek geçim kaynağının çay olduğunu, son dört yılda yaş çay fiyatlarının alım gücü bakımından her yıl yüzde 100 düştüğünü, ortalama 3 dekarlık tarladan elde edilen yıllık gelirin bir aileye yetmediğini ve 1995'ten kalan 2 trilyon liralık müstahsil alacaklarının hâlâ ödenmediğini vurguladı.",
+    "tags": [
+      "author-search",
+      "topic",
+      "date-filter",
+      "tarim"
+    ]
+  },
+  {
+    "id": "d20-cay-002",
+    "query": "1996 yılında çay müstahsilinin yaş çay bedelleri ne zaman ödenecekti, mecliste ne söylendi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-07-19960131_4",
+      "tutanak-20-01-07-19960131_5"
+    ],
+    "golden_answer": null,
+    "tags": [
+      "topic",
+      "date-filter",
+      "tarim"
+    ]
+  },
+  {
+    "id": "d20-cay-003",
+    "query": "Sahte çay üretimi ve çay piyasasındaki denetimsizlik hakkında meclis tutanağında ne geçiyor?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-07-19960131_5"
+    ],
+    "golden_answer": "Rize Milletvekili Ahmet Kabil'in 31 Ocak 1996 tarihli konuşmasına göre, Paraguay çayı adıyla yılda 5 bin ton gümrüksüz ve vergisiz 'ot' Türkiye'ye girerken, atılan çöp çayların karbonat ve kimyevi maddelerle yılda 10 bin ton 'sahte çay' adıyla piyasaya sürüldüğü belirtilmiştir.",
+    "tags": [
+      "topic",
+      "date-filter",
+      "tarim"
+    ]
+  },
+  {
+    "id": "d20-cay-004",
+    "query": "Samsun-Sarp yolunun durumu 1996 meclisinde nasıl değerlendirildi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-07-19960131_7"
+    ],
+    "golden_answer": "Ahmet Kabil, 536 km'lik Samsun-Sarp yolunun şoförlerin ve halkın korkulu rüyası haline geldiğini, dört yıldır hiçbir yatırım yapılmadığını, günlük trafiğin 12 bine ulaştığını ve yolun iki gidiş iki dönüş şeklinde duble yol olarak acilen bitirilmesini talep ettiğini söyledi. 6 il, 63 ilçe ve 9 limana hizmet veren bu yol için tüm Karadeniz Bölgesi milletvekilleri göreve davet edildi.",
+    "tags": [
+      "topic",
+      "date-filter",
+      "altyapi"
+    ]
+  },
+  {
+    "id": "d20-cay-005",
+    "query": "Çay Kurumu'nun mali durumu 1996 yılında ne kadar kötüleşmişti?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-07-19960131_6"
+    ],
+    "golden_answer": "Ahmet Kabil'e göre 1992'de yalnızca 200 milyar borç ve 47 bin ton kuruçay stoğu olan Çay Kurumu, dört yılda 17 trilyon lira borca girmiş ve batma noktasına getirilmiştir.",
+    "tags": [
+      "topic",
+      "date-filter",
+      "tarim"
+    ]
+  },
+  {
+    "id": "d20-cay-006",
+    "query": "Çay tarım arazilerinde başka ürün yetiştirilebilir mi? Meclis tutanağında bu konuda ne denildi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-07-19960131_6"
+    ],
+    "golden_answer": null,
+    "tags": [
+      "topic",
+      "date-filter",
+      "tarim"
+    ]
+  },
+  {
+    "id": "d20-tmo-001",
+    "query": "TMO Genel Müdürlüğündeki yolsuzluk iddiasıyla ilgili meclis araştırması kim tarafından istendi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-08-19960201_8"
+    ],
+    "golden_answer": "İstanbul Milletvekili Halit Dumankaya ve 13 arkadaşı, TMO Genel Müdürlüğündeki usulsüzlük ve yolsuzluk iddialarını araştırmak amacıyla Anayasanın 98. ve İçtüzüğün 102-103. maddeleri uyarınca meclis araştırması açılması önergesi verdi (10/6, Başkanlığa geliş tarihi: 31.1.1996).",
+    "tags": [
+      "author-search",
+      "topic",
+      "arastirma-onergesi"
+    ]
+  },
+  {
+    "id": "d20-yilmaz-001",
+    "query": "Mesut Yılmaz'ın hükümet kurma göreviyle ilgili Cumhurbaşkanlığı tezkeresi hangi birleşimde gündeme geldi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-09-19960206_1"
+    ],
+    "golden_answer": "6 Şubat 1996 tarihli 9. Birleşimde, Rize Milletvekili ve Anavatan Partisi Genel Başkanı A. Mesut Yılmaz'ın Bakanlar Kurulunu yeniden teşkil etmekle görevlendirildiğine ilişkin Cumhurbaşkanlığı tezkeresi (3/28) gündeme geldi.",
+    "tags": [
+      "topic",
+      "date-filter",
+      "hukumet-kurma"
+    ]
+  },
+  {
+    "id": "d20-kalemli-001",
+    "query": "Mustafa Kalemli TBMM Başkanlığına seçildikten sonra ne yaptı?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-05-19960125_4"
+    ],
+    "golden_answer": "TBMM Başkanı Mustafa Kalemli, Başkan seçilmesi dolayısıyla bir teşekkür konuşması yaptı. 6. Birleşim 16.06'da sona erdi.",
+    "tags": [
+      "author-search",
+      "topic",
+      "date-filter"
+    ]
+  },
+  {
+    "id": "d20-lions-001",
+    "query": "Lions Kulüplerinin faaliyetlerinin araştırılması için meclis araştırması kim istedi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-09-19960206_6",
+      "tutanak-20-01-09-19960206_1"
+    ],
+    "golden_answer": "Konya Milletvekili Mustafa Ünaldı ve 14 arkadaşı, Lions Kulüpleri ile yan kuruluşlarının faaliyetlerinin araştırılması amacıyla Anayasanın 98. ve İçtüzüğün 102-103. maddeleri uyarınca meclis araştırması önergesi verdi (10/10, Başkanlığa geliş tarihi: 1.2.1996).",
+    "tags": [
+      "author-search",
+      "topic",
+      "arastirma-onergesi"
+    ]
+  },
+  {
+    "id": "d20-rotary-001",
+    "query": "Rotary Kulüplerinin TBMM gündemine taşınması hangi önerge ile oldu?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-09-19960206_6"
+    ],
+    "golden_answer": null,
+    "tags": [
+      "author-search",
+      "topic",
+      "arastirma-onergesi"
+    ]
+  },
+  {
+    "id": "d20-bilderberg-001",
+    "query": "Bilderberg Kulübünün faaliyetlerinin araştırılması için meclis araştırması açılmasını kim talep etti?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-09-19960206_51"
+    ],
+    "golden_answer": "Konya Milletvekili Mustafa Ünaldı ve 15 arkadaşı, Bilderberg Kulübünün faaliyetlerinin araştırılması amacıyla meclis araştırması açılması önergesi verdi (10/12, Başkanlığa geliş tarihi: 1.2.1996).",
+    "tags": [
+      "author-search",
+      "topic",
+      "arastirma-onergesi"
+    ]
+  },
+  {
+    "id": "d20-bilderberg-002",
+    "query": "1996 yılında Lions, Rotary ve Bilderberg için aynı milletvekilinin kaç araştırma önergesi var?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-09-19960206_6",
+      "tutanak-20-01-09-19960206_1"
+    ],
+    "golden_answer": null,
+    "tags": [
+      "topic",
+      "arastirma-onergesi"
+    ]
+  },
+  {
+    "id": "d20-taskömürü-001",
+    "query": "Taşkömürü üretimindeki sorunların araştırılması için önerge veren milletvekili kimdir?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-09-19960206_53",
+      "tutanak-20-01-09-19960206_55"
+    ],
+    "golden_answer": "Zonguldak Milletvekili Necmettin Aydın ve 15 arkadaşı, taşkömürü üretimindeki sorunların çözüm yollarını tespit etmek amacıyla meclis araştırması önergesi verdi (10/13, Başkanlığa geliş tarihi: 1.2.1996).",
+    "tags": [
+      "author-search",
+      "topic",
+      "arastirma-onergesi"
+    ]
+  },
+  {
+    "id": "d20-ilac-001",
+    "query": "Türkiye'deki ilaç imalatı ve denetimi konusunda meclis araştırması isteyen milletvekili hangisi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-09-19960206_42"
+    ],
+    "golden_answer": "Trabzon Milletvekili Kemalettin Göktaş ve 23 arkadaşı, ülkemizdeki ilaç imalatı, tüketimi ve denetimi konusunda meclis araştırması açılması önergesi verdi (10/9).",
+    "tags": [
+      "author-search",
+      "topic",
+      "arastirma-onergesi"
+    ]
+  },
+  {
+    "id": "d20-sinir-001",
+    "query": "Hudutlarımızın güvenliği konusunda meclis araştırması önergesi hangi milletvekili tarafından verildi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-09-19960206_35",
+      "tutanak-20-01-09-19960206_36"
+    ],
+    "golden_answer": "Konya Milletvekili Mustafa Ünaldı ve 18 arkadaşı, hudutlarımızın güvenliği konusunda alınan ve alınması gereken tedbirleri araştırmak amacıyla meclis araştırması önergesi verdi (10/7, Başkanlığa geliş tarihi: 31.1.1996).",
+    "tags": [
+      "author-search",
+      "topic",
+      "arastirma-onergesi"
+    ]
+  },
+  {
+    "id": "d20-yuksekogretim-001",
+    "query": "Yükseköğretim sorunlarının araştırılması için Mustafa Ünaldı kaç arkadaşıyla önerge verdi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-09-19960206_39"
+    ],
+    "golden_answer": null,
+    "tags": [
+      "author-search",
+      "topic",
+      "arastirma-onergesi"
+    ]
+  },
+  {
+    "id": "d20-terör-001",
+    "query": "1996 Ocak ayında İstanbul'daki terör olayları mecliste nasıl değerlendirildi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-10-19960207_16"
+    ],
+    "golden_answer": "7 Şubat 1996 tarihli 10. Birleşimde yapılan konuşmada, Ocak ayı içinde İstanbul'da 5 belediye otobüsünün yakıldığı, Gültepe'de içinde yolcular bulunan bir otobüsün yakılmasına rağmen faillerin kaçtığı, Kâğıthane Merkez İlkokulunun molotof kokteyliyle tahrip edildiği ve 300 öğrencinin okula gidemediği ifade edildi. Terörün artık Doğu-Güneydoğu ile sınırlı kalmayıp İstanbul sokaklarına yayıldığına dikkat çekildi.",
+    "tags": [
+      "topic",
+      "date-filter",
+      "güvenlik"
+    ]
+  },
+  {
+    "id": "d20-terör-002",
+    "query": "Kâğıthane Merkez İlkokulunda terör saldırısı mecliste nasıl ele alındı?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-10-19960207_8"
+    ],
+    "golden_answer": null,
+    "tags": [
+      "topic",
+      "date-filter",
+      "güvenlik"
+    ]
+  },
+  {
+    "id": "d20-divan-001",
+    "query": "20. Dönem TBMM Başkanlık Divanı nasıl oluşturuldu, hangi partilere kaç pozisyon verildi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-07-19960131_2"
+    ],
+    "golden_answer": "Başkanlık Divanının 18 üyeden oluşturulmasına karar verildi. Dağılım şöyle belirlendi: RP Grubu 1 Başkanvekili, 1 İdare Amiri, 3 Kâtip Üye; DYP Grubu 1 Başkanvekili, 1 İdare Amiri, 2 Kâtip Üye; ANAP Grubu 1 Başkan, 1 Başkanvekili, 1 İdare Amiri, 1 Kâtip Üye; DSP Grubu 1 Başkanvekili, 1 İdare Amiri, 1 Kâtip Üye; CHP Grubu 1 İdare Amiri, 1 Kâtip Üye.",
+    "tags": [
+      "topic",
+      "date-filter",
+      "kurumsal"
+    ]
+  },
+  {
+    "id": "d20-korkmazcan-001",
+    "query": "Hasan Korkmazcan hangi birleşimde TBMM Başkanvekilliğine seçildi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-10-19960207_4"
+    ],
+    "golden_answer": "Denizli Milletvekili Hasan Korkmazcan, 10. Birleşimde (7 Şubat 1996) grubu tarafından aday gösterilerek TBMM Başkanvekilliğine seçildi. Aynı oturumda Aydın Milletvekili M. Fatih Atay Kâtip Üyeliğe, Balıkesir Milletvekili Önder Kırlı ise İdare Amirliğine seçildi.",
+    "tags": [
+      "author-search",
+      "topic",
+      "date-filter",
+      "secim"
+    ]
+  },
+  {
+    "id": "d20-dumankaya-001",
+    "query": "İstanbul Milletvekili Halit Dumankaya KİT ürünlerindeki zamlar için kime soru önergesi verdi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-06-19960130_2"
+    ],
+    "golden_answer": "İstanbul Milletvekili Halit Dumankaya, KİT ürünlerine yapılan son zamlara ilişkin Başbakana yazılı soru önergesi verdi (7/2, Başkanlığa geliş tarihi: 5.1.1996).",
+    "tags": [
+      "author-search",
+      "topic",
+      "soru-onergesi"
+    ]
+  },
+  {
+    "id": "d20-dumankaya-002",
+    "query": "Halit Dumankaya'nın Bolu Kartalkaya tatiliyle ilgili soru önergesi ne hakkındaydı?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-06-19960130_2"
+    ],
+    "golden_answer": null,
+    "tags": [
+      "author-search",
+      "topic",
+      "soru-onergesi"
+    ]
+  },
+  {
+    "id": "d20-fantom-001",
+    "query": "Midilli açıklarında düşen Fantom uçağına ilişkin soru önergesi kim verdi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-06-19960130_1"
+    ],
+    "golden_answer": "İzmir Milletvekili Hakan Tartan, Midilli açıklarında düşen Fantom uçağının pilotunu arama çalışmalarının erken durdurulduğu iddiasına ilişkin Milli Savunma Bakanına sözlü soru önergesi verdi (6/3).",
+    "tags": [
+      "author-search",
+      "topic",
+      "soru-onergesi"
+    ]
+  },
+  {
+    "id": "d20-turban-001",
+    "query": "TURBAN Genel Müdürlüğü telefon ücretleriyle ilgili soru önergesi verildi mi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-06-19960130_1"
+    ],
+    "golden_answer": null,
+    "tags": [
+      "topic",
+      "soru-onergesi"
+    ]
+  },
+  {
+    "id": "d20-su-001",
+    "query": "Manavgat Çayı projesi ve su kaynakları araştırması için önerge veren milletvekili kimdir?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-09-19960206_60",
+      "tutanak-20-01-09-19960206_65"
+    ],
+    "golden_answer": null,
+    "tags": [
+      "author-search",
+      "topic",
+      "arastirma-onergesi"
+    ]
+  },
+  {
+    "id": "d20-ssk-001",
+    "query": "Sosyal güvenlik ve SSK sorunlarına ilişkin meclis araştırması önergesini kim verdi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-10-19960207_34",
+      "tutanak-20-01-09-19960206_7"
+    ],
+    "golden_answer": "Kocaeli Milletvekili Necati Çelik ve 18 arkadaşı, sosyal güvenlik ve SSK ile ilgili sorunları araştırarak alınması gereken tedbirleri tespit etmek amacıyla meclis araştırması önergesi verdi (10/14).",
+    "tags": [
+      "author-search",
+      "topic",
+      "arastirma-onergesi"
+    ]
+  },
+  {
+    "id": "d20-b9-secimler-001",
+    "query": "9. Birleşim 5 Şubat 1996'da saat kaçta sona erdi ve hangi seçimler yapıldı?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-09-19960206_3"
+    ],
+    "golden_answer": null,
+    "tags": [
+      "topic",
+      "date-filter",
+      "secim"
+    ]
+  },
+  {
+    "id": "d20-8birlesim-001",
+    "query": "8. Birleşim hangi tarihte açıldı ve başkanlığı kim yaptı?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-08-19960201_9"
+    ],
+    "golden_answer": "8. Birleşim, 1 Şubat 1996 Perşembe günü saat 15.00'te açıldı. Başkanlığı Mustafa Kalemli yaptı; geçici kâtip üyeler Adil Aşırım (Iğdır) ve Erkan Mumcu (Isparta) idi.",
+    "tags": [
+      "topic",
+      "date-filter",
+      "kurumsal"
+    ]
+  },
+  {
+    "id": "d20-empty-001",
+    "query": "20. Dönem TBMM tutanakları 2024 bütçe görüşmelerini kapsıyor mu?",
+    "expected_source_db": "docling_test",
+    "expected_year": 2024,
+    "relevant_chunk_ids": [],
+    "golden_answer": "Bu koleksiyonda 2024 bütçe görüşmelerine dair tutanak bulunmamaktadır. Koleksiyon yalnızca 1996 yılı Ocak-Şubat dönemine ait 20. Dönem TBMM tutanaklarını (2-10. Birleşimler) kapsamaktadır.",
+    "tags": [
+      "empty-result",
+      "date-filter"
+    ]
+  },
+  {
+    "id": "d20-empty-002",
+    "query": "2026 yılında 20. Dönem meclisinde AKP'nin tutumu neydi?",
+    "expected_source_db": "docling_test",
+    "expected_year": 2026,
+    "relevant_chunk_ids": [],
+    "golden_answer": null,
+    "tags": [
+      "empty-result",
+      "date-filter"
+    ]
+  },
+  {
+    "id": "d20-gov-001",
+    "query": "Necmettin Erbakan'ın hükümeti kurmakla görevlendirildiği hangi tarihte meclis bilgisine sunuldu?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-03-19960123_1"
+    ],
+    "golden_answer": "23 Ocak 1996 tarihli 3. Birleşimde, Bakanlar Kurulunun yeniden teşkili için Konya Milletvekili Necmettin Erbakan'ın Anayasanın 109. maddesi uyarınca görevlendirildiği meclis bilgisine sunulmuştur.",
+    "tags": [
+      "topic",
+      "date-filter",
+      "siyaset"
+    ]
+  },
+  {
+    "id": "d20-pres-001",
+    "query": "Recai Kutan'ın TBMM Başkanlığı adaylığından çekilmesiyle ilgili tezkere ne zaman okundu?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-03-19960123_6"
+    ],
+    "golden_answer": "23 Ocak 1996 tarihinde (3. Birleşim), Malatya Milletvekili M. Recai Kutan'ın adaylıktan çekildiğine dair tezkere okunmuştur.",
+    "tags": [
+      "author-search",
+      "topic",
+      "secim"
+    ]
+  },
+  {
+    "id": "d20-pres-002",
+    "query": "24 Ocak 1996 tarihinde TBMM Başkanlığı için hangi isimler aday gösterilmişti?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-04-19960124_1"
+    ],
+    "golden_answer": "Ali Talip Özdemir, Süleyman Arif Emre, Yasin Hatiboğlu, M. Recai Kutan ve Mahmut Oltan Sungurlu gibi isimler TBMM Başkanlığı için aday gösterilmiştir.",
+    "tags": [
+      "topic",
+      "secim"
+    ]
+  },
+  {
+    "id": "d20-econ-001",
+    "query": "1994 yılı sonunda, bir önceki yıla göre %157,5 artış gösteren sosyal yardım zammı alacaklarının toplam miktarı ne kadardı?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-10-19960207_38"
+    ],
+    "golden_answer": "1994 sonu itibariyle, 1993'e kıyasen yüzde 157,5'lik bir artışla kurumun sosyal yardım zammı alacakları 32,5 trilyon lira olarak belirtilmiştir.",
+    "tags": [
+      "topic",
+      "date-filter",
+      "ekonomi"
+    ]
+  },
+  {
+    "id": "d20-econ-002",
+    "query": "Aralık 1995 tarihi itibariyle kurumun prim ve gecikme zammı alacaklarının dağılımı nasıldı?",
+    "expected_source_db": "docling_test",
+    "expected_year": 1996,
+    "relevant_chunk_ids": [
+      "tutanak-20-01-10-19960207_47"
+    ],
+    "golden_answer": "Aralık 1995 itibariyle kurumun 11,7 trilyon lirası prim, 14,8 trilyon lirası ise gecikme zammı olmak üzere alacakları olduğu ifade edilmiştir.",
+    "tags": [
+      "topic",
+      "ekonomi"
+    ]
+  },
+  {
+    "id": "tuts-tuts-deniz-baykal-kardak-001",
+    "query": "Deniz Baykal kardak kayalıkları ile ilgili ne söyledi?",
+    "expected_year": 1996,
+    "relevant_spans": [
+      {
+        "document_id": "tutanak-20-01-06-19960130",
+        "char_start": 63773,
+        "char_end": 64796
+      }
+    ],
+    "golden_answer": "MEHMET CAVlT KAVAK (İstanbul) -  Kayalık... Kardak Kayalığı...\n\nDIŞİŞLERİ BAKANI VE BAŞBAKAN YARDIMCISI DENİZ BAYKAL (Devamla) -  Te­ şekkür ederim.\n\n...yine, herhangi bir engellemeye maruz kalmadan orada da denizden istifade  ederler.\n\nYıllardan beri bu böyle gitmiştir.  1947'den bu yana, Paris Antlaşmasından bu yana, bu kaya­ lığa, Kardak Kayalığına ne bir Yunan Bayrağı dikilmiştir ne bir Yunan askeri gelmiştir ne de Kar­ dak Kayalığı ile ilgili böyle bir iddia dermeyan edilmiş, böyle bir iddianın parçası olan talepler, gi­ rişimler sergilenmiştir; hiçbirisi yoktur. Figen Akat Gemisi, günün birinde (25 Aralık  1995'te) Kardak'ta kayaya oturunca, bu adayla ilgili egemenlik tartışması gündeme gelince, Yunanistan, birden \"buraSı benimdir\" diye ortaya çıkmıştır ve önce, çeşitli sivil grupların bayrak dikme çabası gerçek­ leştikten  sonra... Ki, bu çerçevede işaret etmeliyim, ilk bayrağı bir Yunanlı belediye başkanı  dik­ miştir Kardak Kayalığına, arkasından, Türk vatandaşları  gidip Türk Bayrağı  dikmişlerdir.",
+    "tags": [
+      "minutes-only"
+    ]
+  }
+]

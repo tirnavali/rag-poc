@@ -1,0 +1,9 @@
+name: "Jina v3 (4K) vs Nomic v2 vs Jina v3 (512) — TBMM Tutanak Karşılaştırması"
+collections:
+  - tutanaklar_jina_v3_4k
+  - tutanaklar_nomic_v2
+  - tutanaklar_jina_v3_512
+fixture: tests/fixtures/eval_queries_docling_d20.json
+top_k: [1, 3, 5, 10]
+reranker: true
+fetch_k: 100

@@ -1,0 +1,244 @@
+# =============================================================================
+# Model & Collection Registry — Fully Data-Driven
+# =============================================================================
+#
+# This file replaces the hardcoded MODEL_SPECS and COLLECTIONS dicts in
+# src/config/collections.py.  To add a new model or collection, edit this file —
+# no Python changes required.
+#
+# Loaded at module-import time by src/config/collections.py.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Model Capability Registry
+# ---------------------------------------------------------------------------
+# max_context_tokens: model's sequence length (context window)
+# overlap_tokens:     window overlap for late chunking
+# embed_dim:          output vector dimension
+# supports_late_chunking: whether model can do full-doc context late chunking
+# base_model:         (optional) alias — actual model to load from HF
+# ---------------------------------------------------------------------------
+
+model_specs:
+  # ------------------------------------------------------------------
+  # Jina Embeddings
+  # ------------------------------------------------------------------
+  jinaai/jina-embeddings-v3:
+    max_context_tokens: 8192
+    overlap_tokens: 128
+    embed_dim: 1024
+    supports_late_chunking: true
+    description: "Jina v3: 8K context, late chunking destekler. Türkçe dahil çok dilli."
+
+  jinaai/jina-embeddings-v3-4k:
+    base_model: jinaai/jina-embeddings-v3
+    max_context_tokens: 4096
+    overlap_tokens: 128
+    embed_dim: 1024
+    supports_late_chunking: true
+    description: "Jina v3 variant: 4K context for lower VRAM / faster processing."
+
+  jinaai/jina-embeddings-v4:
+    max_context_tokens: 32768
+    overlap_tokens: 256
+    embed_dim: 1024
+    supports_late_chunking: true
+    description: "Jina v4: 32K context, aynı 1024 dim. Uzun dokümanlar için ideal."
+
+  jinaai/jina-embeddings-v3_512:
+    base_model: jinaai/jina-embeddings-v3
+    max_context_tokens: 512
+    overlap_tokens: 64
+    embed_dim: 768
+    supports_late_chunking: true
+    description: "Jina v3 variant: 512 token context, 768 dim."
+
+  # ------------------------------------------------------------------
+  # Nomic Embeddings (Ollama)
+  # ------------------------------------------------------------------
+  nomic-embed-text-v2-moe:
+    max_context_tokens: 512
+    overlap_tokens: 64
+    embed_dim: 768
+    supports_late_chunking: false
+    description: "nomic-embed-text-v2-moe: MoE mimarisi, ~100 dil. Context 512 token."
+
+  nvidia/llama-nemotron-embed-1b-v2:
+    max_context_tokens: 8192
+    overlap_tokens: 128
+    embed_dim: 1024
+    supports_late_chunking: true
+    description: "NVIDIA NeMoTron embed: 8K context, 1B param."
+
+  # ------------------------------------------------------------------
+  # Commented out — not currently used
+  # ------------------------------------------------------------------
+  # nomic-embed-text-v1.5:
+  #   max_context_tokens: 8192
+  #   overlap_tokens: 128
+  #   embed_dim: 768
+  #   supports_late_chunking: true
+  #   description: "nomic-embed-text-v1.5: 8K context via RoPE. Not used in project."
+
+# ---------------------------------------------------------------------------
+# Collection Registry
+# ---------------------------------------------------------------------------
+# Each collection maps a name to:
+#   - ChromaDB collection name & persistence path
+#   - Embedding model (must exist in model_specs above)
+#   - Document type (gazete | tutanak | onerge | custom)
+#   - Chunking parameters (min/max chars, min/max tokens)
+# ---------------------------------------------------------------------------
+
+collections:
+  # ------------------------------------------------------------------
+  # Gazete (Newspaper) Collections
+  # ------------------------------------------------------------------
+  press_nomic:
+    collection_name: gazete_arsivi
+    chroma_path: data_lake/press_clips_vectors
+    sqlite_path: data_lake/press_clips.db
+    embed_model: nomic-embed-text-v2-moe
+    doc_type: gazete
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  press_jina_v3:
+    collection_name: gazete_arsivi_jina_v3
+    chroma_path: data_lake/press_clips_vectors
+    sqlite_path: data_lake/press_clips.db
+    embed_model: jinaai/jina-embeddings-v3
+    doc_type: gazete
+    min_chunk_chars: 150
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  # ------------------------------------------------------------------
+  # Tutanak (Parliament Minutes) Collections
+  # ------------------------------------------------------------------
+  minutes_nomic:
+    collection_name: tbmm_minutes
+    chroma_path: data_lake/parliament_digital_born_minutes_vectors
+    sqlite_path: data_lake/parliament_digital_born_minutes.db
+    embed_model: nomic-embed-text-v2-moe
+    doc_type: tutanak
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  minutes_jina_v3:
+    collection_name: tbmm_minutes_docling_jina_v3
+    chroma_path: data_lake/parliament_digital_born_minutes_vectors
+    sqlite_path: data_lake/parliament_digital_born_minutes.db
+    embed_model: jinaai/jina-embeddings-v3
+    doc_type: tutanak
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  minutes_jina_v4:
+    collection_name: tbmm_minutes_docling_jina_v4
+    chroma_path: data_lake/parliament_digital_born_minutes_vectors
+    sqlite_path: data_lake/parliament_digital_born_minutes.db
+    embed_model: jinaai/jina-embeddings-v4
+    doc_type: tutanak
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  tutanaklar_jina_v3_4k:
+    collection_name: tbmm_tutanaklar_docling_jina_v3_4k
+    chroma_path: data_lake/parliament_digital_born_minutes_vectors
+    sqlite_path: data_lake/parliament_digital_born_minutes.db
+    embed_model: jinaai/jina-embeddings-v3-4k
+    doc_type: tutanak
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  tutanaklar_jina_v3_512:
+    collection_name: tbmm_tutanaklar_docling_jina_v3_512
+    chroma_path: data_lake/parliament_digital_born_minutes_vectors
+    sqlite_path: data_lake/parliament_digital_born_minutes.db
+    embed_model: jinaai/jina-embeddings-v3_512
+    doc_type: tutanak
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  tutanaklar_nomic_v2:
+    collection_name: tbmm_tutanaklar_nomic_v2
+    chroma_path: data_lake/parliament_digital_born_minutes_vectors
+    sqlite_path: data_lake/parliament_digital_born_minutes.db
+    embed_model: nomic-embed-text-v2-moe
+    doc_type: tutanak
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  tutanaklar_jina_v3_small:
+    collection_name: tbmm_tutanaklar_jina_v3_small
+    chroma_path: data_lake/parliament_digital_born_minutes_vectors
+    sqlite_path: data_lake/parliament_digital_born_minutes.db
+    embed_model: jinaai/jina-embeddings-v3
+    doc_type: tutanak
+    min_chunk_chars: 300
+    max_chunk_chars: 800
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  # ------------------------------------------------------------------
+  # Önerge (Bill/Proposal) Collections
+  # ------------------------------------------------------------------
+  onerge_nomic:
+    collection_name: tbmm_onerge
+    chroma_path: data_lake/onerge_vectors
+    sqlite_path: data_lake/parliament_digital_born_minutes.db
+    embed_model: nomic-embed-text-v2-moe
+    doc_type: onerge
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  onerge_neomotron:
+    collection_name: tbmm_onerge_neomotron
+    chroma_path: data_lake/onerge_vectors
+    sqlite_path: data_lake/parliament_digital_born_minutes.db
+    embed_model: nvidia/llama-nemotron-embed-1b-v2
+    doc_type: onerge
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  onerge_jina_v3:
+    collection_name: tbmm_onerge_docling_jina_v3
+    chroma_path: data_lake/onerge_vectors
+    sqlite_path: data_lake/parliament_digital_born_minutes.db
+    embed_model: jinaai/jina-embeddings-v3
+    doc_type: onerge
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+# ---------------------------------------------------------------------------
+# Default Collections per Document Type
+# ---------------------------------------------------------------------------
+# Used by query agents when no specific collection is requested.
+# ---------------------------------------------------------------------------
+
+defaults:
+  gazete: press_jina_v3
+  tutanak: tutanaklar_nomic_v2
+  onerge: onerge_jina_v3

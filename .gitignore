@@ -1,0 +1,60 @@
+.venv/
+chroma_db/
+chroma_data/
+data_lake/
+__pycache__/
+*.pyc
+kupurler.db
+rag-poc-2gun-rehberi.pdf
+gazete-rag-001.csv
+gazete-rag-002-1001-5000.csv
+gazete-rag-002-5001-20000.csv
+minutes.db
+CLAUDE.md
+./pytest_cache
+
+# Docker
+Dockerfile*
+docker-compose*
+open-webui-data/
+
+# Tutanak
+tutanak/**/*
+!tutanak/**/
+!tutanak/**/.gitkeep
+output/
+
+# gazeteler
+gazete-rag-001.csv
+gazete-rag-002-1001-5000.csv
+gazete-rag-002-5001-20000.csv
+
+# Claude Code worktrees
+.claude/
+opencode.json
+
+# OS / editor cruft
+.DS_Store
+**/.DS_Store
+.idea/
+.vscode/
+
+# Python caches
+.pytest_cache/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+
+# Archives / large data blobs (never push to GitHub)
+*.zip
+*.pdf
+*.db
+*.sqlite3
+gazete_ingestion.json
+
+# Eval/run outputs
+artifacts/
+docs/superpowers/plans/2026-05-24-balanced-retrieval.md
+docs/superpowers/plans/2026-05-24-integration-test-isolation.md
+docs/superpowers/specs/2026-05-24-integration-test-isolation-design.md
+docs/superpowers/specs/2026-05-24-per-collection-retrieval-design.md

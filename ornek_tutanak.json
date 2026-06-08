@@ -1,0 +1,1558 @@
+{
+    "version": "1.0",
+    "collection": "tutanaklar_nomic_v2",
+    "documents": [
+        {
+            "document_id": "tutanak-19-01-01-19911106",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001001.pdf",
+            "document_date": "1991-11-06",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 1,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-02-19911114",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001002.pdf",
+            "document_date": "1991-11-14",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 2,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-03-19911116",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001003.pdf",
+            "document_date": "1991-11-16",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 3,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-04-19911119",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001004.pdf",
+            "document_date": "1991-11-19",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 4,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-05-19911120",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001005.pdf",
+            "document_date": "1991-11-20",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 5,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-06-19911121",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001006.pdf",
+            "document_date": "1991-11-21",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 6,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-07-19911125",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001007.pdf",
+            "document_date": "1991-11-25",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 7,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-08-19911128",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001008.pdf",
+            "document_date": "1991-11-28",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 8,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-09-19911130",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001009.pdf",
+            "document_date": "1991-11-30",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 9,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-10-19911203",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001010.pdf",
+            "document_date": "1991-12-03",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 10,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-11-19911204",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001011.pdf",
+            "document_date": "1991-12-04",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 11,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-12-19911205",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001012.pdf",
+            "document_date": "1991-12-05",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 12,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-13-19911210",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001013.pdf",
+            "document_date": "1991-12-10",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 13,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-14-19911211",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001014.pdf",
+            "document_date": "1991-12-11",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 14,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-15-19911212",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001015.pdf",
+            "document_date": "1991-12-12",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 15,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-16-19911217",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c001/tbmm19001016.pdf",
+            "document_date": "1991-12-17",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 16,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-17-19911218",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c002/tbmm19002017.pdf",
+            "document_date": "1991-12-18",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 17,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-18-19911219",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c002/tbmm19002018.pdf",
+            "document_date": "1991-12-19",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 18,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-19-19911224",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c002/tbmm19002019.pdf",
+            "document_date": "1991-12-24",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 19,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-20-19911225",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c002/tbmm19002020.pdf",
+            "document_date": "1991-12-25",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 20,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-21-19911226",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c002/tbmm19002021.pdf",
+            "document_date": "1991-12-26",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 21,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-22-19920107",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c002/tbmm19002022.pdf",
+            "document_date": "1992-01-07",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 22,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-23-19920108",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c002/tbmm19002023.pdf",
+            "document_date": "1992-01-08",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 23,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-24-19920109",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c002/tbmm19002024.pdf",
+            "document_date": "1992-01-09",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 24,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-25-19920114",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c002/tbmm19002025.pdf",
+            "document_date": "1992-01-14",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 25,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-26-19920115",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c002/tbmm19002026.pdf",
+            "document_date": "1992-01-15",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 26,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-27-19920116",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c002/tbmm19002027.pdf",
+            "document_date": "1992-01-16",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 27,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-28-19920121",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c003/tbmm19003028.pdf",
+            "document_date": "1992-01-21",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 28,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-29-19920122",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c003/tbmm19003029.pdf",
+            "document_date": "1992-01-22",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 29,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-30-19920123",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c003/tbmm19003030.pdf",
+            "document_date": "1992-01-23",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 30,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-31-19920204",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c003/tbmm19003031.pdf",
+            "document_date": "1992-02-04",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 31,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-32-19920205",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c003/tbmm19003032.pdf",
+            "document_date": "1992-02-05",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 32,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-33-19920206",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c003/tbmm19003033.pdf",
+            "document_date": "1992-02-06",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 33,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-34-19920211",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c003/tbmm19003034.pdf",
+            "document_date": "1992-02-11",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 34,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-35-19920212",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c003/tbmm19003035.pdf",
+            "document_date": "1992-02-12",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 35,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-36-19920213",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c004/tbmm19004036.pdf",
+            "document_date": "1992-02-13",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 36,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-37-19920218",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c004/tbmm19004037.pdf",
+            "document_date": "1992-02-18",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 37,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-38-19920219",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c004/tbmm19004038.pdf",
+            "document_date": "1992-02-19",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 38,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-39-19920220",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c004/tbmm19004039.pdf",
+            "document_date": "1992-02-20",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 39,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-40-19920225",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c004/tbmm19004040.pdf",
+            "document_date": "1992-02-25",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 40,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-41-19920226",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c004/tbmm19004041.pdf",
+            "document_date": "1992-02-26",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 41,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-42-19920227",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c004/tbmm19004042.pdf",
+            "document_date": "1992-02-27",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 42,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-43-19920303",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c004/tbmm19004043.pdf",
+            "document_date": "1992-03-03",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 43,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-44-19920304",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c004/tbmm19004044.pdf",
+            "document_date": "1992-03-04",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 44,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-45-19920305",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c004/tbmm19004045.pdf",
+            "document_date": "1992-03-05",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 45,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-46-19920310",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c005/tbmm19005046.pdf",
+            "document_date": "1992-03-10",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 46,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-47-19920311",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c005/tbmm19005047.pdf",
+            "document_date": "1992-03-11",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 47,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-48-19920312",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c005/tbmm19005048.pdf",
+            "document_date": "1992-03-12",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 48,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-49-19920313",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c006/tbmm19006049.pdf",
+            "document_date": "1992-03-13",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 49,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-50-19920314",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c006/tbmm19006050.pdf",
+            "document_date": "1992-03-14",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 50,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-51-19920315",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c006/tbmm19006051.pdf",
+            "document_date": "1992-03-15",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 51,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-52-19920316",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c006/tbmm19006052.pdf",
+            "document_date": "1992-03-16",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 52,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-53-19920317",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c007/tbmm19007053.pdf",
+            "document_date": "1992-03-17",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 53,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-54-19920318",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c007/tbmm19007054.pdf",
+            "document_date": "1992-03-18",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 54,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-55-19920319",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c007/tbmm19007055.pdf",
+            "document_date": "1992-03-19",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 55,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-56-19920320",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c007/tbmm19007056.pdf",
+            "document_date": "1992-03-20",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 56,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-57-19920321",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c008/tbmm19008057.pdf",
+            "document_date": "1992-03-21",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 57,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-58-19920322",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c008/tbmm19008058.pdf",
+            "document_date": "1992-03-22",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 58,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-59-19920323",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c008/tbmm19008059.pdf",
+            "document_date": "1992-03-23",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 59,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-60-19920324",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c008/tbmm19008060.pdf",
+            "document_date": "1992-03-24",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 60,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-61-19920325",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c008/tbmm19008061.pdf",
+            "document_date": "1992-03-25",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 61,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-62-19920326",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c009/tbmm19009062.pdf",
+            "document_date": "1992-03-26",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 62,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-63-19920414",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c009/tbmm19009063.pdf",
+            "document_date": "1992-04-14",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 63,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-64-19920415",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c009/tbmm19009064.pdf",
+            "document_date": "1992-04-15",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 64,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-65-19920416",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c009/tbmm19009065.pdf",
+            "document_date": "1992-04-16",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 65,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-66-19920421",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c009/tbmm19009066.pdf",
+            "document_date": "1992-04-21",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 66,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-67-19920422",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c009/tbmm19009067.pdf",
+            "document_date": "1992-04-22",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 67,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-68-19920423",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c009/tbmm19009068.pdf",
+            "document_date": "1992-04-23",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 68,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-69-19920428",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c009/tbmm19009069.pdf",
+            "document_date": "1992-04-28",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 69,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-70-19920429",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c010/tbmm19010070.pdf",
+            "document_date": "1992-04-29",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 70,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-71-19920430",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c010/tbmm19010071.pdf",
+            "document_date": "1992-04-30",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 71,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-72-19920505",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c010/tbmm19010072.pdf",
+            "document_date": "1992-05-05",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 72,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-73-19920506",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c010/tbmm19010073.pdf",
+            "document_date": "1992-05-06",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 73,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-74-19920507",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c010/tbmm19010074.pdf",
+            "document_date": "1992-05-07",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 74,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-75-19920512",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c011/tbmm19011075.pdf",
+            "document_date": "1992-05-12",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 75,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-76-19920513",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c011/tbmm19011076.pdf",
+            "document_date": "1992-05-13",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 76,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-77-19920514",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c011/tbmm19011077.pdf",
+            "document_date": "1992-05-14",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 77,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-78-19920520",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c011/tbmm19011078.pdf",
+            "document_date": "1992-05-20",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 78,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-79-19920521",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c011/tbmm19011079.pdf",
+            "document_date": "1992-05-21",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 79,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-80-19920526",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c011/tbmm19011080.pdf",
+            "document_date": "1992-05-26",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 80,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-81-19920527",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c012/tbmm19012081.pdf",
+            "document_date": "1992-05-27",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 81,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-82-19920528",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c012/tbmm19012082.pdf",
+            "document_date": "1992-05-28",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 82,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-83-19920616",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c012/tbmm19012083.pdf",
+            "document_date": "1992-06-16",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 83,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-84-19920617",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c012/tbmm19012084.pdf",
+            "document_date": "1992-06-17",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 84,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-85-19920618",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c013/tbmm19013085.pdf",
+            "document_date": "1992-06-18",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 85,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-86-19920623",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c013/tbmm19013086.pdf",
+            "document_date": "1992-06-23",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 86,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-87-19920624",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c013/tbmm19013087.pdf",
+            "document_date": "1992-06-24",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 87,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-88-19920625",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c014/tbmm19014088.pdf",
+            "document_date": "1992-06-25",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 88,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-89-19920626",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c014/tbmm19014089.pdf",
+            "document_date": "1992-06-26",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 89,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-90-19920630",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c014/tbmm19014090.pdf",
+            "document_date": "1992-06-30",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 90,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-91-19920701",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c014/tbmm19014091.pdf",
+            "document_date": "1992-07-01",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 91,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-92-19920702",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c014/tbmm19014092.pdf",
+            "document_date": "1992-07-02",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 92,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-93-19920703",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c015/tbmm19015093.pdf",
+            "document_date": "1992-07-03",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 93,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-94-19920825",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c016/tbmm19016094.pdf",
+            "document_date": "1992-08-25",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 94,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-95-19920826",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c016/tbmm19016095.pdf",
+            "document_date": "1992-08-26",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 95,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-96-19920827",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c016/tbmm19016096.pdf",
+            "document_date": "1992-08-27",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 96,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-19-01-97-19920828",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d19/c016/tbmm19016097.pdf",
+            "document_date": "1992-08-28",
+            "period": 19,
+            "legislative_year": 1,
+            "session": 97,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d19&v_yasama_yili=1&v_cilt="
+            }
+        }
+    ]
+}
