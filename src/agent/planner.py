@@ -23,9 +23,10 @@ from src.agent.schemas import (
 from src.agent.suggester import Suggester
 from src.agent.tools import AnswerTool, ContextBuilderTool, SearchTool
 from src.agent.tracer import PipelineTracer
-from src.common.filter_translators import ChromaFilterTranslator
+from src.common.filter_translators import build_chroma_where, mask_filters
 from src.common.llm_client_pool import LLMClientPool
 from src.common.llm_utils import extract_json_from_text
+from src.config.collections import COLLECTIONS
 from src.config.pipeline_loader import PipelineConfig
 
 logger = logging.getLogger(__name__)
@@ -332,12 +333,20 @@ class PlanningAgent:
     def _parse_plan(self, plan_data: dict) -> SearchPlan:
         """Build a SearchPlan from a parsed JSON dict.
 
-        Tolerant of LLM schema violations: an out-of-enum ``intent``/``query_type``
-        is coerced to a safe default instead of raising. ``filters`` emitted by
-        the planner LLM are intentionally DROPPED here — FilterExtractor is the
-        single source of truth for metadata filters (populated later in
-        ``_apply_filter_extractor``), and parsing the LLM's filters would both be
-        redundant and crash on invalid values (e.g. document_type='gazete').
+        Tolerant of LLM schema violations so a single bad field never discards the
+        whole plan (which would dump to the fallback path and log a scary
+        "planner failed" warning):
+
+        * out-of-enum ``intent``/``query_type`` → coerced to a safe default;
+        * a resource missing/blank ``collection`` is skipped;
+        * a draft missing/blank ``text`` is skipped;
+        * a resource left with no usable drafts is skipped.
+
+        ``filters`` emitted by the planner LLM are intentionally DROPPED here —
+        FilterExtractor is the single source of truth for metadata filters
+        (populated later in ``_apply_filter_extractor``), and parsing the LLM's
+        filters would both be redundant and crash on invalid values
+        (e.g. document_type='gazete').
         """
         intent = plan_data.get("intent", "unknown")
         if intent not in self._VALID_INTENTS:
@@ -346,25 +355,41 @@ class PlanningAgent:
         if query_type not in self._VALID_QUERY_TYPES:
             query_type = "fact"
 
+        resources: list[CollectionSearchPlan] = []
+        for r in plan_data.get("resources", []) or []:
+            if not isinstance(r, dict):
+                continue
+            collection = r.get("collection")
+            if not isinstance(collection, str) or not collection.strip():
+                continue
+            drafts: list[SearchQueryDraft] = []
+            for d in r.get("query_drafts", []) or []:
+                if not isinstance(d, dict):
+                    continue
+                text = d.get("text")
+                if not isinstance(text, str) or not text.strip():
+                    continue
+                top_k = d.get("top_k", 5)
+                drafts.append(SearchQueryDraft(
+                    text=text.strip(),
+                    filters=None,  # FilterExtractor doldurur; LLM filtreleri yok sayılır
+                    top_k=top_k if isinstance(top_k, int) and top_k > 0 else 5,
+                ))
+            if not drafts:
+                continue
+            mode = r.get("mode")
+            priority = r.get("priority", 1)
+            resources.append(CollectionSearchPlan(
+                collection=collection.strip(),
+                mode=mode if mode in ("parallel", "sequential") else "parallel",
+                priority=priority if isinstance(priority, int) else 1,
+                query_drafts=drafts,
+            ))
+
         return SearchPlan(
             intent=intent,
             query_type=query_type,
-            resources=[
-                CollectionSearchPlan(
-                    collection=r["collection"],
-                    mode=r.get("mode", "parallel"),
-                    priority=r.get("priority", 1),
-                    query_drafts=[
-                        SearchQueryDraft(
-                            text=d["text"],
-                            filters=None,  # FilterExtractor doldurur; LLM filtreleri yok sayılır
-                            top_k=d.get("top_k", 5),
-                        )
-                        for d in r.get("query_drafts", [])
-                    ],
-                )
-                for r in plan_data.get("resources", [])
-            ],
+            resources=resources,
             reasoning=plan_data.get("reasoning", ""),
         )
 
@@ -455,9 +480,13 @@ class PlanningAgent:
 
         Planner artık filtreleri inline çıkarmıyor; metadata filtrelerinin tek
         doğruluk kaynağı FilterExtractor. Çıkarım orijinal sorgu üzerinde BİR KEZ
-        yapılır (filtreler ifade biçiminin değil kullanıcı niyetinin özelliğidir),
-        çıkan FilterCriteria tüm draft'lara uygulanır. has_filter_hints ipucu yoksa
-        extract() LLM çağrısı yapmadan boş filtre döner.
+        yapılır (filtreler ifade biçiminin değil kullanıcı niyetinin özelliğidir).
+        Çıkan FilterCriteria her koleksiyona, o türün indekslediği alanlarla
+        MASKELENEREK uygulanır (çapraz-tür over-filtering'i önler). has_filter_hints
+        ipucu yoksa extract() LLM çağrısı yapmadan boş filtre döner.
+
+        refined_query (filtre kelimeleri çıkarılmış sorgu) orchestrator retrieval'ı
+        için plan'a taşınır; planner yolu kendi LLM draft metinlerini korur.
 
         filter_extractor enjekte edilmediyse (offline testler) no-op'tur.
         Mutasyonu in-place yapar ve plan'ı döndürür.
@@ -473,13 +502,24 @@ class PlanningAgent:
             result = self._filter_extractor.extract(query)
             criteria = result.filters
             applied = criteria.model_dump(exclude_none=True) if criteria else {}
+            plan.refined_query = result.refined_query or None
+            per_collection_applied: dict[str, dict] = {}
             for resource in plan.resources:
+                spec = COLLECTIONS.get(resource.collection)
+                if not applied:
+                    masked = None
+                elif spec is not None:
+                    masked = mask_filters(criteria, spec.doc_type)
+                else:
+                    masked = criteria  # bilinmeyen koleksiyon: maskeleme yok
+                masked_applied = masked.model_dump(exclude_none=True) if masked else {}
+                per_collection_applied[resource.collection] = masked_applied
                 for draft in resource.query_drafts:
                     # Aliasing'i önlemek için her draft'a ayrı kopya ver.
-                    draft.filters = criteria.model_copy() if applied else None
+                    draft.filters = masked.model_copy() if masked_applied else None
             if ctx:
                 ctx.update_details(
-                    filters=applied,
+                    filters=per_collection_applied,
                     refined_query=result.refined_query,
                 )
         return plan
@@ -595,7 +635,9 @@ class PlanningAgent:
         """Execute a single search query draft."""
         where_filter = None
         if draft.filters:
-            where_filter = ChromaFilterTranslator().translate(draft.filters)
+            # build_chroma_where resolves `author` to the collection's actual
+            # labels ($in) instead of a brittle exact-match $eq.
+            where_filter = build_chroma_where(draft.filters, collection)
 
         with tracer.phase(
             phase,

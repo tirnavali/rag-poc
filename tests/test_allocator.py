@@ -82,6 +82,7 @@ def test_allocation_empty_allowed_records_error(alloc_config):
 
 
 def test_allocation_carries_filters_from_planner(alloc_config):
+    """Filtreler ChromaFilterTranslator ile geçerli where-dict'e çevrilir."""
     ap = AllocationPlanner(alloc_config)
     state = _state(
         "fact",
@@ -89,5 +90,25 @@ def test_allocation_carries_filters_from_planner(alloc_config):
         filters_for={"c1": FilterCriteria(year=2023)},
     )
     ap.run(state)
-    assert "year" in state.collection_plans[0].filters
-    assert state.collection_plans[0].filters["year"] == 2023
+    # Ham model_dump ({"year": 2023}) değil; Chroma operatör formatı.
+    assert state.collection_plans[0].filters == {"year": {"$eq": 2023}}
+
+
+def test_allocation_translates_multifield_filter_to_chroma(alloc_config):
+    """Çok-alanlı filtre $and ile sarılır; yazar Türkçe büyük-harf $or'u içerir."""
+    ap = AllocationPlanner(alloc_config)
+    state = _state(
+        "fact",
+        ["c1"],
+        filters_for={"c1": FilterCriteria(year=1996, author="Deniz Baykal")},
+    )
+    ap.run(state)
+    where = state.collection_plans[0].filters
+    # Geçerli Chroma where-dict: tek anahtarlı ham dump DEĞİL.
+    assert "$and" in where
+    conds = where["$and"]
+    assert {"year": {"$eq": 1996}} in conds
+    author_cond = next(c for c in conds if "$or" in c)
+    authors = {o["author"]["$eq"] for o in author_cond["$or"]}
+    assert "Deniz Baykal" in authors
+    assert "DENİZ BAYKAL" in authors

@@ -134,12 +134,21 @@ class PipelineTracer:
                 if query_text:
                     lines.append(f"    [dim]q: {query_text}[/dim]")
 
-            total_results = sum(
+            initial_results = sum(
                 e.details.get("result_count", 0)
                 for e in retrieval_events
                 if e.phase == "retrieval"
             )
-            lines.append(f"  total: {total_results} results")
+            all_results = sum(e.details.get("result_count", 0) for e in retrieval_events)
+            if all_results != initial_results:
+                # Initial retrieval came up short and re-retrieval kicked in; show
+                # both so "total: 0" doesn't read as a dead end when later passes
+                # actually found results. (Raw sum, pre-dedup across passes.)
+                lines.append(
+                    f"  total: {initial_results} initial → {all_results} after re-retrieval (pre-dedup)"
+                )
+            else:
+                lines.append(f"  total: {initial_results} results")
 
         if answering_events:
             lines.append("")

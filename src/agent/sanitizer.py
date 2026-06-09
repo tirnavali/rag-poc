@@ -16,6 +16,19 @@ Görevin: Verilen yanıtı kontrol etmek ve gerekirse düzeltmek.
 Kontrol kriterleri:
 {criteria}
 
+DEĞERLENDİRME KURALLARI (çok önemli — varsayılan tutum GEÇER yönündedir):
+- "İddialar kaynaklarla destekleniyor mu?" kontrolünü SADECE BAĞLAM (alınan
+  kaynak metinleri) bölümüne bakarak değerlendir. KAYNAK METAVERİSİ bölümü
+  yalnızca atıf bilgisidir; eksik veya "?" olması yanıtın yanlış olduğu anlamına
+  GELMEZ. Yanıttaki iddialar BAĞLAM metniyle örtüşüyorsa "backed_by_sources": true.
+- "passes": false SADECE şu durumlarda olur: (a) yanıt Türkçe değil, (b) yanıt
+  boş/anlamsız, (c) yanıt soruyu tamamen görmezden geliyor, ya da (d) yanıt
+  BAĞLAM ile AÇIKÇA ÇELİŞEN bir iddia içeriyor.
+- Şunlar başarısızlık nedeni DEĞİLDİR: eksik metaveri, "?" alanlar, yanıtın kısa
+  olması, üslup, ya da BAĞLAM'da olup yanıtta yer almayan ek ayrıntılar. Yanıt
+  doğru ve BAĞLAM'a dayanıyorsa "passes": true döndür.
+- Emin değilsen "passes": true döndür.
+
 JSON çıktısı:
 {{
   "passes": true/false,
@@ -32,8 +45,8 @@ JSON çıktısı:
 Eğer yanıt tüm kriterleri karşılıyorsa "passes": true döndür ve
 "corrected_answer" alanını orijinal yanıtla aynı bırak.
 
-Eğer yanıt başarısız olursa, kaynaklara dayanarak düzeltilmiş versiyonunu
-"corrected_answer" alanında döndür.
+Eğer yanıt başarısız olursa (yukarıdaki a-d durumları), kaynaklara dayanarak
+düzeltilmiş versiyonunu "corrected_answer" alanında döndür.
 """
 
 
@@ -72,12 +85,7 @@ class SanitizerAgent:
             f"  - {i+1}. {c}" for i, c in enumerate(sanitizer_cfg.validation_criteria)
         )
 
-        source_summary = ""
-        for i, src in enumerate(sources[:5], 1):
-            pub = src.get("source_name", "?")
-            date = src.get("date", "?")
-            author = src.get("author", "?")
-            source_summary += f"  Kaynak {i}: {pub} | {date} | {author}\n"
+        source_summary = self._format_source_summary(sources)
 
         prompt = SANITIZER_PROMPT.format(criteria=criteria_text)
         ctx_excerpt = (
@@ -131,6 +139,28 @@ class SanitizerAgent:
                 issues=[f"Validation skipped (sanitizer error): {e}"],
                 retry_hint=None,
             )
+
+    @staticmethod
+    def _format_source_summary(sources: list[dict]) -> str:
+        """Render up to 5 sources as citation lines, omitting absent fields.
+
+        Earlier this emitted ``Kaynak i: ? | ? | ?`` whenever a chunk's metadata
+        lacked ``source_name``/``date``/``author`` (common for tutanak/onerge),
+        which nudged the validator into a false-negative ``backed_by_sources:
+        false``. We now pull each field through a fallback chain and drop fields
+        that are still missing — a sparse-but-real source reads as a real source,
+        not a string of question marks.
+        """
+        lines: list[str] = []
+        for i, src in enumerate(sources[:5], 1):
+            src = src or {}
+            pub = src.get("source_name") or src.get("source_title") or src.get("title")
+            date = src.get("date")
+            author = src.get("author")
+            parts = [str(p) for p in (pub, date, author) if p]
+            label = " | ".join(parts) if parts else "(metaveri yok, içerik BAĞLAM'da)"
+            lines.append(f"  Kaynak {i}: {label}")
+        return "\n".join(lines) + ("\n" if lines else "")
 
     def sanitize(
         self,

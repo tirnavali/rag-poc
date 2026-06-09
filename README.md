@@ -1,6 +1,16 @@
-# Hibrit Çok-Koleksiyonlu RAG Sistemi
+# Çok-Koleksiyonlu RAG Sistemi
 
-Yerel LLM ile çalışan; hibrit arama (BM25 + vektör + RRF), cross-encoder reranking ve agentic planlama destekli belge sorgulama platformu.
+Yerel LLM ile çalışan; vektör (ANN) arama + cross-encoder reranking, çapraz-koleksiyon RRF füzyonu ve agentic planlama destekli belge sorgulama platformu.
+
+## Arama Stratejisi (güncel)
+
+Arama tamamen **ChromaDB vektör (ANN) + cross-encoder yeniden sıralama** üzerine kuruludur. (BM25 / SQLite FTS kaldırıldı — eski "hibrit" yol artık yok.)
+
+1. **Filtre çıkarımı (opsiyonel):** `FilterExtractor` doğal dil sorgusundan metadata filtrelerini (yıl, dönem, birleşim, kaynak, yazar vb.) çıkarır. `build_chroma_where` (`src/common/filter_translators.py`) bunları ChromaDB `where` sorgusuna çevirir; filtreler ayrıca her koleksiyona kendi türünün indekslediği alanlarla **maskelenir** (`FILTER_APPLICABILITY`, `src/config/document_types.py`) — böylece `source_name` tutanağa, `period`/`session` gazeteye sızmaz. Filtre ipucu yoksa LLM çağrısı atlanır.
+2. **Koleksiyon başına getirme:** Her koleksiyonda ChromaDB ANN ile `fetch_k` aday getirilir, ardından **cross-encoder reranker** ile yeniden sıralanır (`fetch_k → coarse_k → final_k`).
+3. **Çapraz-koleksiyon füzyon:** Birden çok koleksiyon arandığında, koleksiyon başına vektör sonuçları **Reciprocal Rank Fusion (RRF, k=60)** ile birleştirilir (`MultiSourceRetriever`). Bu RRF, BM25↔vektör değil, **koleksiyonlar arası** füzyondur.
+
+> **Konuşmacı/kişi adı aramaları:** ChromaDB metadata filtresi exact-match'tir, oysa tutanakta `author` ünvanlı tam etikettir (örn. `BAŞBAKAN RECEP TAYYİP ERDOĞAN`) — düz isimle (`Recep Tayyip Erdoğan`) sert `$eq` filtresi sıfır sonuç verir. `AuthorResolver` (`src/common/author_resolver.py`) bu yüzden ismi koleksiyonun gerçek author etiketleriyle **büyük/küçük harf duyarsız, Türkçe-duyarlı token eşleştirmesiyle** çözüp `author $in [eşleşen etiketler]` filtresi üretir. Eşleşme yoksa author filtresi düşürülüp **semantik arama + reranker**'a bırakılır (recall); vocab okunamazsa eski `$eq/$or` davranışına dönülür.
 
 > **Mimari detaylar için:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
@@ -1175,10 +1185,9 @@ python -m src.mcp.router_server
 
 ```
 Bi-encoder → ChromaDB ANN (fetch_k=100)
-    + BM25 FTS (hybrid modda)
-    → RRF füzyonu → ~100 aday
-    → Cross-encoder reranker → top 20
-    → SQLite tam metin çekimi (yalnızca 5 sonuç için)
+    → Cross-encoder reranker → coarse_k=20
+    → top final_k=5
+    → (çoklu koleksiyon ise) koleksiyonlar arası RRF füzyonu
     → LLM'e top 5
 ```
 
@@ -1186,8 +1195,8 @@ Bi-encoder → ChromaDB ANN (fetch_k=100)
 
 | Değişken | Varsayılan | Açıklama |
 |---|---|---|
-| `RETRIEVAL_MODE` | `hybrid` | `hybrid`: BM25 + vektör RRF füzyonu \| `vector`: yalnızca ChromaDB ANN |
-| `USE_RERANKER` | `1` | `1`: cross-encoder aktif \| `0`: devre dışı (yalnızca RRF) |
+| `RETRIEVAL_MODE` | `vector` | Yalnızca ChromaDB ANN + rerank. (Eski `hybrid`/BM25 yolu kaldırıldı; değer artık etkin değildir.) |
+| `USE_RERANKER` | `1` | `1`: cross-encoder aktif \| `0`: devre dışı (yalnızca ANN sırası) |
 | `RERANK_MODEL` | `cross-encoder/mmarco-mMiniLMv2-L12-H384-v1` | HuggingFace cross-encoder modeli (~120MB, çok dilli) |
 | `RERANK_FETCH_K` | `100` | Cross-encoder'a beslenen aday sayısı (artırırsan recall yükselir, yavaşlar) |
 | `RERANK_COARSE_K` | `20` | Cross-encoder'dan geçen ara havuz boyutu |
@@ -1310,9 +1319,8 @@ Bu panel üzerinden:
 |---|---|
 | Embedding | `nomic-embed-text-v2-moe` (Ollama) / `jinaai/jina-embeddings-v3/v4` (HuggingFace) |
 | LLM | `gemma4:latest` (Ollama) |
-| Vektör arama | ChromaDB (embedded, PersistentClient) |
-| Tam metin arama | SQLite FTS5 + BM25 |
-| Hibrit füzyon | Reciprocal Rank Fusion (RRF, k=60) |
+| Vektör arama | ChromaDB (embedded, PersistentClient) — ANN |
+| Çapraz-koleksiyon füzyon | Reciprocal Rank Fusion (RRF, k=60) — vektör sonuçları |
 | Reranker | Cross-encoder (`mmarco-mMiniLMv2`, çok dilli) |
 | Arayüz | Rich (terminal) |
 | Belge ayrıştırma | Docling (PDF/DOCX) |
@@ -1338,7 +1346,7 @@ src/
 │       ├── manifest.py           # SQLite manifest (document_manifest.db)
 │       ├── ingest.py             # CLI entry point
 │       └── embedder.py           # LocalLateChunkingEmbedder (Jina v3/v4)
-├── retriever/       # Hibrit arama (BM25 + vektör + RRF)
+├── retriever/       # Vektör (ANN) arama + rerank, çapraz-koleksiyon RRF
 ├── generator/       # LLM entegrasyonu ve RAGService
 ├── evaluator/       # Metrikler, LLM judge, latency, benchmark
 └── ui/              # Terminal arayüzü

@@ -35,6 +35,11 @@ class SearchPlan(BaseModel):
         ..., description="Collections to search with query drafts"
     )
     reasoning: str = Field(..., description="Why this plan was chosen")
+    refined_query: Optional[str] = Field(
+        None,
+        description="Query with filter words stripped (from FilterExtractor); "
+        "used as the orchestrator retrieval query text",
+    )
 
 
 class ValidationResult(BaseModel):
@@ -165,6 +170,12 @@ class CollectionExecutionPlan(BaseModel):
     reserve_budget: int = Field(..., description="Held-back slots released on expand")
     fetch_k: int = Field(..., description="Vector top-N (must be >= primary + reserve)")
     filters: dict[str, Any] = Field(default_factory=dict, description="Metadata filters applied to retrieval")
+    query_drafts: list[str] = Field(
+        default_factory=list,
+        description="Planner query rewrites for this collection; each is run as a "
+        "separate parallel search and the ranked lists are RRF-fused. Empty list "
+        "→ retrieval falls back to the raw user query.",
+    )
     enabled: bool = Field(True, description="If false, retrieval is skipped for this collection")
     route_reason: str = Field("", description="Why this collection was chosen")
 
