@@ -350,6 +350,79 @@ def test_apply_filter_extractor_empty_filters_sets_none():
     assert all(d.filters is None for d in drafts)
 
 
+def test_apply_filter_extractor_masks_filters_per_collection():
+    """Filtreler her koleksiyona, o türün indekslediği alanlarla maskelenerek uygulanır.
+
+    Çapraz-tür plan (tutanak + gazete): source_name (basın alanı) tutanağa,
+    period (parlamento alanı) gazeteye sızmamalı.
+    """
+    mock_fe = MagicMock()
+    mock_fe.model = "test-model"
+    mock_fe.extract.return_value = ExtractedFilterResponse(
+        refined_query="Kardak",
+        filters=FilterCriteria(year=1996, source_name="Hürriyet", period=20),
+    )
+    agent = _agent(filter_extractor=mock_fe)
+    plan = _two_collection_plan()  # tbmm_minutes (tutanak), gazete_arsivi (gazete)
+
+    agent._apply_filter_extractor("1996 Hürriyet Kardak", plan, PipelineTracer())
+
+    by_coll = {r.collection: r.query_drafts[0].filters for r in plan.resources}
+    tutanak_f = by_coll["tbmm_minutes"]
+    gazete_f = by_coll["gazete_arsivi"]
+
+    # year her ikisinde de geçerli.
+    assert tutanak_f.year == 1996 and gazete_f.year == 1996
+    # source_name: sadece gazetede; tutanakta düşürüldü.
+    assert gazete_f.source_name == "Hürriyet"
+    assert tutanak_f.source_name is None
+    # period: sadece tutanakta; gazetede düşürüldü.
+    assert tutanak_f.period == 20
+    assert gazete_f.period is None
+
+
+def test_apply_filter_extractor_keeps_author_for_tutanak():
+    """Konuşmacı adı tutanakta da KORUNUR (maskeleme düşürmez).
+
+    Tutanakta `author` tam ünvan olarak indekslidir ("...DENİZ BAYKAL"), ama 0-sonuç
+    tuzağı maskeleme ile değil, çeviri aşamasında build_chroma_where tarafından
+    çözülür: ad koleksiyonun gerçek etiketlerine eşlenip `author $in [...]`'a çevrilir
+    (bkz. test_filter_translators). Bu yüzden author hem tutanak hem gazetede
+    FilterCriteria üzerinde kalır.
+    """
+    mock_fe = MagicMock()
+    mock_fe.model = "test-model"
+    mock_fe.extract.return_value = ExtractedFilterResponse(
+        refined_query="Kardak kayalıkları",
+        filters=FilterCriteria(author="Deniz Baykal", year=1996),
+    )
+    agent = _agent(filter_extractor=mock_fe)
+    plan = _two_collection_plan()  # tbmm_minutes (tutanak), gazete_arsivi (gazete)
+
+    agent._apply_filter_extractor("Deniz Baykal 1996 Kardak", plan, PipelineTracer())
+
+    by_coll = {r.collection: r.query_drafts[0].filters for r in plan.resources}
+    # author her iki türde de korunur; $in çözümü çeviri katmanında yapılır.
+    assert by_coll["tbmm_minutes"].author == "Deniz Baykal"
+    assert by_coll["tbmm_minutes"].year == 1996
+    assert by_coll["gazete_arsivi"].author == "Deniz Baykal"
+
+
+def test_apply_filter_extractor_populates_refined_query():
+    """refined_query plan'a taşınır (orchestrator retrieval için)."""
+    mock_fe = MagicMock()
+    mock_fe.model = "test-model"
+    mock_fe.extract.return_value = ExtractedFilterResponse(
+        refined_query="Kardak krizi", filters=FilterCriteria(year=1996)
+    )
+    agent = _agent(filter_extractor=mock_fe)
+    plan = _two_collection_plan()
+
+    agent._apply_filter_extractor("1996 Kardak krizi", plan, PipelineTracer())
+
+    assert plan.refined_query == "Kardak krizi"
+
+
 def test_apply_filter_extractor_noop_without_extractor():
     """filter_extractor enjekte edilmemişse no-op; draft.filters dokunulmaz, hata yok."""
     agent = _agent(filter_extractor=None)
@@ -452,3 +525,48 @@ def test_parse_plan_drops_llm_filters():
     })
     # ValidationError atılmadı ve LLM filtresi düşürüldü.
     assert plan.resources[0].query_drafts[0].filters is None
+
+
+def test_parse_plan_skips_resource_without_collection():
+    """'collection' eksik/boş kaynak KeyError atmadan atlanır; geçerliler korunur."""
+    agent = _agent()
+    plan = agent._parse_plan({
+        "intent": "factual",
+        "resources": [
+            {"query_drafts": [{"text": "q"}]},          # collection yok → atla
+            {"collection": "", "query_drafts": [{"text": "q"}]},  # boş → atla
+            {"collection": "good", "query_drafts": [{"text": "q"}]},
+        ],
+        "reasoning": "r",
+    })
+    assert [r.collection for r in plan.resources] == ["good"]
+
+
+def test_parse_plan_skips_draft_without_text_and_empty_resource():
+    """'text' eksik draft atlanır; hiç geçerli draft kalmayan kaynak da atlanır."""
+    agent = _agent()
+    plan = agent._parse_plan({
+        "intent": "factual",
+        "resources": [
+            {"collection": "c1", "query_drafts": [{"top_k": 5}, {"text": "  "}]},  # geçerli draft yok → atla
+            {"collection": "c2", "query_drafts": [{"text": "ok"}, {"foo": "bar"}]},
+        ],
+        "reasoning": "r",
+    })
+    assert [r.collection for r in plan.resources] == ["c2"]
+    assert [d.text for d in plan.resources[0].query_drafts] == ["ok"]
+
+
+def test_parse_plan_tolerates_non_dict_entries():
+    """resources/query_drafts içinde dict olmayan öğeler parse'ı patlatmaz."""
+    agent = _agent()
+    plan = agent._parse_plan({
+        "intent": "factual",
+        "resources": [
+            "garbage",  # dict değil → atla
+            {"collection": "c1", "query_drafts": ["nope", {"text": "ok"}]},
+        ],
+        "reasoning": "r",
+    })
+    assert [r.collection for r in plan.resources] == ["c1"]
+    assert [d.text for d in plan.resources[0].query_drafts] == ["ok"]

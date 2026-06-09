@@ -62,7 +62,7 @@ The `CollectionSpec` (loaded from `models.yaml`) is the key object passed throug
 
 Every chunk in Chroma carries a canonical metadata dict: `source_name`, `date`, `author`, `source_title`, `topics`. `author` is the abstract term across all document types (journalist for press, speaker for parliament, signatory for bills). Legacy Turkish keys are normalized at read-time in `document_types.py`.
 
-Filter fields per type are declared in `DocumentTypeSpec.filter_fields`; ChromaDB filtering is exact-match only. Speaker/party name searches are more reliably done via BM25 text matching than metadata filter.
+Filter fields per type are declared in `DocumentTypeSpec.filter_fields`; ChromaDB filtering is exact-match only. Speaker/party name searches are more reliably done via semantic (vector) text matching + cross-encoder rerank than via metadata filter — the indexed parliament `author` is the full titled label (e.g. "BAŞBAKAN RECEP TAYYİP ERDOĞAN"), so an exact-match filter for a person name zeroes out. (BM25 was dropped; retrieval is ANN + rerank only.)
 
 ### Ingestion
 

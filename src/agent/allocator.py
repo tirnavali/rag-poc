@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from src.agent.schemas import CollectionExecutionPlan, OrchestratorState, SearchPlan
+from src.common.filter_translators import build_chroma_where
 from src.config.pipeline_loader import AllocationConfig
 
 
@@ -27,6 +28,7 @@ class AllocationPlanner:
 
         budget = self._config.budget_for(state.planner_output.query_type)
         filters_by_collection = self._collect_first_filters(state.planner_output)
+        drafts_by_collection = self._collect_draft_texts(state.planner_output)
 
         plans = []
         for idx, name in enumerate(state.policy_result.allowed_collections):
@@ -38,6 +40,7 @@ class AllocationPlanner:
                     reserve_budget=budget.reserve,
                     fetch_k=budget.fetch_k,
                     filters=filters_by_collection.get(name, {}),
+                    query_drafts=drafts_by_collection.get(name, []),
                     route_reason="planner_suggested_and_session_allowed",
                 )
             )
@@ -46,6 +49,15 @@ class AllocationPlanner:
 
     @staticmethod
     def _collect_first_filters(plan: SearchPlan) -> dict[str, dict]:
+        """Per-collection Chroma where-filters from each resource's first draft.
+
+        Filters are translated to ChromaDB `where` syntax here (the orchestrator
+        path's single choke point), so SearchTool receives the same already-
+        translated dict as the PlanningAgent path (planner.py `_execute_single`).
+        A raw model_dump (e.g. {"year_lte": 2000}) is NOT a valid Chroma filter:
+        `year_lte`/`year_gte` are not real metadata fields and multi-field dicts
+        need a `$and` wrapper — ChromaFilterTranslator handles both.
+        """
         out: dict[str, dict] = {}
         for resource in plan.resources:
             if not resource.query_drafts:
@@ -53,7 +65,32 @@ class AllocationPlanner:
             first = resource.query_drafts[0]
             if first.filters is None:
                 continue
-            data = first.filters.model_dump(exclude_none=True)
-            if data:
-                out[resource.collection] = data
+            # build_chroma_where resolves `author` to the collection's actual
+            # labels ($in) per-collection, like the legacy _execute_single path.
+            where = build_chroma_where(first.filters, resource.collection)
+            if where:
+                out[resource.collection] = where
+        return out
+
+    @staticmethod
+    def _collect_draft_texts(plan: SearchPlan) -> dict[str, list[str]]:
+        """Per-collection planner query rewrites, in draft order, deduplicated.
+
+        These are the alternative phrasings the planner generated for a
+        collection. The orchestrator runs each as a parallel search and RRF-fuses
+        the ranked lists, so the planner's query expansion actually contributes
+        recall instead of being discarded. Blank drafts are dropped; a collection
+        with no usable drafts is omitted (retrieval falls back to the raw query).
+        """
+        out: dict[str, list[str]] = {}
+        for resource in plan.resources:
+            seen: set[str] = set()
+            texts: list[str] = []
+            for draft in resource.query_drafts:
+                text = (draft.text or "").strip()
+                if text and text not in seen:
+                    seen.add(text)
+                    texts.append(text)
+            if texts:
+                out[resource.collection] = texts
         return out

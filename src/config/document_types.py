@@ -66,6 +66,42 @@ def get_doc_type_spec(dt: DocumentType) -> DocumentTypeSpec:
     return DOCUMENT_TYPES[dt]
 
 
+# Which FilterCriteria fields are meaningful for each document type's indexed
+# metadata. Kept separate from DocumentTypeSpec.filter_fields (which drives
+# display and is intentionally minimal) to avoid side effects, and expanded to
+# the full FilterCriteria schema: the year family (year/year_lte/year_gte) maps
+# to the single `year` column, and parliament-only fields (period/session) are
+# included for tutanak/onerge — both are verified present in the live
+# tbmm_tutanaklar_nomic_v2 index, and absent from gazete. `source_name` is the
+# discriminating press field; for tutanak it is a constant ("TBMM Tutanakları"),
+# so filtering on it there only risks cross-type zero-results.
+#
+# `author` is applicable for all real types. In gazete the author is a clean
+# journalist name. In tutanak/onerge the indexed speaker label is the FULL title
+# as it appears in the record — e.g. "BAŞBAKAN RECEP TAYYİP ERDOĞAN" — so an
+# exact-match filter for a plain person name would zero out. That is handled NOT
+# by masking author away but by `build_chroma_where` (filter_translators.py),
+# which resolves the name to the collection's matching labels and emits
+# `author $in [...]` (see AuthorResolver). `author_role` (bare role like "bakan")
+# has no reliable indexed column and stays OMITTED for tutanak/onerge.
+# A value of None means "do not mask" (unknown/custom collections, fail-open).
+FILTER_APPLICABILITY: dict[DocumentType, set[str] | None] = {
+    DocumentType.GAZETE: {
+        "year", "year_lte", "year_gte",
+        "author", "author_role", "source_name", "document_type",
+    },
+    DocumentType.TUTANAK: {
+        "year", "year_lte", "year_gte",
+        "author", "period", "session", "document_type",
+    },
+    DocumentType.ONERGE: {
+        "year", "year_lte", "year_gte",
+        "author", "period", "session", "document_type",
+    },
+    DocumentType.CUSTOM: None,
+}
+
+
 _LEGACY_KEY_MAP: dict[str, str] = {
     "gazete": "source_name",
     "tarih": "date",

@@ -94,7 +94,8 @@ class OrchestratorAgent:
                 ctx.update_details(
                     plans=[
                         {"collection": p.collection_name, "primary": p.retrieval_budget,
-                         "reserve": p.reserve_budget, "fetch_k": p.fetch_k}
+                         "reserve": p.reserve_budget, "fetch_k": p.fetch_k,
+                         "drafts": p.query_drafts or [state.user_query]}
                         for p in state.collection_plans
                     ],
                     query_type=state.planner_output.query_type if state.planner_output else "fact",
@@ -206,49 +207,91 @@ class OrchestratorAgent:
         if not plans:
             return
 
-        def _one(plan):
+        # Fan out one search per (collection × planner draft). The planner emits
+        # several query rewrites per collection; running them all and RRF-fusing
+        # the ranked lists is what makes that query expansion actually count.
+        # A collection with no drafts degrades to a single search on the raw
+        # query. All searches share one pool so collections AND drafts run
+        # concurrently (each search is I/O-bound: Chroma + Ollama rerank).
+        # When a collection has no planner drafts, fall back to the filter-words-
+        # stripped refined_query (FilterExtractor) rather than the raw query, so
+        # filter tokens don't pollute the vector search — mirroring RAGService.
+        refined = state.planner_output.refined_query if state.planner_output else None
+        fallback_query = refined or state.user_query
+        tasks: list[tuple[int, str]] = []  # (plan_index, query_text)
+        for pi, plan in enumerate(plans):
+            drafts = plan.query_drafts or [fallback_query]
+            for draft in drafts:
+                tasks.append((pi, draft))
+
+        def _one(task):
+            pi, query_text = task
+            plan = plans[pi]
             t0 = time.perf_counter()
             try:
                 result = self._search_tool.search(
                     collection_key=plan.collection_name,
-                    query_text=state.user_query,
+                    query_text=query_text,
                     filters=plan.filters or None,
                     top_k=plan.fetch_k,
                 )
             except Exception as exc:
-                return plan.collection_name, exc, (time.perf_counter() - t0) * 1000
-
+                return pi, exc, (time.perf_counter() - t0) * 1000
             chunks = self._dict_to_chunks(result, plan.collection_name)
-            primary = chunks[: plan.retrieval_budget]
+            return pi, chunks, (time.perf_counter() - t0) * 1000
+
+        # Ranked chunk lists per collection (one list per successful draft).
+        draft_lists: dict[int, list[list[Chunk]]] = {pi: [] for pi in range(len(plans))}
+        latency_by_plan: dict[int, float] = {pi: 0.0 for pi in range(len(plans))}
+
+        with ThreadPoolExecutor(max_workers=min(16, max(1, len(tasks)))) as ex:
+            for pi, payload, latency in ex.map(_one, tasks):
+                latency_by_plan[pi] = max(latency_by_plan[pi], latency)
+                name = plans[pi].collection_name
+                if isinstance(payload, Exception):
+                    state.errors.append(f"retrieval_failed:{name}:{type(payload).__name__}")
+                else:
+                    draft_lists[pi].append(payload)
+
+        for pi, plan in enumerate(plans):
+            fused = self._fuse_draft_chunks(draft_lists[pi])
+            primary = fused[: plan.retrieval_budget]
             reserve_end = plan.retrieval_budget + plan.reserve_budget
-            reserve = chunks[plan.retrieval_budget:reserve_end]
-            return plan.collection_name, RetrievalOutput(
+            reserve = fused[plan.retrieval_budget:reserve_end]
+            state.retrieval_results[plan.collection_name] = RetrievalOutput(
                 collection_name=plan.collection_name,
                 chunks=primary,
                 reserve_chunks=reserve,
-                fetched_count=len(chunks),
+                fetched_count=len(fused),
                 returned_count=len(primary),
-                latency_ms=(time.perf_counter() - t0) * 1000,
+                latency_ms=latency_by_plan[pi],
                 filter_applied=plan.filters or {},
-            ), None
+            )
 
-        with ThreadPoolExecutor(max_workers=max(1, len(plans))) as ex:
-            for item in ex.map(_one, plans):
-                name = item[0]
-                payload = item[1]
-                if isinstance(payload, Exception):
-                    state.errors.append(f"retrieval_failed:{name}:{type(payload).__name__}")
-                    state.retrieval_results[name] = RetrievalOutput(
-                        collection_name=name,
-                        chunks=[],
-                        reserve_chunks=[],
-                        fetched_count=0,
-                        returned_count=0,
-                        latency_ms=item[2] if len(item) > 2 else 0.0,
-                        filter_applied={},
-                    )
-                else:
-                    state.retrieval_results[name] = payload
+    @staticmethod
+    def _fuse_draft_chunks(draft_lists: list[list["Chunk"]], k: int = 60) -> list["Chunk"]:
+        """RRF-merge the ranked chunk lists produced by a collection's query drafts.
+
+        Each draft is one ranked list; a chunk's fused score sums ``1/(k+rank)``
+        over the drafts that surfaced it, so chunks found by several rewrites rank
+        highest. Dedup is by ``chunk_id``, keeping the instance with the best
+        rerank score. Zero drafts → empty; a single draft passes through unchanged
+        (preserving the reranker's order).
+        """
+        if not draft_lists:
+            return []
+        if len(draft_lists) == 1:
+            return draft_lists[0]
+
+        scores: dict[str, float] = {}
+        best: dict[str, Chunk] = {}
+        for chunks in draft_lists:
+            for rank, ch in enumerate(chunks, start=1):
+                scores[ch.chunk_id] = scores.get(ch.chunk_id, 0.0) + 1.0 / (k + rank)
+                if ch.chunk_id not in best or ch.rerank_score > best[ch.chunk_id].rerank_score:
+                    best[ch.chunk_id] = ch
+        ordered = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+        return [best[cid] for cid, _ in ordered]
 
     @staticmethod
     def _dict_to_chunks(result: dict, collection_name: str) -> list[Chunk]:

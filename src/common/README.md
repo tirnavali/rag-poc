@@ -114,7 +114,7 @@ Türkçe tarih ifadelerini çıkarır ve normalize eder.
 | `normalize_iso_date(raw)` | `YYYY-MM-DD` formatına çevirir (ISO, noktalı, eğik çizgili, Türkçe metin) |
 | `extract_year(iso_date)` | ISO tarihten yıl int'i çıkarır; geçersizse 0 döndürür |
 
-BM25 ve ChromaDB filtrelerinde yıl bazlı arama için kullanılır.
+ChromaDB filtrelerinde yıl bazlı arama için kullanılır.
 
 ---
 
