@@ -267,6 +267,50 @@ def test_run_restricts_to_session_collections(monkeypatch):
     assert set(searched) == {"gazete_arsivi"}
 
 
+def test_reretrieval_stays_within_session_collections(monkeypatch):
+    """Re-retrieval (broader plan) session seçiminin DIŞINA çıkmamalı.
+
+    İlk arama yetersiz sonuç döndürür → broader plan üretilir; broader plan
+    başka koleksiyon önerse bile session kısıtı uygulanır, sadece seçili
+    koleksiyon aranır (regresyon koruması: aksi halde diğer koleksiyonların
+    embedder'ları yüklenir)."""
+    agent = _agent()
+    # İlk plan: seçili koleksiyon. Broader plan: kapsam-dışı koleksiyon önerir.
+    monkeypatch.setattr(
+        agent, "_generate_plan",
+        lambda q, tracer, allowed_keys=None: _plan("test"),
+    )
+    monkeypatch.setattr(
+        agent, "_generate_broader_plan",
+        lambda q, prev, results, tracer, allowed_keys=None: _plan("gazete_arsivi", "tbmm_minutes"),
+    )
+
+    searched = []
+
+    def fake_search(*, collection_key, query_text, filters, top_k):
+        searched.append(collection_key)
+        # İlk turda az sonuç → re-retrieval tetiklensin.
+        return {
+            "documents": ["a"],
+            "metadatas": [{"chunk_id": f"{collection_key}-0"}],
+            "distances": [0.1],
+        }
+
+    monkeypatch.setattr(agent._search_tool, "search", fake_search)
+    monkeypatch.setattr(
+        agent._answer_tool, "generate",
+        lambda query, context, mufettis_mode=False: ("t", "ok"),
+    )
+    monkeypatch.setattr(agent._sanitizer, "sanitize", lambda *a, **kw: "ok")
+    agent._bad_words = None
+    agent._classifier = None
+
+    agent.run("soru", session_collections=["test"])
+
+    # Broader plan gazete/tbmm_minutes önerse de hiçbiri aranmadı; sadece 'test'.
+    assert set(searched) == {"test"}
+
+
 # --- FilterExtractor entegrasyonu: filtrelerin tek kaynağı FilterExtractor ---
 
 def test_apply_filter_extractor_populates_all_drafts():

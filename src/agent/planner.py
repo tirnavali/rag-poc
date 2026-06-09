@@ -237,9 +237,13 @@ class PlanningAgent:
         current_plan = plan
         attempts = 0
         while attempts < self._config.planner.re_retrieval_max_retries and self._needs_reretrieval(all_results):
-            broader_plan = self._generate_broader_plan(query, current_plan, all_results, tracer)
+            broader_plan = self._generate_broader_plan(query, current_plan, all_results, tracer, allowed_keys=allowed)
             if broader_plan is None:
                 break
+            # Re-retrieval da session seçimine sadık kalmalı (broadening sorguyu
+            # genişletir, koleksiyon kümesini değil).
+            if allowed:
+                broader_plan = self._enforce_session_collections(query, broader_plan, allowed, tracer)
             new_results = self._execute_plan(broader_plan, tracer, phase="re_retrieval")
             all_results = self._merge_results(all_results, new_results)
             current_plan = broader_plan
@@ -272,7 +276,9 @@ class PlanningAgent:
         # Phase 4b: Quality-based re-retrieval
         quality_re_retrieved = False
         if self._needs_quality_reretrieval(answer, validation):
-            gap_plan = self._generate_gap_fill_plan(query, answer, validation, tracer)
+            gap_plan = self._generate_gap_fill_plan(query, answer, validation, tracer, allowed_keys=allowed)
+            if gap_plan and allowed:
+                gap_plan = self._enforce_session_collections(query, gap_plan, allowed, tracer)
             if gap_plan:
                 gap_results = self._execute_plan(
                     gap_plan, tracer, phase="quality_reretrieval"
@@ -635,9 +641,15 @@ class PlanningAgent:
         previous_plan: SearchPlan,
         all_results: list[dict],
         tracer: PipelineTracer,
+        allowed_keys: set[str] | None = None,
     ) -> SearchPlan | None:
-        """Generate a broader plan for re-retrieval."""
-        catalog = self._config.get_collection_catalog()
+        """Generate a broader plan for re-retrieval.
+
+        When ``allowed_keys`` is given, the catalog is restricted to the session
+        selection so re-retrieval broadens the QUERY, not the collection set
+        (otherwise the broadening prompt would route to out-of-scope collections).
+        """
+        catalog = self._config.get_collection_catalog(allowed_keys=allowed_keys)
         system_prompt = RE_RETRIEVAL_PROMPT.format(
             catalog=catalog,
             query=query,
@@ -652,9 +664,14 @@ class PlanningAgent:
         answer: str,
         validation: ValidationResult,
         tracer: PipelineTracer,
+        allowed_keys: set[str] | None = None,
     ) -> SearchPlan | None:
-        """Generate a targeted plan to fill the information gap in a failing answer."""
-        catalog = self._config.get_collection_catalog()
+        """Generate a targeted plan to fill the information gap in a failing answer.
+
+        When ``allowed_keys`` is given, the catalog is restricted to the session
+        selection so gap-fill stays within the user's chosen collections.
+        """
+        catalog = self._config.get_collection_catalog(allowed_keys=allowed_keys)
         issues_text = "; ".join(validation.issues) if validation.issues else "Yanıt soruyu karşılamıyor"
         system_prompt = GAP_FILL_PROMPT.format(
             catalog=catalog,
