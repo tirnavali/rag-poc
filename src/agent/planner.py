@@ -317,10 +317,32 @@ class PlanningAgent:
             suggestion_2=padded[2],
         )
 
+    # Allowed enum values for tolerant coercion of LLM output (qwen occasionally
+    # emits a sentence/invalid token in these fields, which would otherwise raise
+    # a Pydantic ValidationError and crash the whole plan into the fallback path).
+    _VALID_INTENTS = {"factual", "comparative", "analytical", "temporal", "unknown"}
+    _VALID_QUERY_TYPES = {"fact", "summary", "comparison", "reasoning", "policy"}
+
     def _parse_plan(self, plan_data: dict) -> SearchPlan:
-        """Build a SearchPlan from a parsed JSON dict."""
+        """Build a SearchPlan from a parsed JSON dict.
+
+        Tolerant of LLM schema violations: an out-of-enum ``intent``/``query_type``
+        is coerced to a safe default instead of raising. ``filters`` emitted by
+        the planner LLM are intentionally DROPPED here — FilterExtractor is the
+        single source of truth for metadata filters (populated later in
+        ``_apply_filter_extractor``), and parsing the LLM's filters would both be
+        redundant and crash on invalid values (e.g. document_type='gazete').
+        """
+        intent = plan_data.get("intent", "unknown")
+        if intent not in self._VALID_INTENTS:
+            intent = "unknown"
+        query_type = plan_data.get("query_type", "fact")
+        if query_type not in self._VALID_QUERY_TYPES:
+            query_type = "fact"
+
         return SearchPlan(
-            intent=plan_data.get("intent", "unknown"),
+            intent=intent,
+            query_type=query_type,
             resources=[
                 CollectionSearchPlan(
                     collection=r["collection"],
@@ -329,7 +351,7 @@ class PlanningAgent:
                     query_drafts=[
                         SearchQueryDraft(
                             text=d["text"],
-                            filters=d.get("filters"),
+                            filters=None,  # FilterExtractor doldurur; LLM filtreleri yok sayılır
                             top_k=d.get("top_k", 5),
                         )
                         for d in r.get("query_drafts", [])

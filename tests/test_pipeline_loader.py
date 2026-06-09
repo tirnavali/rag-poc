@@ -68,6 +68,26 @@ def test_collection_catalog_restricted_to_allowed_keys():
         assert f"- {other} " not in catalog
 
 
+def test_collection_catalog_includes_selected_non_default():
+    """Seçilen koleksiyon tip-default olmasa bile (örn. 'test') katalogda görünür.
+
+    Aksi halde non-default bir koleksiyon seçildiğinde katalog boş döner ve
+    planner körlemesine kapsam-dışı koleksiyon uydurur.
+    """
+    from src.config.collections import COLLECTIONS, DEFAULT_COLLECTION_FOR_TYPE
+
+    cfg = load_pipeline_config()
+    if "test" not in COLLECTIONS:
+        import pytest
+        pytest.skip("'test' koleksiyonu kayıtlı değil")
+    assert "test" not in set(DEFAULT_COLLECTION_FOR_TYPE.values()), "test bir tip-default olmamalı"
+
+    catalog = cfg.get_collection_catalog(allowed_keys={"test"})
+    assert "- test " in catalog
+    # doc_type satırda yer almalı ki planner koleksiyon türünü öğrensin.
+    assert "doc_type=" in catalog
+
+
 def test_retrieval_defaults_present():
     cfg = load_pipeline_config()
     assert cfg.retrieval.distance_threshold > 0

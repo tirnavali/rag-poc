@@ -270,17 +270,23 @@ class PipelineConfig:
     def get_collection_catalog(self, allowed_keys: "set[str] | None" = None) -> str:
         """Return a human-readable catalog of collections for the agent prompt.
 
-        Only the default (canonical) collection per document type is listed —
-        the `defaults` map in models.yaml. models.yaml also registers many
-        experimental/comparison collections (e.g. tbmm_minutes_docling_jina_v4,
-        tbmm_tutanaklar_docling_jina_v3_4k) that are not the live retrieval target; exposing
-        them here makes the planner route to dead collections. The planner must
-        only see one active collection per doc_type.
+        Default (``allowed_keys=None``): only the canonical collection per
+        document type is listed — the `defaults` map in models.yaml. models.yaml
+        also registers many experimental/comparison collections (e.g.
+        tbmm_minutes_docling_jina_v4) that are not the live retrieval target;
+        exposing them makes the planner route to dead collections.
+
+        When ``allowed_keys`` is given (the user's session selection), the catalog
+        lists EXACTLY those registered collections — including non-default ones
+        (e.g. a `test` collection). Otherwise selecting a non-default collection
+        would yield an empty catalog and the planner, seeing nothing, would
+        hallucinate an out-of-scope collection. Each line still carries
+        ``doc_type=...`` so the planner learns the collection's type and routes
+        correctly.
 
         Args:
-            allowed_keys: when given, restrict the catalog to these collection
-                keys (the user's session selection). The planner then can only
-                route within the selected set. None lists all defaults.
+            allowed_keys: when given, list these collection keys (the session
+                selection); None lists the type defaults.
         """
         from src.config.collections import COLLECTIONS, DEFAULT_COLLECTION_FOR_TYPE
         from src.config.document_types import DOCUMENT_TYPES, DocumentType
@@ -292,13 +298,19 @@ class PipelineConfig:
             DocumentType.CUSTOM: "özel kaynak",
         }
 
+        if allowed_keys is not None:
+            # Session selection: list exactly the chosen registered collections,
+            # whatever their doc_type (not limited to the per-type defaults).
+            keys = [k for k in allowed_keys if k in COLLECTIONS]
+        else:
+            keys = list(DEFAULT_COLLECTION_FOR_TYPE.values())
+
         lines = []
-        for dt, key in DEFAULT_COLLECTION_FOR_TYPE.items():
-            if allowed_keys is not None and key not in allowed_keys:
-                continue
+        for key in keys:
             spec = COLLECTIONS.get(key)
             if spec is None:
                 continue
+            dt = spec.doc_type
             label = DOCUMENT_TYPES[dt].display_name_tr
             hint = content_hints.get(dt, "")
             descriptor = f"{label} — {hint}" if hint else label

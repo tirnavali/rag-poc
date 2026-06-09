@@ -363,3 +363,48 @@ def test_legacy_run_propagates_extracted_filters_to_search(monkeypatch):
 
     # İlk arama: FE year=1996 → ChromaFilterTranslator → tek koşul $eq.
     assert calls[0] == {"year": {"$eq": 1996}}
+
+
+# --- _parse_plan robustness: LLM şema ihlallerine tolerans ---
+
+def test_parse_plan_coerces_invalid_intent():
+    """LLM intent alanına cümle yazarsa 'unknown'a düşülür, ValidationError atılmaz."""
+    agent = _agent()
+    plan = agent._parse_plan({
+        "intent": "Deniz Baykal'ın konuşmasını detaylı bulmak.",  # geçersiz, cümle
+        "resources": [{"collection": "test", "query_drafts": [{"text": "q"}]}],
+        "reasoning": "r",
+    })
+    assert plan.intent == "unknown"
+
+
+def test_parse_plan_coerces_invalid_query_type():
+    """Geçersiz query_type 'fact'e düşülür."""
+    agent = _agent()
+    plan = agent._parse_plan({
+        "intent": "factual",
+        "query_type": "bilgi",  # geçersiz
+        "resources": [{"collection": "test", "query_drafts": [{"text": "q"}]}],
+        "reasoning": "r",
+    })
+    assert plan.query_type == "fact"
+
+
+def test_parse_plan_drops_llm_filters():
+    """LLM filtre kusarsa (geçersiz document_type dahil) parse patlamaz; filters None olur.
+
+    Filtrelerin tek kaynağı FilterExtractor; planner LLM'in ürettiği filters yok sayılır.
+    """
+    agent = _agent()
+    plan = agent._parse_plan({
+        "intent": "factual",
+        "resources": [{
+            "collection": "test",
+            "query_drafts": [
+                {"text": "q", "filters": {"document_type": "gazete"}},  # geçersiz enum
+            ],
+        }],
+        "reasoning": "r",
+    })
+    # ValidationError atılmadı ve LLM filtresi düşürüldü.
+    assert plan.resources[0].query_drafts[0].filters is None
