@@ -79,13 +79,16 @@ Katmanlar arası paylaşılan durumsuz yardımcı araçlar:
 - `text.py`: Türkçe normalizasyon (`normalize_tr`) ve anahtar kelime penceresi çıkarma.
 - `dates.py`: Türkçe tarih ayrıştırma ve ISO formatına dönüştürme.
 - `embeddings.py`: `Ollama` ve yerel `Jina v3` embedding fabrikaları.
-- `parsing/`: `DoclingManager` (yapısal döküman analizi) ve `packer.py` (akıllı parçalama).
+- `parsing/`: İki ayrı modül olarak bölünmüş:
+  - `markdown_converter.py` (`MarkdownConverter`): PDF/DOCX → Markdown dönüşümü ve `data_lake/markdown/` altına artefakt kaydı. Bağımsız çalıştırılabilir: `python -m src.common.parsing.markdown_converter --file belge.pdf`
+  - `docling_manager.py` (`DoclingManager`): Packing (chunking) katmanı. `MarkdownConverter`'ı composition ile kullanır; `convert_and_pack()` geriye dönük uyumlu imzayı korur.
+  - `packer.py`: Greedy atom paketleme yardımcısı.
 - `chroma.py` / `sqlite_io.py`: Veritabanı bağlantı yardımcıları.
 
 ### `src/trainer/ingestion/` (Yeni Veri Yükleme Hattı)
 Modern, yapısal analize dayalı veri yükleme süreci:
 - `adapters/`: Farklı belge tiplerini ortak `DocumentInput` şemasına dönüştüren adapter sınıfları.
-- `pipeline.py`: Uçtan uca veri yükleme akışı (Docling -> Late Chunking -> Chroma).
+- `pipeline.py`: Uçtan uca veri yükleme akışı (Markdown dönüşümü → Packing → Late Chunking → Chroma).
 - `manifest.py`: Hangi dosyaların yüklendiğini takip eden SQLite tabanlı manifest.
 
 ### `src/retriever/`
@@ -123,6 +126,7 @@ Harici MCP istemcileri (Claude Desktop, Open WebUI vb.) için SSE tabanlı iki b
 | `python -m src.mcp.press_server` | Gazete arşivi MCP sunucusunu başlat (port 8001) |
 | `python -m src.mcp.router_server` | Çapraz arama + rapor MCP sunucusunu başlat (port 8003) |
 | `python -m src.trainer.ingestion.ingest --request manifest.json` | Belge yükleme hattı |
+| `python -m src.common.parsing.markdown_converter --file belge.pdf` | Yalnızca PDF → Markdown dönüştür (chunk/embed olmadan) |
 | `python -m scripts.ingest_onerge` | Kanun teklifleri için veri yükleme hattı |
 | `python -m scripts.evaluate` | Değerlendirme sistemini çalıştır |
 | `python -m scripts.reindex_all` | Tüm koleksiyonları sıfırdan yeniden dizinle |
@@ -145,7 +149,12 @@ Harici MCP istemcileri (Claude Desktop, Open WebUI vb.) için SSE tabanlı iki b
 
 ## Parçalama ve Bağlam (Chunking)
 
-Sistem artık statik parçalama yerine, döküman yapısını anlayan akıllı paketleme (`packer.py`) ve bağlamsal embedding (`Late Chunking`) kullanmaktadır. Ayarlar `src/config/collections.py` içerisinden koleksiyon bazlı yönetilir.
+Sistem, döküman yapısını anlayan akıllı paketleme ve bağlamsal embedding (Late Chunking) kullanır. Pipeline iki ayrı katmana bölünmüştür:
+
+1. **Dönüşüm katmanı** (`MarkdownConverter.convert()`): PDF → Markdown atomları + `full_text`. Sonuç `data_lake/markdown/` altına `{kaynak}__{hash[:8]}.md` olarak kaydedilir — OCR kalitesi gözle incelenebilir ve diff'lenebilir.
+2. **Packing katmanı** (`DoclingManager.pack()`): Atomları chunk'lara paketler. Late Chunking için `full_text` + karakter span'leri birlikte taşınır; span'ler `full_text` üzerinden hesaplanır — bu bağ koparılamaz.
+
+Ayarlar `src/config/collections.py` (veya `models.yaml`) içerisinden koleksiyon bazlı yönetilir.
 
 ---
 
