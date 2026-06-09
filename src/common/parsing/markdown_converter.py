@@ -39,6 +39,7 @@ class ParsedDocument:
     dl_doc: Any | None
     ocr_base: str               # Level-2 chunk önbelleği anahtar üretimi için
     markdown_path: str | None = field(default=None)
+    pages_path: str | None = field(default=None)
     pages_by_number: List[Dict[str, Any]] = field(default_factory=list)
 
 
@@ -181,6 +182,7 @@ class MarkdownConverter:
 
         markdown_path = self._save_markdown_artifact(file_path, file_hash, full_text)
         pages_by_number = self._build_pages_by_number(atoms_data)
+        pages_path = self._save_pages_artifact(file_path, file_hash, pages_by_number)
 
         return ParsedDocument(
             full_text=full_text,
@@ -188,6 +190,7 @@ class MarkdownConverter:
             dl_doc=dl_doc,
             ocr_base=ocr_base,
             markdown_path=markdown_path,
+            pages_path=pages_path,
             pages_by_number=pages_by_number,
         )
 
@@ -263,6 +266,26 @@ class MarkdownConverter:
             }
         )
 
+    def _save_pages_artifact(
+        self, file_path: str, file_hash: str, pages_by_number: List[Dict[str, Any]]
+    ) -> str | None:
+        """pages_by_number'ı data_lake/pages/ altına sidecar JSON olarak yazar."""
+        try:
+            pages_dir = settings.PAGES_DIR
+            pages_dir.mkdir(parents=True, exist_ok=True)
+            source_stem = Path(file_path).stem
+            pages_path = pages_dir / f"{source_stem}__{file_hash[:8]}_pages.json"
+            if not pages_path.exists():
+                pages_path.write_text(
+                    json.dumps(pages_by_number, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+                print(f"  [PAGES] Artefakt kaydedildi: {pages_path.name}")
+            return str(pages_path)
+        except Exception as e:
+            print(f"  [WARN] Pages artefakt yazma hatası: {e}")
+            return None
+
     def _save_markdown_artifact(
         self, file_path: str, file_hash: str, full_text: str
     ) -> str | None:
@@ -327,6 +350,8 @@ if __name__ == "__main__":
     print(f"  full_text   : {len(parsed.full_text):,} karakter")
     if parsed.markdown_path:
         print(f"  Artefakt    : {parsed.markdown_path}")
+    if parsed.pages_path:
+        print(f"  Pages JSON  : {parsed.pages_path}")
     if args.pages_json:
         import json as _json
         print(_json.dumps(parsed.pages_by_number, ensure_ascii=False, indent=2))

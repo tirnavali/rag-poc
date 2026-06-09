@@ -161,6 +161,7 @@ ONERGE_COLLECTION = "tbmm_onerge"
 MANIFEST_DB = DATA_LAKE / "document_manifest.db"
 PARSE_CACHE_DIR = DATA_LAKE / "parse_cache"
 MARKDOWN_DIR = DATA_LAKE / "markdown"
+PAGES_DIR = DATA_LAKE / "pages"
 
 # --- Downloaded Files ---
 # Files fetched from URLs during ingestion are cached here per collection.
