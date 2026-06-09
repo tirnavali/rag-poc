@@ -420,12 +420,12 @@ def cmd_add_collection(args) -> None:
 
     registry_key = collection_name
 
-    # Step 3 — chroma_path
-    chroma_path = _wiz_text(3, TOTAL, "ChromaDB Dizini",
+    # Step 2 — chroma_path
+    chroma_path = _wiz_text(2, TOTAL, "ChromaDB Dizini",
         "Vektör veritabanının kaydedileceği dizin (göreli ya da mutlak).\n  Örnek: data_lake/press_clips_vectors",
         "ChromaDB dizini")
 
-    # Step 4 — embed_model (numbered list with specs)
+    # Step 3 — embed_model (numbered list with specs)
     model_choices = []
     for name, spec in MODEL_SPECS.items():
         ctx = spec["max_context_tokens"]
@@ -433,10 +433,10 @@ def cmd_add_collection(args) -> None:
         dim = spec["embed_dim"]
         lc = "· late chunking ✓" if spec["supports_late_chunking"] else ""
         model_choices.append((name, f"{ctx_label} context · {dim} dim {lc}".strip()))
-    embed_model = _wiz_choice(4, TOTAL, "Embed Modeli",
+    embed_model = _wiz_choice(3, TOTAL, "Embed Modeli",
         "Bu koleksiyonu indeksleyecek ve sorgulayacak embedding modeli.", model_choices)
 
-    # Step 5 — doc_type
+    # Step 4 — doc_type
     type_labels = {
         "gazete": "Gazete kupürü",
         "tutanak": "TBMM tutanağı",
@@ -444,10 +444,10 @@ def cmd_add_collection(args) -> None:
         "custom": "Özel kaynak",
     }
     type_choices = [(dt.value, type_labels.get(dt.value, dt.value)) for dt in DocumentType]
-    doc_type_value = _wiz_choice(5, TOTAL, "Belge Tipi",
+    doc_type_value = _wiz_choice(4, TOTAL, "Belge Tipi",
         "Koleksiyondaki belgelerin türü.", type_choices)
 
-    # Step 6 — chunk params
+    # Step 5 — chunk params
     chunk_defaults = dict(min_chunk_chars=400, max_chunk_chars=1500, max_chunk_tokens=512, min_chunk_tokens=384)
     console.print()
     console.print(Panel(
@@ -456,7 +456,7 @@ def cmd_add_collection(args) -> None:
         f"max_chunk_chars={chunk_defaults['max_chunk_chars']}\n"
         f"  max_chunk_tokens={chunk_defaults['max_chunk_tokens']}  "
         f"min_chunk_tokens={chunk_defaults['min_chunk_tokens']}",
-        title=f"[bold]Adım 6 / {TOTAL}  —  Chunk Parametreleri[/bold]",
+        title=f"[bold]Adım 5 / {TOTAL}  —  Chunk Parametreleri[/bold]",
         border_style="blue",
     ))
     chunk_params = dict(chunk_defaults)

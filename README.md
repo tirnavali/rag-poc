@@ -61,6 +61,8 @@ python -m src.trainer.ingestion.ingest --add-collection
 
 Sihirbaz koleksiyon anahtarı, ChromaDB adı, embedding modeli ve chunk parametrelerini sorar; onayda `models.yaml`'a yazar. Python kodu değişikliği gerekmez.
 
+> **Yeni embedding modeli eklemek:** `models.yaml`'daki `model_specs` bloğuna yeni bir giriş ekleyin; sihirbaz bir sonraki çalıştırmada bu modeli listeler. HuggingFace modelleri (örn. `jinaai/jina-embeddings-v4`) ilk indekslemede otomatik indirilir — kurulum gerekmez, sadece disk alanı ve bekleme süresi.
+
 ### 1. `ingest_request.json` Hazırla
 
 ```json
@@ -434,14 +436,13 @@ Yeni bir koleksiyonu en hızlı yol interaktif sihirbazla eklemektir; `models.ya
 python -m src.trainer.ingestion.ingest --add-collection
 ```
 
-Sihirbaz sizi 6 adımda yönlendirir:
+Sihirbaz sizi 5 adımda yönlendirir:
 
-1. **Koleksiyon anahtarı** — `models.yaml`'daki kayıt anahtarı (`snake_case`, benzersiz)
-2. **ChromaDB koleksiyon adı** — ChromaDB içindeki koleksiyon adı (benzersiz)
-3. **ChromaDB dizini** — vektörlerin kaydedileceği dizin (örn. `data_lake/press_clips_vectors`)
-4. **Embedding modeli** — `models.yaml`'daki kayıtlı modeller listesinden seçim
-5. **Belge tipi** — `tutanak`, `gazete`, `onerge`, `custom`
-6. **Chunk parametreleri** — varsayılanları kabul edebilir ya da özelleştirebilirsiniz
+1. **Koleksiyon adı** — hem `models.yaml`'daki kayıt anahtarı hem ChromaDB koleksiyon adı (`snake_case`, benzersiz). `ingest_request.json`'daki `collection` alanına yazılan değerdir.
+2. **ChromaDB dizini** — vektörlerin kaydedileceği dizin (örn. `data_lake/press_clips_vectors`)
+3. **Embedding modeli** — `models.yaml`'daki kayıtlı modeller listesinden seçim
+4. **Belge tipi** — `tutanak`, `gazete`, `onerge`, `custom`
+5. **Chunk parametreleri** — varsayılanları kabul edebilir ya da özelleştirebilirsiniz
 
 Sonunda özet gösterilir ve onayınızla `models.yaml`'a yazılır. İsteğe bağlı olarak bu koleksiyonu o belge tipi için varsayılan yapabilirsiniz.
 
