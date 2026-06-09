@@ -1,6 +1,6 @@
-# Gazete Arşivi RAG (Retrieval-Augmented Generation) Sistemi
+# Hibrit Çok-Koleksiyonlu RAG Sistemi
 
-Türkçe gazete arşivi ve TBMM tutanakları üzerinde hibrit arama ve LLM yanıt üretimi yapan yerel RAG sistemi.
+Yerel LLM ile çalışan; hibrit arama (BM25 + vektör + RRF), cross-encoder reranking ve agentic planlama destekli belge sorgulama platformu.
 
 > **Mimari detaylar için:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
