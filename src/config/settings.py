@@ -17,6 +17,16 @@ _logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_LAKE = PROJECT_ROOT / "data_lake"
 
+# --- .env Dosyasını Yükleme (Sıfır Bağımlılık) ---
+_env_file = PROJECT_ROOT / ".env"
+if _env_file.exists():
+    with open(_env_file, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, val = line.split("=", 1)
+                os.environ.setdefault(key.strip(), val.strip())
+
 # --- Model & Environment Configuration ---
 # Options: 'local', 'remote'
 RAG_ENV = os.environ.get("RAG_ENV", "local")
@@ -159,6 +169,20 @@ DOWNLOADS_DIR = DATA_LAKE / "downloads"
 # Engine options: "easyocr", "tesseract", "mac"
 # Override via env: OCR_ENGINE=tesseract python -m scripts.ingest ...
 OCR_ENGINE = os.environ.get("OCR_ENGINE", "easyocr")
+
+# GPU/CPU configuration for Docling
+_use_gpu_env = os.environ.get("DOCLING_USE_GPU", "auto").lower()
+if _use_gpu_env == "true":
+    DOCLING_USE_GPU = True
+elif _use_gpu_env == "false":
+    DOCLING_USE_GPU = False
+else:
+    # "auto" or empty: autodetect CUDA capability
+    try:
+        import torch
+        DOCLING_USE_GPU = torch.cuda.is_available()
+    except ImportError:
+        DOCLING_USE_GPU = False
 
 # --- Local Late Chunking Configuration ---
 #

@@ -13,15 +13,19 @@ Yerel LLM ile çalışan; hibrit arama (BM25 + vektör + RRF), cross-encoder rer
 bash setup_env.sh
 source .venv/bin/activate
 
-# 2. Ollama modellerini indir
+# 2. Çevre değişkenlerini yapılandır (GPU/OCR ayarları vb.)
+cp .env.example .env
+# (İsteğe bağlı) .env dosyasını açıp donanım tercihinizi (GPU/CPU veya Tesseract/EasyOCR) düzenleyebilirsiniz.
+
+# 3. Ollama modellerini indir
 ollama pull nomic-embed-text-v2-moe
 ollama pull gemma4:e2b
 ollama pull qwen3.5:9b
 
-# 3. Belgeleri indeksle (örnek manifest ile)
+# 4. Belgeleri indeksle (örnek manifest ile)
 python -m src.trainer.ingestion.ingest --request ornek_ingestion.json
 
-# 4. Sohbeti başlat (agent modu)
+# 5. Sohbeti başlat (agent modu)
 python chat.py --agent
 
 # Alternatif: Görsel arayüz
@@ -630,18 +634,20 @@ Dijital doğumlu PDF'lerde (metin katmanı olan) OCR'ı devre dışı bırakın 
 
 `ocr` alanı belirtilmezse varsayılan `true` — OCR her zaman çalışır. Taranmış belgeler için `ocr: true` bırakın veya hiç yazmayın.
 
-#### Global OCR motoru
+#### Global OCR ve Donanım Yapılandırması
 
-PDF'ler için OCR motoru `OCR_ENGINE` ortam değişkeni ile değiştirilebilir.
+Projeyi kuran kişiler OCR motorunu ve GPU kullanımını kök dizindeki `.env` dosyasından yapılandırabilir (Şablon için: `.env.example`).
 
-| Motor | Değer | Notlar |
-|---|---|---|
-| EasyOCR (varsayılan) | `easyocr` | Türkçe modeli ile en iyi kalite, ilk çalıştırmada ~300 MB model indirir |
-| Tesseract CLI | `tesseract` | `brew install tesseract tesseract-lang` gerektirir |
-| macOS Vision | `mac` | Sıfır kurulum, yalnızca macOS |
+| Değişken | Varsayılan | Seçenekler | Açıklama |
+|---|---|---|---|
+| `OCR_ENGINE` | `easyocr` | `easyocr`, `tesseract`, `mac` | Hangi OCR motorunun kullanılacağını seçer |
+| `DOCLING_USE_GPU` | `auto` | `auto`, `true`, `false` | `auto`: PyTorch CUDA desteği varsa GPU kullanır. |
+| `USE_LOCAL_LATE_CHUNKING` | `0` | `1`, `0` | Yerel Late Chunking modelini aktif eder. |
+
+Tek seferlik geçici çalıştırmalarda komut satırından da geçersiz kılınabilir:
 
 ```bash
-# Motor seçimi (tek seferlik)
+# Motor seçimi (tek seferlik komut satırı geçersiz kılması)
 OCR_ENGINE=tesseract python -m src.trainer.ingestion.ingest --request ingest.json
 
 # Motorları karşılaştır

@@ -73,7 +73,7 @@ def greedy_pack_atoms(
 def _build_ocr_options(engine: str):
     """Map engine name → Docling OCR options object."""
     if engine == "easyocr":
-        return EasyOcrOptions(lang=["tr"], use_gpu=False)
+        return EasyOcrOptions(lang=["tr"], use_gpu=settings.DOCLING_USE_GPU)
     elif engine == "tesseract":
         return TesseractCliOcrOptions(lang=["tur"])
     elif engine == "mac":
