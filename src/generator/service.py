@@ -356,8 +356,9 @@ class RAGService:
         Args:
             query: user query
             on_phase: optional callback(name, block, model, details) for legacy path
-            session_collections: collections the user selected at session start
-                (orchestrator path uses this for policy intersection)
+            session_collections: collections the user selected at session start.
+                Both paths honor it: orchestrator via PolicyEnforcer, legacy via
+                PlanningAgent's catalog restriction + plan intersection.
             stream_callback: optional callable invoked by the orchestrator path
                 when the final answer is ready; reserved for future token-level
                 streaming.
@@ -377,4 +378,4 @@ class RAGService:
 
         agent = self._get_agent()
         tracer = AgentPipelineTracer(on_phase=on_phase)
-        return agent.run(query, trace=tracer)
+        return agent.run(query, trace=tracer, session_collections=session_collections)

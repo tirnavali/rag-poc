@@ -76,7 +76,7 @@ def test_low_confidence_off_domain_falls_through_to_planner(agent, monkeypatch):
         scope="off_domain", confidence=0.3, reason="emin değilim"
     )
     monkeypatch.setattr(agent, "_generate_plan", lambda *a, **kw: None)
-    monkeypatch.setattr(agent, "_fallback_plan", lambda q: SearchPlan(intent="unknown", resources=[], reasoning=""))
+    monkeypatch.setattr(agent, "_fallback_plan", lambda q, allowed_keys=None: SearchPlan(intent="unknown", resources=[], reasoning=""))
     monkeypatch.setattr(agent, "_execute_plan", lambda *a, **kw: [])
     monkeypatch.setattr(agent, "_call_answering", lambda *a, **kw: ("", "fallback answer"))
     monkeypatch.setattr(agent, "_validate_output", lambda *a, **kw: ValidationResult(passes=True, issues=[], corrected_answer=None, retry_hint=None))
@@ -96,7 +96,7 @@ def test_in_scope_runs_planner(agent, monkeypatch):
         scope="in_scope", confidence=0.95, reason="siyasi"
     )
     monkeypatch.setattr(agent, "_generate_plan", lambda *a, **kw: None)
-    monkeypatch.setattr(agent, "_fallback_plan", lambda q: SearchPlan(intent="unknown", resources=[], reasoning=""))
+    monkeypatch.setattr(agent, "_fallback_plan", lambda q, allowed_keys=None: SearchPlan(intent="unknown", resources=[], reasoning=""))
     monkeypatch.setattr(agent, "_execute_plan", lambda *a, **kw: [])
     monkeypatch.setattr(agent, "_call_answering", lambda *a, **kw: ("", "ok"))
     monkeypatch.setattr(agent, "_validate_output", lambda *a, **kw: ValidationResult(passes=True, issues=[], corrected_answer=None, retry_hint=None))

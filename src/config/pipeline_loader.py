@@ -267,7 +267,7 @@ class PipelineConfig:
             )
         return self.blocks[name]
 
-    def get_collection_catalog(self) -> str:
+    def get_collection_catalog(self, allowed_keys: "set[str] | None" = None) -> str:
         """Return a human-readable catalog of collections for the agent prompt.
 
         Only the default (canonical) collection per document type is listed —
@@ -276,6 +276,11 @@ class PipelineConfig:
         tbmm_tutanaklar_docling_jina_v3_4k) that are not the live retrieval target; exposing
         them here makes the planner route to dead collections. The planner must
         only see one active collection per doc_type.
+
+        Args:
+            allowed_keys: when given, restrict the catalog to these collection
+                keys (the user's session selection). The planner then can only
+                route within the selected set. None lists all defaults.
         """
         from src.config.collections import COLLECTIONS, DEFAULT_COLLECTION_FOR_TYPE
         from src.config.document_types import DOCUMENT_TYPES, DocumentType
@@ -289,6 +294,8 @@ class PipelineConfig:
 
         lines = []
         for dt, key in DEFAULT_COLLECTION_FOR_TYPE.items():
+            if allowed_keys is not None and key not in allowed_keys:
+                continue
             spec = COLLECTIONS.get(key)
             if spec is None:
                 continue
