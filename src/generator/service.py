@@ -313,7 +313,7 @@ class RAGService:
             )
 
         pool = LLMClientPool.from_config(config)
-        self._agent = PlanningAgent(config, pool)
+        self._agent = PlanningAgent(config, pool, self.filter_extractor)
         return self._agent
 
     def _get_orchestrator(self):
@@ -332,7 +332,7 @@ class RAGService:
             )
 
         pool = LLMClientPool.from_config(config)
-        self._orchestrator = OrchestratorAgent(config, pool)
+        self._orchestrator = OrchestratorAgent(config, pool, self.filter_extractor)
         return self._orchestrator
 
     def _orchestrator_enabled(self) -> bool:

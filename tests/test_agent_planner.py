@@ -7,18 +7,38 @@ Covers the pure-Python decision logic and locks in two fixes:
 """
 import pytest
 
+from unittest.mock import MagicMock
+
 from src.agent.planner import PlanningAgent
 from src.agent.schemas import CollectionSearchPlan, SearchPlan, SearchQueryDraft
 from src.agent.tracer import PipelineTracer
 from src.common.llm_client_pool import LLMClientPool
-from src.common.schemas import FilterCriteria
+from src.common.schemas import ExtractedFilterResponse, FilterCriteria
 from src.config.pipeline_loader import load_pipeline_config
 
 
-def _agent() -> PlanningAgent:
+def _agent(filter_extractor=None) -> PlanningAgent:
     cfg = load_pipeline_config()
     pool = LLMClientPool.from_config(cfg)
-    return PlanningAgent(cfg, pool)
+    return PlanningAgent(cfg, pool, filter_extractor)
+
+
+def _two_collection_plan() -> SearchPlan:
+    """Plan with 2 collections × 2 drafts each, all filters initially None."""
+    return SearchPlan(
+        intent="factual",
+        resources=[
+            CollectionSearchPlan(
+                collection="tbmm_minutes",
+                query_drafts=[SearchQueryDraft(text="q1a"), SearchQueryDraft(text="q1b")],
+            ),
+            CollectionSearchPlan(
+                collection="gazete_arsivi",
+                query_drafts=[SearchQueryDraft(text="q2a"), SearchQueryDraft(text="q2b")],
+            ),
+        ],
+        reasoning="r",
+    )
 
 
 def test_needs_reretrieval_true_when_below_threshold():
@@ -245,3 +265,101 @@ def test_run_restricts_to_session_collections(monkeypatch):
 
     # Sadece seçili koleksiyon arandı; tbmm_minutes düşürüldü.
     assert set(searched) == {"gazete_arsivi"}
+
+
+# --- FilterExtractor entegrasyonu: filtrelerin tek kaynağı FilterExtractor ---
+
+def test_apply_filter_extractor_populates_all_drafts():
+    """FilterExtractor BİR KEZ çağrılır, çıkan FilterCriteria tüm draft'lara uygulanır."""
+    mock_fe = MagicMock()
+    mock_fe.model = "test-model"
+    mock_fe.extract.return_value = ExtractedFilterResponse(
+        refined_query="Kardak", filters=FilterCriteria(year=1996)
+    )
+    agent = _agent(filter_extractor=mock_fe)
+    plan = _two_collection_plan()
+
+    agent._apply_filter_extractor("1996 Kardak", plan, PipelineTracer())
+
+    # Tek-çağrı garantisi: filtreler ifade biçiminin değil kullanıcı niyetinin özelliği.
+    mock_fe.extract.assert_called_once_with("1996 Kardak")
+    drafts = [d for r in plan.resources for d in r.query_drafts]
+    assert len(drafts) == 4
+    assert all(d.filters is not None and d.filters.year == 1996 for d in drafts)
+    # Aliasing yok: her draft ayrı kopya.
+    assert len({id(d.filters) for d in drafts}) == 4
+
+
+def test_apply_filter_extractor_empty_filters_sets_none():
+    """İpucu/filtre yoksa draft.filters None olur (filtresiz arama)."""
+    mock_fe = MagicMock()
+    mock_fe.model = "test-model"
+    mock_fe.extract.return_value = ExtractedFilterResponse(
+        refined_query="kardak krizi", filters=FilterCriteria()
+    )
+    agent = _agent(filter_extractor=mock_fe)
+    plan = _two_collection_plan()
+
+    agent._apply_filter_extractor("kardak krizi", plan, PipelineTracer())
+
+    drafts = [d for r in plan.resources for d in r.query_drafts]
+    assert all(d.filters is None for d in drafts)
+
+
+def test_apply_filter_extractor_noop_without_extractor():
+    """filter_extractor enjekte edilmemişse no-op; draft.filters dokunulmaz, hata yok."""
+    agent = _agent(filter_extractor=None)
+    plan = _two_collection_plan()
+
+    returned = agent._apply_filter_extractor("herhangi sorgu", plan, PipelineTracer())
+
+    drafts = [d for r in returned.resources for d in r.query_drafts]
+    assert all(d.filters is None for d in drafts)
+
+
+def test_legacy_run_propagates_extracted_filters_to_search(monkeypatch):
+    """Legacy PlanningAgent.run yolu: FE → draft.filters → _execute_single çevirisi → search."""
+    mock_fe = MagicMock()
+    mock_fe.model = "test-model"
+    mock_fe.extract.return_value = ExtractedFilterResponse(
+        refined_query="ege adaları", filters=FilterCriteria(year=1996)
+    )
+    agent = _agent(filter_extractor=mock_fe)
+
+    # Planner LLM'i atla: sabit tek-koleksiyonlu plan döndür.
+    fixed_plan = SearchPlan(
+        intent="factual",
+        resources=[CollectionSearchPlan(
+            collection="tbmm_minutes",
+            query_drafts=[SearchQueryDraft(text="ege adaları")],
+        )],
+        reasoning="r",
+    )
+    monkeypatch.setattr(agent, "_generate_plan", lambda q, t, allowed_keys=None: fixed_plan)
+
+    calls = []
+
+    def fake_search(*, collection_key, query_text, filters, top_k):
+        calls.append(filters)
+        # Yeterli sonuç döndür ki re-retrieval tetiklenmesin (gerçek LLM'e gitmesin).
+        return {
+            "documents": ["a", "b", "c", "d", "e"],
+            "metadatas": [{"chunk_id": str(i)} for i in range(5)],
+            "distances": [0.1] * 5,
+        }
+
+    monkeypatch.setattr(agent._search_tool, "search", fake_search)
+    # Cevap üretimi ve sanitizer'ı atla (gerçek LLM'e gitmesin).
+    monkeypatch.setattr(
+        agent._answer_tool, "generate",
+        lambda query, context, mufettis_mode=False: ("t", "ok"),
+    )
+    monkeypatch.setattr(agent._sanitizer, "sanitize", lambda *a, **kw: "ok")
+    # Gate'leri sadeleştir.
+    agent._bad_words = None
+    agent._classifier = None
+
+    agent.run("1996 ege adaları")
+
+    # İlk arama: FE year=1996 → ChromaFilterTranslator → tek koşul $eq.
+    assert calls[0] == {"year": {"$eq": 1996}}

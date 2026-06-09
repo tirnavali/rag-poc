@@ -1,6 +1,8 @@
 """End-to-end orchestrator tests with mocked SearchTool and answering."""
 from __future__ import annotations
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from src.agent.orchestrator import OrchestratorAgent
@@ -10,6 +12,7 @@ from src.agent.schemas import (
     SearchQueryDraft,
 )
 from src.common.llm_client_pool import LLMClientPool
+from src.common.schemas import ExtractedFilterResponse, FilterCriteria
 from src.config.pipeline_loader import load_pipeline_config
 
 
@@ -180,3 +183,50 @@ def test_orchestrator_emits_phase_trace_events(monkeypatch):
     assert "judge" in phases
     assert "answering" in phases
     assert "citation" in phases
+
+
+def test_orchestrator_propagates_extracted_filters_to_retrieval(monkeypatch):
+    """FE → Planner.plan → allocator._collect_first_filters → _retrieve_all → search.
+
+    _planner.plan'ı doğrudan patch'lemiyoruz (o _apply_filter_extractor'ı atlardı);
+    bunun yerine _inner._generate_plan'ı sabit plana patch'leyip gerçek Planner.plan'ın
+    FilterExtractor'ı çalıştırmasını sağlıyoruz.
+    """
+    mock_fe = MagicMock()
+    mock_fe.model = "test-model"
+    mock_fe.extract.return_value = ExtractedFilterResponse(
+        refined_query="iklim", filters=FilterCriteria(year=2023)
+    )
+
+    cfg = load_pipeline_config()
+    pool = LLMClientPool.from_config(cfg)
+    agent = OrchestratorAgent(cfg, pool, filter_extractor=mock_fe)
+
+    monkeypatch.setattr(
+        agent._planner._inner, "_generate_plan",
+        lambda q, tracer: _make_plan("col_a"),
+    )
+
+    chunks = [{"chunk_id": f"a{i}", "document_id": f"da{i}"} for i in range(3)]
+    captured = {}
+
+    def _search(collection_key, query_text, filters=None, top_k=5):
+        captured["filters"] = filters
+        return _make_search_result(
+            chunk_ids=[c["chunk_id"] for c in chunks],
+            doc_ids=[c["document_id"] for c in chunks],
+            collection=collection_key,
+        )
+    monkeypatch.setattr(agent._search_tool, "search", _search)
+    monkeypatch.setattr(
+        agent._answer_tool, "generate",
+        lambda query, context, mufettis_mode=False: ("t", "ok"),
+    )
+    monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
+
+    agent.run("2023 iklim", session_collections=["col_a"])
+
+    mock_fe.extract.assert_called_once_with("2023 iklim")
+    # Orchestrator yolu allocator'ın model_dump dict'ini geçirir (legacy yol gibi
+    # Chroma'ya çevirmez): {"year": 2023}.
+    assert captured["filters"] == {"year": 2023}
