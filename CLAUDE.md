@@ -16,7 +16,6 @@ python -m src.trainer.ingestion.ingest --request manifest.json
 
 # MCP servers (run separately, each on its own port)
 python -m src.mcp.press_server       # port 8001 — gazete arşivi
-python -m src.mcp.minutes_server     # port 8002 — TBMM tutanakları (legacy)
 python -m src.mcp.router_server      # port 8003 — çapraz arama + rapor
 
 # Tests
@@ -41,9 +40,9 @@ The system has two independent entry paths that converge at the Retriever/Genera
 
 **CLI path:** `chat.py` → `src/ui/chat.py` → `RAGService` → `VectorRetriever` + `OllamaGenerator`
 
-**MCP path:** External client (Claude Desktop, Open WebUI) → `router_server.py:8003` → `RAGService` or `DeepPipeline` directly
+**MCP path:** External client (Claude Desktop, Open WebUI) → `press_server.py:8001` or `router_server.py:8003` → `VectorRetriever` / `RAGService` / `DeepPipeline`
 
-`src/mcp/server.py` is legacy/unused. `MinutesRetriever` in `src/retriever/minutes_retriever.py` is only consumed by `minutes_server.py` and is a candidate for removal once its BM25+party/speaker filter logic is absorbed into `VectorRetriever`.
+`src/mcp/server.py` is legacy/unused.
 
 ### Configuration as source of truth
 

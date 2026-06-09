@@ -10,8 +10,8 @@ Yerel LLM tabanlı, çok-koleksiyonlu hibrit RAG (Retrieval-Augmented Generation
 
 - **Yerel Dil Modelleri (Local LLMs)**: Ollama üzerinden (`gemma4:latest` vb.)
 - **Vektör Veritabanı**: ChromaDB (gömülü modda)
-- **Metin Arama**: SQLite FTS5
-- **Hibrit Arama**: Vektör benzerliği + BM25 (RRF veya Rerank ile birleştirilmiş)
+- **Metin Arama**: SQLite FTS5 (ingestion manifest)
+- **Hibrit Arama**: Vektör benzerliği + Cross-Encoder reranking (ANN + Rerank)
 - **Gelişmiş Veri Yükleme**: IBM Docling ve Late Chunking (Bağlamsal Embedding)
 
 ---
@@ -27,15 +27,14 @@ Yerel LLM tabanlı, çok-koleksiyonlu hibrit RAG (Retrieval-Augmented Generation
 │  │     src/ui/*.py             │   │  (Claude Desktop, Open WebUI, …) │ │
 │  └──────────────┬──────────────┘   └────────────────┬─────────────────┘ │
 └─────────────────┼────────────────────────────────────┼───────────────────┘
-                  │ kullanır                           │ SSE (port 8001/8002/8003)
+                  │ kullanır                           │ SSE (port 8001/8003)
                   ▼                                    ▼
 ┌─────────────────────────────┐   ┌──────────────────────────────────────┐
 │    Generator.RAGService     │   │          MCP Sunucu Katmanı          │
 │  src/generator/service.py   │   │                                      │
 │  src/generator/             │   │  press_server.py   (port 8001)       │
-│    deep_pipeline.py         │   │  minutes_server.py (port 8002)       │
-└──────────────┬──────────────┘   │  router_server.py  (port 8003)       │
-               │                  │  _base.py  (paylaşılan altyapı)      │
+│    deep_pipeline.py         │   │  router_server.py  (port 8003)       │
+└──────────────┬──────────────┘   │  _base.py  (paylaşılan altyapı)     │
                │                  └────────────────┬─────────────────────┘
                │                                   │ doğrudan çağırır
                └───────────────────┬───────────────┘
@@ -43,7 +42,7 @@ Yerel LLM tabanlı, çok-koleksiyonlu hibrit RAG (Retrieval-Augmented Generation
 ┌──────────────────────────────────────────────────────────────────────────┐
 │                          Retriever Katmanı                               │
 │  src/retriever/                                                          │
-│  vector_retriever.py    minutes_retriever.py    query_parser.py          │
+│  vector_retriever.py    query_parser.py                                  │
 └──────────────────────────────────┬───────────────────────────────────────┘
                                    │ kullanır
 ┌──────────────────────────────────▼───────────────────────────────────────┐
@@ -93,7 +92,6 @@ Modern, yapısal analize dayalı veri yükleme süreci:
 Arama ve bilgi getirme mantığı:
 - `query_parser.py`: Sorgu analizi, tarih ayıklama ve kaynak yönlendirme.
 - `vector_retriever.py`: Vektör araması (ANN) ve Cross-Encoder reranking tabanlı üretim getiricisi.
-- `minutes_retriever.py`: Uzun yapısal belgeler için özelleşmiş hibrit (BM25 + Vektör + RRF) getirici.
 - `reranker.py`: Sonuçların doğruluğunu artıran Cross-Encoder modeli.
 
 ### `src/generator/`
@@ -103,12 +101,11 @@ LLM etkileşimi:
 - `deep_pipeline.py`: "Müfettiş modu" için çok adımlı akıl yürütme hattı.
 
 ### `src/mcp/`
-Harici MCP istemcileri (Claude Desktop, Open WebUI vb.) için SSE tabanlı üç bağımsız sunucu:
+Harici MCP istemcileri (Claude Desktop, Open WebUI vb.) için SSE tabanlı iki bağımsız sunucu:
 - `press_server.py` (port 8001): Gazete arşivini `VectorRetriever` üzerinden sunar; `search_press_archive` aracını tanımlar.
-- `minutes_server.py` (port 8002): TBMM tutanaklarını `MinutesRetriever` üzerinden sunar; yıl/parti/konuşmacı filtrelerini destekler.
-- `router_server.py` (port 8003): İki arşivi çapraz sorgular; `RAGService` + `DeepPipeline` kullanır ve `generate_report` aracını da sunar.
-- `_base.py`: FastAPI + SSE transport fabrikası — üç sunucunun paylaştığı ortak altyapı.
-- `server.py`: Eski (legacy) uygulama; artık kullanılmıyor.
+- `router_server.py` (port 8003): Tüm arşivleri çapraz sorgular; `RAGService` + `DeepPipeline` kullanır; `search_archives` ve `generate_report` araçlarını sunar.
+- `_base.py`: FastAPI + SSE transport fabrikası — sunucuların paylaştığı ortak altyapı.
+- `server.py`: Eski (legacy) uygulama; kullanılmıyor.
 
 ### `src/evaluator/`
 Çevrimdışı değerlendirme araçları:
@@ -124,7 +121,6 @@ Harici MCP istemcileri (Claude Desktop, Open WebUI vb.) için SSE tabanlı üç 
 |---|---|
 | `python chat.py` | İnteraktif sohbet arayüzü |
 | `python -m src.mcp.press_server` | Gazete arşivi MCP sunucusunu başlat (port 8001) |
-| `python -m src.mcp.minutes_server` | TBMM tutanakları MCP sunucusunu başlat (port 8002) |
 | `python -m src.mcp.router_server` | Çapraz arama + rapor MCP sunucusunu başlat (port 8003) |
 | `python -m src.trainer.ingestion.ingest --request manifest.json` | Belge yükleme hattı |
 | `python -m scripts.ingest_onerge` | Kanun teklifleri için veri yükleme hattı |
