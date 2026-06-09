@@ -6,8 +6,18 @@ helpers below and stay DB-agnostic.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Optional
+
+# Disable ChromaDB's anonymized telemetry before the package is imported. Recent
+# chromadb releases ship a telemetry client whose capture() signature drifted,
+# spamming "Failed to send telemetry event ... capture() takes 1 positional
+# argument but 3 were given" on every client start and query. The per-client
+# Settings(anonymized_telemetry=False) below is not honored early enough on some
+# versions, so we also set the env var here (all chromadb access funnels through
+# this module, imported before any client is built).
+os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
 
 import chromadb
 from chromadb.config import Settings
@@ -24,7 +34,10 @@ def open_collection(path: Path | str, name: str):
 
 def open_or_create_collection(path: Path | str, name: str):
     """Open or create a ChromaDB collection with cosine similarity."""
-    client = chromadb.PersistentClient(path=str(path))
+    client = chromadb.PersistentClient(
+        path=str(path),
+        settings=Settings(anonymized_telemetry=False),
+    )
     collection = client.get_or_create_collection(
         name=name,
         metadata={"hnsw:space": "cosine"},
