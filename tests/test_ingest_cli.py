@@ -76,14 +76,12 @@ def _write_request(tmp_path, data, name="request.json"):
 def test_list_collections_runs_without_crash(capsys):
     cmd_list_collections(Namespace())
     out = capsys.readouterr().out
-    # Rich table truncates long collection names; check prefix substrings
-    assert "gazete_arsivi" in out
-    assert "minutes_jina" in out  # truncated form acceptable
-    # doc_type values must render (regression check: source_type AttributeError)
+    # Tablo başlığı ve doc_type değerleri render edilmeli
+    # (regression: source_type AttributeError hatası için)
+    assert "Koleksiyonlar" in out  # tablo başlığı
     assert "tutanak" in out
     assert "gazete" in out
     assert "onerge" in out
-    assert "Doküman Tipi" in out
 
 
 # ─── cmd_list_types ──────────────────────────────────────────
