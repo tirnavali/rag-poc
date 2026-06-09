@@ -383,6 +383,11 @@ PDF → Markdown dönüşümünü indeksleme olmadan çalıştırabilirsiniz:
 python -m src.common.parsing.markdown_converter --file belge.pdf
 # Sonuç: data_lake/markdown/{belge}__{hash[:8]}.md
 # Aynı dosya tekrar çalıştırıldığında Level-1 önbellekten okunur — OCR yeniden yapılmaz.
+
+# Sayfa bazlı JSON çıktısı (her sayfa ayrı markdown bloğu olarak):
+python -m src.common.parsing.markdown_converter --file belge.pdf --pages-json
+python -m src.common.parsing.markdown_converter --file belge.pdf --pages-json > pages.json
+# Çıktı: [{"sayfaNo": 1, "sayfa_markdown": "..."}, {"sayfaNo": 2, ...}]
 ```
 
 > Her `ingest` çalışması da bu artefaktı otomatik üretir. `data_lake/markdown/` klasörü

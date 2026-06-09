@@ -39,6 +39,7 @@ class ParsedDocument:
     dl_doc: Any | None
     ocr_base: str               # Level-2 chunk önbelleği anahtar üretimi için
     markdown_path: str | None = field(default=None)
+    pages_by_number: List[Dict[str, Any]] = field(default_factory=list)
 
 
 def _build_ocr_options(engine: str):
@@ -179,6 +180,7 @@ class MarkdownConverter:
                     print(f"  [WARN] Doc önbellek yazma hatası: {e}")
 
         markdown_path = self._save_markdown_artifact(file_path, file_hash, full_text)
+        pages_by_number = self._build_pages_by_number(atoms_data)
 
         return ParsedDocument(
             full_text=full_text,
@@ -186,6 +188,7 @@ class MarkdownConverter:
             dl_doc=dl_doc,
             ocr_base=ocr_base,
             markdown_path=markdown_path,
+            pages_by_number=pages_by_number,
         )
 
     # ------------------------------------------------------------------
@@ -232,6 +235,22 @@ class MarkdownConverter:
                     }
                 )
         return atoms_data
+
+    @staticmethod
+    def _build_pages_by_number(atoms: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Atomları primary page'e göre gruplar; sorted [{sayfaNo, sayfa_markdown}] döner."""
+        from collections import defaultdict
+
+        page_buckets: dict[int, list[str]] = defaultdict(list)
+        for atom in atoms:
+            primary_page = atom.get("page")
+            if primary_page is None:
+                continue
+            page_buckets[primary_page].append(atom["text"])
+        return [
+            {"sayfaNo": page_no, "sayfa_markdown": "\n\n".join(page_buckets[page_no])}
+            for page_no in sorted(page_buckets.keys())
+        ]
 
     @staticmethod
     def _extract_pages(item) -> List[int]:
@@ -286,6 +305,8 @@ if __name__ == "__main__":
   python -m src.common.parsing.markdown_converter --file belge.pdf
   python -m src.common.parsing.markdown_converter --file belge.pdf --ocr-engine tesseract
   python -m src.common.parsing.markdown_converter --file belge.pdf --no-ocr
+  python -m src.common.parsing.markdown_converter --file belge.pdf --pages-json
+  python -m src.common.parsing.markdown_converter --file belge.pdf --pages-json > pages.json
         """,
     )
     parser.add_argument("--file", required=True, help="Parse edilecek PDF dosyası")
@@ -293,13 +314,20 @@ if __name__ == "__main__":
         "--ocr-engine", default=None, help="OCR engine: easyocr | tesseract | mac"
     )
     parser.add_argument("--no-ocr", action="store_true", help="OCR'yi devre dışı bırak")
+    parser.add_argument(
+        "--pages-json", action="store_true", help="Sayfa bazlı JSON çıktısını stdout'a yaz"
+    )
     args = parser.parse_args()
 
     conv = MarkdownConverter(ocr_engine=args.ocr_engine, do_ocr=not args.no_ocr)
     parsed = conv.convert(args.file)
     print(f"\nTamamlandı.")
     print(f"  Atom sayısı : {len(parsed.atoms)}")
+    print(f"  Sayfa sayısı: {len(parsed.pages_by_number)}")
     print(f"  full_text   : {len(parsed.full_text):,} karakter")
     if parsed.markdown_path:
         print(f"  Artefakt    : {parsed.markdown_path}")
+    if args.pages_json:
+        import json as _json
+        print(_json.dumps(parsed.pages_by_number, ensure_ascii=False, indent=2))
     sys.exit(0)
