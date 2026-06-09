@@ -10,7 +10,6 @@ gazete-rag-001.csv
 gazete-rag-002-1001-5000.csv
 gazete-rag-002-5001-20000.csv
 minutes.db
-CLAUDE.md
 ./pytest_cache
 
 # Docker
