@@ -6,7 +6,7 @@
 
 ## Genel Bakış
 
-Bu sistem, gazete arşivleri ve TBMM tutanakları üzerinde sorgulama yapmak için tasarlanmış Türkçe bir RAG (Retrieval-Augmented Generation) sistemidir. Sistemin temel bileşenleri:
+Yerel LLM tabanlı, çok-koleksiyonlu hibrit RAG (Retrieval-Augmented Generation) sistemidir. Farklı belge tiplerini (tutanak, gazete kupürü, kanun teklifi, PDF rapor) tek bir arama ve yanıt üretim altyapısında birleştirir. Temel bileşenler:
 
 - **Yerel Dil Modelleri (Local LLMs)**: Ollama üzerinden (`gemma4:latest` vb.)
 - **Vektör Veritabanı**: ChromaDB (gömülü modda)
@@ -76,7 +76,7 @@ Katmanlar arası paylaşılan durumsuz yardımcı araçlar:
 
 ### `src/trainer/ingestion/` (Yeni Veri Yükleme Hattı)
 Modern, yapısal analize dayalı veri yükleme süreci:
-- `adapters/`: Farklı veri kaynaklarını (gazete, tutanak, kanun teklifi) normalize eden sınıflar.
+- `adapters/`: Farklı belge tiplerini ortak `DocumentInput` şemasına dönüştüren adapter sınıfları.
 - `pipeline.py`: Uçtan uca veri yükleme akışı (Docling -> Late Chunking -> Chroma).
 - `manifest.py`: Hangi dosyaların yüklendiğini takip eden SQLite tabanlı manifest.
 
@@ -84,7 +84,7 @@ Modern, yapısal analize dayalı veri yükleme süreci:
 Arama ve bilgi getirme mantığı:
 - `query_parser.py`: Sorgu analizi, tarih ayıklama ve kaynak yönlendirme.
 - `vector_retriever.py`: Vektör araması (ANN) ve Cross-Encoder reranking tabanlı üretim getiricisi.
-- `minutes_retriever.py`: TBMM tutanakları için özelleşmiş hibrit (BM25 + Vektör + RRF) getirici.
+- `minutes_retriever.py`: Uzun yapısal belgeler için özelleşmiş hibrit (BM25 + Vektör + RRF) getirici.
 - `reranker.py`: Sonuçların doğruluğunu artıran Cross-Encoder modeli.
 
 ### `src/generator/`
@@ -106,7 +106,7 @@ LLM etkileşimi:
 | Komut | Açıklama |
 |---|---|
 | `python chat.py` | İnteraktif sohbet arayüzü |
-| `python -m src.trainer.ingestion.ingest --request manifest.json` | Belge yükleme hattı (gazete / tutanak) |
+| `python -m src.trainer.ingestion.ingest --request manifest.json` | Belge yükleme hattı |
 | `python -m scripts.ingest_onerge` | Kanun teklifleri için veri yükleme hattı |
 | `python -m scripts.evaluate` | Değerlendirme sistemini çalıştır |
 | `python -m scripts.reindex_all` | Tüm koleksiyonları sıfırdan yeniden dizinle |
