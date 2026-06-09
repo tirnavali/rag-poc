@@ -54,8 +54,9 @@ def test_service_uses_legacy_planner_when_flag_disabled(monkeypatch):
     captured = {}
 
     class _FakeLegacy:
-        def run(self, query, *, trace=None):
+        def run(self, query, *, trace=None, session_collections=None):
             captured["called"] = "legacy"
+            captured["session"] = session_collections
             from src.agent.schemas import AgentOutput
             return AgentOutput(answer="legacy")
 
@@ -63,3 +64,5 @@ def test_service_uses_legacy_planner_when_flag_disabled(monkeypatch):
     out = svc.run_agent("hello", session_collections=["c1"])
     assert captured["called"] == "legacy"
     assert out.answer == "legacy"
+    # session_collections artık legacy yola da iletiliyor.
+    assert captured["session"] == ["c1"]

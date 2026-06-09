@@ -158,12 +158,22 @@ class PlanningAgent:
         )
         self._suggester = Suggester(client_pool, config)
 
-    def run(self, query: str, *, trace: PipelineTracer | None = None) -> AgentOutput:
+    def run(
+        self,
+        query: str,
+        *,
+        trace: PipelineTracer | None = None,
+        session_collections: list[str] | None = None,
+    ) -> AgentOutput:
         """Execute the full agent pipeline.
 
         Args:
             query: user query
             trace: optional existing tracer (creates new one if None)
+            session_collections: collections the user selected at session start.
+                When given, the planner is restricted to these (catalog filtered
+                upfront + plan resources intersected as a safety net), mirroring
+                the OrchestratorAgent's PolicyEnforcer. None = no restriction.
 
         Returns:
             AgentOutput with answer, trace, plan, and validation.
@@ -209,9 +219,14 @@ class PlanningAgent:
                 )
 
         # Phase 1: Generate search plan
-        plan = self._generate_plan(query, tracer)
+        allowed = set(session_collections) if session_collections else None
+        plan = self._generate_plan(query, tracer, allowed_keys=allowed)
         if plan is None:
-            plan = self._fallback_plan(query)
+            plan = self._fallback_plan(query, allowed_keys=allowed)
+
+        # Phase 1b: Enforce session collection selection (safety net)
+        if allowed:
+            plan = self._enforce_session_collections(query, plan, allowed, tracer)
 
         # Phase 2: Execute searches
         all_results = self._execute_plan(plan, tracer)
@@ -361,13 +376,19 @@ class PlanningAgent:
         self,
         query: str,
         tracer: PipelineTracer,
+        allowed_keys: set[str] | None = None,
     ) -> SearchPlan | None:
-        """Generate a search plan using the planning agent LLM."""
+        """Generate a search plan using the planning agent LLM.
+
+        When ``allowed_keys`` is given, the catalog shown to the planner is
+        restricted to those collections so it can only route within the user's
+        session selection.
+        """
         planner_cfg = self._config.planner
         block_name = planner_cfg.block
         model_key = planner_cfg.model_key
         model = self._pool.get_model_for_block(block_name, model_key)
-        catalog = self._config.get_collection_catalog()
+        catalog = self._config.get_collection_catalog(allowed_keys=allowed_keys)
 
         system_prompt = PLAN_SYSTEM_PROMPT.format(catalog=catalog)
 
@@ -396,10 +417,18 @@ class PlanningAgent:
             )
             return plan
 
-    def _fallback_plan(self, query: str) -> SearchPlan:
-        """Generate a fallback plan when the planner LLM fails."""
+    def _fallback_plan(self, query: str, allowed_keys: set[str] | None = None) -> SearchPlan:
+        """Generate a fallback plan when the planner LLM fails.
+
+        When ``allowed_keys`` is given, search exactly the user-selected
+        collections (instead of the configured fallback set), so the session
+        selection is honored even on the fallback path.
+        """
         fb = self._config.planner
-        collections = fb.fallback_collections or ["tbmm_tutanaklar_nomic_v2"]
+        if allowed_keys:
+            collections = list(allowed_keys)
+        else:
+            collections = fb.fallback_collections or ["tbmm_tutanaklar_nomic_v2"]
 
         drafts = []
         for fq in fb.fallback_queries:
@@ -425,6 +454,37 @@ class PlanningAgent:
             resources=resources,
             reasoning="Fallback plan (planner LLM failed)",
         )
+
+    def _enforce_session_collections(
+        self,
+        query: str,
+        plan: SearchPlan,
+        allowed: set[str],
+        tracer: PipelineTracer,
+    ) -> SearchPlan:
+        """Intersect the plan's collections with the user's session selection.
+
+        Mirrors the OrchestratorAgent's PolicyEnforcer for the legacy path: the
+        catalog is already filtered upfront, but the planner LLM may still
+        hallucinate an out-of-scope collection. Drop those here. If nothing
+        survives (planner misrouted entirely), rebuild a fallback plan scoped to
+        the selected collections so they ARE searched.
+        """
+        with tracer.phase("policy") as ctx:
+            kept = [r for r in plan.resources if r.collection in allowed]
+            dropped = [r.collection for r in plan.resources if r.collection not in allowed]
+            if kept:
+                plan.resources = kept
+            else:
+                plan = self._fallback_plan(query, allowed_keys=allowed)
+                kept = plan.resources
+            if ctx:
+                ctx.update_details(
+                    allowed=sorted(allowed),
+                    kept=[r.collection for r in kept],
+                    dropped=dropped,
+                )
+        return plan
 
     def _execute_plan(
         self,

@@ -154,3 +154,94 @@ def test_execute_plan_tags_re_retrieval_phase(monkeypatch):
     agent._execute_plan(plan, tracer, phase="re_retrieval")
     assert tracer.events
     assert all(e.phase == "re_retrieval" for e in tracer.events)
+
+
+# --- Session koleksiyon kapsamı (legacy yol) ---
+
+def _plan(*collections: str) -> SearchPlan:
+    return SearchPlan(
+        intent="factual",
+        resources=[
+            CollectionSearchPlan(
+                collection=c,
+                query_drafts=[SearchQueryDraft(text="q")],
+            )
+            for c in collections
+        ],
+        reasoning="r",
+    )
+
+
+def test_enforce_session_collections_drops_out_of_scope():
+    """Planner kapsam dışı koleksiyon seçerse düşürülür, seçili olan kalır."""
+    agent = _agent()
+    plan = _plan("gazete_arsivi", "tbmm_minutes")
+    out = agent._enforce_session_collections(
+        "q", plan, {"gazete_arsivi"}, PipelineTracer()
+    )
+    assert [r.collection for r in out.resources] == ["gazete_arsivi"]
+
+
+def test_enforce_session_collections_emits_policy_trace():
+    agent = _agent()
+    plan = _plan("gazete_arsivi", "tbmm_minutes")
+    tracer = PipelineTracer()
+    agent._enforce_session_collections("q", plan, {"gazete_arsivi"}, tracer)
+    policy_events = [e for e in tracer.events if e.phase == "policy"]
+    assert policy_events
+    details = policy_events[0].details
+    assert details["kept"] == ["gazete_arsivi"]
+    assert details["dropped"] == ["tbmm_minutes"]
+
+
+def test_enforce_session_collections_rebuilds_when_all_dropped():
+    """Planner tamamen yanlış koleksiyon seçerse seçili koleksiyona fallback kurulur."""
+    agent = _agent()
+    plan = _plan("tbmm_minutes")  # kullanıcı bunu seçmedi
+    out = agent._enforce_session_collections(
+        "ege adaları", plan, {"gazete_arsivi"}, PipelineTracer()
+    )
+    # Boş bırakmaz; seçili koleksiyonu arar.
+    assert [r.collection for r in out.resources] == ["gazete_arsivi"]
+    assert out.resources[0].query_drafts
+
+
+def test_fallback_plan_scoped_to_allowed_keys():
+    """allowed_keys verilince fallback tam olarak seçili koleksiyonları arar."""
+    agent = _agent()
+    plan = agent._fallback_plan("Kardak", allowed_keys={"gazete_arsivi"})
+    assert [r.collection for r in plan.resources] == ["gazete_arsivi"]
+
+
+def test_run_restricts_to_session_collections(monkeypatch):
+    """run(session_collections=...) → sadece seçili koleksiyonda arama yapılır."""
+    agent = _agent()
+    # Planner tüm katalogdan iki koleksiyon seçti; kullanıcı sadece birini seçmişti.
+    monkeypatch.setattr(
+        agent, "_generate_plan",
+        lambda q, tracer, allowed_keys=None: _plan("gazete_arsivi", "tbmm_minutes"),
+    )
+
+    searched = []
+
+    def fake_search(*, collection_key, query_text, filters, top_k):
+        searched.append(collection_key)
+        return {
+            "documents": ["a", "b", "c", "d", "e"],
+            "metadatas": [{"chunk_id": f"{collection_key}-{i}"} for i in range(5)],
+            "distances": [0.1] * 5,
+        }
+
+    monkeypatch.setattr(agent._search_tool, "search", fake_search)
+    monkeypatch.setattr(
+        agent._answer_tool, "generate",
+        lambda query, context, mufettis_mode=False: ("t", "ok"),
+    )
+    monkeypatch.setattr(agent._sanitizer, "sanitize", lambda *a, **kw: "ok")
+    agent._bad_words = None
+    agent._classifier = None
+
+    agent.run("soru", session_collections=["gazete_arsivi"])
+
+    # Sadece seçili koleksiyon arandı; tbmm_minutes düşürüldü.
+    assert set(searched) == {"gazete_arsivi"}

@@ -52,6 +52,22 @@ def test_collection_catalog_lists_only_default_collections():
         assert f"- {key} " not in catalog  # tam token kontrolü; substring false positive önler
 
 
+def test_collection_catalog_restricted_to_allowed_keys():
+    """allowed_keys verilince katalog yalnızca seçili koleksiyonları listeler."""
+    from src.config.collections import DEFAULT_COLLECTION_FOR_TYPE
+
+    cfg = load_pipeline_config()
+    defaults = sorted(DEFAULT_COLLECTION_FOR_TYPE.values())
+    assert len(defaults) >= 2, "test çoklu default koleksiyon varsayıyor"
+
+    chosen = defaults[0]
+    catalog = cfg.get_collection_catalog(allowed_keys={chosen})
+
+    assert f"- {chosen} " in catalog
+    for other in defaults[1:]:
+        assert f"- {other} " not in catalog
+
+
 def test_retrieval_defaults_present():
     cfg = load_pipeline_config()
     assert cfg.retrieval.distance_threshold > 0
