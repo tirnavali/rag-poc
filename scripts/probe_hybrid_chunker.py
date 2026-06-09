@@ -1,6 +1,13 @@
+"""Manuel Docling probe — HybridChunker charspan provenance'ını test eder.
+
+Kullanım:
+    python -m scripts.probe_hybrid_chunker <pdf_path>
+
+Bu bir pytest testi DEĞİLDİR; elle çalıştırılan bir araştırma script'idir.
+"""
 
 import os
-from pathlib import Path
+import sys
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.datamodel.pipeline_options import PdfPipelineOptions, EasyOcrOptions
 from docling.datamodel.base_models import InputFormat
@@ -8,11 +15,15 @@ from docling.chunking import HybridChunker
 from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
 from docling_core.transforms.serializer.markdown import MarkdownDocSerializer
 
-pdf_path = "/Users/sercan/Projects/RAG-poc/tutanak/tbmm20001002.pdf"
+if len(sys.argv) < 2:
+    print("Kullanım: python -m scripts.probe_hybrid_chunker <pdf_path>")
+    sys.exit(1)
+
+pdf_path = sys.argv[1]
 
 if not os.path.exists(pdf_path):
     print(f"Error: File not found at {pdf_path}")
-    exit(1)
+    sys.exit(1)
 
 print(f"Testing HybridChunker on: {os.path.basename(pdf_path)}")
 

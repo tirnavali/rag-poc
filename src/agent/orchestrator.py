@@ -44,10 +44,10 @@ class OrchestratorAgent:
     Judge → (Expand → Re-Judge) → Answer → Sanitizer → Citation.
     """
 
-    def __init__(self, config: PipelineConfig, client_pool: LLMClientPool) -> None:
+    def __init__(self, config: PipelineConfig, client_pool: LLMClientPool, filter_extractor=None) -> None:
         self._config = config
         self._pool = client_pool
-        self._planner = Planner(config, client_pool)
+        self._planner = Planner(config, client_pool, filter_extractor)
         self._policy = PolicyEnforcer(config.policy)
         self._allocator = AllocationPlanner(config.allocation)
         self._search_tool = SearchTool(config, client_pool)

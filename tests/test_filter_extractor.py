@@ -208,6 +208,89 @@ class TestIntegration:
             assert result["fallback_level"] == "semantic_only"
 
 
+class TestFilterHintsKnownLimitations:
+    """Belgelenmiş bilinen sınırlamalar — has_filter_hints bilerek maliyet-gate olarak
+    tutuluyor (precision kritik). Çıplak soyad / iyelik eki vakaları tespit edilemiyor.
+
+    Bu kabul edilebilir çünkü mimaride Planner sorguyu önce refine eder (çıplak soyadı
+    tam isme çevirir: 'Baykal' → 'Deniz Baykal'), dolayısıyla FilterExtractor'a hep
+    temiz/tam-isimli sorgu ulaşır ve has_filter_hints zaten geçer. Bkz. plan:
+    Planner ↔ FilterExtractor entegrasyonu.
+    """
+
+    def test_has_filter_hints_surname_first_not_detected(self):
+        """KNOWN LIMITATION: tek çıplak soyad cümle başındayken (words[0]) tespit edilmez.
+
+        Mantık sadece words[1:]'i kontrol eder; words[0] her cümle büyük harfle
+        başladığı için kasıtlı olarak atlanır (yoksa 'Kardak nedir' false-positive olur).
+        Planner sorguyu tam isme refine ettiği için pratikte sorun değil.
+        """
+        fe = FilterExtractor()
+        assert fe.has_filter_hints("Baykal konuşmaları") is False
+        assert fe.has_filter_hints("Ecevit açıklaması") is False
+
+    def test_has_filter_hints_genitive_suffix_not_detected(self):
+        """KNOWN LIMITATION: cümle başındaki iyelik ekli özel isim tek başına tespit edilmez.
+
+        words[0]="Erdoğan'ın" → atlanır; words[1]="konuşmaları" → küçük harf → False.
+        Ancak başka bir ipucu (yıl, keyword, ikinci özel isim) varsa kurtarır.
+        """
+        fe = FilterExtractor()
+        assert fe.has_filter_hints("Erdoğan'ın konuşmaları") is False
+        # Yıl ipucu varsa kurtarır (soyadı değil, 1996 tetikler):
+        assert fe.has_filter_hints("Baykal'ın 1996 konuşması") is True
+        # 'meclis' keyword'ü varsa kurtarır:
+        assert fe.has_filter_hints("Çiller'in meclis tutanakları") is True
+
+
+class TestFilterTranslatorEdgeCases:
+    """Eksik kapsam — ChromaFilterTranslator kenar durumları."""
+
+    def test_to_chroma_filter_author_only(self):
+        """Yazar-tek filtre: top-level $or üretilmeli (tek koşul olduğunda $and yok)."""
+        filters = FilterCriteria(author="Deniz Baykal")
+        chroma_filter = FilterExtractor.to_chroma_filter(filters)
+        assert chroma_filter == {
+            "$or": [
+                {"author": {"$eq": "Deniz Baykal"}},
+                {"author": {"$eq": "DENİZ BAYKAL"}},
+            ]
+        }
+
+    def test_to_chroma_filter_source_name_not_normalized(self):
+        """source_name büyük/küçük harf normalizasyonu yapılmıyor — bilinen sınırlama.
+
+        LLM genellikle küçük harf döndürür ("hürriyet"), metadata "Hürriyet" saklar.
+        Bu exact-match sessizce başarısız olur. author için yapılan $or trick'i burada yok.
+        """
+        filters = FilterCriteria(source_name="hürriyet")
+        chroma_filter = FilterExtractor.to_chroma_filter(filters)
+        assert chroma_filter == {"source_name": {"$eq": "hürriyet"}}
+
+    def test_to_chroma_filter_year_and_year_lte(self):
+        """year + year_lte aynı anda: $and ile iki koşul üretilmeli."""
+        filters = FilterCriteria(year=1996, year_lte=2000)
+        chroma_filter = FilterExtractor.to_chroma_filter(filters)
+        assert chroma_filter == {
+            "$and": [
+                {"year": {"$eq": 1996}},
+                {"year": {"$lte": 2000}},
+            ]
+        }
+
+    def test_to_chroma_filter_period_only(self):
+        """period tek başına: single-condition dönem filtresi."""
+        filters = FilterCriteria(period=20)
+        chroma_filter = FilterExtractor.to_chroma_filter(filters)
+        assert chroma_filter == {"period": {"$eq": 20}}
+
+    def test_to_chroma_filter_session_only(self):
+        """session tek başına: single-condition birleşim filtresi."""
+        filters = FilterCriteria(session=7)
+        chroma_filter = FilterExtractor.to_chroma_filter(filters)
+        assert chroma_filter == {"session": {"$eq": 7}}
+
+
 class TestFallbackChain:
     """Test suite for filter relaxation cascade logic."""
 
@@ -241,6 +324,29 @@ class TestFallbackChain:
         assert chain[0][0] is None
         assert chain[1][0] == "author_dropped"
         assert chain[2][0] == "semantic_only"
+
+    def test_fallback_chain_author_role_only(self):
+        """author_role var, author yok: relaxed author_role'ü de düşürür → 3 kademe."""
+        fe = FilterExtractor()
+        criteria = FilterCriteria(year=1996, author_role="bakan")
+        chain = fe.fallback_chain(criteria)
+        assert len(chain) == 3
+        assert chain[0][0] is None
+        assert chain[0][1] == {"$and": [{"year": {"$eq": 1996}}, {"author_role": {"$eq": "bakan"}}]}
+        assert chain[1][0] == "author_dropped"
+        assert chain[1][1] == {"year": {"$eq": 1996}}
+        assert chain[2][0] == "semantic_only"
+
+    def test_fallback_chain_author_only_no_intermediate(self):
+        """Sadece author varsa: relaxed=None → author_dropped tier eklenmiyor."""
+        fe = FilterExtractor()
+        criteria = FilterCriteria(author="Deniz Baykal")
+        chain = fe.fallback_chain(criteria)
+        # relaxed author'ı düşürünce hiç koşul kalmıyor (None) → intermediate yok
+        assert len(chain) == 2
+        assert chain[0][0] is None
+        assert chain[0][1] is not None
+        assert chain[1][0] == "semantic_only"
 
     def test_fallback_chain_semantic_only_is_always_last(self):
         """semantic_only should always be the last candidate with where_filter=None."""
