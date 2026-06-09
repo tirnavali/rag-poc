@@ -251,7 +251,7 @@ class MarkdownConverter:
                 continue
             page_buckets[primary_page].append(atom["text"])
         return [
-            {"sayfaNo": page_no, "sayfa_markdown": "\n\n".join(page_buckets[page_no])}
+            {"sayfa_no": page_no, "sayfa_markdown": "\n\n".join(page_buckets[page_no])}
             for page_no in sorted(page_buckets.keys())
         ]
 

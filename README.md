@@ -387,7 +387,7 @@ python -m src.common.parsing.markdown_converter --file belge.pdf
 # Sayfa bazlı JSON çıktısı (her sayfa ayrı markdown bloğu olarak):
 python -m src.common.parsing.markdown_converter --file belge.pdf --pages-json
 python -m src.common.parsing.markdown_converter --file belge.pdf --pages-json > pages.json
-# Çıktı: [{"sayfaNo": 1, "sayfa_markdown": "..."}, {"sayfaNo": 2, ...}]
+# Çıktı: [{"sayfa_no": 1, "sayfa_markdown": "..."}, {"sayfa_no": 2, ...}]
 ```
 
 > Her `ingest` çalışması da bu artefaktı otomatik üretir. `data_lake/markdown/` klasörü
