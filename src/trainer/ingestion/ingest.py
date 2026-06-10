@@ -298,6 +298,36 @@ def cmd_status(args) -> None:
                 failed = statuses.get("failed", 0)
                 table.add_row(col_name, dtype, str(done), str(pending), str(failed))
         console.print(table)
+
+        # Performans trendi (perf_json verisi varsa)
+        if args.report:
+            trends = manifest.perf_trends_by_collection()
+            if trends:
+                perf_table = Table(title="Performans Özeti (ort. / belge)")
+                perf_table.add_column("Koleksiyon", style="bold")
+                perf_table.add_column("Belge", justify="right")
+                perf_table.add_column("Ort. Toplam", justify="right")
+                perf_table.add_column("Ort. Parse", justify="right")
+                perf_table.add_column("Ort. Embed", justify="right")
+                perf_table.add_column("Span %", justify="right")
+                perf_table.add_column("OCR Bayrağı %", justify="right")
+                for col_name, t in trends.items():
+                    span_pct = t["avg_span_coverage_pct"]
+                    span_style = "red" if span_pct < 100 else "green"
+                    ocr_pct = t["ocr_flagged_pct"]
+                    ocr_style = "yellow" if ocr_pct > 0 else "green"
+                    perf_table.add_row(
+                        col_name,
+                        str(t["doc_count"]),
+                        f"{t['avg_total_ms']:,}ms",
+                        f"{t['avg_parse_ms']:,}ms",
+                        f"{t['avg_embed_ms']:,}ms",
+                        f"[{span_style}]{span_pct}%[/{span_style}]",
+                        f"[{ocr_style}]{ocr_pct}%[/{ocr_style}]",
+                    )
+                console.print(perf_table)
+            else:
+                console.print("[dim]Henüz performans verisi yok (perf_json boş).[/dim]")
         return
 
     # Detay listesi
@@ -588,6 +618,110 @@ def cmd_add_collection(args) -> None:
     )
 
 
+def cmd_inspect(args) -> None:
+    """PDF'i parse+chunk et, embed/upsert yapmadan chunk önizlemesi göster."""
+    from src.common.parsing.docling_manager import DoclingManager
+
+    file_path = args.inspect
+    if not Path(file_path).exists():
+        console.print(f"[red]Dosya bulunamadı: {file_path}[/red]")
+        sys.exit(1)
+
+    spec = None
+    if args.collection:
+        try:
+            spec = get_spec(args.collection)
+            console.print(f"[dim]Koleksiyon: {args.collection} → {spec.embed_model}[/dim]")
+        except Exception as e:
+            console.print(f"[yellow]Koleksiyon yüklenemedi ({e}), varsayılan parametreler kullanılıyor.[/yellow]")
+
+    if spec and spec.supports_late_chunking:
+        mgr = DoclingManager(
+            tokenizer_name=spec.embed_model,
+            max_chunk_tokens=spec.max_chunk_tokens,
+            min_chunk_tokens=spec.min_chunk_tokens,
+        )
+        min_chars = spec.min_chunk_chars
+        max_chars = spec.max_chunk_chars
+    else:
+        mgr = DoclingManager()
+        min_chars = getattr(spec, "min_chunk_chars", None) or 400
+        max_chars = getattr(spec, "max_chunk_chars", None) or 1500
+
+    doc_type = args.document_type or None
+    limit = args.limit or 20
+
+    console.print(f"\n[dim]Parse ediliyor: {file_path} ...[/dim]")
+    full_text, chunks = mgr.convert_and_pack(
+        file_path,
+        min_chars=min_chars,
+        max_chars=max_chars,
+        document_type=doc_type,
+    )
+
+    # Chunk önizleme tablosu
+    table = Table(
+        title=f"Chunk Önizleme — {Path(file_path).name}  ({len(chunks)} parça)",
+        show_lines=True,
+    )
+    table.add_column("#", style="dim", width=4, justify="right")
+    table.add_column("Sayfa", width=6)
+    table.add_column("Kar ~", width=6, justify="right")
+    table.add_column("Span", width=14)
+    table.add_column("Tip", width=18)
+    table.add_column("Başlıklar", width=20)
+    table.add_column("İlk 100 karakter")
+
+    for i, chunk in enumerate(chunks[:limit]):
+        meta = chunk.get("metadata", {})
+        pages = meta.get("pages", [meta.get("page")] if meta.get("page") else [])
+        pages_str = "-".join(str(p) for p in pages) if pages else "?"
+        span = chunk.get("span")
+        span_str = f"{span[0]}–{span[1]}" if span else "[yellow]—[/yellow]"
+        char_count = len(chunk["text"])
+        chunk_type = str(meta.get("type", "?"))[:18]
+        headings = meta.get("headings", [])
+        headings_str = " › ".join(str(h) for h in headings[:2])[:20] if headings else ""
+        preview = chunk["text"][:100].replace("\n", " ")
+
+        table.add_row(
+            str(i),
+            pages_str,
+            str(char_count),
+            span_str,
+            chunk_type,
+            headings_str,
+            preview,
+        )
+
+    console.print(table)
+
+    if len(chunks) > limit:
+        console.print(f"[dim]... {len(chunks) - limit} parça daha (--limit ile artırılabilir)[/dim]")
+
+    # Özet panel
+    pages_set: set = set()
+    for c in chunks:
+        m = c.get("metadata", {})
+        for p in m.get("pages", [m.get("page")] if m.get("page") else []):
+            if p is not None:
+                pages_set.add(p)
+    span_missing = sum(1 for c in chunks if not c.get("span"))
+    span_ok = span_missing == 0
+
+    console.print(Panel(
+        f"Toplam: [bold]{len(chunks)}[/bold] parça · "
+        f"[bold]{len(pages_set)}[/bold] sayfa · "
+        f"full_text: [bold]{len(full_text):,}[/bold] karakter\n"
+        f"Span: [{'green' if span_ok else 'red'}]"
+        f"{'%100 ✓ — late chunking hazır' if span_ok else f'{span_missing} eksik ⚠ — late chunking fallback'}"
+        f"[/{'green' if span_ok else 'red'}]",
+        title="[bold]Önizleme Özeti[/bold]",
+        border_style="green" if span_ok else "yellow",
+        expand=False,
+    ))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="RAG Document Ingestion CLI",
@@ -603,12 +737,15 @@ def main() -> None:
     parser.add_argument("--status", action="store_true", help="Manifest durumunu göster")
     parser.add_argument("--delete", help="Belge ve chunk'larını sil")
     parser.add_argument("--add-collection", action="store_true", help="Yeni koleksiyon ekle (interaktif sihirbaz)")
+    parser.add_argument("--inspect", metavar="PDF", help="PDF'i parse+chunk et, chunk önizlemesi göster (embed/upsert yok)")
 
     # Modifiers
     parser.add_argument("--force", action="store_true", help="Zaten işlenmiş belgeleri tekrar işle.")
     parser.add_argument("--only-changed", action="store_true", help="Sadece değişmiş/yeni belgeleri işle")
-    parser.add_argument("--collection", "-c", help="Status filtreleme")
-    parser.add_argument("--document-type", "-t", help="Status filtreleme")
+    parser.add_argument("--collection", "-c", help="Status filtreleme / inspect koleksiyonu")
+    parser.add_argument("--document-type", "-t", help="Status filtreleme / inspect doküman tipi")
+    parser.add_argument("--limit", type=int, default=20, help="--inspect: gösterilecek maksimum chunk sayısı (varsayılan: 20)")
+    parser.add_argument("--report", action="store_true", help="--status ile birlikte: performans trendi göster")
 
     args = parser.parse_args()
 
@@ -628,6 +765,8 @@ def main() -> None:
         cmd_delete(args)
     elif args.add_collection:
         cmd_add_collection(args)
+    elif args.inspect:
+        cmd_inspect(args)
     else:
         parser.print_help()
         sys.exit(1)
