@@ -16,6 +16,7 @@ from docling.datamodel.pipeline_options import (
 )
 from docling_core.transforms.serializer.markdown import MarkdownDocSerializer
 from docling.document_converter import DocumentConverter, PdfFormatOption
+from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
 
 from src.common.parsing.packer import greedy_pack
 from src.config import settings
@@ -115,7 +116,10 @@ class DoclingManager:
             pipeline_options = PdfPipelineOptions(do_ocr=False)
         self.converter = DocumentConverter(
             format_options={
-                InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
+                InputFormat.PDF: PdfFormatOption(
+                    pipeline_options=pipeline_options,
+                    backend=PyPdfiumDocumentBackend
+                )
             }
         )
 
@@ -149,7 +153,7 @@ class DoclingManager:
         # do_ocr=True is the historic default — omit tag to stay compatible
         # with existing cache files. Only tag when OCR is explicitly disabled.
         ocr_tag = "" if self.do_ocr else "_no_ocr"
-        ocr_base = f"{file_hash}_{self.ocr_engine}{ocr_tag}"
+        ocr_base = f"{file_hash}_{self.ocr_engine}{ocr_tag}_pypdfium"
 
         use_hybrid = bool(self.tokenizer_name)
 
