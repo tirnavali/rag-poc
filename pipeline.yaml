@@ -22,7 +22,7 @@ deployment_blocks:
     purpose: "planning,filter_extraction,sanitization,judge"
     models:
       planner: qwen3.5:9b
-      filter_extractor: gemma4:e2b
+      filter_extractor: gemma4:latest
       sanitizer: qwen3.5:9b
       judge: qwen3.5:9b
       classifier: qwen3.5:9b
@@ -34,7 +34,7 @@ deployment_blocks:
     host: http://localhost:11434
     purpose: "answering"
     models:
-      answer: gemma4:e2b
+      answer: gemma4:latest
     timeout_seconds: 60
     max_num_ctx: 32768
     max_num_predict: 4096

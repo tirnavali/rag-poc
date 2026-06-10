@@ -61,3 +61,5 @@ docs/superpowers/specs/2026-05-24-per-collection-retrieval-design.md
 # Allow test PDF fixtures
 !tests/fixtures/*.pdf
 
+# Local environments
+.env
