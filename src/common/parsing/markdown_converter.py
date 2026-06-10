@@ -27,6 +27,7 @@ from docling.datamodel.pipeline_options import (
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling_core.transforms.serializer.markdown import MarkdownDocSerializer
 
+from src.common.parsing.quality import compute_quality, extract_ocr_confidence
 from src.config import settings
 
 
@@ -41,6 +42,7 @@ class ParsedDocument:
     markdown_path: str | None = field(default=None)
     pages_path: str | None = field(default=None)
     pages_by_number: List[Dict[str, Any]] = field(default_factory=list)
+    quality: Dict[str, Any] = field(default_factory=dict)  # Tier-1 OCR kalite metrikleri
 
 
 def _build_ocr_options(engine: str):
@@ -90,7 +92,12 @@ class MarkdownConverter:
             }
         )
 
-    def convert(self, file_path: str, use_hybrid: bool = False) -> ParsedDocument:
+    def convert(
+        self,
+        file_path: str,
+        use_hybrid: bool = False,
+        document_type: str | None = None,
+    ) -> ParsedDocument:
         """
         Dosyayı parse et; markdown artefaktını diske yaz ve ParsedDocument döndür.
 
@@ -98,11 +105,14 @@ class MarkdownConverter:
         Her dönüşüm sonrası data_lake/markdown/ altına okunabilir bir .md dosyası kaydedilir.
 
         Args:
-            file_path:   Parse edilecek dosya yolu.
-            use_hybrid:  True ise DoclingDocument da döndürülür (HybridChunker için).
+            file_path:     Parse edilecek dosya yolu.
+            use_hybrid:    True ise DoclingDocument da döndürülür (HybridChunker için).
+            document_type: Yalnızca kalite metrikleri için (tip bazlı karakter
+                           sapması karşılaştırması). Parse davranışını değiştirmez.
 
         Returns:
-            ParsedDocument — full_text, atoms, dl_doc (opsiyonel), ocr_base, markdown_path.
+            ParsedDocument — full_text, atoms, dl_doc (opsiyonel), ocr_base,
+            markdown_path, quality.
         """
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Dosya bulunamadı: {file_path}")
@@ -120,6 +130,7 @@ class MarkdownConverter:
         atoms_data = None
         full_text = None
         dl_doc = None
+        ocr_mean_confidence = None
 
         # Level-1 hit: atomlar daha önce parse edilmiş
         if ocr_cache_file.exists():
@@ -133,6 +144,11 @@ class MarkdownConverter:
                 if has_page_meta:
                     atoms_data = ocr_cached["atoms_data"]
                     full_text = ocr_cached["full_text"]
+                    # quality alanı eski cache'lerde yok — yokluğu cache'i geçersiz
+                    # kılmaz; OCR güveni yeniden hesaplanamadığı için None kalır.
+                    ocr_mean_confidence = (ocr_cached.get("quality") or {}).get(
+                        "ocr_mean_confidence"
+                    )
                     print(f"  [CACHE] OCR önbellekten okundu: {os.path.basename(file_path)}")
                 else:
                     print("  [CACHE] OCR önbelleğinde sayfa numarası eksik, yeniden parse ediliyor.")
@@ -150,6 +166,7 @@ class MarkdownConverter:
                 print(f"  [WARN] Doc önbellek okuma hatası, yeniden parse ediliyor: {e}")
                 dl_doc = None
 
+        parsed_fresh = False
         if atoms_data is None or (use_hybrid and dl_doc is None):
             print(
                 f"  [PARSE] Docling çalıştırılıyor (OCR: {self.ocr_engine}): "
@@ -157,21 +174,11 @@ class MarkdownConverter:
             )
             result = self.converter.convert(file_path)
             dl_doc = result.document
+            parsed_fresh = True
 
             atoms_data = self._extract_atoms(dl_doc)
             full_text = "\n\n".join(a["text"] for a in atoms_data)
-
-            # Level-1 önbelleğe kaydet
-            try:
-                with open(ocr_cache_file, "w", encoding="utf-8") as f:
-                    json.dump(
-                        {"full_text": full_text, "atoms_data": atoms_data},
-                        f,
-                        ensure_ascii=False,
-                        indent=2,
-                    )
-            except Exception as e:
-                print(f"  [WARN] OCR önbellek yazma hatası: {e}")
+            ocr_mean_confidence = extract_ocr_confidence(result) if self.do_ocr else None
 
             if use_hybrid and dl_doc is not None:
                 try:
@@ -179,6 +186,39 @@ class MarkdownConverter:
                         json.dump(dl_doc.model_dump(mode="json"), f, ensure_ascii=False)
                 except Exception as e:
                     print(f"  [WARN] Doc önbellek yazma hatası: {e}")
+
+        # Tier-1 kalite metrikleri — cache hit'te de yeniden hesaplanır
+        # (tip ortalaması koleksiyon büyüdükçe değişir); yalnızca OCR güveni
+        # taze parse gerektirir.
+        quality = compute_quality(
+            atoms_data,
+            full_text,
+            document_type=document_type,
+            ocr_mean_confidence=ocr_mean_confidence,
+            stats_key=file_hash,
+        )
+        if quality["ocr_flagged"]:
+            print(
+                f"  [WARN] OCR kalite bayrağı ({os.path.basename(file_path)}): "
+                f"{', '.join(quality['flags'])}"
+            )
+
+        # Level-1 önbelleğe kaydet (quality alanı dahil)
+        if parsed_fresh:
+            try:
+                with open(ocr_cache_file, "w", encoding="utf-8") as f:
+                    json.dump(
+                        {
+                            "full_text": full_text,
+                            "atoms_data": atoms_data,
+                            "quality": quality,
+                        },
+                        f,
+                        ensure_ascii=False,
+                        indent=2,
+                    )
+            except Exception as e:
+                print(f"  [WARN] OCR önbellek yazma hatası: {e}")
 
         markdown_path = self._save_markdown_artifact(file_path, file_hash, full_text)
         pages_by_number = self._build_pages_by_number(atoms_data)
@@ -192,6 +232,7 @@ class MarkdownConverter:
             markdown_path=markdown_path,
             pages_path=pages_path,
             pages_by_number=pages_by_number,
+            quality=quality,
         )
 
     # ------------------------------------------------------------------
@@ -348,6 +389,10 @@ if __name__ == "__main__":
     print(f"  Atom sayısı : {len(parsed.atoms)}")
     print(f"  Sayfa sayısı: {len(parsed.pages_by_number)}")
     print(f"  full_text   : {len(parsed.full_text):,} karakter")
+    if parsed.quality.get("ocr_flagged"):
+        print(f"  Kalite      : BAYRAKLI — {', '.join(parsed.quality['flags'])}")
+    else:
+        print(f"  Kalite      : temiz")
     if parsed.markdown_path:
         print(f"  Artefakt    : {parsed.markdown_path}")
     if parsed.pages_path:

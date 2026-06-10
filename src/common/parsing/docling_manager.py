@@ -127,7 +127,9 @@ class DoclingManager:
         İmza ve dönüş tipi değişmez — tüm çağıranlar (adapter'lar) güncelleme gerektirmez.
         """
         use_hybrid = bool(self.tokenizer_name)
-        parsed = self._converter.convert(file_path, use_hybrid=use_hybrid)
+        parsed = self._converter.convert(
+            file_path, use_hybrid=use_hybrid, document_type=document_type
+        )
         return self.pack(
             parsed,
             file_path,
@@ -170,6 +172,7 @@ class DoclingManager:
         use_hybrid = bool(self.tokenizer_name)
         atoms_data = parsed.atoms
         full_text = parsed.full_text
+        ocr_flagged = bool((parsed.quality or {}).get("ocr_flagged", False))
 
         # Level-2 chunk cache key — aynı şema, mevcut cache dosyaları geçerli kalır
         if use_hybrid:
@@ -199,6 +202,9 @@ class DoclingManager:
                 )
                 if has_page_meta:
                     print(f"  [CACHE] Chunk önbellekten okundu: {os.path.basename(file_path)}")
+                    # ocr_flagged eski cache'lerde yok — cache geçerli kalır,
+                    # bayrak güncel quality'den post-hoc enjekte edilir.
+                    self._apply_ocr_flag(cached_data["chunks"], ocr_flagged)
                     return cached_data["full_text"], cached_data["chunks"]
                 else:
                     print("  [CACHE] Önbellekte sayfa numarası eksik, yeniden oluşturuluyor.")
@@ -216,6 +222,7 @@ class DoclingManager:
                 initial_author=initial_author,
                 initial_role=initial_role,
             )
+            self._apply_ocr_flag(final_chunks, ocr_flagged)
             self._save_chunk_cache(chunk_cache_file, full_text_hybrid, final_chunks)
             return full_text_hybrid, final_chunks
 
@@ -259,6 +266,7 @@ class DoclingManager:
                 }
                 final_chunks.append({"text": p_text, "span": span, "metadata": merged_meta})
 
+            self._apply_ocr_flag(final_chunks, ocr_flagged)
             self._save_chunk_cache(chunk_cache_file, full_text, final_chunks)
             return full_text, final_chunks
 
@@ -293,12 +301,19 @@ class DoclingManager:
                 )
                 current_search_pos = start_idx + 1
 
+        self._apply_ocr_flag(final_chunks, ocr_flagged)
         self._save_chunk_cache(chunk_cache_file, full_text, final_chunks)
         return full_text, final_chunks
 
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _apply_ocr_flag(chunks: list, ocr_flagged: bool) -> None:
+        """Tier-1 kalite bayrağını her chunk metadata'sına taşır (in-place)."""
+        for chunk in chunks:
+            chunk.setdefault("metadata", {})["ocr_flagged"] = ocr_flagged
 
     def _save_chunk_cache(self, cache_file, full_text: str, chunks: list) -> None:
         try:

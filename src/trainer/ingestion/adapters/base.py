@@ -195,6 +195,8 @@ class ManifestRecord:
     ocr: bool = True
     source_etag: Optional[str] = None
     source_last_modified: Optional[str] = None
+    quality_json: Optional[str] = None
+    """Tier-1 OCR kalite özeti (JSON). Örnek: {"ocr_flagged": true}"""
 
 
 @dataclass

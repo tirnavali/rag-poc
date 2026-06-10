@@ -114,7 +114,8 @@ def ndcg_at_k(retrieved_ids: list, relevant_ids: set, k: int) -> float:
 
     top_k = retrieved_ids[:k]
     gains = [1 if rid in relevant_ids else 0 for rid in top_k]
-    ideal = sorted(gains, reverse=True)
+    n_rel = min(k, len(relevant_ids))
+    ideal = [1] * n_rel + [0] * (k - n_rel)
     actual_dcg = dcg(gains)
     ideal_dcg = dcg(ideal)
     return actual_dcg / ideal_dcg if ideal_dcg > 0 else 0.0
