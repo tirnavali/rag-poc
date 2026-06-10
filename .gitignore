@@ -57,3 +57,7 @@ docs/superpowers/plans/2026-05-24-balanced-retrieval.md
 docs/superpowers/plans/2026-05-24-integration-test-isolation.md
 docs/superpowers/specs/2026-05-24-integration-test-isolation-design.md
 docs/superpowers/specs/2026-05-24-per-collection-retrieval-design.md
+
+# Allow test PDF fixtures
+!tests/fixtures/*.pdf
+

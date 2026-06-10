@@ -27,8 +27,7 @@ def test_docling_turkish_encoding_and_layout():
     Türkçe karakterlerin bozulmadığını ve layoutun düzgün çıktığını doğrular.
     """
     pdf_path = str(PROJECT_ROOT / "tests" / "fixtures" / "test_docling_turkish_encoding.pdf")
-    if not os.path.exists(pdf_path):
-        pytest.skip("Test fixture pdf dosyası bulunamadı (büyük olasılıkla git'e eklenmemiş)")
+    assert os.path.exists(pdf_path), f"Test fixture bulunamadı: {pdf_path}"
 
     manager = DoclingManager(do_ocr=False)
     full_text, chunks = manager.convert_and_pack(pdf_path, do_pack=False)
