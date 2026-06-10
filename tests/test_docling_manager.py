@@ -22,6 +22,40 @@ def test_docling_manager_uses_pypdfium_backend():
     assert pdf_option.backend == PyPdfiumDocumentBackend
 
 
+def test_docling_turkish_encoding_and_layout():
+    """test_docling_turkish_encoding.pdf dosyasının doğru şekilde okunduğunu,
+    Türkçe karakterlerin bozulmadığını ve layoutun düzgün çıktığını doğrular.
+    """
+    pdf_path = str(PROJECT_ROOT / "tests" / "fixtures" / "test_docling_turkish_encoding.pdf")
+    if not os.path.exists(pdf_path):
+        pytest.skip("Test fixture pdf dosyası bulunamadı (büyük olasılıkla git'e eklenmemiş)")
+
+    manager = DoclingManager(do_ocr=False)
+    full_text, chunks = manager.convert_and_pack(pdf_path, do_pack=False)
+
+    # 1. Türkçe karakter ve bozuk kelime kontrolleri
+    assert "Adalet ve Kalkınma" in full_text
+    assert "Bülent Turan" in full_text
+    assert "İçişleri Bakanlığı" in full_text
+    
+    # Bozuk kelimelerin çıkmadığından emin ol
+    assert "AGaOeW" not in full_text
+    assert "KaONıQma" not in full_text
+
+    # 2. Layout ve Offset (Span) Doğruluğu Kontrolü
+    assert len(chunks) > 0, "Hiç chunk üretilmedi!"
+    
+    for i, chunk in enumerate(chunks):
+        assert "span" in chunk and chunk["span"] is not None, f"Chunk {i}'de span bilgisi eksik!"
+        start, end = chunk["span"]
+        assert full_text[start:end] == chunk["text"], f"Span eşleşme hatası: Chunk {i}"
+        
+        # Metadata kontrolleri
+        meta = chunk.get("metadata", {})
+        assert "type" in meta
+        assert meta["source"] == "test_docling_turkish_encoding.pdf"
+
+
 @pytest.fixture
 def pdf_path():
     pytest.skip("Entegrasyon testi — manuel çalıştırın: python tests/test_docling_manager.py <pdf>")
