@@ -9,27 +9,30 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(PROJECT_ROOT))
 
 from src.common.parsing.docling_manager import DoclingManager
-from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
+from docling.backend.docling_parse_backend import DoclingParseDocumentBackend
 from docling.datamodel.base_models import InputFormat
 
 
 def test_docling_manager_uses_pypdfium_backend():
-    """DoclingManager'ın PDF formatı için PyPdfiumDocumentBackend'i kullandığını doğrular."""
+    """DoclingManager'ın PDF formatı için varsayılan Docling backend'i kullandığını doğrular."""
     manager = DoclingManager(do_ocr=False)
-    format_options = manager.converter.format_to_options
+    format_options = manager._converter.converter.format_to_options
     assert InputFormat.PDF in format_options
     pdf_option = format_options[InputFormat.PDF]
-    assert pdf_option.backend == PyPdfiumDocumentBackend
+    assert pdf_option.backend == DoclingParseDocumentBackend
 
 
+@pytest.mark.slow
 def test_docling_turkish_encoding_and_layout():
     """test_docling_turkish_encoding.pdf dosyasının doğru şekilde okunduğunu,
     Türkçe karakterlerin bozulmadığını ve layoutun düzgün çıktığını doğrular.
+
+    PDF'in native metin katmanı bozuk font encoding içerdiğinden OCR gereklidir.
     """
     pdf_path = str(PROJECT_ROOT / "tests" / "fixtures" / "test_docling_turkish_encoding.pdf")
     assert os.path.exists(pdf_path), f"Test fixture bulunamadı: {pdf_path}"
 
-    manager = DoclingManager(do_ocr=False)
+    manager = DoclingManager(do_ocr=True)
     full_text, chunks = manager.convert_and_pack(pdf_path, do_pack=False)
 
     # 1. Türkçe karakter ve bozuk kelime kontrolleri
