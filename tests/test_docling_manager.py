@@ -9,6 +9,17 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(PROJECT_ROOT))
 
 from src.common.parsing.docling_manager import DoclingManager
+from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
+from docling.datamodel.base_models import InputFormat
+
+
+def test_docling_manager_uses_pypdfium_backend():
+    """DoclingManager'ın PDF formatı için PyPdfiumDocumentBackend'i kullandığını doğrular."""
+    manager = DoclingManager(do_ocr=False)
+    format_options = manager.converter.format_to_options
+    assert InputFormat.PDF in format_options
+    pdf_option = format_options[InputFormat.PDF]
+    assert pdf_option.backend == PyPdfiumDocumentBackend
 
 
 @pytest.fixture
