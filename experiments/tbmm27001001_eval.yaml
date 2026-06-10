@@ -1,0 +1,14 @@
+name: "TBMM 27. Dönem 1. Yasama Yılı Golden Değerlendirmesi"
+collections:
+  - tutanaklar
+  - tutanaklar_nomic
+  - tutanaklar_qwen
+  - tutanaklar_ctx1024
+  - tutanaklar_qwen_ctx1024
+  - tutanaklar_ctx1536
+  - tutanaklar_qwen_ctx1536
+fixture: tests/fixtures/golden_tbmm27001001.json
+top_k: [5, 10]
+reranker: true
+fetch_k: 100
+

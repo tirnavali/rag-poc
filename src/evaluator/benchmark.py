@@ -136,9 +136,16 @@ class RetrievalBenchmark:
                     pages_list = p_entry.get("pages")
                     if pages_list is not None:
                         for p in pages_list:
-                            relevant_keys.add(f"{doc_id}#page_{p}")
+                            try:
+                                relevant_keys.add(f"{doc_id}#page_{int(float(p))}")
+                            except (ValueError, TypeError):
+                                relevant_keys.add(f"{doc_id}#page_{p}")
                     elif "page" in p_entry:
-                        relevant_keys.add(f"{doc_id}#page_{p_entry['page']}")
+                        p = p_entry['page']
+                        try:
+                            relevant_keys.add(f"{doc_id}#page_{int(float(p))}")
+                        except (ValueError, TypeError):
+                            relevant_keys.add(f"{doc_id}#page_{p}")
 
                 retrieved_hits = []
                 retrieved_keys_by_rank = []
@@ -146,11 +153,26 @@ class RetrievalBenchmark:
                     meta = r.get("meta") or {}
                     doc_id = meta.get("document_id")
                     
-                    pages = meta.get("pages", [])
-                    if not pages and "page" in meta:
-                        pages = [meta["page"]]
+                    pages = meta.get("pages")
+                    if isinstance(pages, str):
+                        pages_list = [p.strip() for p in pages.split(",") if p.strip()]
+                    elif isinstance(pages, (int, float)):
+                        pages_list = [pages]
+                    elif isinstance(pages, list):
+                        pages_list = pages
+                    else:
+                        pages_list = []
+                        
+                    if not pages_list and "page" in meta:
+                        pages_list = [meta["page"]]
                     
-                    chunk_keys = {f"{doc_id}#page_{p}" for p in pages if p is not None}
+                    chunk_keys = set()
+                    for p in pages_list:
+                        if p is not None:
+                            try:
+                                chunk_keys.add(f"{doc_id}#page_{int(float(p))}")
+                            except (ValueError, TypeError):
+                                chunk_keys.add(f"{doc_id}#page_{p}")
                     
                     is_hit = bool(chunk_keys & relevant_keys)
                     retrieved_hits.append(is_hit)

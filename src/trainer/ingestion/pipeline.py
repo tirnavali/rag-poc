@@ -163,6 +163,7 @@ class IngestionPipeline:
                     model_name=spec.embed_model,
                     max_context_tokens=spec.max_context_tokens,
                     overlap_tokens=spec.overlap_tokens,
+                    embed_dim=spec.embed_dim,
                 )
             else:
                 from langchain_ollama import OllamaEmbeddings

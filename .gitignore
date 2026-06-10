@@ -63,3 +63,7 @@ docs/superpowers/specs/2026-05-24-per-collection-retrieval-design.md
 
 # Local environments
 .env
+
+# Scratch / ad-hoc experiments
+scratch/
+test_qwen.py

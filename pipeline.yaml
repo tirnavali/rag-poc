@@ -201,9 +201,7 @@ agent:
     fallback:
       strategy: "broadcast"
       default_collections:
-        - tbmm_tutanaklar_nomic_v2
-        - gazete_arsivi_jina_v3
-        - tbmm_onerge_docling_jina_v3
+        - tutanaklar_ctx1024
       default_queries:
         - text: "{original_query}"
           filters: null

@@ -25,6 +25,9 @@ from chromadb.config import Settings
 
 def open_collection(path: Path | str, name: str):
     """Open an existing ChromaDB collection at an absolute path."""
+    path_obj = Path(path)
+    if not path_obj.exists():
+        raise FileNotFoundError(f"ChromaDB directory does not exist at: {path_obj}")
     client = chromadb.PersistentClient(
         path=str(path),
         settings=Settings(anonymized_telemetry=False),

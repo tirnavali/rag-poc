@@ -1,0 +1,2327 @@
+[
+  {
+    "id": "tbmm27-01-01-001",
+    "query": "ilk meclis birleşimini hangi başkan açtı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          2
+        ]
+      }
+    ],
+    "golden_answer": "Durmuş Yılmaz",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-002",
+    "query": "Durmuş Yılmaz normlar hiyerarşisinde en üstte ne var dedi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          4
+        ]
+      }
+    ],
+    "golden_answer": "Yasama organının çıkardığı Anayasa ve kanunlar",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-003",
+    "query": "Meclis açılışında okunan Mehmet Akif şiiri hangisiydi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          5
+        ]
+      }
+    ],
+    "golden_answer": "Girmeden tefrika bir millete düşman giremez. Toplu vurdukça yürekler onu top sindiremez",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-004",
+    "query": "yemin töreninde ilk sırada yemin eden engelli vekil kim?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          5
+        ]
+      }
+    ],
+    "golden_answer": "Musa Piroğlu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-005",
+    "query": "Abdullah Doğru neden yeminini baştan okumak zorunda kaldı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          6
+        ]
+      }
+    ],
+    "golden_answer": "Yemin metnini bir iki kelime eksik okuduğu için",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-006",
+    "query": "Ankara vekilleri yemin etmeden önce niye saygı duruşu yapıldı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          8
+        ]
+      }
+    ],
+    "golden_answer": "Cumhuriyetimizin kurucusu Gazi Mustafa Kemal Atatürk'ün aziz ruhu için",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-007",
+    "query": "Servet Ünsal yemin ederken neyi atladı da uyarıldı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          9
+        ]
+      }
+    ],
+    "golden_answer": "Yemin metnini okurken bir satır atlamış olması",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-008",
+    "query": "İsmail Ok yemin ederken hangi kelimeyi yanlış söyledi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          11
+        ]
+      }
+    ],
+    "golden_answer": "'andiçerim' kelimesi yerine 'yemin ediyorum' demiş olması",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-009",
+    "query": "Mahmut Tanal alkış yasağına ne diyerek karşı çıktı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          14
+        ]
+      }
+    ],
+    "golden_answer": "Kuralların protestoyu engellediğini ancak sevinci engellemediğini, alkışlamanın bir sevinç gösterisi olduğunu belirterek itiraz etmiştir",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-010",
+    "query": "Metin Nurullah Sazak yemin metnini kaç kerede okudu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          15,
+          16
+        ]
+      }
+    ],
+    "golden_answer": "3. denemesinde başarıyla tamamlamıştır",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-011",
+    "query": "Yamula barajı sulama önergesi nerede geçiyor?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          202
+        ]
+      }
+    ],
+    "golden_answer": "Sayfa 202",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-012",
+    "query": "Eğribel tüneli yolları önergesinin numarası kaç?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          202
+        ]
+      }
+    ],
+    "golden_answer": "6/1417",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-013",
+    "query": "Kayseri'deki IŞİD operasyonlarını meclise kim sordu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          202
+        ]
+      }
+    ],
+    "golden_answer": "Çetin Arık",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-014",
+    "query": "kamu bankalarına yapılan siber saldırıları soran vekil kim?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          202
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-015",
+    "query": "Hassa kazı çalışmaları hakkında kimin önergesi var?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          203
+        ]
+      }
+    ],
+    "golden_answer": "Serkan Topal",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-016",
+    "query": "zirai ilaç kalıntılarıyla ilgili soru önergesini kim verdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          203
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-017",
+    "query": "engelli taşeron işçiler için verilen önerge no nedir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          203
+        ]
+      }
+    ],
+    "golden_answer": "6/1453",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-018",
+    "query": "Giresun yayla turizmiyle ilgili önerge kime ait?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          204
+        ]
+      }
+    ],
+    "golden_answer": "Bülent Yener Bektaşoğlu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-019",
+    "query": "çiftlik bank dolandırıcılığının araştırılmasını kim istedi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          205
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-020",
+    "query": "üniversitelerdeki FETÖ soruşturmalarını kim meclise taşıdı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          206
+        ]
+      }
+    ],
+    "golden_answer": "Bülent Yener Bektaşoğlu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-021",
+    "query": "Niğde Belediyespor yardım önergesi no kaç?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          207
+        ]
+      }
+    ],
+    "golden_answer": "6/1542",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-022",
+    "query": "Suriyeli çocukların eğitimini araştırmak isteyen kim?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          403
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-023",
+    "query": "ABD lobi şirketine yapılan ödemeleri soran vekil?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          403
+        ]
+      }
+    ],
+    "golden_answer": "Hişyar Özsoy",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-024",
+    "query": "Haymana mağaraları turizmi için kim önerge verdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          403
+        ]
+      }
+    ],
+    "golden_answer": "Levent Gök",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-025",
+    "query": "Yunanistan'ın Ege adalarını işgalini kim sordu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          403
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-026",
+    "query": "Şırnak helikopter kazasını araştırmak isteyen vekiller kimler?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          403
+        ]
+      }
+    ],
+    "golden_answer": "Engin Altay, Levent Gök ve Özgür Özel",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-027",
+    "query": "Sümer holding özelleştirme önergesi no kaç?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          403
+        ]
+      }
+    ],
+    "golden_answer": "10/1849",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-028",
+    "query": "SSPE hastalarının sorunlarını meclise kim getirdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          404
+        ]
+      }
+    ],
+    "golden_answer": "Mustafa Sezgin Tanrıkulu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-029",
+    "query": "kaçırılan tarihi eserleri kim sordu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          404
+        ]
+      }
+    ],
+    "golden_answer": "Serdal Kuyucuoğlu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-030",
+    "query": "Turkcell SPK atamalarıyla ilgili önergeyi kim verdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          404
+        ]
+      }
+    ],
+    "golden_answer": "Barış Yarkadaş",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-031",
+    "query": "İstanbul sözleşmesi ve kadına şiddeti soran kim?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          405
+        ]
+      }
+    ],
+    "golden_answer": "Filiz Kerestecioğlu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-032",
+    "query": "vekillerin bylock kullanımı için kim önerge sundu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          405
+        ]
+      }
+    ],
+    "golden_answer": "Haluk Pekşen",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-033",
+    "query": "mısır şurubu zararları önerge no kaç?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          405
+        ]
+      }
+    ],
+    "golden_answer": "10/1889",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-034",
+    "query": "Maarif vakfı huzur hakkı sorusunu kim sordu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          407
+        ]
+      }
+    ],
+    "golden_answer": "Gaye Usluer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-035",
+    "query": "HSK yapısı hakkında araştırma önergesi kime ait?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          408
+        ]
+      }
+    ],
+    "golden_answer": "Meral Danış Beştaş",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-036",
+    "query": "Durmuş Yılmaz neden oturarak konuştu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          2
+        ]
+      }
+    ],
+    "golden_answer": "Geçirdiği bir kaza nedeniyle ameliyat olduğu ve uzun müddet ayakta kalamayacağı için",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-037",
+    "query": "Mecliste yemin sırası neye göre yapıldı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          5
+        ]
+      }
+    ],
+    "golden_answer": "Milletvekillerinin seçim çevreleri, soyadları ve adlarının alfabetik sıralaması dikkate alınarak",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-038",
+    "query": "Rize vekili Hayati Yazıcı neden sırasını beklemeden yemin etti?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          15
+        ]
+      }
+    ],
+    "golden_answer": "Hayati Yazıcı",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-039",
+    "query": "Meclis başkanı alkış yapanları uyarırken içtüzüğün hangi maddesini söyledi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          16
+        ]
+      }
+    ],
+    "golden_answer": "169'uncu maddesini",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-040",
+    "query": "Saliha Sera Kadıgil Sütlü yemin ederken takılınca ne dedi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          20
+        ]
+      }
+    ],
+    "golden_answer": "'Özür dilerim, ezberlememek gerekiyormuş.'",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-041",
+    "query": "Erzincan vekilleri yemin etmeden önce meclis ne kadar ara verdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          14
+        ]
+      }
+    ],
+    "golden_answer": "Yirmi dakika",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-042",
+    "query": "Barış Atay'ın yemininden sonraki gürültüde meclis kaç dakika ara verdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          17
+        ]
+      }
+    ],
+    "golden_answer": "Beş dakika",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-043",
+    "query": "Kayseri vekillerinden mazereti olup öne geçen kimdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          21
+        ]
+      }
+    ],
+    "golden_answer": "Taner Yıldız",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-044",
+    "query": "Siirt vekilleri Meral Danış Beştaş ve Sıdık Taş niye kendi sıralarında yemin edemedi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          28
+        ]
+      }
+    ],
+    "golden_answer": "Mazeretleri nedeniyle",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-045",
+    "query": "Musa Piroğlu'ndan sonra kürsüye çağrılan Hakkari vekili kim?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          6
+        ]
+      }
+    ],
+    "golden_answer": "Husret Dinç",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-046",
+    "query": "Van milletvekili Muazzez Orhan yemin ederken neden tekrar okumak zorunda kaldı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          29,
+          30
+        ]
+      }
+    ],
+    "golden_answer": "Sesi yeterince yüksek olmadığı için Başkan sesini yükseltmesini istedi",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-047",
+    "query": "yemin töreni bitiminde kendi sırası geldiğinde bulunamayan Samsun vekili kim?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          30,
+          31
+        ]
+      }
+    ],
+    "golden_answer": "Ahmet Demircan",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-048",
+    "query": "meclis başkan adaylarını bildirmek için son gün ne zamandı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          31
+        ]
+      }
+    ],
+    "golden_answer": "11 Temmuz 2018 Çarşamba günü saat 24.00",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-049",
+    "query": "meclis başkanlığı seçimi ne zaman yapıldı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          31
+        ]
+      }
+    ],
+    "golden_answer": "12 Temmuz 2018 Perşembe günü saat 14.00",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-050",
+    "query": "27. dönem geçici başkanlığı neden Deniz Baykal üstlenemedi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          31
+        ]
+      }
+    ],
+    "golden_answer": "Sağlık sorunları nedeniyle görevini yerine getiremediğinden parlamento ikinci yaşlı üyesi sıfatıyla Durmuş Yılmaz geçici başkanlık yaptı",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-051",
+    "query": "Kayseri'deki doğal gaz tüketimi hakkında kimin sözlü sorusu var?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          202
+        ]
+      }
+    ],
+    "golden_answer": "Çetin Arık",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-052",
+    "query": "Kayseri taşımalı eğitim sorunlarını soran önerge numarası?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          202
+        ]
+      }
+    ],
+    "golden_answer": "6/1413",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-053",
+    "query": "hayvanlara karşı işlenen suçlar hakkında kim önerge verdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          202
+        ]
+      }
+    ],
+    "golden_answer": "Dirayet Dilan Taşdemir",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-054",
+    "query": "Giresun üst geçitleri hakkında önerge no nedir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          202
+        ]
+      }
+    ],
+    "golden_answer": "6/1416",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-055",
+    "query": "Kayseri'de Suriyeli öğrenciler hakkında soran önerge kim tarafından verildi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          202
+        ]
+      }
+    ],
+    "golden_answer": "Çetin Arık",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-056",
+    "query": "Kayseri'deki imam açığını kim sordu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          203
+        ]
+      }
+    ],
+    "golden_answer": "Çetin Arık",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-057",
+    "query": "Hatay Dörtyol ilçesi yatırımları hakkında kim önerge verdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          203
+        ]
+      }
+    ],
+    "golden_answer": "Serkan Topal",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-058",
+    "query": "veteriner hekimler için fiili hizmet zammı önergesi kime ait?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          203
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-059",
+    "query": "coğrafi işaretli gıda üretimi için önerge numarası?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          203
+        ]
+      }
+    ],
+    "golden_answer": "6/1446",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-060",
+    "query": "mültecilere çalışma izni verilmesiyle ilgili kim soru sordu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          203
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-061",
+    "query": "Yeşil Yol Projesi ve Giresun yaylaları hakkında önerge no?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          204
+        ]
+      }
+    ],
+    "golden_answer": "6/1460",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-062",
+    "query": "Doğu Karadeniz'de turizm geliştirme projeleri hakkında önerge kime ait?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          204
+        ]
+      }
+    ],
+    "golden_answer": "Bülent Yener Bektaşoğlu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-063",
+    "query": "Giresun HES bölgesinde elektrik faturasında indirim isteyen kim?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          204
+        ]
+      }
+    ],
+    "golden_answer": "Bülent Yener Bektaşoğlu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-064",
+    "query": "SGK açıklarına ilişkin soru kim tarafından soruldu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          204
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-065",
+    "query": "Hatay Belen ilçesi kazı çalışmaları için önerge no nedir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          205
+        ]
+      }
+    ],
+    "golden_answer": "6/1486",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-066",
+    "query": "nişasta bazlı şeker kotası konusunda kim soru sordu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          205
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-067",
+    "query": "TEOG yerine gelen yeni kayıt sistemini kim sordu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          205
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-068",
+    "query": "domuz eti satış verileri hakkında önerge kim tarafından verildi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          206
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-069",
+    "query": "15 Temmuz sonrası askeri okullardan çıkarılan öğrencileri kim sordu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          206
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-070",
+    "query": "mobbing başvuruları hakkındaki sözlü önerge no nedir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          206
+        ]
+      }
+    ],
+    "golden_answer": "6/1510",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-071",
+    "query": "Şebinkarahisar cezaevi inşaatı ihalesinin iptali konusunda kim önerge verdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          207
+        ]
+      }
+    ],
+    "golden_answer": "Bülent Yener Bektaşoğlu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-072",
+    "query": "Kayseri'de öğretmene yönelik şiddet vakalarını kim sordu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          207
+        ]
+      }
+    ],
+    "golden_answer": "Çetin Arık",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-073",
+    "query": "staj sürelerinin emekliliğe sayılmasını isteyen önerge kime ait?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          207
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-074",
+    "query": "Kayseri'de intihar vakalarına ilişkin sözlü önerge no?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          207
+        ]
+      }
+    ],
+    "golden_answer": "6/1537",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-075",
+    "query": "orman mühendislerinin istihdamı hakkında soru veren kimdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          208
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-076",
+    "query": "Rusya yaptırımlarından etkilenen sektörler için meclis araştırması kim istedi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          302
+        ]
+      }
+    ],
+    "golden_answer": "Haluk Pekşen",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-077",
+    "query": "TOKİ yolsuzluk iddialarını araştırma önergesi kime ait?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          302
+        ]
+      }
+    ],
+    "golden_answer": "Tahsin Tarhan",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-078",
+    "query": "ASELSAN çalışanlarının şüpheli ölümlerini araştırmak isteyen kim?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          302
+        ]
+      }
+    ],
+    "golden_answer": "Mustafa Sezgin Tanrıkulu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-079",
+    "query": "Kaz Dağları çevre sorunları araştırma önergesi no kaç?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          303
+        ]
+      }
+    ],
+    "golden_answer": "10/117",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-080",
+    "query": "elektrik dağıtımı özelleştirmesi ve tüketici mağduriyetini araştıran kimdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          303
+        ]
+      }
+    ],
+    "golden_answer": "Haluk Pekşen",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-081",
+    "query": "Mardin turizm alanlarının şirketlere devri araştırma önergesi kime ait?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          304
+        ]
+      }
+    ],
+    "golden_answer": "Mehmet Erdoğan",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-082",
+    "query": "17-25 Aralık soruşturmaları sonrası idare eylemlerini araştırmak isteyen kim?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          306
+        ]
+      }
+    ],
+    "golden_answer": "Aykut Erdoğdu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-083",
+    "query": "yasa dışı telefon dinlemelerini araştırma önergesi kime ait?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          304
+        ]
+      }
+    ],
+    "golden_answer": "Muharrem İnce",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-084",
+    "query": "çocuk yaşta evlilikler araştırma önergesi kimin?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          304
+        ]
+      }
+    ],
+    "golden_answer": "Burcu Köksal",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-085",
+    "query": "Gediz Nehri kirliliği araştırma önergesi no nedir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          305
+        ]
+      }
+    ],
+    "golden_answer": "10/171",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-086",
+    "query": "Adıyaman milletvekili Abdurrahman Tutdere yemin etti mi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          7
+        ]
+      }
+    ],
+    "golden_answer": "Evet, yemin etti.",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-087",
+    "query": "Afyonkarahisar'dan hangi MHP'li vekil seçildi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          7
+        ]
+      }
+    ],
+    "golden_answer": "Mehmet Taytak",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-088",
+    "query": "Yemin töreninde Antalya milletvekili Deniz Baykal neden yer almadı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          10
+        ]
+      }
+    ],
+    "golden_answer": "Salonda bulunmadığı için (Yok denildi).",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-089",
+    "query": "Bolu'dan CHP milletvekili olarak kim yemin etti?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          12
+        ]
+      }
+    ],
+    "golden_answer": "Tanju Özcan",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-090",
+    "query": "Dinleyici locasındaki alkışlar yüzünden uyarılıp yeminine ara verilen Çorum vekili kim?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          13
+        ]
+      }
+    ],
+    "golden_answer": "Ahmet Sami Ceylan",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-091",
+    "query": "Çorum yemin töreninde dinleyicileri alkış yapmamaları konusunda uyaran başkan kimdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          13
+        ]
+      }
+    ],
+    "golden_answer": "Durmuş Yılmaz",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-092",
+    "query": "Geçici kâtip üye Dersim Dağ hangi ilin milletvekilidir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          18
+        ]
+      }
+    ],
+    "golden_answer": "Diyarbakır",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-093",
+    "query": "Yemin töreninin üçüncü oturumu saat kaçta açıldı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          18
+        ]
+      }
+    ],
+    "golden_answer": "18.35",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-094",
+    "query": "İstanbul milletvekili Onursal Adıgüzel'den yeminini neden tekrar etmesi istendi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          18
+        ]
+      }
+    ],
+    "golden_answer": "Yemin metnini okurken takıldığı veya eksik okuduğu için başkan tarafından tekrar etmesi istendi.",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-095",
+    "query": "CHP İstanbul milletvekili Kadri Enis Berberoğlu yemin törenine katıldı mı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          19
+        ]
+      }
+    ],
+    "golden_answer": "Hayır, yoktu (yemin etmedi).",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-096",
+    "query": "1. Birleşimin dördüncü oturumu saat kaçta açıldı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          24
+        ]
+      }
+    ],
+    "golden_answer": "21.36",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-097",
+    "query": "Kocaeli'den seçilen HDP milletvekili kimdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          24
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Faruk Gergerlioğlu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-098",
+    "query": "Konya'dan Saadet Partisi adına yemin eden milletvekili kimdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          25
+        ]
+      }
+    ],
+    "golden_answer": "Abdulkadir Karaduman",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-099",
+    "query": "Eski bakan Abdüllatif Şener hangi ilden milletvekili seçilmiştir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          25
+        ]
+      }
+    ],
+    "golden_answer": "Konya",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-100",
+    "query": "Eski Spor Bakanı Osman Aşkın Bak hangi ilin milletvekilidir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          27
+        ]
+      }
+    ],
+    "golden_answer": "Rize",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-101",
+    "query": "Eski milli motosikletçi Kenan Sofuoğlu hangi ilden milletvekili olarak yemin etti?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          27
+        ]
+      }
+    ],
+    "golden_answer": "Sakarya",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-102",
+    "query": "Samsun milletvekili Ahmet Demircan yemin töreninde hazır bulundu mu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          27
+        ]
+      }
+    ],
+    "golden_answer": "Hayır, ismi okunduğunda salonda bulunmadığı (Yok) belirtildi.",
+    "tags": [
+      "tbmm-minutes",
+      "page-level"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-103",
+    "query": "1. Birleşim'de yemin törenine katılmayan (yok yazılan) Antalya ve Samsun milletvekilleri kimlerdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          10,
+          27
+        ]
+      }
+    ],
+    "golden_answer": "Antalya'dan Deniz Baykal, Samsun'dan Ahmet Demircan.",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-104",
+    "query": "Durmuş Yılmaz başkanlığındaki üçüncü ve dördüncü oturumların katip üyeleri kimlerdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          18,
+          24
+        ]
+      }
+    ],
+    "golden_answer": "Diyarbakır Milletvekili Dersim Dağ, İstanbul Milletvekili Rümeysa Kadak ve Gaziantep Milletvekili Müslüm Yüksel.",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-105",
+    "query": "İzzet Ulvi Yönter'in 657 sayılı kanunda değişiklik öngören hükümsüz kanun teklifinin esas numarası nedir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          100
+        ]
+      }
+    ],
+    "golden_answer": "2/940",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-106",
+    "query": "Öğretmenlerin ulaşım hizmetlerinin desteklenmesi hakkında kanun teklifini kim verdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          100
+        ]
+      }
+    ],
+    "golden_answer": "Balıkesir Milletvekili İsmail Ok",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-107",
+    "query": "Muğla milletvekili Akın Üstündağ'ın hükümsüz kalan kanun teklifleri hangi belediye kanunu hakkındadır?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          110
+        ]
+      }
+    ],
+    "golden_answer": "5216 sayılı Büyükşehir Belediyesi Kanunu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-108",
+    "query": "Aytuğ Atıcı'nın ulusal bayram ve genel tatiller hakkında verdiği hükümsüz kanun teklifinin sıra numarası nedir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          120
+        ]
+      }
+    ],
+    "golden_answer": "1348",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-109",
+    "query": "Çalışanlara çocuk eğitim ödeneği verilmesini isteyen Sinop milletvekili kimdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          130
+        ]
+      }
+    ],
+    "golden_answer": "Barış Karadeniz",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-110",
+    "query": "Ömer Fethi Gürer'in Orman ve Su İşleri Bakanlığı teşkilatı hakkında verdiği kanun teklifinin esas numarası kaçtır?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          130
+        ]
+      }
+    ],
+    "golden_answer": "2/1617",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-111",
+    "query": "Mahmut Tanal'ın mal bildiriminde bulunulması, rüşvet ve yolsuzlukla mücadele kanununda değişiklik teklifinin esas numaraları nelerdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          140
+        ]
+      }
+    ],
+    "golden_answer": "2/1839 ve 2/1841",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-112",
+    "query": "Katma Değer Vergisi Kanununda değişiklik isteyen Mehmet Tüm hangi ilin milletvekilidir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          150
+        ]
+      }
+    ],
+    "golden_answer": "Balıkesir",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-113",
+    "query": "Ateşli Silahlar ve Bıçaklar Kanununda değişiklik isteyen İzmir milletvekili kimdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          160
+        ]
+      }
+    ],
+    "golden_answer": "Murat Bakan",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-114",
+    "query": "Ömer Fethi Gürer'in hükümsüz kalan Orman ve Su İşleri Bakanlığı ile Pasaport Kanunu tekliflerinin esas numaraları sırasıyla nedir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          130,
+          140
+        ]
+      }
+    ],
+    "golden_answer": "2/1617 ve 2/1838",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-115",
+    "query": "Murat Bakan'ın 657 sayılı kanun ve Ateşli Silahlar Kanunu konusundaki hükümsüz tekliflerinin sıra numaraları nedir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          130,
+          160
+        ]
+      }
+    ],
+    "golden_answer": "1569 ve 2227",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-116",
+    "query": "Ülkemize kaçak şeker girişi ve şekerle mücadele hakkında sözlü soru önergelerini kim verdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          170
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-117",
+    "query": "Mardin Kalesi'nin turizme açılması için İçişleri ve Savunma bakanlarına soru soran Diyarbakır vekili kimdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          170
+        ]
+      }
+    ],
+    "golden_answer": "Altan Tan",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-118",
+    "query": "Fatma Kaplan Hürriyet Gebze Kirazpınar ve Pelitli mahalleleri hakkında kime soru önergesi verdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          180
+        ]
+      }
+    ],
+    "golden_answer": "Çevre ve Şehircilik Bakanı'na",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-119",
+    "query": "Alanya'daki fırtına sonrası hasar tespit çalışmalarını soran Niyazi Nefi Kara hangi ilin vekilidir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          190
+        ]
+      }
+    ],
+    "golden_answer": "Antalya",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-120",
+    "query": "Giresun'daki yabancı uyruklu kişiler ve nüfus kaydırma sorunları hakkında soru önergesi veren vekil kimdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          200
+        ]
+      }
+    ],
+    "golden_answer": "Bülent Yener Bektaşoğlu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-121",
+    "query": "Polis memurlarının ek göstergeleri hakkında İçişleri Bakanına sorulan önergenin esas nosu nedir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          209
+        ]
+      }
+    ],
+    "golden_answer": "6/1577",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-122",
+    "query": "Çocuk aşısı uygulamaları ve aşı reddi verilerini Sağlık Bakanı'ndan talep eden önergenin sahibi kimdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          210
+        ]
+      }
+    ],
+    "golden_answer": "Ömer Fethi Gürer",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-123",
+    "query": "Giresun milletvekili Bülent Yener Bektaşoğlu'nun polislerin ek göstergeleri ile Giresun nüfusu hakkındaki önergelerinin esas numaraları nedir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          200,
+          209
+        ]
+      }
+    ],
+    "golden_answer": "6/1372 ve 6/1577",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-124",
+    "query": "Suriyeli sığınmacıların sosyal ve ekonomik sorunlarının araştırılmasını isteyen Adana milletvekili kimdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          307
+        ]
+      }
+    ],
+    "golden_answer": "Meral Danış Beştaş",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-125",
+    "query": "Kalkınma Ajanslarının hedeflerine ulaşıp ulaşmadığının araştırılması önergesi kime aittir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          308
+        ]
+      }
+    ],
+    "golden_answer": "İzmir Milletvekili Ahmet Kenan Tanrıkulu ve 20 milletvekili",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-126",
+    "query": "Yetiştirme yurtlarından ayrılan çocukların sorunları için meclis araştırması isteyen Isparta vekili kimdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          309
+        ]
+      }
+    ],
+    "golden_answer": "Nuri Okutan",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-127",
+    "query": "Kayısı üretimi ve pazarlama sorunlarının araştırılmasını talep eden Malatya milletvekili kimdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          310
+        ]
+      }
+    ],
+    "golden_answer": "Veli Ağbaba",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-128",
+    "query": "Çocuk işçiliğinin araştırılması amacıyla Ömer Fethi Gürer ve arkadaşlarının verdiği önergenin sıra numarası nedir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          406
+        ]
+      }
+    ],
+    "golden_answer": "1848",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-129",
+    "query": "Şırnak'taki helikopter kazasının araştırılması önergesini veren İstanbul milletvekili kimdir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          406
+        ]
+      }
+    ],
+    "golden_answer": "Ali Özcan",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-130",
+    "query": "Trafik kazalarının araştırılması amacıyla Mustafa Sezgin Tanrıkulu tarafından sunulan önergenin esas numarası kaçtır?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          410
+        ]
+      }
+    ],
+    "golden_answer": "10/1959",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "hard"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-131",
+    "query": "MHP Grubu adına rüşvet ve yolsuzluk iddialarının araştırılması amacıyla Erkan Akçay ve Oktay Vural'ın verdikleri önergelerin esas numaraları nedir?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          307,
+          309
+        ]
+      }
+    ],
+    "golden_answer": "10/190 ve 10/227",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page"
+    ]
+  }
+]

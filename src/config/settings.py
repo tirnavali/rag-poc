@@ -229,7 +229,7 @@ else:
 # AKTİF ETMEK İÇİN:
 #   USE_LOCAL_LATE_CHUNKING=1 python -m src.trainer.ingestion.ingest --request manifest.json
 JINA_LOCAL_MODEL = os.environ.get("JINA_LOCAL_MODEL", "jinaai/jina-embeddings-v3")
-USE_LOCAL_LATE_CHUNKING = os.environ.get("USE_LOCAL_LATE_CHUNKING", "0") == "1"
+USE_LOCAL_LATE_CHUNKING = os.environ.get("USE_LOCAL_LATE_CHUNKING", "1") == "1"
 # NOT: max_context_tokens ve overlap_tokens artık model bazında
 # src/config/collections.py içindeki MODEL_SPECS'ten çekiliyor.
 # Bu sayede Jina v3 (8K), Jina v4 (32K), Nomic v2 (512) gibi farklı
@@ -259,7 +259,7 @@ PUBLICATION_KEYWORDS = [
 # --- Default collection for RAGService ---
 # Used when RAGService() is instantiated without explicit spec.
 # Override with RAG_DEFAULT_COLLECTION env var.
-DEFAULT_COLLECTION = os.environ.get("RAG_DEFAULT_COLLECTION", "tbmm_tutanaklar_nomic_v2")
+DEFAULT_COLLECTION = os.environ.get("RAG_DEFAULT_COLLECTION", "tutanaklar_ctx1024")
 
 # --- Author Metadata Validator (LLM backstop) ---
 # Runs only on chunks where regex-based author extraction failed.

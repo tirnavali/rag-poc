@@ -14,6 +14,16 @@ from langchain_core.embeddings import Embeddings
 warnings.filterwarnings("ignore")
 logging.set_verbosity_error()
 
+# Monkeypatch transformers DynamicCache to support get_usable_length in newer transformers versions
+try:
+    from transformers.cache_utils import DynamicCache
+    if not hasattr(DynamicCache, "get_usable_length"):
+        def get_usable_length(self, seq_len, layer_idx=0):
+            return self.get_seq_length(layer_idx)
+        DynamicCache.get_usable_length = get_usable_length
+except Exception:
+    pass
+
 
 class LocalLateChunkingEmbedder(Embeddings):
     """Jina v3/v4 kullanarak Late Chunking gerçekleştiren yerel gömme sınıfı.
@@ -34,9 +44,10 @@ class LocalLateChunkingEmbedder(Embeddings):
         model_name: str,
         max_context_tokens: int = 8192,
         overlap_tokens: int = 128,
+        embed_dim: int | None = None,
     ):
         print(f"--- Yükleniyor: {model_name} (Bu işlem ilk seferde uzun sürebilir) ---")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, local_files_only=True)
 
         # Resolve target device up-front
         if torch.cuda.is_available():
@@ -54,7 +65,11 @@ class LocalLateChunkingEmbedder(Embeddings):
             # The subsequent .to(device) call then fails with meta tensor error.
             # Forcing False keeps weights on CPU during load so .to(device) works.
             "low_cpu_mem_usage": False,
+            "local_files_only": True,
         }
+        if device == "cuda":
+            load_kwargs["torch_dtype"] = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+
         if "jina" in model_name.lower():
             # Flash Attention, Jina'nın 'task' parametresiyle bazen çakışabiliyor.
             # Performans için 'eager' (standart) attention kullanarak task desteğini garantiye alıyoruz.
@@ -64,16 +79,34 @@ class LocalLateChunkingEmbedder(Embeddings):
         self.model.eval()
         self.model.to(device)
 
+        self.is_jina = "jina" in model_name.lower()
+        self.is_nomic = "nomic" in model_name.lower()
+        self.is_qwen = "qwen" in model_name.lower()
+
         self.max_context_tokens = max_context_tokens
         self.overlap_tokens = overlap_tokens
+        self.embed_dim = embed_dim
 
     def embed_documents(self, texts: List[str], task: str = "retrieval.passage") -> List[List[float]]:
         """Uyumluluk için standart gömme (ortalama havuzlama kullanır)."""
+        if self.is_nomic:
+            prefix = "search_query: " if "query" in task else "search_document: "
+            texts = [prefix + text for text in texts]
+        elif self.is_qwen:
+            if "query" in task:
+                prefix = "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
+                texts = [prefix + text for text in texts]
+
         inputs = self.tokenizer(texts, padding=True, truncation=True, return_tensors="pt").to(self.model.device)
         with torch.no_grad():
             # Jina v3/v4 için task parametresi
-            outputs = self.model(**inputs, task=task)
+            if self.is_jina:
+                outputs = self.model(**inputs, task=task)
+            else:
+                outputs = self.model(**inputs)
         embeddings = outputs.last_hidden_state.mean(dim=1)
+        if self.embed_dim is not None:
+            embeddings = embeddings[:, :self.embed_dim]
         embeddings = F.normalize(embeddings, p=2, dim=1)
         return embeddings.cpu().tolist()
 
@@ -83,6 +116,18 @@ class LocalLateChunkingEmbedder(Embeddings):
     def embed_with_late_chunking(self, full_text: str, spans: List[Tuple[int, int]], 
                                 task: str = "retrieval.passage") -> List[List[float]]:
         """Tek bir belge üzerinde late chunking uygular."""
+        if self.is_nomic:
+            prefix = "search_query: " if "query" in task else "search_document: "
+            shift = len(prefix)
+            full_text = prefix + full_text
+            spans = [(start + shift, end + shift) for start, end in spans]
+        elif self.is_qwen:
+            if "query" in task:
+                prefix = "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
+                shift = len(prefix)
+                full_text = prefix + full_text
+                spans = [(start + shift, end + shift) for start, end in spans]
+
         # Güvenlik kontrolü
         quick_check = self.tokenizer(full_text, return_tensors="pt", truncation=False)
         if quick_check["input_ids"].shape[1] > self.max_context_tokens:
@@ -97,7 +142,10 @@ class LocalLateChunkingEmbedder(Embeddings):
 
         with torch.no_grad():
             # Jina v3/v4 için task parametresi kritik
-            outputs = self.model(**inputs, task=task)
+            if self.is_jina:
+                outputs = self.model(**inputs, task=task)
+            else:
+                outputs = self.model(**inputs)
 
         token_embeddings = outputs.last_hidden_state[0]
 
@@ -114,6 +162,9 @@ class LocalLateChunkingEmbedder(Embeddings):
                 chunk_vec = token_embeddings[token_indices].mean(dim=0)
             else:
                 chunk_vec = token_embeddings.mean(dim=0)
+
+            if self.embed_dim is not None:
+                chunk_vec = chunk_vec[:self.embed_dim]
 
             chunk_vec = F.normalize(chunk_vec.unsqueeze(0), p=2, dim=1).squeeze(0)
             chunk_embeddings.append(chunk_vec.cpu().tolist())

@@ -535,7 +535,7 @@ class PlanningAgent:
         if allowed_keys:
             collections = list(allowed_keys)
         else:
-            collections = fb.fallback_collections or ["tbmm_tutanaklar_nomic_v2"]
+            collections = fb.fallback_collections or ["tutanaklar_ctx1024"]
 
         drafts = []
         for fq in fb.fallback_queries:

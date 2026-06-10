@@ -51,6 +51,7 @@ def build_embedder(model: str = settings.EMBED_MODEL) -> Embeddings:
             model_name=jina_model,
             max_context_tokens=_mspec.get("max_context_tokens", 8192),
             overlap_tokens=_mspec.get("overlap_tokens", 128),
+            embed_dim=_mspec.get("embed_dim", 768),
         )
     return L2NormalizedEmbeddings(OllamaEmbeddings(model=model, base_url=settings.OLLAMA_HOST))
 
@@ -68,6 +69,7 @@ def build_embedder_for_spec(spec: "CollectionSpec") -> Embeddings:
             model_name=spec.embed_model,
             max_context_tokens=spec.max_context_tokens,
             overlap_tokens=spec.overlap_tokens,
+            embed_dim=spec.embed_dim,
         )
     return L2NormalizedEmbeddings(
         OllamaEmbeddings(model=spec.embed_model, base_url=settings.OLLAMA_HOST)
