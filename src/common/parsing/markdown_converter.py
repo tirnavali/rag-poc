@@ -1,11 +1,14 @@
-"""
-PDF (ve diğer desteklenen formatlar) → Markdown dönüşümünü bağımsız bir modül olarak sağlar.
+"""Bu modül PDF→Markdown dönüşümünden sorumludur. Chunking, embedding ve
+ingestion orkestrasyon kapsam dışıdır.
 
-Sorumluluk: yalnızca parse katmanı.
-  PDF → atoms (anlamsal parçalar) + full_text (markdown)
+Mimari rolü: ingestion pipeline'ının KATMAN 1'i (PARSE).
+  Girdi : PDF (veya Docling'in desteklediği diğer formatlar)
+  Çıktı : ParsedDocument(atoms, full_text, pages_by_number, quality)
 
-Chunking / packing için DoclingManager.pack() kullanın.
-Bağımsız kullanım: python -m src.common.parsing.markdown_converter --file belge.pdf
+Bağımsız CLI olarak da kullanılabilir — pipeline'a bağımlı değildir:
+    python -m src.common.parsing.markdown_converter --file belge.pdf
+
+Chunking için DoclingManager.pack() (KATMAN 2) kullanılır.
 """
 
 from __future__ import annotations

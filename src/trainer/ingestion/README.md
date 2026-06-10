@@ -11,6 +11,72 @@ python -m src.trainer.ingestion.ingest --request manifest.json
 
 ---
 
+## Mimari — Üç Katman
+
+Boru hattı **üç bağımsız katmandan** oluşur. Her katman ayrı bir modüldür,
+ayrı bir CLI'ı vardır ve diğerinden bağımsız çalıştırılabilir. Pipeline
+yalnızca aralarındaki teli çeker — parse/chunk/embed kararlarını
+kendi vermez.
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  KATMAN 1 — PARSE  (PDF → Markdown)                                 │
+│    src/common/parsing/                                              │
+│      markdown_converter.py   PDF → atomlar + markdown + sayfalar    │
+│      quality.py              Tier-1 OCR kalite sinyalleri           │
+│  Bağımsız CLI:                                                      │
+│      python -m src.common.parsing.markdown_converter --file X.pdf   │
+├─────────────────────────────────────────────────────────────────────┤
+│  KATMAN 2 — CHUNK  (atomlar → chunk'lar)                            │
+│    src/common/parsing/                                              │
+│      docling_manager.py      3 paketleme yolu (hybrid/author/greedy)│
+│  Bağımsız CLI:                                                      │
+│      python -m src.trainer.ingestion.ingest --inspect X.pdf         │
+├─────────────────────────────────────────────────────────────────────┤
+│  KATMAN 3 — INGEST  (orchestration)                                 │
+│    src/trainer/ingestion/                                           │
+│      pipeline.py             6 aşama, perf + kalite ölçümü          │
+│      manifest.py             SQLite dedup state                     │
+│      adapters/               tip bazlı metadata zenginleştirme      │
+│  Bağımsız CLI:                                                      │
+│      python -m src.trainer.ingestion.ingest --request manifest.json │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+> **DevOps mesajı**: PDF→Markdown ayrı bir modüldür (KATMAN 1).
+> Pipeline ona delege eder; KATMAN 1 hiçbir embedding/Chroma kodu içermez.
+> Yukarıdaki ilk CLI bunun canlı kanıtıdır — hiç ChromaDB ya da embedder
+> yüklemeden bir PDF'i markdown'a çevirip kalite raporu üretir.
+
+---
+
+## Sunum Demosu — Üç İzole Komut
+
+Her katman, diğerleri olmadan çalıştırılabilir:
+
+```bash
+# 1) KATMAN 1 (PARSE-only) — PDF → markdown + kalite, sıfır ingest maliyeti
+python -m src.common.parsing.markdown_converter --file belge.pdf
+#   → data_lake/markdown/{kaynak}__{hash}.md
+#   → data_lake/pages/{kaynak}__{hash}_pages.json
+#   → data_lake/parse_cache/{md5}_atoms.json (quality alanı dahil)
+#   → konsolda: "Kalite: bayraklı/temiz" satırı
+
+# 2) KATMAN 1+2 (CHUNK-preview) — embed/upsert YOK, chunk önizlemesi
+python -m src.trainer.ingestion.ingest --inspect belge.pdf \
+    -c tbmm_minutes_docling_jina_v4 -t tutanak
+#   → her chunk için sayfa, karakter, span, başlık hiyerarşisi
+#   → "Span %100 ✓ — late chunking hazır" özet kararı
+
+# 3) KATMAN 1+2+3 (FULL INGEST) — uçtan uca, ölçümlü
+python -m src.trainer.ingestion.ingest --request manifest.json
+#   → 6 aşama [n/6] satırları + perf paneli
+#   → data_lake/reports/{document_id}.json sidecar (timings + kalite)
+#   → manifest.db içine quality_json + perf_json
+```
+
+---
+
 ## Büyük Resim
 
 ```mermaid
@@ -166,20 +232,57 @@ korunur — `full_text` içindeki ofsetler embedding'in adresleridir.
 
 ## DevOps Runbook
 
+### Normal akış
+
 ```bash
-# Çalıştırmadan önce: manifest geçerli mi? (dosyalar var mı, URL'ler erişilebilir mi)
+# 1. Manifest geçerli mi? (dosyalar var mı, URL'ler erişilebilir mi)
 python -m src.trainer.ingestion.ingest --validate manifest.json
 
-# Ne işlenecek, ne atlanacak? (kuru çalıştırma)
+# 2. Ne işlenecek, ne atlanacak? (kuru çalıştırma, değişiklik yok)
 python -m src.trainer.ingestion.ingest --diff manifest.json
 
-# Yükle (yalnızca yeni/değişmişleri işle)
+# 3. Yükle (yalnızca yeni/değişmişleri işle; Rich progress bar gösterir)
 python -m src.trainer.ingestion.ingest --request manifest.json --only-changed
+```
 
+### Gözlemleme
+
+```bash
 # Durum: koleksiyon başına done / pending / failed sayıları
 python -m src.trainer.ingestion.ingest --status
+
+# + Performans trendi: ort. parse/embed süresi, span coverage %, OCR bayrak oranı
+python -m src.trainer.ingestion.ingest --status --report
+
+# Belirli koleksiyon detayı (ilk 50 belge)
 python -m src.trainer.ingestion.ingest --status -c tbmm_minutes_docling_jina_v4
 
+# Belge başına uçuş kaydedici raporlar (JSON)
+ls data_lake/reports/
+cat data_lake/reports/tbmm-27-1-001-20110101.json
+```
+
+### Chunk önizleme — `--inspect` (demo için altın)
+
+```bash
+# PDF'i parse+chunk et; embed/upsert YOK — sıfır maliyet, anında sonuç
+python -m src.trainer.ingestion.ingest --inspect belge.pdf
+
+# Koleksiyon parametreleriyle (doğru tokenizer, chunk boyutları)
+python -m src.trainer.ingestion.ingest --inspect belge.pdf \
+    -c tbmm_minutes_docling_jina_v4 -t tutanak
+
+# Daha fazla chunk göster
+python -m src.trainer.ingestion.ingest --inspect belge.pdf --limit 50
+```
+
+Çıktı: her chunk için sayfa aralığı, karakter sayısı, span durumu (`—` = late chunking düşer),
+başlık hiyerarşisi ve metin önizlemesi. Özet panelde "Span %100 ✓ — late chunking hazır" ya da
+"X eksik ⚠ — fallback" kararı görünür.
+
+### Diğer komutlar
+
+```bash
 # Koleksiyonlar ve chunk sayıları
 python -m src.trainer.ingestion.ingest --list-collections
 
@@ -188,20 +291,44 @@ python -m src.trainer.ingestion.ingest --delete BELGE_ID -c KOLEKSIYON
 
 # Yalnızca parse katmanını izole çalıştır (chunk/embed olmadan)
 python -m src.common.parsing.markdown_converter --file belge.pdf
+python -m src.common.parsing.markdown_converter --file belge.pdf --pages-json
 ```
 
 **Çıkış kodları:** `0` = tümü başarılı/atlandı, `1` = en az bir belge `failed`
 (hatalı belgeler özet panelinde listelenir; diğer belgeler işlenmeye devam eder —
 bir belgenin hatası batch'i durdurmaz).
 
+### Konsol çıktısını okumak
+
+Her `--request` çalıştırmasında belge başına 6 satır + özet panel görünür:
+
+```
+[PIPELINE] tbmm-27-1-001-20110101 (tutanak)
+  [1/6 MANIFEST] ✓ 8ms
+  [2/6 PARSE] ✓ 4,250ms  · 142 parça · 45,320 karakter
+  [3/6 CHUNK] ✓ 145ms    · 28 parça · span %100
+  [4/6 EMBED] ✓ 3,100ms  · mod: late_chunking
+  [5/6 UPSERT] ChromaDB: tbmm_minutes_docling_jina_v4
+  [6/6 DONE] 28 parça eklendi.
+  ╭─ tbmm-27-1-001-20110101 ──────────────────────────────────╮
+  │ manifest 8ms  parse 4250ms  embed 3100ms  upsert 45ms     │
+  │ toplam 7,553ms  28 parça · span 100%  ✓ uyarı yok        │
+  ╰───────────────────────────────────────────────────────────╯
+```
+
+Sarı panel + `⚠ SPAN COVERAGE` → late chunking bu belgede standart embed'e düştü
+(retrieval kalite kaybı — kök nedeni `DoclingManager._hybrid_pack` span çıkarımında ara).
+
 **Sık karşılaşılan durumlar:**
 
 | Belirti | Neden | Çözüm |
 |---|---|---|
-| `[SKIP] Zaten başarıyla işlenmiş` | content_hash eşleşti | Beklenen davranış; zorlamak için `--force` |
-| `[SKIP] ETag değişmemiş` | URL kaynağı değişmedi, indirme bile yapılmadı | Beklenen davranış |
-| `parse_error: ...` | Bozuk PDF, el yazısı içerik, OCR çökmesi | `markdown_converter` CLI ile izole test edin; `--no-ocr` deneyin |
-| `embed_error: ...` | GPU bellek / model indirme sorunu | İlk çalıştırmada model HuggingFace'ten iner; disk ve VRAM kontrol edin |
+| `SKIP — content_hash eşleşiyor` | Belge değişmemiş | Beklenen; zorlamak için `--force` |
+| `SKIP — ETag değişmemiş` | URL kaynağı değişmedi, indirme bile yapılmadı | Beklenen |
+| `⚠ SPAN COVERAGE X eksik` | HybridChunker bazı öğelerde prov/charspan üretemedi | `--inspect` ile hangi chunk'ların span'siz olduğunu gör; Docling sürümü kontrol et |
+| `⚠ ocr_flagged:N/M` | OCR kalite sinyali — atom yoğunluğu düşük veya karakter sapması yüksek | `data_lake/reports/` raporunu incele; düşük kaliteli PDF yeniden tara |
+| `parse_error: ...` | Bozuk PDF, el yazısı, OCR çökmesi | `markdown_converter` CLI ile izole test; `--no-ocr` dene |
+| `embed_error: ...` | GPU bellek / model indirme sorunu | İlk çalıştırmada model HuggingFace'ten iner; disk ve VRAM kontrol et |
 | Yavaş ilk çalıştırma | OCR + model indirme | Normal; ikinci çalıştırma önbellekten saniyeler sürer |
 | `parse_cache/` şişti | Önbellek birikti | Tamamı silinebilir — bir sonraki çalıştırmada yeniden üretilir (OCR maliyetiyle) |
 
@@ -220,8 +347,34 @@ bir belgenin hatası batch'i durdurmaz).
    ile). Boru hattının tüm davranışı `CollectionSpec` üzerinden enjekte edilir.
 3. **Embed modeli indeks ve sorgu zamanında aynı olmak zorundadır** — `CollectionSpec`
    bu eşleşmeyi taşır; koleksiyona yanlış modelle yazmak yapısal olarak engellenir.
-4. **OCR kalite izleme (yol haritası).** Hiçbir OCR çözümü tam güvenilir değildir;
-   Türkçe karakter seti (ı/İ, ğ, ş) ek hata yüzeyi ekler. Planlanan Tier-1 kontrolleri:
-   OCR güven skoru eşiği, sayfa başına eleman yoğunluğu anomalisi ve ünlü uyumu ihlali
-   oranı — bayraklar artefakta yazılacak, retrieval katmanı kaliteye göre
-   filtreleyebilecek.
+4. **OCR kalite izleme (Tier-1 — uygulandı).** Hiçbir OCR çözümü tam
+   güvenilir değildir; Türkçe karakter seti (ı/İ, ğ, ş) ek hata yüzeyi ekler.
+   Tier-1 sinyalleri parse anında otomatik hesaplanır
+   (`src/common/parsing/quality.py`): atom yoğunluğu, document_type bazlı
+   karakter sapması, OCR güveni; ek olarak Türkçe ı/İ-i/I karışıklığı ve
+   ünlü uyumu ihlali sayaçları bilgi amaçlı taşınır. Bayraklar
+   `ParsedDocument.quality`, her chunk metadata'sındaki `ocr_flagged` alanı
+   ve manifest'in `quality_json` kolonuna yazılır; retrieval-time filtreleme
+   V2'ye bırakıldı.
+
+---
+
+## Bilinen MVP Sınırları
+
+Şeffaf olalım — şu sınırlar bilinçli MVP kararlarıdır, V2 backlog'undadır:
+
+- **Quality stats warm-up.** İlk `QUALITY_STATS_MIN_DOCS=3` belge tip
+  ortalaması olmadan bayraksız geçer; `char_count_outlier` ancak yeterli
+  başka örnek biriktikten sonra anlamlıdır.
+- **Tek-process istatistik dosyası.** `parse_cache/quality_stats.json` için
+  dosya kilidi yoktur; paralel ingest race condition üretebilir. Sıralı
+  çalıştırma varsayılır.
+- **OCR confidence sürüm bağımlı.** Docling `ConfidenceReport` veya
+  page-cell güvenleri yoksa kontrol atlanır (fail-open) — `low_ocr_confidence`
+  bayrağı üretilmez, diğer iki bayrak çalışmaya devam eder.
+- **`ocr_flagged` retrieval'da kullanılmıyor.** Şu an yalnızca yazılır;
+  V2'de opsiyonel `where` filtresi olarak retrieval'a entegre edilecek.
+- **Cache backfill yok.** quality alanı olmayan eski Level-1 atoms.json
+  dosyaları okuma anında yeniden hesaplanır (atomlar yeterli) ama diske
+  geri yazılmaz; yalnızca `ocr_mean_confidence` taze parse gerektirdiği
+  için `None` kalır.

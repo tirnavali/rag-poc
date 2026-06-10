@@ -197,6 +197,10 @@ class ManifestRecord:
     source_last_modified: Optional[str] = None
     quality_json: Optional[str] = None
     """Tier-1 OCR kalite özeti (JSON). Örnek: {"ocr_flagged": true}"""
+    perf_json: Optional[str] = None
+    """Aşama zamanlamaları ve chunk istatistikleri (JSON).
+    Örnek: {"total_ms": 7400, "parse_ms": 4250, "span_coverage_pct": 100.0}"""
+    """Aşama zamanlamaları ve chunk istatistikleri (JSON). Örnek: {"total_ms": 7400, "span_coverage_pct": 100.0}"""
 
 
 @dataclass

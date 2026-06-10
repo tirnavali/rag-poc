@@ -556,20 +556,87 @@ print(result.status)  # "done", "skipped", "failed"
 **Sizin sorumluluğunuz:** `ingest_request.json` üretmek.
 **Sistemin sorumluluğu:** doğrulamak, indekslemek, takip etmek.
 
+#### Normal Akış (CI/CD)
+
 ```bash
-# CI/CD pipeline örneği
-# 1. Yeni tutanakları tarayıcıdan çek, JSON üret
+# 1. Yeni tutanakları çek, JSON üret
 python your_scraper.py --output ingest_new_period.json
 
 # 2. Doğrula
 python -m src.trainer.ingestion.ingest --validate ingest_new_period.json
 
-# 3. Sadece yeni/değişmişleri işle (idempotent)
+# 3. Önce diff göster — ne yüklenecek, ne atlanacak?
+python -m src.trainer.ingestion.ingest --diff ingest_new_period.json
+
+# 4. Sadece yeni/değişmişleri işle (idempotent)
 python -m src.trainer.ingestion.ingest --request ingest_new_period.json --only-changed
 
-# 4. Rapor al
-python -m src.trainer.ingestion.ingest --status --collection tbmm_minutes_docling_jina_v4
+# 5. Performans trendi + OCR kalite özeti
+python -m src.trainer.ingestion.ingest --status --report --collection tbmm_minutes_docling_jina_v4
 ```
+
+#### Konsol Çıktısı
+
+Her `--request` çalıştırmasında belge başına 6 satır + özet panel görünür:
+
+```
+[PIPELINE] tbmm-27-1-001-20110101 (tutanak)
+  [1/6 MANIFEST] ✓ 8ms
+  [2/6 PARSE]    ✓ 4,250ms  · 142 parça · 45,320 karakter
+  [3/6 CHUNK]    ✓ 145ms    · 28 parça · span %100
+  [4/6 EMBED]    ✓ 3,100ms  · mod: late_chunking
+  [5/6 UPSERT]   ChromaDB: tbmm_minutes_docling_jina_v4
+  [6/6 DONE]     28 parça eklendi.
+  ╭─ tbmm-27-1-001-20110101 ──────────────────────────────────╮
+  │ manifest 8ms  parse 4250ms  embed 3100ms  upsert 45ms     │
+  │ toplam 7,553ms  28 parça · span 100%  ✓ uyarı yok        │
+  ╰───────────────────────────────────────────────────────────╯
+```
+
+Sarı panel + `⚠ SPAN COVERAGE` → late chunking o belgede standart embed'e düştü (retrieval kalite kaybı).
+
+#### Chunk Önizleme — `--inspect`
+
+Embed/upsert olmadan parse+chunk sonucunu gösterir. Demo ve hata ayıklama için:
+
+```bash
+# Temel kullanım
+python -m src.trainer.ingestion.ingest --inspect belge.pdf -c tbmm_minutes_docling_jina_v4
+
+# Daha fazla chunk (varsayılan: 20)
+python -m src.trainer.ingestion.ingest --inspect belge.pdf -c tbmm_minutes_docling_jina_v4 --limit 50
+```
+
+Tablo: `#`, `Sayfa`, `Kar~` (karakter sayısı), `Span` (`—` = late chunking bu chunk'ta düşer), `Tip`, `Başlıklar`, `İlk 100 karakter`. Alt panelde `Span %100 ✓ — late chunking hazır` ya da `3 eksik ⚠ — fallback` kararı.
+
+#### Uçuş Kaydedici — `data_lake/reports/`
+
+Her belge için sidecar JSON (tüm aşama süreleri + kalite sinyalleri):
+
+```bash
+ls data_lake/reports/
+cat data_lake/reports/tbmm-27-1-001-20110101.json
+# → manifest_ms, parse_ms, embed_ms, upsert_ms, total_ms,
+#   span_coverage_pct, embed_mode, warnings
+```
+
+#### Performans Trendi — `--status --report`
+
+```bash
+python -m src.trainer.ingestion.ingest --status --report
+# Koleksiyon bazında: belge sayısı, ort. toplam/parse/embed ms, span coverage %, OCR bayrak %
+```
+
+#### Uyarı Referansı
+
+| Belirti | Neden | Çözüm |
+|---|---|---|
+| `SKIP — content_hash eşleşiyor` | Belge değişmemiş | Beklenen; zorlamak için `--force` |
+| `SKIP — ETag değişmemiş` | URL kaynağı değişmedi | Beklenen |
+| `⚠ SPAN COVERAGE X eksik` | HybridChunker bazı chunk'larda charspan üretemedi | `--inspect` ile hangi chunk'ların span'siz olduğunu gör |
+| `⚠ ocr_flagged:N/M` | Atom yoğunluğu düşük veya karakter sapması yüksek | `data_lake/reports/` raporunu incele |
+| `parse_error: ...` | Bozuk PDF, OCR çökmesi | `markdown_converter` CLI ile izole test |
+| Yavaş ilk çalıştırma | OCR + model indirme | Normal; ikinci çalıştırma önbellekten saniyeler sürer |
 
 ---
 

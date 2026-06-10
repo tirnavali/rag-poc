@@ -1,6 +1,8 @@
-"""Tier-1 OCR kalite sinyalleri.
+"""Bu modül parse sonrası Tier-1 OCR kalite sinyallerinin hesaplanmasından
+sorumludur. Parse'ın kendisi (Docling çağrısı) kapsam dışıdır —
+MarkdownConverter buraya delege eder.
 
-Parse sonrası belge bazında otomatik kalite metrikleri hesaplar:
+Belge bazında otomatik kalite metrikleri hesaplar:
 
   (a) Sayfa başına atom yoğunluğu — beklenen sayfa sayısına (atomlarda görülen
       en büyük sayfa numarası) göre anormal düşükse "low_atom_density" bayrağı.

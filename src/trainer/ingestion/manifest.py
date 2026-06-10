@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS document_manifest (
     source_last_modified TEXT,
     ocr               INTEGER NOT NULL DEFAULT 1,
     quality_json      TEXT,
+    perf_json         TEXT,
     PRIMARY KEY (document_id, collection_name)
 );
 
@@ -95,6 +96,7 @@ class DocumentManifest:
             ("source_last_modified", "TEXT"),
             ("ocr", "INTEGER NOT NULL DEFAULT 1"),
             ("quality_json", "TEXT"),
+            ("perf_json", "TEXT"),
         ]
         for col, typedef in new_columns:
             try:
@@ -120,11 +122,14 @@ class DocumentManifest:
                error_message: Optional[str] = None,
                source_etag: Optional[str] = None,
                source_last_modified: Optional[str] = None,
-               quality: Optional[dict] = None) -> None:
+               quality: Optional[dict] = None,
+               perf: Optional[dict] = None) -> None:
         """Insert or update a manifest record.
 
-        quality: opsiyonel Tier-1 OCR kalite özeti (örn. {"ocr_flagged": true}).
-        None geçilirse mevcut değer korunur (COALESCE).
+        quality: Tier-1 OCR kalite özeti (örn. {"ocr_flagged": true}).
+        perf:    Aşama zamanlamaları ve chunk istatistikleri
+                 (örn. {"total_ms": 7400, "parse_ms": 4250, "span_coverage_pct": 100.0}).
+        Her iki alan da None geçilirse mevcut değer korunur (COALESCE).
         """
         now = _iso_now()
         existing = self.get(doc.document_id, doc.collection_name)
@@ -140,8 +145,8 @@ class DocumentManifest:
              status, chunk_count, document_date, year, period, legislative_year, session,
              author, author_role, source_name, title, topics,
              ingest_time, last_modified, error_message, metadata_json,
-             source_etag, source_last_modified, ocr, quality_json)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             source_etag, source_last_modified, ocr, quality_json, perf_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(document_id, collection_name) DO UPDATE SET
                 document_source = excluded.document_source,
                 document_type = excluded.document_type,
@@ -164,7 +169,8 @@ class DocumentManifest:
                 source_etag = excluded.source_etag,
                 source_last_modified = excluded.source_last_modified,
                 ocr = excluded.ocr,
-                quality_json = COALESCE(excluded.quality_json, document_manifest.quality_json)
+                quality_json = COALESCE(excluded.quality_json, document_manifest.quality_json),
+                perf_json = COALESCE(excluded.perf_json, document_manifest.perf_json)
             """,
             (
                 doc.document_id, doc.collection_name, doc.document_source, doc.document_type, doc.content_hash,
@@ -176,6 +182,7 @@ class DocumentManifest:
                 source_last_modified,
                 int(doc.ocr),
                 json.dumps(quality, ensure_ascii=False) if quality else None,
+                json.dumps(perf, ensure_ascii=False) if perf else None,
             ),
         )
         self._conn.commit()
@@ -264,6 +271,57 @@ class DocumentManifest:
             result.setdefault(col, {}).setdefault(dtype, {})[status] = count
         return result
 
+    def perf_trends_by_collection(self) -> dict[str, dict]:
+        """perf_json verisinden koleksiyon başına zamanlama ve kalite ortalamaları döner.
+
+        Yalnızca status='done' kayıtlar hesaba katılır; perf_json olmayan kayıtlar atlanır.
+        Dönen yapı:
+          {collection_name: {
+            "doc_count": int,
+            "avg_total_ms": float,
+            "avg_parse_ms": float,
+            "avg_embed_ms": float,
+            "avg_span_coverage_pct": float,
+            "ocr_flagged_pct": float,
+          }}
+        """
+        rows = self._conn.execute(
+            "SELECT collection_name, perf_json, quality_json "
+            "FROM document_manifest WHERE status='done' AND perf_json IS NOT NULL"
+        ).fetchall()
+
+        buckets: dict[str, list] = {}
+        for row in rows:
+            col = row["collection_name"]
+            try:
+                perf = json.loads(row["perf_json"])
+            except Exception:
+                continue
+            quality = {}
+            if row["quality_json"]:
+                try:
+                    quality = json.loads(row["quality_json"])
+                except Exception:
+                    pass
+            buckets.setdefault(col, []).append((perf, quality))
+
+        result = {}
+        for col, entries in buckets.items():
+            total_ms = [e[0].get("total_ms", 0) for e in entries if e[0].get("total_ms")]
+            parse_ms = [e[0].get("parse_ms", 0) for e in entries if e[0].get("parse_ms")]
+            embed_ms = [e[0].get("embed_ms", 0) for e in entries if e[0].get("embed_ms")]
+            span_pct = [e[0].get("span_coverage_pct", 100) for e in entries]
+            flagged = [1 if e[1].get("ocr_flagged") else 0 for e in entries]
+            result[col] = {
+                "doc_count": len(entries),
+                "avg_total_ms": round(sum(total_ms) / len(total_ms)) if total_ms else 0,
+                "avg_parse_ms": round(sum(parse_ms) / len(parse_ms)) if parse_ms else 0,
+                "avg_embed_ms": round(sum(embed_ms) / len(embed_ms)) if embed_ms else 0,
+                "avg_span_coverage_pct": round(sum(span_pct) / len(span_pct), 1),
+                "ocr_flagged_pct": round(sum(flagged) / len(flagged) * 100, 1),
+            }
+        return result
+
     # ------------------------------------------------------------------
     # Internal
     # ------------------------------------------------------------------
@@ -296,6 +354,7 @@ class DocumentManifest:
             source_etag=row["source_etag"],
             source_last_modified=row["source_last_modified"],
             quality_json=row["quality_json"],
+            perf_json=row["perf_json"] if "perf_json" in row.keys() else None,
         )
 
 

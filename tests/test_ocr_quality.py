@@ -356,3 +356,17 @@ class TestManifestQuality:
         manifest.upsert(self._doc(), status="done", chunk_count=3)
         record = manifest.get("doc-1", "col-1")
         assert record.quality_json is None
+
+    def test_perf_roundtrip_and_preserved_when_omitted(self, tmp_path):
+        manifest = DocumentManifest(db_path=tmp_path / "manifest.db")
+        doc = self._doc()
+        manifest.upsert(doc, status="done", chunk_count=3,
+                        perf={"total_ms": 7400, "parse_ms": 4250,
+                              "span_coverage_pct": 100.0})
+        record = manifest.get("doc-1", "col-1")
+        assert json.loads(record.perf_json) == {
+            "total_ms": 7400, "parse_ms": 4250, "span_coverage_pct": 100.0
+        }
+        # İkinci upsert perf vermez → COALESCE ile korunmalı
+        manifest.upsert(doc, status="done", chunk_count=3)
+        assert json.loads(manifest.get("doc-1", "col-1").perf_json)["total_ms"] == 7400

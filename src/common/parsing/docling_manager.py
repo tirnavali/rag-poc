@@ -1,9 +1,12 @@
-"""
-Docling kütüphanesini kullanarak dokümanları parse eden ve Late Chunking için
-uygun formatta (metin + ofsetler) çıktı veren modül.
+"""Bu modül atomların chunk'lara paketlenmesinden sorumludur. PDF→Markdown
+dönüşümü kapsam dışıdır — MarkdownConverter'a (KATMAN 1) delege edilir.
 
-PDF → Markdown dönüşümü MarkdownConverter'a delege edilir (composition).
-Bu sınıf packing (chunking) katmanından sorumludur.
+Mimari rolü: ingestion pipeline'ının KATMAN 2'si (CHUNK).
+  Girdi : ParsedDocument (atoms + full_text)
+  Çıktı : Late Chunking'e hazır chunk'lar (metin + char ofsetleri + metadata)
+
+Üç paketleme yolu destekler: hybrid (HybridChunker, token-aware),
+author-aware (segment_pack), greedy (basit min/max-char).
 """
 
 import hashlib
@@ -120,15 +123,23 @@ class DoclingManager:
         document_type: str | None = None,
         initial_author: str | None = None,
         initial_role: str | None = None,
+        quality_document_type: str | None = None,
     ) -> Tuple[str, List[Dict[str, Any]]]:
         """
         PDF → chunk'lar.  MarkdownConverter.convert() + DoclingManager.pack() zinciri.
 
         İmza ve dönüş tipi değişmez — tüm çağıranlar (adapter'lar) güncelleme gerektirmez.
+
+        quality_document_type: Yalnızca kalite (karakter sapması) karşılaştırması için
+            kullanılan tip etiketi. Verilmezse author-aware'in tetiklenmemesini
+            istediği halde kalite kontrolü yapmak isteyen adapter'lar için
+            (ör. pdf_report). Boş bırakılırsa document_type kullanılır.
         """
         use_hybrid = bool(self.tokenizer_name)
         parsed = self._converter.convert(
-            file_path, use_hybrid=use_hybrid, document_type=document_type
+            file_path,
+            use_hybrid=use_hybrid,
+            document_type=quality_document_type or document_type,
         )
         return self.pack(
             parsed,
