@@ -125,9 +125,75 @@ class RetrievalBenchmark:
                 query, top_k=max(k_values), reranker=reranker, fetch_k=fetch_k
             )
 
-            # Dispatch: span_overlap (special) → hybrid token+chunk (golden) → legacy
+            # Dispatch: page_overlap → span_overlap (special) → hybrid token+chunk (golden) → legacy
+            golden_pages = item.get("relevant_pages")
             golden = item.get("gold_evidence_spans") or item.get("relevant_spans")
-            if golden:
+            if golden_pages:
+                # Page-level match path: matches chunk's page(s) metadata against relevant_pages
+                relevant_keys = set()
+                for p_entry in golden_pages:
+                    doc_id = p_entry["document_id"]
+                    pages_list = p_entry.get("pages")
+                    if pages_list is not None:
+                        for p in pages_list:
+                            relevant_keys.add(f"{doc_id}#page_{p}")
+                    elif "page" in p_entry:
+                        relevant_keys.add(f"{doc_id}#page_{p_entry['page']}")
+
+                retrieved_hits = []
+                retrieved_keys_by_rank = []
+                for r in retrieved:
+                    meta = r.get("meta") or {}
+                    doc_id = meta.get("document_id")
+                    
+                    pages = meta.get("pages", [])
+                    if not pages and "page" in meta:
+                        pages = [meta["page"]]
+                    
+                    chunk_keys = {f"{doc_id}#page_{p}" for p in pages if p is not None}
+                    
+                    is_hit = bool(chunk_keys & relevant_keys)
+                    retrieved_hits.append(is_hit)
+                    retrieved_keys_by_rank.append(chunk_keys)
+
+                metrics = {}
+                for k in k_values:
+                    hits_at_k = sum(1 for h in retrieved_hits[:k] if h)
+                    metrics[f"precision_{k}"] = hits_at_k / k if k > 0 else 0.0
+                    
+                    union_retrieved_keys = set()
+                    for keys in retrieved_keys_by_rank[:k]:
+                        union_retrieved_keys.update(keys)
+                    found_keys = union_retrieved_keys & relevant_keys
+                    metrics[f"recall_{k}"] = len(found_keys) / len(relevant_keys) if relevant_keys else 0.0
+                    
+                    metrics[f"hit_rate_{k}"] = 1.0 if any(retrieved_hits[:k]) else 0.0
+
+                first_hit_rank = next((rank for rank, h in enumerate(retrieved_hits, 1) if h), None)
+                metrics["mrr"] = 1.0 / first_hit_rank if first_hit_rank is not None else 0.0
+                
+                gains_10 = [1 if h else 0 for h in retrieved_hits[:10]]
+                n_rel = min(10, len(relevant_keys))
+                ideal_10 = [1] * n_rel + [0] * (10 - n_rel)
+                
+                def dcg(hits_list):
+                    return sum(rel / math.log2(i + 2) for i, rel in enumerate(hits_list))
+                
+                actual_dcg = dcg(gains_10)
+                ideal_dcg = dcg(ideal_10)
+                metrics["ndcg_10"] = actual_dcg / ideal_dcg if ideal_dcg > 0 else 0.0
+
+                results.append(
+                    {
+                        "id": qid,
+                        "query": query,
+                        "metrics": metrics,
+                        "retrieved_ids": [r["id"] for r in retrieved[: max(k_values)]],
+                        "relevant_ids": sorted(list(relevant_keys)),
+                        "matcher": "page_overlap",
+                    }
+                )
+            elif golden:
                 # Span-overlap path: char-range based ground truth.
                 retrieved_spans = []
                 for r in retrieved:

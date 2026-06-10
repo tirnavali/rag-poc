@@ -1,0 +1,2012 @@
+{
+    "version": "1.0",
+    "collection": "tbmm_tutanaklar_nomic_v2",
+    "documents": [
+        {
+            "document_id": "tutanak-27-03-01-20191001",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c017/tbmm27017001.pdf",
+            "document_date": "2019-10-01",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 1,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-02-20191002",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c018/tbmm27018002.pdf",
+            "document_date": "2019-10-02",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 2,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-03-20191008",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c018/tbmm27018003.pdf",
+            "document_date": "2019-10-08",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 3,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-04-20191009",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c018/tbmm27018004.pdf",
+            "document_date": "2019-10-09",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 4,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-05-20191010",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c018/tbmm27018005.pdf",
+            "document_date": "2019-10-10",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 5,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-06-20191015",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c019/tbmm27019006.pdf",
+            "document_date": "2019-10-15",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 6,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-07-20191016",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c020/tbmm27020007.pdf",
+            "document_date": "2019-10-16",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 7,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-08-20191022",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c020/tbmm27020008.pdf",
+            "document_date": "2019-10-22",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 8,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-09-20191023",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c020/tbmm27020009.pdf",
+            "document_date": "2019-10-23",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 9,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-10-20191024",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c020/tbmm27020010.pdf",
+            "document_date": "2019-10-24",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 10,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-11-20191030",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c021/tbmm27021011.pdf",
+            "document_date": "2019-10-30",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 11,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-12-20191031",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c021/tbmm27021012.pdf",
+            "document_date": "2019-10-31",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 12,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-13-20191105",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c021/tbmm27021013.pdf",
+            "document_date": "2019-11-05",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 13,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-14-20191106",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c021/tbmm27021014.pdf",
+            "document_date": "2019-11-06",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 14,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-15-20191107",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c021/tbmm27021015.pdf",
+            "document_date": "2019-11-07",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 15,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-16-20191112",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c021/tbmm27021016.pdf",
+            "document_date": "2019-11-12",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 16,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-17-20191113",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c022/tbmm27022017.pdf",
+            "document_date": "2019-11-13",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 17,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-18-20191114",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c022/tbmm27022018.pdf",
+            "document_date": "2019-11-14",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 18,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-19-20191119",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c022/tbmm27022019.pdf",
+            "document_date": "2019-11-19",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 19,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-20-20191120",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c022/tbmm27022020.pdf",
+            "document_date": "2019-11-20",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 20,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-21-20191121",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c022/tbmm27022021.pdf",
+            "document_date": "2019-11-21",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 21,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-22-20191126",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c022/tbmm27022022.pdf",
+            "document_date": "2019-11-26",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 22,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-23-20191127",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c023/tbmm27023023.pdf",
+            "document_date": "2019-11-27",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 23,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-24-20191128",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c023/tbmm27023024.pdf",
+            "document_date": "2019-11-28",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 24,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-25-20191203",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c023/tbmm27023025.pdf",
+            "document_date": "2019-12-03",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 25,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-26-20191204",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c024/tbmm27024026.pdf",
+            "document_date": "2019-12-04",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 26,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-27-20191205",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c025/tbmm27025027.pdf",
+            "document_date": "2019-12-05",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 27,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-28-20191209",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c026/tbmm27026028.pdf",
+            "document_date": "2019-12-09",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 28,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-29-20191210",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c027/tbmm27027029.pdf",
+            "document_date": "2019-12-10",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 29,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-30-20191211",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c027/tbmm27027030.pdf",
+            "document_date": "2019-12-11",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 30,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-31-20191212",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c027/tbmm27027031.pdf",
+            "document_date": "2019-12-12",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 31,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-32-20191213",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c027/tbmm27027032.pdf",
+            "document_date": "2019-12-13",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 32,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-33-20191214",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c027/tbmm27027033.pdf",
+            "document_date": "2019-12-14",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 33,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-34-20191215",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c028/tbmm27028034.pdf",
+            "document_date": "2019-12-15",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 34,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-35-20191216",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c028/tbmm27028035.pdf",
+            "document_date": "2019-12-16",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 35,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-36-20191217",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c028/tbmm27028036.pdf",
+            "document_date": "2019-12-17",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 36,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-37-20191218",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c028/tbmm27028037.pdf",
+            "document_date": "2019-12-18",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 37,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-38-20191219",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c029/tbmm27029038.pdf",
+            "document_date": "2019-12-19",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 38,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-39-20191220",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c029/tbmm27029039.pdf",
+            "document_date": "2019-12-20",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 39,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-40-20191221",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c029/tbmm27029040.pdf",
+            "document_date": "2019-12-21",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 40,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-41-20200102",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c030/tbmm27030041.pdf",
+            "document_date": "2020-01-02",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 41,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-42-20200114",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c030/tbmm27030042.pdf",
+            "document_date": "2020-01-14",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 42,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-43-20200115",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c031/tbmm27031043.pdf",
+            "document_date": "2020-01-15",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 43,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-44-20200116",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c031/tbmm27031044.pdf",
+            "document_date": "2020-01-16",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 44,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-45-20200121",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c031/tbmm27031045.pdf",
+            "document_date": "2020-01-21",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 45,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-46-20200122",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c032/tbmm27032046.pdf",
+            "document_date": "2020-01-22",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 46,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-47-20200123",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c032/tbmm27032047.pdf",
+            "document_date": "2020-01-23",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 47,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-48-20200128",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c033/tbmm27033048.pdf",
+            "document_date": "2020-01-28",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 48,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-49-20200129",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c034/tbmm27034049.pdf",
+            "document_date": "2020-01-29",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 49,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-50-20200130",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c034/tbmm27034050.pdf",
+            "document_date": "2020-01-30",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 50,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-51-20200204",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c034/tbmm27034051.pdf",
+            "document_date": "2020-02-04",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 51,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-52-20200205",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c034/tbmm27034052.pdf",
+            "document_date": "2020-02-05",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 52,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-53-20200206",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c034/tbmm27034053.pdf",
+            "document_date": "2020-02-06",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 53,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-54-20200211",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c034/tbmm27034054.pdf",
+            "document_date": "2020-02-11",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 54,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-55-20200212",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c035/tbmm27035055.pdf",
+            "document_date": "2020-02-12",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 55,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-56-20200213",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c035/tbmm27035056.pdf",
+            "document_date": "2020-02-13",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 56,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-57-20200218",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c035/tbmm27035057.pdf",
+            "document_date": "2020-02-18",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 57,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-58-20200219",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c035/tbmm27035058.pdf",
+            "document_date": "2020-02-19",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 58,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-59-20200220",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c035/tbmm27035059.pdf",
+            "document_date": "2020-02-20",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 59,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-60-20200225",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c036/tbmm27036060.pdf",
+            "document_date": "2020-02-25",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 60,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-61-20200226",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c036/tbmm27036061.pdf",
+            "document_date": "2020-02-26",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 61,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-62-20200227",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c036/tbmm27036062.pdf",
+            "document_date": "2020-02-27",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 62,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-63-20200303",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c036/tbmm27036063.pdf",
+            "document_date": "2020-03-03",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 63,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-64-20200304",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c036/tbmm27036064.pdf",
+            "document_date": "2020-03-04",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 64,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-65-20200305",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c037/tbmm27037065.pdf",
+            "document_date": "2020-03-05",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 65,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-66-20200310",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c037/tbmm27037066.pdf",
+            "document_date": "2020-03-10",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 66,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-67-20200311",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c037/tbmm27037067.pdf",
+            "document_date": "2020-03-11",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 67,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-68-20200312",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c037/tbmm27037068.pdf",
+            "document_date": "2020-03-12",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 68,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-69-20200317",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c038/tbmm27038069.pdf",
+            "document_date": "2020-03-17",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 69,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-70-20200318",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c038/tbmm27038070.pdf",
+            "document_date": "2020-03-18",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 70,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-71-20200319",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c038/tbmm27038071.pdf",
+            "document_date": "2020-03-19",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 71,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-72-20200324",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c038/tbmm27038072.pdf",
+            "document_date": "2020-03-24",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 72,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-73-20200325",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c038/tbmm27038073.pdf",
+            "document_date": "2020-03-25",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 73,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-74-20200326",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c038/tbmm27038074.pdf",
+            "document_date": "2020-03-26",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 74,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-75-20200331",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c038/tbmm27038075.pdf",
+            "document_date": "2020-03-31",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 75,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-76-20200401",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c039/tbmm27039076.pdf",
+            "document_date": "2020-04-01",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 76,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-77-20200402",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c039/tbmm27039077.pdf",
+            "document_date": "2020-04-02",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 77,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-78-20200407",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c039/tbmm27039078.pdf",
+            "document_date": "2020-04-07",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 78,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-79-20200408",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c039/tbmm27039079.pdf",
+            "document_date": "2020-04-08",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 79,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-80-20200409",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c039/tbmm27039080.pdf",
+            "document_date": "2020-04-09",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 80,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-81-20200410",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c039/tbmm27039081.pdf",
+            "document_date": "2020-04-10",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 81,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-82-20200411",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c039/tbmm27039082.pdf",
+            "document_date": "2020-04-11",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 82,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-83-20200412",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c040/tbmm27040083.pdf",
+            "document_date": "2020-04-12",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 83,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-84-20200413",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c040/tbmm27040084.pdf",
+            "document_date": "2020-04-13",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 84,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-85-20200414",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c040/tbmm27040085.pdf",
+            "document_date": "2020-04-14",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 85,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-86-20200415",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c040/tbmm27040086.pdf",
+            "document_date": "2020-04-15",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 86,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-87-20200416",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c040/tbmm27040087.pdf",
+            "document_date": "2020-04-16",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 87,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-88-20200423",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c041/tbmm27041088.pdf",
+            "document_date": "2020-04-23",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 88,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-89-20200520",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c041/tbmm27041089.pdf",
+            "document_date": "2020-05-20",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 89,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-90-20200521",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c041/tbmm27041090.pdf",
+            "document_date": "2020-05-21",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 90,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-91-20200527",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c041/tbmm27041091.pdf",
+            "document_date": "2020-05-27",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 91,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-92-20200528",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c041/tbmm27041092.pdf",
+            "document_date": "2020-05-28",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 92,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-93-20200602",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c042/tbmm27042093.pdf",
+            "document_date": "2020-06-02",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 93,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-94-20200603",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c042/tbmm27042094.pdf",
+            "document_date": "2020-06-03",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 94,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-95-20200604",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c042/tbmm27042095.pdf",
+            "document_date": "2020-06-04",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 95,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-96-20200609",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c042/tbmm27042096.pdf",
+            "document_date": "2020-06-09",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 96,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-97-20200610",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c042/tbmm27042097.pdf",
+            "document_date": "2020-06-10",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 97,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-98-20200611",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c043/tbmm27043098.pdf",
+            "document_date": "2020-06-11",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 98,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-99-20200612",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c043/tbmm27043099.pdf",
+            "document_date": "2020-06-12",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 99,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-100-20200616",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c043/tbmm27043100.pdf",
+            "document_date": "2020-06-16",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 100,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-101-20200617",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c043/tbmm27043101.pdf",
+            "document_date": "2020-06-17",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 101,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-102-20200618",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c043/tbmm27043102.pdf",
+            "document_date": "2020-06-18",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 102,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-103-20200623",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c044/tbmm27044103.pdf",
+            "document_date": "2020-06-23",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 103,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-104-20200624",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c044/tbmm27044104.pdf",
+            "document_date": "2020-06-24",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 104,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-105-20200630",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c044/tbmm27044105.pdf",
+            "document_date": "2020-06-30",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 105,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-106-20200701",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c045/tbmm27045106.pdf",
+            "document_date": "2020-07-01",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 106,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-107-20200702",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c045/tbmm27045107.pdf",
+            "document_date": "2020-07-02",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 107,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-108-20200707",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c045/tbmm27045108.pdf",
+            "document_date": "2020-07-07",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 108,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-109-20200708",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c045/tbmm27045109.pdf",
+            "document_date": "2020-07-08",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 109,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-110-20200709",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c045/tbmm27045110.pdf",
+            "document_date": "2020-07-09",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 110,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-111-20200710",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c045/tbmm27045111.pdf",
+            "document_date": "2020-07-10",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 111,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-112-20200711",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c046/tbmm27046112.pdf",
+            "document_date": "2020-07-11",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 112,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-113-20200714",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c046/tbmm27046113.pdf",
+            "document_date": "2020-07-14",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 113,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-114-20200716",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c046/tbmm27046114.pdf",
+            "document_date": "2020-07-16",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 114,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-115-20200721",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c046/tbmm27046115.pdf",
+            "document_date": "2020-07-21",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 115,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-116-20200722",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c047/tbmm27047116.pdf",
+            "document_date": "2020-07-22",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 116,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-117-20200723",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c047/tbmm27047117.pdf",
+            "document_date": "2020-07-23",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 117,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-03-118-20200728",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c047/tbmm27047118.pdf",
+            "document_date": "2020-07-28",
+            "period": 27,
+            "legislative_year": 3,
+            "session": 118,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": false,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=3&v_cilt="
+            }
+        }
+    ]
+}

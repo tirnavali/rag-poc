@@ -1,13 +1,29 @@
-"""Refactored ingestion pipeline with manifest-based dedup.
+"""Uçtan uca ingestion boru hattı — manifest tabanlı dedup ile.
 
-Key changes from previous version:
-- run_document() replaces run() as primary entry point
-- Manifest check for skip / update / new
-- Unified canonical metadata (English keys, Turkish values)
-- No more extract_metadata_from_path() — metadata comes from DocumentInput
-- Chunk IDs: {document_id}_{chunk_index} (deterministic, dedup-safe)
+Bir belgenin izlediği yol (konsoldaki [n/6] etiketleri bu akışla eşleşir):
 
-Backward compatibility: run_batch() still works but delegates to run_document().
+    manifest.json (DocumentInput)
+        │
+        ▼
+    [1/6 MANIFEST]  content_hash / ETag kontrolü ──► değişmemişse SKIP
+        │
+        ▼
+    [2/6 PARSE]     adapter → DoclingManager → MarkdownConverter
+        │           (PDF → OCR → atomlar + DoclingDocument; parse_cache/)
+        ▼
+    [3/6 CHUNK]     HybridChunker / author-aware / greedy paketleme
+        │           chunk ID: {document_id}_{i} — deterministik, dedup-safe
+        ▼
+    [4/6 EMBED]     Late chunking (Jina, tüm belge bağlamı) ya da standart embed
+        │
+        ▼
+    [5/6 UPSERT]    ChromaDB'ye vektör + metadata yazımı
+        │
+        ▼
+    [6/6 DONE]      Manifest'e done + chunk_count + ETag kaydı
+
+Her bileşen (parser, embedder) CollectionSpec üzerinden enjekte edilir;
+ayrıntılı mimari ve disk artefakt haritası için bkz. README.md (bu dizinde).
 """
 from __future__ import annotations
 
@@ -132,7 +148,7 @@ class IngestionPipeline:
                             current_etag = resp.headers.get("ETag")
                             current_lm = resp.headers.get("Last-Modified")
                         if current_etag and current_etag == existing.source_etag:
-                            print(f"  [SKIP] ETag değişmemiş, indirme yapılmıyor")
+                            print(f"  [1/6 MANIFEST] SKIP — ETag değişmemiş, indirme yapılmıyor")
                             return IngestResult(
                                 document_id=doc.document_id,
                                 status="skipped",
@@ -151,7 +167,7 @@ class IngestionPipeline:
 
         existing = self.manifest.get(doc.document_id, doc.collection_name)
         if not force and existing and existing.content_hash == doc.content_hash and existing.status == "done":
-            print(f"  [SKIP] Zaten başarıyla işlenmiş (content_hash eşleşiyor)")
+            print(f"  [1/6 MANIFEST] SKIP — Zaten başarıyla işlenmiş (content_hash eşleşiyor)")
             return IngestResult(
                 document_id=doc.document_id,
                 status="skipped",
@@ -160,10 +176,11 @@ class IngestionPipeline:
             )
 
         if existing and existing.content_hash != doc.content_hash:
-            print(f"  [UPDATE] İçerik değişmiş, eski chunk'lar siliniyor...")
+            print(f"  [1/6 MANIFEST] UPDATE — İçerik değişmiş, eski chunk'lar siliniyor...")
             self._delete_chunks(doc.document_id)
 
         # 2. Parse
+        print(f"  [2/6 PARSE] Adapter: {doc.document_type}")
         try:
             full_text, chunks = adapter.parse(doc)
         except Exception as e:
@@ -183,7 +200,18 @@ class IngestionPipeline:
                 reason="no_chunks",
             )
 
+        # Tier-1 OCR kalite bayrağı (chunk metadata'sından, bkz. quality.py)
+        flagged_chunks = sum(
+            1 for c in chunks if c.get("metadata", {}).get("ocr_flagged")
+        )
+        if flagged_chunks:
+            print(
+                f"  [WARN] OCR kalite bayrağı: {doc.document_id} — düşük kalite "
+                f"sinyali ({flagged_chunks}/{len(chunks)} parça işaretli)"
+            )
+
         # 3. Chunk ID üret
+        print(f"  [3/6 CHUNK] {len(chunks)} parça, ID formatı: {doc.document_id}_{{i}}")
         chunk_ids = [f"{doc.document_id}_{i}" for i in range(len(chunks))]
         documents = [c["text"] for c in chunks]
         
@@ -211,7 +239,7 @@ class IngestionPipeline:
                 all_have_spans = all(s is not None for s in spans)
                 if all_have_spans:
                     print(
-                        f"  [EMBED] Late Chunking ({len(chunks)} parça, "
+                        f"  [4/6 EMBED] Late Chunking ({len(chunks)} parça, "
                         f"context={self.spec.max_context_tokens})..."
                     )
                     embeddings = self.embedder.embed_with_late_chunking_windowed(
@@ -224,7 +252,7 @@ class IngestionPipeline:
                     # Bazı chunk'larda span eksik — standart embed
                     embeddings = self.embedder.embed_documents(documents)
             else:
-                print(f"  [EMBED] Standart Embed ({len(chunks)} parça)...")
+                print(f"  [4/6 EMBED] Standart Embed ({len(chunks)} parça)...")
                 embeddings = self.embedder.embed_documents(documents)
         except Exception as e:
             self.manifest.upsert(doc, status="failed", error_message=str(e))
@@ -235,6 +263,7 @@ class IngestionPipeline:
             )
 
         # 5. ChromaDB upsert
+        print(f"  [5/6 UPSERT] ChromaDB: {self.spec.name}")
         try:
             self.collection.upsert(
                 ids=chunk_ids,
@@ -257,8 +286,9 @@ class IngestionPipeline:
             chunk_count=len(chunks),
             source_etag=source_etag,
             source_last_modified=source_last_modified,
+            quality={"ocr_flagged": bool(flagged_chunks)},
         )
-        print(f"  [DONE] {len(chunks)} parça eklendi.")
+        print(f"  [6/6 DONE] {len(chunks)} parça eklendi.")
 
         return IngestResult(
             document_id=doc.document_id,

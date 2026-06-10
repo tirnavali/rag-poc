@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS document_manifest (
     source_etag       TEXT,
     source_last_modified TEXT,
     ocr               INTEGER NOT NULL DEFAULT 1,
+    quality_json      TEXT,
     PRIMARY KEY (document_id, collection_name)
 );
 
@@ -93,6 +94,7 @@ class DocumentManifest:
             ("source_etag", "TEXT"),
             ("source_last_modified", "TEXT"),
             ("ocr", "INTEGER NOT NULL DEFAULT 1"),
+            ("quality_json", "TEXT"),
         ]
         for col, typedef in new_columns:
             try:
@@ -117,8 +119,13 @@ class DocumentManifest:
     def upsert(self, doc: DocumentInput, status: str, chunk_count: int = 0,
                error_message: Optional[str] = None,
                source_etag: Optional[str] = None,
-               source_last_modified: Optional[str] = None) -> None:
-        """Insert or update a manifest record."""
+               source_last_modified: Optional[str] = None,
+               quality: Optional[dict] = None) -> None:
+        """Insert or update a manifest record.
+
+        quality: opsiyonel Tier-1 OCR kalite özeti (örn. {"ocr_flagged": true}).
+        None geçilirse mevcut değer korunur (COALESCE).
+        """
         now = _iso_now()
         existing = self.get(doc.document_id, doc.collection_name)
         if existing:
@@ -133,8 +140,8 @@ class DocumentManifest:
              status, chunk_count, document_date, year, period, legislative_year, session,
              author, author_role, source_name, title, topics,
              ingest_time, last_modified, error_message, metadata_json,
-             source_etag, source_last_modified, ocr)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             source_etag, source_last_modified, ocr, quality_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(document_id, collection_name) DO UPDATE SET
                 document_source = excluded.document_source,
                 document_type = excluded.document_type,
@@ -156,7 +163,8 @@ class DocumentManifest:
                 metadata_json = excluded.metadata_json,
                 source_etag = excluded.source_etag,
                 source_last_modified = excluded.source_last_modified,
-                ocr = excluded.ocr
+                ocr = excluded.ocr,
+                quality_json = COALESCE(excluded.quality_json, document_manifest.quality_json)
             """,
             (
                 doc.document_id, doc.collection_name, doc.document_source, doc.document_type, doc.content_hash,
@@ -167,6 +175,7 @@ class DocumentManifest:
                 source_etag,
                 source_last_modified,
                 int(doc.ocr),
+                json.dumps(quality, ensure_ascii=False) if quality else None,
             ),
         )
         self._conn.commit()
@@ -286,6 +295,7 @@ class DocumentManifest:
             ocr=bool(row["ocr"]),
             source_etag=row["source_etag"],
             source_last_modified=row["source_last_modified"],
+            quality_json=row["quality_json"],
         )
 
 
