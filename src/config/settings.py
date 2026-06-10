@@ -160,10 +160,25 @@ ONERGE_COLLECTION = "tbmm_onerge"
 # --- Document Manifest Configuration ---
 MANIFEST_DB = DATA_LAKE / "document_manifest.db"
 PARSE_CACHE_DIR = DATA_LAKE / "parse_cache"
+MARKDOWN_DIR = DATA_LAKE / "markdown"
+PAGES_DIR = DATA_LAKE / "pages"
 
 # --- Downloaded Files ---
 # Files fetched from URLs during ingestion are cached here per collection.
 DOWNLOADS_DIR = DATA_LAKE / "downloads"
+
+# --- Tier-1 OCR Quality (src/common/parsing/quality.py) ---
+# Sayfa başına atom sayısı bu eşiğin altındaysa "low_atom_density" bayrağı.
+QUALITY_MIN_ATOMS_PER_PAGE = 3.0
+# Sayfa başına karakter, aynı document_type ortalamasından bu oranın üzerinde
+# sapıyorsa "char_count_outlier" bayrağı.
+QUALITY_CHAR_DEVIATION_RATIO = 0.30
+# Ortalama OCR güveni bu eşiğin altındaysa "low_ocr_confidence" bayrağı.
+QUALITY_MIN_OCR_CONFIDENCE = 0.85
+# Karakter sapması kontrolü için tip başına gereken minimum diğer belge sayısı.
+QUALITY_STATS_MIN_DOCS = 3
+# document_type bazlı karakter istatistiklerinin biriktiği dosya.
+QUALITY_STATS_FILE = PARSE_CACHE_DIR / "quality_stats.json"
 
 # --- Docling OCR Configuration ---
 # Engine options: "easyocr", "tesseract", "mac"

@@ -32,10 +32,14 @@ ollama pull nomic-embed-text-v2-moe
 ollama pull gemma4:e2b
 ollama pull qwen3.5:9b
 
-# 4. Belgeleri indeksle (örnek manifest ile)
+# 4. (İsteğe bağlı) PDF → Markdown dönüşümünü önce bağımsız test et
+python -m src.common.parsing.markdown_converter --file ornek.pdf
+# Çıktı: data_lake/markdown/{dosya_adi}__{hash}.md — OCR kalitesini burada inceleyin
+
+# 5. Belgeleri indeksle (örnek manifest ile)
 python -m src.trainer.ingestion.ingest --request ornek_ingestion.json
 
-# 5. Sohbeti başlat (agent modu)
+# 6. Sohbeti başlat (agent modu)
 python chat.py --agent
 
 # Alternatif: Görsel arayüz
@@ -214,6 +218,7 @@ Metadata klasör yapısından değil, JSON'dan gelir.
 | `ingest_request.json` | İndekslenecek belgelerin listesi. Tek giriş noktası. |
 | `document_id` | Her belgenin deterministik kimliği. Dışarıdan sağlanır. |
 | `CollectionSpec` | Koleksiyon + model tanımı. `src/config/collections.py`'te kayıtlı. |
+| `MarkdownConverter` | PDF → Markdown dönüşümcüsü (`src/common/parsing/markdown_converter.py`). Sonucu `data_lake/markdown/` altına .md artefaktı olarak kaydeder. |
 | `DocumentAdapter` | Belge tipine göre parser (tutanak, press_clip, pdf_report). |
 | `Manifest` | SQLite tablosu. Hangi belgelerin işlendiğini takip eder. |
 
@@ -370,13 +375,31 @@ Her belge için bir JSON nesnesi. Metadata anahtarları **İngilizce**, değerle
 }
 ```
 
-#### 3. Doğrulayın
+#### 3. (İsteğe bağlı) OCR kalitesini önceden kontrol edin
+
+PDF → Markdown dönüşümünü indeksleme olmadan çalıştırabilirsiniz:
+
+```bash
+python -m src.common.parsing.markdown_converter --file belge.pdf
+# Sonuç: data_lake/markdown/{belge}__{hash[:8]}.md
+# Aynı dosya tekrar çalıştırıldığında Level-1 önbellekten okunur — OCR yeniden yapılmaz.
+
+# Sayfa bazlı JSON çıktısı (her sayfa ayrı markdown bloğu olarak):
+python -m src.common.parsing.markdown_converter --file belge.pdf --pages-json
+python -m src.common.parsing.markdown_converter --file belge.pdf --pages-json > pages.json
+# Çıktı: [{"sayfa_no": 1, "sayfa_markdown": "..."}, {"sayfa_no": 2, ...}]
+```
+
+> Her `ingest` çalışması da bu artefaktı otomatik üretir. `data_lake/markdown/` klasörü
+> OCR kalitesini gözle incelemenin ve farklı engine'leri karşılaştırmanın standart yoludur.
+
+#### 4. Doğrulayın
 
 ```bash
 python -m src.trainer.ingestion.ingest --validate ingest_request.json
 ```
 
-#### 4. İndeksleyin
+#### 5. İndeksleyin
 
 ```bash
 # İlk indeksleme
@@ -393,7 +416,7 @@ python -m src.trainer.ingestion.ingest --request ingest_request.json --only-chan
 python -m src.trainer.ingestion.ingest --diff ingest_request.json
 ```
 
-#### 5. Durumu Kontrol Edin
+#### 6. Durumu Kontrol Edin
 
 ```bash
 # Genel durum
@@ -406,7 +429,7 @@ python -m src.trainer.ingestion.ingest --status --collection tbmm_minutes_doclin
 python -m src.trainer.ingestion.ingest --status --document-type tutanak
 ```
 
-#### 6. Silme (Gerekirse)
+#### 7. Silme (Gerekirse)
 
 ```bash
 python -m src.trainer.ingestion.ingest --delete tbmm-20-1-1-19960108
