@@ -247,6 +247,15 @@ collections:
     max_chunk_chars: 1500
     max_chunk_tokens: 512
     min_chunk_tokens: 384
+  tutanaklar_test:
+    collection_name: tutanaklar_test
+    chroma_path: data_lake/tutanaklar_test
+    embed_model: nomic-embed-text-v2-moe
+    doc_type: tutanak
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
 defaults:
   gazete: gazete_arsivi_jina_v3
   tutanak: tbmm_tutanaklar_nomic_v2

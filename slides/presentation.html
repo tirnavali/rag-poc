@@ -327,7 +327,7 @@
 </head>
 <body>
     <div class="progress-bar" id="progress"></div>
-    <div class="slide-number" id="slide-num">1 / 17</div>
+    <div class="slide-number" id="slide-num">1 / 18</div>
 
     <div class="slides-container" id="container">
 
@@ -355,18 +355,24 @@
         <!-- Slide 2: Standardize Ingestion -->
         <section class="slide">
             <div class="glass-card">
-                <h2>Standart Ingestion & Manifest</h2>
+                <h2>Standart Ingestion & Manifest Mimarisi</h2>
                 <div class="grid-2">
                     <div>
-                        <p>Sistem tutarlılığını sağlamak için tüm veri girişi tek bir JSON şeması üzerinden yapılır.</p>
-                        <div class="highlight-box">
-                            <strong>DocumentManifest:</strong> 
-                            Her döküman <code>content_hash</code> ile takip edilir. Tekrar yüklemeler (deduplication) otomatik olarak önlenir.
+                        <span class="tag">MANIFEST NEDİR?</span>
+                        <p style="font-size: 1.05rem; margin-bottom: 1rem; color: var(--text-main);">
+                            Manifest, sisteme yüklenecek tüm belgelerin (PDF, kupür vb.) kimliklerini, tiplerini, kaynak yollarını ve meta-verilerini tanımlayan <strong>yapısal bir beyannamedir (bildirim listesidir)</strong>.
+                        </p>
+                        
+                        <span class="tag" style="border-color: var(--accent-secondary); color: var(--accent-secondary);">NEDEN BÖYLE BİR YAPI KURDUK?</span>
+                        <div style="font-size: 0.95rem; line-height: 1.4;">
+                            <div class="list-item"><strong>Tekrarları Önleme (Deduplication):</strong> <code>document_manifest.db</code> (SQLite) ile her belgenin <code>content_hash</code> değeri takip edilir. Zaten yüklenmiş değişmeyen dosyalar saniyeler içinde atlanır.</div>
+                            <div class="list-item"><strong>Diferansiyel Güncelleme:</strong> Belge güncellendiğinde içerik farkı algılanır, eski vektörler silinir ve sadece yeni parçalar baştan indekslenir.</div>
+                            <div class="list-item"><strong>Hata & Durum İzlenebilirliği:</strong> Başarısız yüklemeler hata detaylarıyla manifestte saklanır. Yarım kalan süreçler kolayca izlenir.</div>
                         </div>
-                        <div class="list-item"><strong>JSON Schema:</strong> Zorunlu alanların validasyonu.</div>
-                        <div class="list-item"><strong>Adapter Pattern:</strong> Kaynak bağımsız normalizasyon.</div>
                     </div>
-                    <pre><code>{
+                    <div>
+                        <span class="tag" style="border-color: var(--accent-tertiary); color: var(--accent-tertiary);">STANDART JSON ŞEMASI</span>
+                        <pre style="font-size: 0.85rem; padding: 1.2rem;"><code>{
   "document_id": "tbmm-20-1-1",
   "document_type": "tutanak",
   "document_source": "data.pdf",
@@ -375,6 +381,7 @@
     "period": 20
   }
 }</code></pre>
+                    </div>
                 </div>
             </div>
         </section>
@@ -517,12 +524,14 @@
                 <div class="grid-2">
                     <div>
                         <h3>CollectionSpec Registry</h3>
-                        <p>Tüm modeller ve parametreler tek bir merkezden (<code>collections.py</code>) yönetilir.</p>
-                        <pre><code>COLLECTIONS["minutes_jina_v4"] = CollectionSpec(
-    db_path=settings.MINUTES_CHROMA,
-    embed_model="jinaai/jina-embeddings-v4",
-    supports_late_chunking=True
-)</code></pre>
+                        <p>Tüm modeller ve parametreler tek bir merkezden (<code>models.yaml</code>) yönetilir.</p>
+                        <pre><code class="language-yaml"># models.yaml
+collections:
+  tbmm_minutes_docling_jina_v4:
+    collection_name: tbmm_minutes_docling_jina_v4
+    chroma_path: data_lake/parliament_digital_born_minutes_vectors
+    embed_model: jinaai/jina-embeddings-v4
+    doc_type: tutanak</code></pre>
                     </div>
                     <div class="feature-card">
                         <h3>A/B Benchmarking</h3>
@@ -753,19 +762,19 @@
                         <span class="tag">SLM & AGENT EŞLEŞMELERİ</span>
                         <p style="font-size: 1.1rem; margin-bottom: 1.5rem;">Sistem, karmaşıklığı azaltmak ve verimliliği artırmak için özelleşmiş Küçük Dil Modelleri (SLM) ve LLM'ler kullanır:</p>
                         
-                        <div class="list-item"><strong>Planner / Sanitizer / Judge:</strong> <code>qwen3.5:9b</code> (fast-01) - Planlama, doğrulama ve bağlam yeterlilik kararları için optimize edilmiş güçlü SLM.</div>
-                        <div class="list-item"><strong>Classifier / Suggester:</strong> <code>qwen2.5:3b-instruct</code> (fast-01) - Hızlı alan dışı/içi sınıflandırma ve alternatif sorgu önerileri.</div>
-                        <div class="list-item"><strong>Filter Extractor:</strong> <code>qwen2.5:3b-instruct</code> (fast-01) - Doğal dil sorgularından tarih ve yazar filtrelerini çıkarma.</div>
+                        <div class="list-item"><strong>Planner / Sanitizer / Judge / Classifier / Suggester:</strong> <code>qwen3.5:9b</code> (fast-01) - Planlama, doğrulama, yeterlilik kararları ve sınıflandırma için optimize edilmiş güçlü SLM.</div>
+                        <div class="list-item"><strong>Filter Extractor:</strong> <code>gemma4:latest</code> (fast-01) - Doğal dil sorgularından tarih ve yazar filtrelerini çıkarma.</div>
                         <div class="list-item"><strong>Answer Generator:</strong> <code>gemma4:latest</code> (gpu-01) - Zengin bağlamdan detaylı ve mantıklı Türkçe yanıt üretimi.</div>
                     </div>
                     <div>
                         <span class="tag" style="border-color: var(--accent-secondary); color: var(--accent-secondary);">AYARLARIN DEĞİŞTİRİLMESİ</span>
                         <p style="font-size: 1.1rem; margin-bottom: 1rem;">Tüm model ve ajan eşleşmeleri merkezi, veri-güdümlü bir yapı olan <code>pipeline.yaml</code> üzerinden yönetilir:</p>
                         <pre style="font-size: 0.85rem; padding: 1rem; margin-bottom: 1rem;"><code># pipeline.yaml
-fast-01:
-  models:
-    planner: qwen3.5:9b
-    classifier: qwen2.5:3b-instruct
+deployment_blocks:
+  fast-01:
+    models:
+      planner: qwen3.5:9b
+      filter_extractor: gemma4:latest
 agent:
   planner:
     block: fast-01
@@ -777,11 +786,11 @@ agent:
             </div>
         </section>
 
-        <!-- Slide 14: Test Stratejisi ve Kalite Güvencesi -->
+        <!-- Slide 15: Test Stratejisi ve Kalite Güvencesi -->
         <section class="slide">
             <div class="glass-card">
                 <h2>Test Stratejisi & Kalite Güvencesi</h2>
-                <p style="font-size: 1.15rem; margin-bottom: 2rem;">Sistemin doğruluğu, performansı ve güvenliği 60'tan fazla entegrasyon ve birim testi ile korunmaktadır.</p>
+                <p style="font-size: 1.15rem; margin-bottom: 2rem;">Sistemin doğruluğu, performansı ve güvenliği 450'den fazla entegrasyon ve birim testi ile korunmaktadır.</p>
                 <div class="grid-2">
                     <div class="feature-card">
                         <span class="tag" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2);">MEVCUT TEST KAPSAMI</span>
@@ -814,15 +823,15 @@ agent:
                         <p style="font-size: 1.1rem; margin-bottom: 1rem;">Gereksiz LLM çağrılarını önlemek ve sistemi korumak için 3 kademeli bir kapı yapısı kurulmuştur:</p>
                         
                         <div class="list-item"><strong>1. Bad Words Filter:</strong> Regex tabanlı deterministik küfür ve uygunsuz içerik filtrelemesi. Sıfır LLM maliyeti ile hızlı engel.</div>
-                        <div class="list-item"><strong>2. Scope Classifier:</strong> <code>qwen2.5:3b-instruct</code> modeliyle sorgunun RAG alanı içinde (in_scope) veya dışında (off_domain) olduğunu tespit eder.</div>
+                        <div class="list-item"><strong>2. Scope Classifier:</strong> <code>qwen3.5:9b</code> modeliyle sorgunun RAG alanı içinde (in_scope) veya dışında (off_domain) olduğunu tespit eder.</div>
                         <div class="list-item"><strong>3. Suggester:</strong> Sınıflandırma alan dışı çıktığında hata göstermek yerine, sistem uzmanlığına uygun 3 adet alternatif Türkçe sorgu üretir.</div>
                     </div>
                     <div>
                         <span class="tag" style="border-color: var(--accent-secondary); color: var(--accent-secondary);">TEST & UI ENTEGRASYONU</span>
                         <p style="font-size: 1.1rem; margin-bottom: 1rem;">Kapsam kapısı mekanizması test veri kümeleri ve arayüzle uçtan uca sıkı sıkıya bağlıdır:</p>
                         
-                        <div class="list-item"><strong>Golden Scenarios:</strong> 9 kategoride 15 farklı senaryo (adversarial, borderline, temporal, author vb.) içeren testler, regresyonu önlemek için <code>planning_scenarios.yaml</code> üzerinden her testte doğrulanır.</div>
-                        <div class="list-item"><strong>UI Entegrasyonu:</strong> Ajanın döndürdüğü kapsam sonucuna göre chat arayüzünde otomatik engelleme veya Suggester buton panelleri render edilir.</div>
+                        <div class="list-item"><strong>Golden Scenarios:</strong> 9 kategoride 14 farklı senaryo (adversarial, borderline, temporal, author vb.) içeren testler, regresyonu önlemek için <code>planning_scenarios.yaml</code> üzerinden her testte doğrulanır.</div>
+                        <div class="list-item"><strong>UI Entegrasyonu:</strong> Ajanın döndürdüğü kapsam sonucına göre chat arayüzünde otomatik engelleme veya Suggester buton panelleri render edilir.</div>
                         
                         <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--accent-secondary); font-family: 'Fira Code', monospace; padding: 0.5rem 1rem; background: rgba(0, 0, 0, 0.3); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05); width: fit-content;">
                             <strong>Kod Referansları:</strong> 
@@ -835,7 +844,36 @@ agent:
             </div>
         </section>
 
-        <!-- Slide 17: Özet -->
+        <!-- Slide 17: Soru-Cevap: Ingestion ve Tasarım Kararları -->
+        <section class="slide">
+            <div class="glass-card">
+                <h2>Soru-Cevap: Ingestion ve Tasarım Kararları</h2>
+                <div class="grid-2">
+                    <div class="feature-card" style="border-color: var(--accent-primary);">
+                        <span class="tag" style="background: rgba(14, 165, 233, 0.1); color: var(--accent-primary);">PARSING & CHUNKING</span>
+                        <div style="margin-top: 1rem;">
+                            <p style="font-size: 1rem; margin-bottom: 0.5rem; color: #fff;"><strong>S: Docling'i sıradan PDF parser'lara göre neden tercih ediyoruz?</strong></p>
+                            <p style="font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.4;">C: Standart parser'lar hiyerarşiyi bozup düz metin verirken; Docling başlık, liste ve tabloları yapısal olarak korur. RAG performansı doğrudan tablonun veya başlığın yapısını anlamaya bağlıdır.</p>
+                            
+                            <p style="font-size: 1rem; margin-bottom: 0.5rem; color: #fff;"><strong>S: Late Chunking'in standart chunking'den farkı ve avantajı nedir?</strong></p>
+                            <p style="font-size: 0.95rem; margin-bottom: 0; line-height: 1.4;">C: Standart yöntemde her parça bağlamdan kopuk embed edilir. Late chunking'de ise tüm belge tek seferde (Full-Context) encode edilir, ardından pencerelere bölünür. Böylece her vektör dökümanın bütünsel bağlamını taşır.</p>
+                        </div>
+                    </div>
+                    <div class="feature-card" style="border-color: var(--accent-secondary);">
+                        <span class="tag" style="background: rgba(99, 102, 241, 0.1); color: var(--accent-secondary);">VERİMLİLİK & PERFORMANS</span>
+                        <div style="margin-top: 1rem;">
+                            <p style="font-size: 1rem; margin-bottom: 0.5rem; color: #fff;"><strong>S: Tekrar yüklemelerde (deduplication) veya içerik değişiminde ne yapılıyor?</strong></p>
+                            <p style="font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.4;">C: SQLite tabanlı <code>document_manifest.db</code> dökümanın <code>content_hash</code> değerini saklar. Aynı dosya tekrar gönderilirse atlanır. Değişiklik varsa eski vektörler silinip diferansiyel güncelleme yapılır.</p>
+                            
+                            <p style="font-size: 1rem; margin-bottom: 0.5rem; color: #fff;"><strong>S: URL'den veri çekerken oluşabilecek ağ maliyetini nasıl engelliyoruz?</strong></p>
+                            <p style="font-size: 0.95rem; margin-bottom: 0; line-height: 1.4;">C: Ağ üzerinden dosyayı doğrudan indirmek yerine HTTP HEAD isteği atılarak ETag/Last-Modified bilgisi kontrol edilir. Değişim yoksa indirme iptal edilerek saniyeler içinde atlanır.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 18: Özet -->
         <section class="slide">
             <div class="glass-card" style="text-align: center;">
                 <h1>Gelecek Hazır</h1>
@@ -869,7 +907,7 @@ agent:
 
     <script>
         let currentSlide = 0;
-        const totalSlides = 17;
+        const totalSlides = 18;
         const container = document.getElementById('container');
         const progress = document.getElementById('progress');
         const slideNum = document.getElementById('slide-num');

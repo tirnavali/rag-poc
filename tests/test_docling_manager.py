@@ -9,6 +9,95 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(PROJECT_ROOT))
 
 from src.common.parsing.docling_manager import DoclingManager
+from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
+from docling.datamodel.base_models import InputFormat
+
+
+def test_docling_manager_uses_pypdfium_backend():
+    """DoclingManager'ın PDF formatı için PyPdfiumDocumentBackend'i kullandığını doğrular."""
+    manager = DoclingManager(do_ocr=False)
+    format_options = manager.converter.format_to_options
+    assert InputFormat.PDF in format_options
+    pdf_option = format_options[InputFormat.PDF]
+    assert pdf_option.backend == PyPdfiumDocumentBackend
+
+
+def test_docling_turkish_encoding_and_layout():
+    """test_docling_turkish_encoding.pdf dosyasının doğru şekilde okunduğunu,
+    Türkçe karakterlerin bozulmadığını ve layoutun düzgün çıktığını doğrular.
+    """
+    pdf_path = str(PROJECT_ROOT / "tests" / "fixtures" / "test_docling_turkish_encoding.pdf")
+    assert os.path.exists(pdf_path), f"Test fixture bulunamadı: {pdf_path}"
+
+    manager = DoclingManager(do_ocr=False)
+    full_text, chunks = manager.convert_and_pack(pdf_path, do_pack=False)
+
+    # 1. Türkçe karakter ve bozuk kelime kontrolleri
+    assert "Adalet ve Kalkınma" in full_text
+    assert "Bülent Turan" in full_text
+    assert "İçişleri Bakanlığı" in full_text
+    
+    # Bozuk kelimelerin çıkmadığından emin ol
+    assert "AGaOeW" not in full_text
+    assert "KaONıQma" not in full_text
+
+    # 2. Layout ve Offset (Span) Doğruluğu Kontrolü
+    assert len(chunks) > 0, "Hiç chunk üretilmedi!"
+    
+    for i, chunk in enumerate(chunks):
+        assert "span" in chunk and chunk["span"] is not None, f"Chunk {i}'de span bilgisi eksik!"
+        start, end = chunk["span"]
+        assert full_text[start:end] == chunk["text"], f"Span eşleşme hatası: Chunk {i}"
+        
+        # Metadata kontrolleri
+        meta = chunk.get("metadata", {})
+        assert "type" in meta
+        assert meta["source"] == "test_docling_turkish_encoding.pdf"
+
+
+def test_docling_table_extraction():
+    """docling_table_extraction_test.pdf dosyasındaki tabloların doğru şekilde parse edildiğini,
+    tablo yapısının korunduğunu ve Türkçe karakterlerin bozulmadığını doğrular.
+    """
+    pdf_path = str(PROJECT_ROOT / "tests" / "fixtures" / "docling_table_extraction_test.pdf")
+    assert os.path.exists(pdf_path), f"Test fixture bulunamadı: {pdf_path}"
+
+    manager = DoclingManager(do_ocr=False)
+    full_text, chunks = manager.convert_and_pack(pdf_path, do_pack=False)
+
+    # 1. Tablo varlığı kontrolü
+    table_chunks = [c for c in chunks if c.get("metadata", {}).get("type") == "table"]
+    assert len(table_chunks) >= 1, "Hiç tablo chunk'ı bulunamadı!"
+
+    table_text = table_chunks[0]["text"]
+    
+    # 2. Tablo kolon ve satır yapısı doğrulaması
+    assert "|" in table_text, "Tablo markdown formatında değil!"
+    assert "Adı-Soyadı" in table_text
+    assert "Seçim Çevresi" in table_text
+    assert "Siyasi Parti Grubu" in table_text
+    
+    # 3. Tablo içerisindeki isimlerin ve Türkçe karakterlerin doğrulanması
+    assert "Levent Gök" in table_text
+    assert "Celal Adan" in table_text
+    assert "Mithat Sancar" in table_text
+    assert "Mustafa Şentop" in table_text
+    assert "Kâtip Üyelikler" in table_text
+    assert "Burcu Köksal" in table_text
+    assert "İsmail Ok" in table_text
+    assert "Bayram Özçelik" in table_text
+    assert "Rümeysa Kadak" in table_text
+    assert "Fatma Kaplan Hürriyet" in table_text
+    assert "Şeyhmus Dinçel" in table_text
+
+    # 4. Span / Offset eşleşme doğrulaması
+    for i, chunk in enumerate(chunks):
+        assert "span" in chunk and chunk["span"] is not None
+        start, end = chunk["span"]
+        assert full_text[start:end] == chunk["text"], f"Span eşleşme hatası: Chunk {i}"
+        
+        meta = chunk.get("metadata", {})
+        assert meta["source"] == "docling_table_extraction_test.pdf"
 
 
 @pytest.fixture
