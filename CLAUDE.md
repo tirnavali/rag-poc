@@ -30,6 +30,9 @@ python -m scripts.run_benchmark
 # Collection inspection (Streamlit)
 streamlit run scripts/vector_explorer.py
 
+# Golden Q&A builder (browse pages, write Q&A, append to fixture)
+python -m scripts.golden_builder    # http://localhost:8765
+
 # Reindex everything from scratch
 python -m scripts.reindex_all
 ```

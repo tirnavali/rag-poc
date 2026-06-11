@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Golden Q&A Builder</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #181b22; --panel2: #1f232c; --border: #2a2f3a;
+    --fg: #e6e8ec; --muted: #9aa3b2; --accent: #4f8cff; --accent2: #2dd4bf;
+    --warn: #f59e0b; --ok: #22c55e; --chip: #28303f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg); color: var(--fg); height: 100vh; overflow: hidden;
+  }
+  header {
+    display: flex; align-items: center; gap: 12px; padding: 8px 16px;
+    background: var(--panel); border-bottom: 1px solid var(--border);
+  }
+  header h1 { font-size: 15px; margin: 0; font-weight: 600; }
+  header .counter { margin-left: auto; color: var(--muted); font-size: 13px; }
+  select, input, textarea, button {
+    font: inherit; color: var(--fg); background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 7px; padding: 7px 9px;
+  }
+  textarea { width: 100%; resize: vertical; min-height: 70px; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(79,140,255,.25); }
+  button {
+    cursor: pointer; background: var(--accent); border-color: var(--accent);
+    color: #fff; font-weight: 600;
+  }
+  button.ghost { background: var(--panel2); color: var(--fg); border-color: var(--border); font-weight: 500; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .main { display: flex; height: calc(100vh - 49px); }
+  .left { flex: 1.3; border-right: 1px solid var(--border); display: flex; flex-direction: column; min-width: 0; }
+  .right { flex: 1; display: flex; flex-direction: column; min-width: 380px; }
+  .nav { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--panel); flex-wrap: wrap; }
+  .nav input.page-jump { width: 64px; text-align: center; }
+  .page-view { flex: 1; overflow: auto; padding: 18px 22px; }
+  .page-view .md { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+  .md h2, .md h3 { color: var(--accent2); margin: .6em 0 .3em; font-size: 15px; }
+  .md table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13px; }
+  .md th, .md td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; vertical-align: top; }
+  .md p { margin: .4em 0; }
+  .right .pane { padding: 16px; flex: 0 0 auto; }
+  .form-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px 16px; }
+  .form-title { font-size: 13px; font-weight: 700; letter-spacing: .04em; color: var(--accent2); text-transform: uppercase; margin: 0 0 4px; }
+  .form label { display: block; font-size: 12px; color: var(--muted); margin: 14px 0 5px; text-transform: uppercase; letter-spacing: .03em; font-weight: 600; }
+  .form label:first-of-type { margin-top: 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; min-height: 30px; align-content: flex-start; }
+  .chip { background: var(--chip); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+  .chip button { background: none; border: none; color: var(--muted); padding: 0; font-size: 15px; line-height: 1; }
+  .chip button:hover { color: #ff6b6b; }
+  .tagrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .tagrow .tagbtn { background: var(--panel2); border: 1px solid var(--border); color: var(--muted); border-radius: 20px; padding: 4px 11px; font-size: 13px; font-weight: 500; }
+  .tagrow .tagbtn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .actions { display: flex; gap: 8px; margin-top: 16px; }
+  .actions button { flex: 1; padding: 10px; }
+  .msg { margin-top: 12px; padding: 10px 12px; border-radius: 8px; font-size: 13px; display: none; }
+  .msg.ok { display: block; background: rgba(34,197,94,.12); border: 1px solid var(--ok); color: #a7f3c0; }
+  .msg.warn { display: block; background: rgba(245,158,11,.12); border: 1px solid var(--warn); color: #fcd9a0; }
+  .msg.err { display: block; background: rgba(255,107,107,.12); border: 1px solid #ff6b6b; color: #ffc2c2; }
+  .existing { border-top: 1px solid var(--border); flex: 1 1 0; min-height: 120px; display: flex; flex-direction: column; }
+  #existingList { overflow: auto; flex: 1 1 auto; min-height: 0; }
+  .existing h3 { font-size: 13px; color: var(--muted); padding: 12px 16px 0; margin: 0; text-transform: uppercase; letter-spacing: .03em; flex: 0 0 auto; }
+  .entry { padding: 9px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .entry:hover { background: var(--panel); }
+  .entry .q { font-size: 13px; }
+  .entry .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .pagebtn-bar { position: sticky; top: 0; background: var(--bg); padding-bottom: 10px; margin-bottom: 4px; z-index: 2; }
+  kbd { background: var(--panel2); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; font-size: 11px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🏛️ Golden Q&amp;A Builder</h1>
+  <select id="docSelect" title="Belge seç"></select>
+  <span class="counter" id="counter">—</span>
+</header>
+<div class="main">
+  <!-- SOL: sayfa gezgini -->
+  <div class="left">
+    <div class="nav">
+      <button class="ghost" id="prevBtn">◀ Önceki</button>
+      <span>Sayfa</span>
+      <input class="page-jump" id="pageJump" type="number" min="1" value="1">
+      <span id="pageTotal">/ —</span>
+      <button class="ghost" id="nextBtn">Sonraki ▶</button>
+      <span style="color:var(--muted);font-size:12px;margin-left:auto">◀ ▶ ile gez</span>
+    </div>
+    <div class="page-view" id="pageView">
+      <div class="pagebtn-bar">
+        <button id="addPageBtn">＋ Bu sayfayı cevap sayfası olarak ekle (<span id="curPageLbl">1</span>)</button>
+      </div>
+      <div class="md" id="pageMd">Belge yükleniyor…</div>
+    </div>
+  </div>
+  <!-- SAĞ: Q&A formu -->
+  <div class="right">
+    <div class="pane form">
+      <div class="form-card">
+        <p class="form-title">✍️ Yeni Soru / Cevap</p>
+        <label>Soru (query)</label>
+        <textarea id="query" rows="3" placeholder="Örn: İlk meclis birleşimini hangi başkan açtı?"></textarea>
+
+        <label>Doğru Cevap (golden_answer)</label>
+        <textarea id="answer" rows="3" placeholder="Örn: Durmuş Yılmaz"></textarea>
+
+        <label>Cevap Sayfaları (relevant_pages)</label>
+        <div class="chips" id="pageChips"></div>
+
+        <label>Kategori</label>
+        <div class="tagrow" id="catRow"></div>
+        <label>Zorluk</label>
+        <div class="tagrow" id="diffRow"></div>
+
+        <div class="actions">
+          <button class="ghost" id="clearBtn">Temizle</button>
+          <button id="saveBtn">💾 Kaydet</button>
+        </div>
+        <div class="msg" id="msg"></div>
+      </div>
+    </div>
+    <div class="existing">
+      <h3>Bu belgedeki mevcut sorular (<span id="exCount">0</span>)</h3>
+      <div id="existingList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { docs: [], docId: null, pages: [], idx: 0, selPages: new Set(), cat: null, diff: null };
+const CATS = ["narrative", "deputy", "bulletin"];
+const DIFFS = ["easy", "medium", "hard"];
+
+// --- minik markdown renderer (tablo + başlık + paragraf) ---
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function renderMd(src){
+  const lines = (src||"").split("\n");
+  let html = "", i = 0, para = [];
+  const flush = () => { if(para.length){ html += "<p>"+para.join("<br>")+"</p>"; para=[]; } };
+  while(i < lines.length){
+    let ln = lines[i];
+    // tablo: ardışık satırlarda |
+    if(/^\s*\|.*\|\s*$/.test(ln)){
+      flush();
+      const rows = [];
+      while(i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])){ rows.push(lines[i]); i++; }
+      const cells = (r) => r.trim().replace(/^\||\|$/g,"").split("|").map(c=>c.trim());
+      let t = "<table>";
+      rows.forEach((r, ri) => {
+        if(/^\s*\|[\s:|-]+\|\s*$/.test(r)) return; // ayraç satırı
+        const tag = ri === 0 ? "th" : "td";
+        t += "<tr>" + cells(r).map(c => `<${tag}>${inline(c)}</${tag}>`).join("") + "</tr>";
+      });
+      t += "</table>";
+      html += t;
+      continue;
+    }
+    const h = ln.match(/^(#{1,4})\s+(.*)$/);
+    if(h){ flush(); const lvl = Math.min(h[1].length+1, 4); html += `<h${lvl}>${inline(h[2])}</h${lvl}>`; i++; continue; }
+    if(ln.trim() === ""){ flush(); i++; continue; }
+    para.push(inline(ln));
+    i++;
+  }
+  flush();
+  return html || "<em style='color:var(--muted)'>(boş sayfa)</em>";
+}
+function inline(s){
+  return esc(s)
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>");
+}
+
+async function getJSON(url, opts){ const r = await fetch(url, opts); return r.json(); }
+
+async function init(){
+  state.docs = await getJSON("/api/documents");
+  const sel = $("docSelect");
+  sel.innerHTML = state.docs.map(d =>
+    `<option value="${d.document_id}">${d.label} (${d.page_count} s.)</option>`).join("");
+  sel.onchange = () => loadDoc(sel.value);
+  buildTagRows();
+  if(state.docs.length) await loadDoc(state.docs[0].document_id);
+}
+
+function buildTagRows(){
+  $("catRow").innerHTML = CATS.map(c => `<button class="tagbtn" data-cat="${c}">${c}</button>`).join("");
+  $("diffRow").innerHTML = DIFFS.map(c => `<button class="tagbtn" data-diff="${c}">${c}</button>`).join("");
+  $("catRow").querySelectorAll(".tagbtn").forEach(b => b.onclick = () => {
+    state.cat = state.cat === b.dataset.cat ? null : b.dataset.cat; syncTags();
+  });
+  $("diffRow").querySelectorAll(".tagbtn").forEach(b => b.onclick = () => {
+    state.diff = state.diff === b.dataset.diff ? null : b.dataset.diff; syncTags();
+  });
+}
+function syncTags(){
+  $("catRow").querySelectorAll(".tagbtn").forEach(b => b.classList.toggle("on", b.dataset.cat === state.cat));
+  $("diffRow").querySelectorAll(".tagbtn").forEach(b => b.classList.toggle("on", b.dataset.diff === state.diff));
+}
+
+async function loadDoc(docId){
+  state.docId = docId; state.idx = 0;
+  state.pages = await getJSON("/api/pages?document_id=" + encodeURIComponent(docId));
+  $("pageTotal").textContent = "/ " + state.pages.length;
+  $("pageJump").max = state.pages.length;
+  showPage(0);
+  await loadExisting();
+}
+
+function showPage(idx){
+  if(!state.pages.length) return;
+  state.idx = Math.max(0, Math.min(idx, state.pages.length - 1));
+  const pg = state.pages[state.idx];
+  $("pageMd").innerHTML = renderMd(pg.sayfa_markdown);
+  $("pageJump").value = pg.sayfa_no;
+  $("curPageLbl").textContent = pg.sayfa_no;
+  $("counter").textContent = `${state.docId} · sayfa ${pg.sayfa_no}/${state.pages.length}`;
+  $("pageView").scrollTop = 0;
+}
+
+function renderChips(){
+  const arr = [...state.selPages].sort((a,b)=>a-b);
+  $("pageChips").innerHTML = arr.length
+    ? arr.map(p => `<span class="chip">s. ${p} <button data-p="${p}">×</button></span>`).join("")
+    : `<span style="color:var(--muted)">Henüz sayfa seçilmedi — soldan ＋ ile ekle.</span>`;
+  $("pageChips").querySelectorAll("button").forEach(b => b.onclick = () => {
+    state.selPages.delete(+b.dataset.p); renderChips();
+  });
+}
+
+async function loadExisting(){
+  const list = await getJSON("/api/entries?document_id=" + encodeURIComponent(state.docId));
+  $("exCount").textContent = list.length;
+  $("existingList").innerHTML = list.map(e =>
+    `<div class="entry" data-page="${e.pages[0]||1}">
+       <div class="q">${esc(e.query)}</div>
+       <div class="meta">${e.id} · s. ${e.pages.join(", ")} · ${esc(e.golden_answer).slice(0,60)}</div>
+     </div>`).join("") || `<div class="entry" style="cursor:default;color:var(--muted)">Bu belge için henüz girdi yok.</div>`;
+  $("existingList").querySelectorAll(".entry[data-page]").forEach(el => el.onclick = () => {
+    const i = state.pages.findIndex(p => p.sayfa_no === +el.dataset.page);
+    if(i >= 0) showPage(i);
+  });
+}
+
+function showMsg(text, kind){ const m = $("msg"); m.className = "msg " + kind; m.textContent = text; }
+function clearForm(){
+  $("query").value = ""; $("answer").value = "";
+  state.selPages.clear(); state.cat = null; state.diff = null;
+  syncTags(); renderChips();
+}
+
+async function save(){
+  const query = $("query").value.trim();
+  const answer = $("answer").value.trim();
+  const pages = [...state.selPages];
+  if(!query || !answer || !pages.length){
+    showMsg("Soru, cevap ve en az bir sayfa gerekli.", "err"); return;
+  }
+  const tags = [];
+  if(state.cat) tags.push(state.cat);
+  if(state.diff) tags.push(state.diff);
+  $("saveBtn").disabled = true;
+  try {
+    const res = await getJSON("/api/save", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ document_id: state.docId, query, golden_answer: answer, pages, tags })
+    });
+    if(res.error){ showMsg("Hata: " + res.error, "err"); return; }
+    const head = `${res.action === "updated" ? "Güncellendi" : "Eklendi"} · ${res.id} · toplam ${res.total}`;
+    if(res.warning){ showMsg("⚠ " + head + " — " + res.warning, "warn"); }
+    else { showMsg("✓ " + head, "ok"); }
+    clearForm();
+    await loadExisting();
+  } catch(e){ showMsg("İstek hatası: " + e, "err"); }
+  finally { $("saveBtn").disabled = false; }
+}
+
+// olaylar
+$("prevBtn").onclick = () => showPage(state.idx - 1);
+$("nextBtn").onclick = () => showPage(state.idx + 1);
+$("pageJump").onchange = () => {
+  const i = state.pages.findIndex(p => p.sayfa_no === +$("pageJump").value);
+  showPage(i >= 0 ? i : 0);
+};
+$("addPageBtn").onclick = () => { state.selPages.add(state.pages[state.idx].sayfa_no); renderChips(); };
+$("clearBtn").onclick = clearForm;
+$("saveBtn").onclick = save;
+document.addEventListener("keydown", (e) => {
+  if(["TEXTAREA","INPUT"].includes(e.target.tagName)) return;
+  if(e.key === "ArrowLeft") showPage(state.idx - 1);
+  if(e.key === "ArrowRight") showPage(state.idx + 1);
+});
+
+renderChips();
+init();
+</script>
+</body>
+</html>
