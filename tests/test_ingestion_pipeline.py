@@ -37,7 +37,7 @@ def mock_pipeline_components():
         spec = CollectionSpec(
             name="test_collection",
             db_path=Path("/tmp/test_chroma"),
-            embed_model="jinaai/jina-embeddings-v3",
+            embed_model="jinaai/jina-embeddings-v3-ctx1024",
             doc_type=DocumentType.TUTANAK,
         )
         pipeline = IngestionPipeline(spec=spec)

@@ -7,7 +7,7 @@ Covers the pure-Python decision logic and locks in two fixes:
 """
 import pytest
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from src.agent.planner import PlanningAgent
 from src.agent.schemas import CollectionSearchPlan, SearchPlan, SearchQueryDraft
@@ -356,6 +356,8 @@ def test_apply_filter_extractor_masks_filters_per_collection():
     Çapraz-tür plan (tutanak + gazete): source_name (basın alanı) tutanağa,
     period (parlamento alanı) gazeteye sızmamalı.
     """
+    from src.config.document_types import DocumentType
+
     mock_fe = MagicMock()
     mock_fe.model = "test-model"
     mock_fe.extract.return_value = ExtractedFilterResponse(
@@ -365,7 +367,14 @@ def test_apply_filter_extractor_masks_filters_per_collection():
     agent = _agent(filter_extractor=mock_fe)
     plan = _two_collection_plan()  # tbmm_minutes (tutanak), gazete_arsivi (gazete)
 
-    agent._apply_filter_extractor("1996 Hürriyet Kardak", plan, PipelineTracer())
+    # "tbmm_minutes" ve "gazete_arsivi" artık models.yaml'da yok; maskelemenin
+    # doğru çalıştığını test etmek için COLLECTIONS'ı geçici olarak patch'liyoruz.
+    fake_tutanak_spec = MagicMock(); fake_tutanak_spec.doc_type = DocumentType.TUTANAK
+    fake_gazete_spec  = MagicMock(); fake_gazete_spec.doc_type  = DocumentType.GAZETE
+    fake_collections = {"tbmm_minutes": fake_tutanak_spec, "gazete_arsivi": fake_gazete_spec}
+
+    with patch("src.agent.planner.COLLECTIONS", fake_collections):
+        agent._apply_filter_extractor("1996 Hürriyet Kardak", plan, PipelineTracer())
 
     by_coll = {r.collection: r.query_drafts[0].filters for r in plan.resources}
     tutanak_f = by_coll["tbmm_minutes"]

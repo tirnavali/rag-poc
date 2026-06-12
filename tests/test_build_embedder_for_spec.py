@@ -22,30 +22,27 @@ class TestBuildEmbedderForSpec:
         spec = CollectionSpec(
             name="test_jina",
             db_path="/tmp",
-            embed_model="jinaai/jina-embeddings-v3",
+            embed_model="jinaai/jina-embeddings-v3-ctx1024",
         )
         assert spec.supports_late_chunking
-        assert spec.max_context_tokens == 8192
+        assert spec.max_context_tokens == 1024
         assert spec.overlap_tokens == 128
 
         with patch("src.trainer.ingestion.embedder.AutoTokenizer.from_pretrained"), \
              patch("src.trainer.ingestion.embedder.AutoModel.from_pretrained"):
             emb = build_embedder_for_spec(spec)
             assert isinstance(emb, LocalLateChunkingEmbedder)
-            assert emb.max_context_tokens == 8192
+            assert emb.max_context_tokens == 1024
 
     def test_ollama_spec_returns_l2_wrapped(self):
         """Spec with supports_late_chunking=False → L2NormalizedEmbeddings wrapping OllamaEmbeddings."""
-        from src.config.collections import CollectionSpec
         from src.common.embeddings import build_embedder_for_spec, L2NormalizedEmbeddings
-        from langchain_ollama import OllamaEmbeddings
 
-        spec = CollectionSpec(
-            name="test_nomic",
-            db_path="/tmp",
-            embed_model="nomic-embed-text-v2-moe",
-        )
-        assert not spec.supports_late_chunking
+        # supports_late_chunking=False path'ı test etmek için registry'ye bağımlı
+        # olmadan doğrudan bir mock spec kullanıyoruz.
+        spec = MagicMock()
+        spec.supports_late_chunking = False
+        spec.embed_model = "some-ollama-model"
 
         with patch("src.common.embeddings.OllamaEmbeddings") as mock_ollama:
             mock_base = MagicMock()

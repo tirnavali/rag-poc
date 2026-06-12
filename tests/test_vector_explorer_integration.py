@@ -16,13 +16,13 @@ def test_multi_collection_retriever_creates_retrievers():
         spec1 = CollectionSpec(
             name="test_col1",
             db_path=Path("/tmp/test1"),
-            embed_model="nomic-embed-text-v2-moe",
+            embed_model="jinaai/jina-embeddings-v3-ctx1024",
             doc_type=DocumentType.GAZETE,
         )
         spec2 = CollectionSpec(
             name="test_col2",
             db_path=Path("/tmp/test2"),
-            embed_model="nomic-embed-text-v2-moe",
+            embed_model="jinaai/jina-embeddings-v3-ctx1024",
             doc_type=DocumentType.TUTANAK,
         )
 
@@ -49,13 +49,13 @@ def test_multi_collection_retriever_query_workflow(mocker):
     spec1 = CollectionSpec(
         name="test_col1",
         db_path=Path("/tmp/test1"),
-        embed_model="nomic-embed-text-v2-moe",
+        embed_model="jinaai/jina-embeddings-v3-ctx1024",
         doc_type=DocumentType.GAZETE,
     )
     spec2 = CollectionSpec(
         name="test_col2",
         db_path=Path("/tmp/test2"),
-        embed_model="nomic-embed-text-v2-moe",
+        embed_model="jinaai/jina-embeddings-v3-ctx1024",
         doc_type=DocumentType.TUTANAK,
     )
 

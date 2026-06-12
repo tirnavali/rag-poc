@@ -45,7 +45,7 @@ def valid_request_file(tmp_path):
     """A minimal valid ingest_request.json (uses inline press_clip — no PDF needed)."""
     data = {
         "version": "1.0",
-        "collection": "gazete_arsivi",
+        "collection": "tutanaklar_ctx1024",
         "batch_id": "test-batch",
         "documents": [
             {
@@ -80,8 +80,6 @@ def test_list_collections_runs_without_crash(capsys):
     # (regression: source_type AttributeError hatası için)
     assert "Koleksiyonlar" in out  # tablo başlığı
     assert "tutanak" in out
-    assert "gazete" in out
-    assert "onerge" in out
 
 
 # ─── cmd_list_types ──────────────────────────────────────────

@@ -31,7 +31,7 @@ def spec():
     return CollectionSpec(
         name="test_observability",
         db_path=Path("/tmp/test_obs_chroma"),
-        embed_model="jinaai/jina-embeddings-v3",
+        embed_model="jinaai/jina-embeddings-v3-ctx1024",
         doc_type=DocumentType.TUTANAK,
     )
 

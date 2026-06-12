@@ -54,17 +54,17 @@ def test_collection_catalog_lists_only_default_collections():
 
 def test_collection_catalog_restricted_to_allowed_keys():
     """allowed_keys verilince katalog yalnızca seçili koleksiyonları listeler."""
-    from src.config.collections import DEFAULT_COLLECTION_FOR_TYPE
-
     cfg = load_pipeline_config()
-    defaults = sorted(DEFAULT_COLLECTION_FOR_TYPE.values())
-    assert len(defaults) >= 2, "test çoklu default koleksiyon varsayıyor"
+    all_keys = cfg.get_collection_keys()
+    assert len(all_keys) >= 2, "en az 2 koleksiyon gerekli"
 
-    chosen = defaults[0]
+    chosen = all_keys[0]
+    excluded = [k for k in all_keys if k != chosen]
+
     catalog = cfg.get_collection_catalog(allowed_keys={chosen})
 
     assert f"- {chosen} " in catalog
-    for other in defaults[1:]:
+    for other in excluded:
         assert f"- {other} " not in catalog
 
 

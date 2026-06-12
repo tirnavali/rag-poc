@@ -82,6 +82,10 @@ def _wire(embedder, hidden_dim: int = 8):
     # object.__new__ skips __init__, so set these manually
     embedder.max_context_tokens = 8192
     embedder.overlap_tokens = 128
+    embedder.is_jina = False
+    embedder.is_nomic = False
+    embedder.is_qwen = False
+    embedder.embed_dim = None
     return embedder
 
 
