@@ -5,12 +5,13 @@ bağımlılıksız (stdlib) HTTP arayüzü.
     python -m scripts.golden_builder            # http://localhost:8765
     python -m scripts.golden_builder --port 9000 --fixture path/to/golden.json
 
+Belgeler data_lake/reports/ ve data_lake/pages/ dizinlerinden otomatik keşfedilir;
+manifest dosyası artık zorunlu değildir.
 Tarayıcıda soru + golden_answer yazılır, cevabın bulunduğu sayfa(lar) işaretlenir;
 kayıt mevcut fixture'a merge edilir. Cevabın atıfta bulunulan sayfada gerçekten
 geçip geçmediği `lint_golden.answer_in_pages` ile canlı doğrulanır (uyarı verir,
 kaydı engellemez). Şema mevcut fixture ile birebir aynıdır — lint_golden /
-benchmark uyumlu kalır.
-"""
+benchmark uyumlu kalır."""
 from __future__ import annotations
 
 import argparse
@@ -18,12 +19,15 @@ import json
 import os
 import re
 import tempfile
+from glob import glob
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from scripts.lint_golden import (
     DEFAULT_MANIFEST,
+    PAGES_DIR,
+    REPORTS_DIR,
     ROOT,
     _norm,
     _pages_path_for,
@@ -38,6 +42,72 @@ DOC_ID_RE = re.compile(r"tutanak-(\d+)-(\d+)-(\d+)-")
 
 
 # --------------------------------------------------------------------------- #
+# Otomatik belge keşfi — reports/ + pages/ dizinlerinden
+# --------------------------------------------------------------------------- #
+def _discover_documents() -> list[dict]:
+    """data_lake/reports/*.json ve data_lake/pages/*_pages.json dosyalarından
+    tüm belgeleri keşfeder. Manifest gerektirmez."""
+    docs: dict[str, dict] = {}
+
+    # 1) reports/ dizininden: document_id + artifacts.pages doğrudan okur
+    for report_file in sorted(REPORTS_DIR.glob("*.json")):
+        try:
+            data = json.loads(report_file.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        doc_id = data.get("document_id", "")
+        if not doc_id:
+            continue
+        pages_path_str = (data.get("artifacts") or {}).get("pages", "")
+        if not pages_path_str:
+            continue
+        pages_path = Path(pages_path_str)
+        if not pages_path.is_absolute():
+            pages_path = ROOT / pages_path
+        if not pages_path.exists():
+            continue
+        # oturum ve tarih bilgisini çıkar
+        m = DOC_ID_RE.match(doc_id)
+        session = int(m.group(3)) if m else None
+        # tarih: document_id'nin son parçası (örn. 20180709)
+        date_part = doc_id.rsplit("-", 1)[-1] if "-" in doc_id else ""
+        date = f"{date_part[:4]}-{date_part[4:6]}-{date_part[6:]}" if len(date_part) == 8 else ""
+        docs[doc_id] = {
+            "document_id": doc_id,
+            "document_source": "",
+            "session": session,
+            "document_date": date,
+            "_pages_path": str(pages_path),
+        }
+
+    # 2) pages/ dizininden: reports'ta yer almayan dosyaları da ekle
+    for pages_file in sorted(PAGES_DIR.glob("*_pages.json")):
+        stem = pages_file.name  # örn: tbmm27001002__30ee9f62_pages.json
+        # reports'tan zaten eklendiyse atla
+        already = any(
+            Path(d["_pages_path"]) == pages_file for d in docs.values()
+        )
+        if already:
+            continue
+        # document_id olarak dosya adının stem kısmını kullan
+        doc_id = pages_file.stem.replace("_pages", "")  # tbmm27001002__30ee9f62
+        docs[doc_id] = {
+            "document_id": doc_id,
+            "document_source": "",
+            "session": None,
+            "document_date": "",
+            "_pages_path": str(pages_file),
+        }
+
+    # session numarasına göre sırala (tutanaklar önce, diğerleri sona)
+    def sort_key(d):
+        s = d.get("session")
+        return (0 if s is not None else 1, s or 0, d["document_id"])
+
+    return sorted(docs.values(), key=sort_key)
+
+
+# --------------------------------------------------------------------------- #
 # Veri erişimi
 # --------------------------------------------------------------------------- #
 def _load_manifest(manifest_path: Path) -> list[dict]:
@@ -45,9 +115,17 @@ def _load_manifest(manifest_path: Path) -> list[dict]:
 
 
 def _load_pages(doc: dict) -> list[dict]:
-    """Bir belgenin [{sayfa_no, sayfa_markdown}] dizisini döndürür."""
-    path = _pages_path_for(doc["document_id"], doc.get("document_source", ""))
-    if path is None:
+    """Bir belgenin [{sayfa_no, sayfa_markdown}] dizisini döndürür.
+
+    Önce doc içindeki '_pages_path' anahtarına bakar (otomatik keşif yolu),
+    yoksa lint_golden._pages_path_for() ile çözer.
+    """
+    pages_path_str = doc.get("_pages_path", "")
+    if pages_path_str:
+        path = Path(pages_path_str)
+    else:
+        path = _pages_path_for(doc["document_id"], doc.get("document_source", ""))
+    if path is None or not path.exists():
         return []
     entries = json.loads(Path(path).read_text(encoding="utf-8"))
     return [
@@ -99,8 +177,9 @@ def _next_id(items: list[dict], document_id: str) -> str:
 # --------------------------------------------------------------------------- #
 class Handler(BaseHTTPRequestHandler):
     # sınıf değişkenleri server kurulumunda atanır
-    manifest_path: Path = DEFAULT_MANIFEST
+    manifest_path: Path | None = None  # None = otomatik keşif (önerilen)
     fixture_path: Path = DEFAULT_FIXTURE
+    _docs_cache: list[dict] | None = None
 
     def log_message(self, fmt, *args):  # daha sessiz log
         pass
@@ -123,7 +202,13 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _docs(self) -> list[dict]:
-        return _load_manifest(self.manifest_path)
+        if Handler._docs_cache is not None:
+            return Handler._docs_cache
+        if self.manifest_path is not None:
+            Handler._docs_cache = _load_manifest(self.manifest_path)
+        else:
+            Handler._docs_cache = _discover_documents()
+        return Handler._docs_cache
 
     # ----- GET ----- #
     def do_GET(self):
@@ -191,14 +276,27 @@ class Handler(BaseHTTPRequestHandler):
     # ----- POST ----- #
     def do_POST(self):
         parsed = urlparse(self.path)
-        if parsed.path != "/api/save":
+        if parsed.path not in ("/api/save", "/api/delete"):
             return self._send_json({"error": "not found"}, 404)
         try:
             length = int(self.headers.get("Content-Length", 0))
             payload = json.loads(self.rfile.read(length).decode("utf-8")) if length else {}
+            if parsed.path == "/api/delete":
+                return self._handle_delete(payload)
             return self._handle_save(payload)
         except Exception as exc:  # noqa: BLE001
             return self._send_json({"error": str(exc)}, 500)
+
+    def _handle_delete(self, payload: dict):
+        entry_id = (payload.get("id") or "").strip()
+        if not entry_id:
+            return self._send_json({"error": "id zorunlu."}, 400)
+        items = _load_fixture(self.fixture_path)
+        new_items = [it for it in items if it.get("id") != entry_id]
+        if len(new_items) == len(items):
+            return self._send_json({"error": f"Girdi bulunamadı: {entry_id}"}, 404)
+        _save_fixture(self.fixture_path, new_items)
+        return self._send_json({"ok": True, "id": entry_id, "total": len(new_items)})
 
     def _handle_save(self, payload: dict):
         document_id = (payload.get("document_id") or "").strip()
@@ -206,6 +304,7 @@ class Handler(BaseHTTPRequestHandler):
         answer = (payload.get("golden_answer") or "").strip()
         pages = payload.get("pages") or []
         tags = payload.get("tags") or []
+        edit_id = (payload.get("edit_id") or "").strip()  # varsa ID üzerinden güncelle
 
         if not document_id or not query or not answer or not pages:
             return self._send_json(
@@ -247,12 +346,6 @@ class Handler(BaseHTTPRequestHandler):
 
         items = _load_fixture(self.fixture_path)
 
-        # query'ye göre dedup (normalize)
-        nq = _norm(query)
-        existing_idx = next(
-            (i for i, it in enumerate(items) if _norm(it.get("query", "")) == nq), None
-        )
-
         entry = {
             "query": query,
             "relevant_pages": [{"document_id": document_id, "pages": pages_int}],
@@ -260,16 +353,33 @@ class Handler(BaseHTTPRequestHandler):
             "tags": final_tags,
         }
 
-        if existing_idx is not None:
-            entry["id"] = items[existing_idx].get("id") or _next_id(items, document_id)
-            ordered = {"id": entry["id"], **entry}
-            items[existing_idx] = ordered
+        if edit_id:
+            # ID üzerinden düzenle (sorgu değişmiş olabilir)
+            existing_idx = next(
+                (i for i, it in enumerate(items) if it.get("id") == edit_id), None
+            )
+            if existing_idx is None:
+                return self._send_json({"error": f"Girdi bulunamadı: {edit_id}"}, 404)
+            entry["id"] = edit_id
+            items[existing_idx] = {"id": edit_id, **entry}
             action = "updated"
         else:
-            new_id = _next_id(items, document_id)
-            ordered = {"id": new_id, **entry}
-            items.append(ordered)
-            action = "created"
+            # Sorguya göre dedup (yeni kayıt veya aynı sorguyu güncelle)
+            nq = _norm(query)
+            existing_idx = next(
+                (i for i, it in enumerate(items) if _norm(it.get("query", "")) == nq), None
+            )
+            if existing_idx is not None:
+                entry["id"] = items[existing_idx].get("id") or _next_id(items, document_id)
+                items[existing_idx] = {"id": entry["id"], **entry}
+                action = "updated"
+            else:
+                new_id = _next_id(items, document_id)
+                items.append({"id": new_id, **entry})
+                entry["id"] = new_id
+                action = "created"
+
+        ordered = next(it for it in items if it.get("id") == entry["id"])
 
         _save_fixture(self.fixture_path, items)
         return self._send_json(
@@ -284,22 +394,37 @@ class Handler(BaseHTTPRequestHandler):
         )
 
 
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--fixture", type=Path, default=DEFAULT_FIXTURE)
-    ap.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
+    ap.add_argument(
+        "--manifest",
+        type=Path,
+        default=None,
+        help="Opsiyonel: manifest JSON. Belirtilmezse data_lake/reports + pages otomatik taranır.",
+    )
     args = ap.parse_args()
 
     Handler.fixture_path = args.fixture
-    Handler.manifest_path = args.manifest
+    Handler.manifest_path = args.manifest  # None → otomatik keşif
+    Handler._docs_cache = None  # önbelleği sıfırla
+
+    # Belge listesini başlangıçta keşfet ve göster
+    docs = _discover_documents() if args.manifest is None else _load_manifest(args.manifest)
+    print(f"Golden Builder → http://{args.host}:{args.port}")
+    print(f"Fixture  : {args.fixture}")
+    if args.manifest:
+        print(f"Manifest : {args.manifest}")
+    else:
+        print(f"Belgeler : data_lake/reports + pages otomatik keşif → {len(docs)} belge bulundu")
+        for d in docs:
+            print(f"  · {d['document_id']}")
+    print("Durdurmak için Ctrl+C")
 
     httpd = ThreadingHTTPServer((args.host, args.port), Handler)
-    print(f"Golden Builder → http://{args.host}:{args.port}")
-    print(f"Fixture : {args.fixture}")
-    print(f"Manifest: {args.manifest}")
-    print("Durdurmak için Ctrl+C")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

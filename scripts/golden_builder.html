@@ -65,10 +65,18 @@
   .existing { border-top: 1px solid var(--border); flex: 1 1 0; min-height: 120px; display: flex; flex-direction: column; }
   #existingList { overflow: auto; flex: 1 1 auto; min-height: 0; }
   .existing h3 { font-size: 13px; color: var(--muted); padding: 12px 16px 0; margin: 0; text-transform: uppercase; letter-spacing: .03em; flex: 0 0 auto; }
-  .entry { padding: 9px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .entry { padding: 9px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 8px; }
   .entry:hover { background: var(--panel); }
+  .entry .body { flex: 1; min-width: 0; cursor: pointer; }
   .entry .q { font-size: 13px; }
   .entry .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .entry .entry-actions { display: flex; gap: 4px; flex-shrink: 0; padding-top: 2px; }
+  .entry .entry-actions button { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); padding: 2px 7px; font-size: 12px; cursor: pointer; }
+  .entry .entry-actions button:hover { border-color: var(--accent); color: var(--accent); }
+  .entry .entry-actions button.del:hover { border-color: #ff6b6b; color: #ff6b6b; }
+  .edit-badge { display:none; font-size:11px; background: rgba(79,140,255,.15); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; padding: 2px 8px; margin-left: 4px; vertical-align: middle; }
+  .editing .edit-badge { display: inline; }
+  .editing .form-title { color: var(--warn); }
   .pagebtn-bar { position: sticky; top: 0; background: var(--bg); padding-bottom: 10px; margin-bottom: 4px; z-index: 2; }
   kbd { background: var(--panel2); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; font-size: 11px; }
 </style>
@@ -101,7 +109,7 @@
   <div class="right">
     <div class="pane form">
       <div class="form-card">
-        <p class="form-title">✍️ Yeni Soru / Cevap</p>
+        <p class="form-title" id="formTitle">✍️ Yeni Soru / Cevap <span class="edit-badge" id="editBadge"></span></p>
         <label>Soru (query)</label>
         <textarea id="query" rows="3" placeholder="Örn: İlk meclis birleşimini hangi başkan açtı?"></textarea>
 
@@ -132,7 +140,7 @@
 
 <script>
 const $ = (id) => document.getElementById(id);
-const state = { docs: [], docId: null, pages: [], idx: 0, selPages: new Set(), cat: null, diff: null };
+const state = { docs: [], docId: null, pages: [], idx: 0, selPages: new Set(), cat: null, diff: null, editId: null };
 const CATS = ["narrative", "deputy", "bulletin"];
 const DIFFS = ["easy", "medium", "hard"];
 
@@ -235,22 +243,93 @@ function renderChips(){
 async function loadExisting(){
   const list = await getJSON("/api/entries?document_id=" + encodeURIComponent(state.docId));
   $("exCount").textContent = list.length;
+  if(!list.length){
+    $("existingList").innerHTML = `<div class="entry" style="cursor:default;color:var(--muted)"><div class="body">Bu belge için henüz girdi yok.</div></div>`;
+    return;
+  }
   $("existingList").innerHTML = list.map(e =>
-    `<div class="entry" data-page="${e.pages[0]||1}">
-       <div class="q">${esc(e.query)}</div>
-       <div class="meta">${e.id} · s. ${e.pages.join(", ")} · ${esc(e.golden_answer).slice(0,60)}</div>
-     </div>`).join("") || `<div class="entry" style="cursor:default;color:var(--muted)">Bu belge için henüz girdi yok.</div>`;
-  $("existingList").querySelectorAll(".entry[data-page]").forEach(el => el.onclick = () => {
-    const i = state.pages.findIndex(p => p.sayfa_no === +el.dataset.page);
+    `<div class="entry" data-id="${esc(e.id)}" data-page="${e.pages[0]||1}">
+       <div class="body">
+         <div class="q">${esc(e.query)}</div>
+         <div class="meta">${esc(e.id)} · s. ${e.pages.join(", ")} · ${esc(e.golden_answer).slice(0,60)}</div>
+       </div>
+       <div class="entry-actions">
+         <button class="edit-btn" title="Formu doldur ve düzenle">✏️</button>
+         <button class="del" title="Sil">🗑️</button>
+       </div>
+     </div>`).join("");
+  $("existingList").querySelectorAll(".entry .body").forEach(el => el.onclick = () => {
+    const entry = el.closest(".entry");
+    const i = state.pages.findIndex(p => p.sayfa_no === +entry.dataset.page);
     if(i >= 0) showPage(i);
   });
+  // Düzenle düğmeleri — listedeki veriden formu doldur
+  $("existingList").querySelectorAll(".edit-btn").forEach(btn => {
+    btn.onclick = (ev) => {
+      ev.stopPropagation();
+      const entry = btn.closest(".entry");
+      const id = entry.dataset.id;
+      const found = list.find(e => e.id === id);
+      if(found) loadEntry(found);
+    };
+  });
+  // Sil düğmeleri
+  $("existingList").querySelectorAll(".del").forEach(btn => {
+    btn.onclick = async (ev) => {
+      ev.stopPropagation();
+      const entry = btn.closest(".entry");
+      const id = entry.dataset.id;
+      const q = list.find(e => e.id === id)?.query || id;
+      if(!confirm(`"${q.slice(0,80)}" silinsin mi?`)) return;
+      btn.disabled = true;
+      try {
+        const res = await getJSON("/api/delete", {
+          method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ id })
+        });
+        if(res.error){ alert("Hata: " + res.error); return; }
+        if(state.editId === id) clearForm();
+        await loadExisting();
+        showMsg(`✓ Silindi: ${id} · kalan ${res.total}`, "ok");
+      } catch(e){ alert("İstek hatası: " + e); }
+      finally { btn.disabled = false; }
+    };
+  });
+}
+
+function loadEntry(e){
+  // Form alanlarını doldur
+  $("query").value = e.query || "";
+  $("answer").value = e.golden_answer || "";
+  state.selPages = new Set((e.pages || []).map(Number));
+  // Etiketleri ayrıştır: cat ve diff
+  const tags = e.tags || [];
+  const CATS_SET = new Set(CATS), DIFFS_SET = new Set(DIFFS);
+  state.cat  = tags.find(t => CATS_SET.has(t))  || null;
+  state.diff = tags.find(t => DIFFS_SET.has(t)) || null;
+  state.editId = e.id;
+  syncTags(); renderChips();
+  // Düzenleme modu göstergesi
+  $("formTitle").closest(".form-card").classList.add("editing");
+  $("editBadge").textContent = e.id;
+  $("saveBtn").textContent = "💾 Güncelle";
+  $("query").focus();
+  // Sağ paneli tepe noktasına kaydır
+  $("formTitle").closest(".pane")?.scrollTo(0, 0);
+  showMsg(`"${e.id}" düzenleniyor — değişiklik yapmadan Temizle ile iptal edebilirsin.`, "warn");
 }
 
 function showMsg(text, kind){ const m = $("msg"); m.className = "msg " + kind; m.textContent = text; }
 function clearForm(){
   $("query").value = ""; $("answer").value = "";
   state.selPages.clear(); state.cat = null; state.diff = null;
+  state.editId = null;
   syncTags(); renderChips();
+  // Düzenleme modundan çık
+  document.querySelectorAll(".form-card.editing").forEach(el => el.classList.remove("editing"));
+  $("editBadge").textContent = "";
+  $("saveBtn").textContent = "💾 Kaydet";
+  const m = $("msg"); m.className = "msg"; m.textContent = "";
 }
 
 async function save(){
@@ -265,9 +344,11 @@ async function save(){
   if(state.diff) tags.push(state.diff);
   $("saveBtn").disabled = true;
   try {
+    const body = { document_id: state.docId, query, golden_answer: answer, pages, tags };
+    if(state.editId) body.edit_id = state.editId;
     const res = await getJSON("/api/save", {
       method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ document_id: state.docId, query, golden_answer: answer, pages, tags })
+      body: JSON.stringify(body)
     });
     if(res.error){ showMsg("Hata: " + res.error, "err"); return; }
     const head = `${res.action === "updated" ? "Güncellendi" : "Eklendi"} · ${res.id} · toplam ${res.total}`;
