@@ -35,6 +35,8 @@ def isolated_dirs(tmp_path, monkeypatch):
     parse_cache.mkdir(parents=True)
     monkeypatch.setattr(settings, "PARSE_CACHE_DIR", parse_cache)
     monkeypatch.setattr(settings, "MARKDOWN_DIR", tmp_path / "markdown")
+    monkeypatch.setattr(settings, "ATOMS_DIR", tmp_path / "atoms")
+    monkeypatch.setattr(settings, "PACKED_ATOMS_DIR", tmp_path / "packed_atoms")
     monkeypatch.setattr(settings, "PAGES_DIR", tmp_path / "pages")
     monkeypatch.setattr(settings, "QUALITY_STATS_FILE", parse_cache / "quality_stats.json")
     return tmp_path
@@ -190,12 +192,17 @@ def _atoms_cache_path(file_path: Path, ocr_engine: str = "easyocr") -> Path:
 
 
 class TestMarkdownConverterQuality:
-    def test_old_cache_without_quality_is_still_valid(self, isolated_dirs):
-        """quality alanı olmayan eski atoms.json geçerli sayılır, Docling çağrılmaz."""
+    def test_cache_without_quality_is_still_valid(self, isolated_dirs):
+        """quality alanı olmayan (ama şema güncel) atoms.json geçerli sayılır, Docling çağrılmaz.
+
+        schema_version >= 2 olduğu sürece quality alanının yokluğu cache'i geçersiz
+        kılmaz — quality yeniden hesaplanır, OCR güveni None kalır.
+        """
         pdf = isolated_dirs / "belge.pdf"
         pdf.write_bytes(b"%PDF-fake")
 
         old_cache = {
+            "schema_version": 2,
             "full_text": "Atom bir\n\nAtom iki",
             "atoms_data": [
                 {"text": "Atom bir", "label": "text", "page": 1, "pages": [1]},
@@ -370,3 +377,103 @@ class TestManifestQuality:
         # İkinci upsert perf vermez → COALESCE ile korunmalı
         manifest.upsert(doc, status="done", chunk_count=3)
         assert json.loads(manifest.get("doc-1", "col-1").perf_json)["total_ms"] == 7400
+
+
+# ---------------------------------------------------------------------------
+# MarkdownConverter — sayfa sınırını aşan atom bölme (prov charspan)
+# ---------------------------------------------------------------------------
+
+class TestPageBoundarySplit:
+    """tutanak-27-01-01 · sayfa 13/14 regresyonu: Docling, fiziksel olarak iki
+    sayfaya yayılan bir layout bloğunu tek item'da topluyor ama her parçanın
+    sayfasını prov charspan ile işaretliyor. page_texts bunu doğru sayfaya böler."""
+
+    def test_extract_page_texts_splits_by_charspan(self):
+        item = SimpleNamespace(
+            text="Salihe Aydeniz Ebubekir Bal Dersim Dağ",
+            prov=[
+                SimpleNamespace(page_no=13, charspan=(0, 14)),
+                SimpleNamespace(page_no=14, charspan=(15, 27)),
+                SimpleNamespace(page_no=14, charspan=(28, 38)),
+            ],
+        )
+        assert MarkdownConverter._extract_page_texts(item) == {
+            13: "Salihe Aydeniz",
+            14: "Ebubekir Bal Dersim Dağ",
+        }
+
+    def test_extract_page_texts_single_page_returns_empty(self):
+        item = SimpleNamespace(
+            text="Şahin Tin", prov=[SimpleNamespace(page_no=13, charspan=(0, 9))]
+        )
+        assert MarkdownConverter._extract_page_texts(item) == {}
+
+    def test_extract_page_texts_falls_back_without_charspans(self):
+        item = SimpleNamespace(
+            text="x",
+            prov=[
+                SimpleNamespace(page_no=13, charspan=(0, 0)),
+                SimpleNamespace(page_no=14, charspan=(0, 0)),
+            ],
+        )
+        assert MarkdownConverter._extract_page_texts(item) == {}
+
+    def test_build_pages_by_number_uses_page_texts(self):
+        atoms = [
+            {"text": "DİYARBAKIR:", "page": 13, "pages": [13]},
+            {
+                "text": "Salihe Aydeniz Ebubekir Bal Dersim Dağ",
+                "page": 13,
+                "pages": [13, 14],
+                "page_texts": {13: "Salihe Aydeniz", 14: "Ebubekir Bal Dersim Dağ"},
+            },
+            {"text": "Mehmet Mehdi Eker", "page": 14, "pages": [14]},
+        ]
+        by = {p["sayfa_no"]: p["sayfa_markdown"]
+              for p in MarkdownConverter._build_pages_by_number(atoms)}
+        assert "Ebubekir Bal" not in by[13]  # sayfa 14 ismi 13'e sızmamalı
+        assert "Salihe Aydeniz" in by[13]
+        assert by[14].startswith("Ebubekir Bal")
+        assert "Dersim Dağ" in by[14]
+
+    def test_build_pages_by_number_normalizes_string_keys(self):
+        # Cache'ten okunduğunda JSON anahtarları string olur
+        atoms = [{"text": "a b c", "page": 13, "pages": [13, 14],
+                  "page_texts": {"13": "a", "14": "b c"}}]
+        by = {p["sayfa_no"]: p["sayfa_markdown"]
+              for p in MarkdownConverter._build_pages_by_number(atoms)}
+        assert by == {13: "a", 14: "b c"}
+
+
+class TestCacheSchemaInvalidation:
+    """schema_version < 2 olan Level-1 cache'ler geçersiz sayılır (page_texts eksik)."""
+
+    def test_pre_v2_cache_triggers_reparse(self, isolated_dirs):
+        pdf = isolated_dirs / "belge.pdf"
+        pdf.write_bytes(b"%PDF-fake-v1")
+
+        # schema_version YOK → v1 kabul edilir → yeniden parse tetiklenmeli
+        v1_cache = {
+            "full_text": "Atom bir",
+            "atoms_data": [{"text": "Atom bir", "label": "text", "page": 1, "pages": [1]}],
+        }
+        _atoms_cache_path(pdf).write_text(
+            json.dumps(v1_cache, ensure_ascii=False), encoding="utf-8"
+        )
+
+        items = [SimpleNamespace(text="Yeni atom", label="text",
+                                 prov=[SimpleNamespace(page_no=1)])]
+        fake_doc = SimpleNamespace(iterate_items=lambda: [(i, 0) for i in items])
+        fake_result = SimpleNamespace(
+            document=fake_doc, confidence=SimpleNamespace(ocr_score=0.9), pages=[]
+        )
+
+        conv = _make_converter()
+        conv.converter.convert.return_value = fake_result
+        conv.convert(str(pdf))  # serializer SimpleNamespace'te düşer → fallback branch
+
+        conv.converter.convert.assert_called_once()  # v1 cache reddedildi, Docling çalıştı
+
+        # Yeniden yazılan cache schema_version 2 taşımalı
+        rewritten = json.loads(_atoms_cache_path(pdf).read_text())
+        assert rewritten["schema_version"] == 2

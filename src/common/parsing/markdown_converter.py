@@ -43,6 +43,7 @@ class ParsedDocument:
     dl_doc: Any | None
     ocr_base: str               # Level-2 chunk önbelleği anahtar üretimi için
     markdown_path: str | None = field(default=None)
+    atoms_path: str | None = field(default=None)
     pages_path: str | None = field(default=None)
     pages_by_number: List[Dict[str, Any]] = field(default_factory=list)
     quality: Dict[str, Any] = field(default_factory=dict)  # Tier-1 OCR kalite metrikleri
@@ -141,8 +142,14 @@ class MarkdownConverter:
                 with open(ocr_cache_file, "r", encoding="utf-8") as f:
                     ocr_cached = json.load(f)
                 atoms_to_check = ocr_cached.get("atoms_data", [])
-                has_page_meta = bool(atoms_to_check) and all(
-                    "page" in a and "pages" in a for a in atoms_to_check
+                # schema_version >= 2: prov charspan'lerinden çok-sayfalı atom
+                # bölme (page_texts) eklendi. v1 cache'ler sayfa sınırını aşan
+                # blokları yanlış sayfaya atfettiği için geçersiz sayılır.
+                schema_ok = ocr_cached.get("schema_version", 1) >= 2
+                has_page_meta = (
+                    schema_ok
+                    and bool(atoms_to_check)
+                    and all("page" in a and "pages" in a for a in atoms_to_check)
                 )
                 if has_page_meta:
                     atoms_data = ocr_cached["atoms_data"]
@@ -212,6 +219,7 @@ class MarkdownConverter:
                 with open(ocr_cache_file, "w", encoding="utf-8") as f:
                     json.dump(
                         {
+                            "schema_version": 2,
                             "full_text": full_text,
                             "atoms_data": atoms_data,
                             "quality": quality,
@@ -224,6 +232,7 @@ class MarkdownConverter:
                 print(f"  [WARN] OCR önbellek yazma hatası: {e}")
 
         markdown_path = self._save_markdown_artifact(file_path, file_hash, full_text)
+        atoms_path = self._save_atoms_artifact(file_path, file_hash, atoms_data)
         pages_by_number = self._build_pages_by_number(atoms_data)
         pages_path = self._save_pages_artifact(file_path, file_hash, pages_by_number)
 
@@ -233,6 +242,7 @@ class MarkdownConverter:
             dl_doc=dl_doc,
             ocr_base=ocr_base,
             markdown_path=markdown_path,
+            atoms_path=atoms_path,
             pages_path=pages_path,
             pages_by_number=pages_by_number,
             quality=quality,
@@ -252,14 +262,16 @@ class MarkdownConverter:
                 label = getattr(item, "label", "unknown")
                 if content.strip():
                     pages = self._extract_pages(item)
-                    atoms_data.append(
-                        {
-                            "text": content.strip(),
-                            "label": str(label),
-                            "page": pages[0] if pages else None,
-                            "pages": pages,
-                        }
-                    )
+                    atom = {
+                        "text": content.strip(),
+                        "label": str(label),
+                        "page": pages[0] if pages else None,
+                        "pages": pages,
+                    }
+                    page_texts = self._extract_page_texts(item)
+                    if page_texts:
+                        atom["page_texts"] = page_texts
+                    atoms_data.append(atom)
         except Exception as e:
             print(f"  [WARN] Gelişmiş Markdown dışa aktarma başarısız, manuel yönteme geçiliyor: {e}")
             atoms_data = []
@@ -273,14 +285,16 @@ class MarkdownConverter:
                     level_str = str(label).split("_")[-1] if "_" in str(label) else "1"
                     level = int(level_str) if level_str.isdigit() else 1
                     text = f"{'#' * level} {text}"
-                atoms_data.append(
-                    {
-                        "text": text,
-                        "label": str(label),
-                        "page": pages[0] if pages else None,
-                        "pages": pages,
-                    }
-                )
+                atom = {
+                    "text": text,
+                    "label": str(label),
+                    "page": pages[0] if pages else None,
+                    "pages": pages,
+                }
+                page_texts = self._extract_page_texts(item)
+                if page_texts:
+                    atom["page_texts"] = page_texts
+                atoms_data.append(atom)
         return atoms_data
 
     @staticmethod
@@ -290,6 +304,14 @@ class MarkdownConverter:
 
         page_buckets: dict[int, list[str]] = defaultdict(list)
         for atom in atoms:
+            # Sayfa sınırını aşan atom: her parça prov charspan'ine göre doğru sayfaya.
+            # (Cache'ten okunduğunda JSON anahtarları string olur → int'e normalize.)
+            page_texts = atom.get("page_texts")
+            if page_texts:
+                for pno, txt in page_texts.items():
+                    if txt.strip():
+                        page_buckets[int(pno)].append(txt)
+                continue
             primary_page = atom.get("page")
             if primary_page is None:
                 continue
@@ -310,6 +332,40 @@ class MarkdownConverter:
             }
         )
 
+    @staticmethod
+    def _extract_page_texts(item) -> Dict[int, str]:
+        """Sayfa sınırını aşan item'ı prov charspan'lerine göre {sayfa_no: metin}'e böler.
+
+        Docling, fiziksel olarak iki sayfaya yayılan bir layout bloğunu (ör. çok-sütunlu
+        yoklama isim listesi) tek item'da toplar ama her parçanın sayfasını prov'da ayrı
+        charspan ile işaretler. Tek sayfaya ait item'larda boş dict döner (bölmeye gerek
+        yok); bölünemeyen durumlarda (charspan yok/geçersiz, tek sayfa) yine {} döner ve
+        çağıran primary-page davranışına geri düşer.
+        """
+        raw = getattr(item, "text", "") or ""
+        provs = [
+            p for p in getattr(item, "prov", []) if getattr(p, "page_no", None) is not None
+        ]
+        if not raw or len({p.page_no for p in provs}) <= 1:
+            return {}
+
+        from collections import defaultdict
+
+        buckets: dict[int, list[str]] = defaultdict(list)
+        for p in provs:
+            cs = getattr(p, "charspan", None)
+            if not cs or tuple(cs) == (0, 0):
+                continue
+            start, end = cs[0], cs[1]
+            if 0 <= start < end <= len(raw):
+                seg = raw[start:end].strip()
+                if seg:
+                    buckets[p.page_no].append(seg)
+
+        if len(buckets) <= 1:
+            return {}
+        return {pno: " ".join(segs) for pno, segs in buckets.items()}
+
     def _save_pages_artifact(
         self, file_path: str, file_hash: str, pages_by_number: List[Dict[str, Any]]
     ) -> str | None:
@@ -328,6 +384,39 @@ class MarkdownConverter:
             return str(pages_path)
         except Exception as e:
             print(f"  [WARN] Pages artefakt yazma hatası: {e}")
+            return None
+
+    def _save_atoms_artifact(
+        self, file_path: str, file_hash: str, atoms_data: List[Dict[str, Any]]
+    ) -> str | None:
+        """atom listesini data_lake/atoms/ altına okunabilir sidecar JSON olarak yazar.
+
+        parse_cache/{md5}_atoms.json'ın {stem}__{hash8} ile anahtarlı, gözle
+        incelenebilir yansımasıdır (aşama 2 — docling atomları).
+        """
+        try:
+            atoms_dir = settings.ATOMS_DIR
+            atoms_dir.mkdir(parents=True, exist_ok=True)
+            source_stem = Path(file_path).stem
+            atoms_path = atoms_dir / f"{source_stem}__{file_hash[:8]}_atoms.json"
+            if not atoms_path.exists():
+                atoms_path.write_text(
+                    json.dumps(
+                        {
+                            "source_stem": source_stem,
+                            "file_hash8": file_hash[:8],
+                            "atom_count": len(atoms_data),
+                            "atoms": atoms_data,
+                        },
+                        ensure_ascii=False,
+                        indent=2,
+                    ),
+                    encoding="utf-8",
+                )
+                print(f"  [ATOMS] Artefakt kaydedildi: {atoms_path.name}")
+            return str(atoms_path)
+        except Exception as e:
+            print(f"  [WARN] Atoms artefakt yazma hatası: {e}")
             return None
 
     def _save_markdown_artifact(
