@@ -159,10 +159,13 @@ ONERGE_COLLECTION = "tbmm_onerge"
 
 # --- Document Manifest Configuration ---
 MANIFEST_DB = DATA_LAKE / "document_manifest.db"
-PARSE_CACHE_DIR = DATA_LAKE / "parse_cache"
-MARKDOWN_DIR = DATA_LAKE / "markdown"
-PAGES_DIR = DATA_LAKE / "pages"
-REPORTS_DIR = DATA_LAKE / "reports"
+PARSE_CACHE_DIR = DATA_LAKE / "parse_cache"   # iç önbellek (opak MD5 anahtarlı)
+# Aşama bazlı, okunabilir ({stem}__{hash8}) artefakt dizinleri — gözlemlenebilirlik/QC için.
+MARKDOWN_DIR = DATA_LAKE / "markdown"          # 1 — tam markdown (.md)
+ATOMS_DIR = DATA_LAKE / "atoms"                # 2 — docling atomları (_atoms.json)
+PACKED_ATOMS_DIR = DATA_LAKE / "packed_atoms"  # 3 — paketlenmiş chunk'lar (_packed.json)
+PAGES_DIR = DATA_LAKE / "pages"                # 4 — sayfa bazlı markdown (_pages.json)
+REPORTS_DIR = DATA_LAKE / "reports"            # uçuş kaydedici + artifact index ({document_id}.json)
 
 # --- Downloaded Files ---
 # Files fetched from URLs during ingestion are cached here per collection.
@@ -199,6 +202,105 @@ else:
         DOCLING_USE_GPU = torch.cuda.is_available()
     except ImportError:
         DOCLING_USE_GPU = False
+
+# --- VLM Table Extraction Configuration ---
+# Taranmış/döndürülmüş tabloları (Docling'in TableFormer'ının yapı çıkaramadığı,
+# OCR'ın çöp ürettiği tablolar) yerel bir Ollama görü-dil modeliyle (qwen2.5vl) okur.
+# Yalnızca "bozuk" tablolarda otomatik devreye girer (low-quality tetikleyici);
+# düzgün okunan tablolara dokunmaz. Akış: yüksek-çözünürlük kırp → dik çevir
+# (Tesseract OSD) → gerekirse satır-bantlarına böl → VLM ile markdown'a çevir.
+# Devre dışı bırakmak için: VLM_TABLE_EXTRACTION=0
+VLM_TABLE_EXTRACTION = os.environ.get("VLM_TABLE_EXTRACTION", "1") not in ("0", "false", "False")
+# Ollama'da kurulu görü-dil modeli. 7b, 32b kadar doğru (bütçe toplamları bire bir
+# doğrulandı) ama bu makinede ~4× hızlı. Daha yüksek doğruluk için: VLM_TABLE_MODEL=qwen2.5vl:32b
+VLM_TABLE_MODEL = os.environ.get("VLM_TABLE_MODEL", "qwen2.5vl:7b")
+# Tablo bbox'ının PDF'ten kırpılırken kullanılacak SABİT render ölçeği — yalnızca
+# adaptif zoom hesaplanamazsa fallback olarak kullanılır (aşağıya bkz).
+VLM_TABLE_ZOOM = float(os.environ.get("VLM_TABLE_ZOOM", "3.0"))
+# Adaptif zoom: kırpılan bölgenin uzun kenarını bu piksele getirecek ölçek hesaplanır
+# (clamp MIN..MAX). Farklı çözünürlükteki/küçültülmüş tablolar normalize edilir → hücre
+# başına yeterli piksel. uzun_kenar_pt > 0 değilse VLM_TABLE_ZOOM'a düşülür.
+VLM_TABLE_TARGET_LONG_PX = int(os.environ.get("VLM_TABLE_TARGET_LONG_PX", "2400"))
+VLM_TABLE_MIN_ZOOM = float(os.environ.get("VLM_TABLE_MIN_ZOOM", "2.0"))
+VLM_TABLE_MAX_ZOOM = float(os.environ.get("VLM_TABLE_MAX_ZOOM", "6.0"))
+# Kırpmadan önce tablo bbox'ı sayfa boyutunun bu kesiri kadar dışa genişletilir →
+# cetvel başlığı/üst-başlık ve alt not kırpıntıya girer (aksi halde bbox onları keser).
+VLM_TABLE_BBOX_PAD_FRAC = float(os.environ.get("VLM_TABLE_BBOX_PAD_FRAC", "0.07"))
+# Ollama bağlam ve üretim limitleri. Varsayılan KvSize (8192) dev tablolarda
+# taşıp 500 döndürdüğü için bağlam belirgin biçimde büyütülür (GPU unified memory).
+# Tek çağrıda tipik bir tablonun tamamı (~50 satır) okunabilsin diye bağlam geniş;
+# 16384 görsel+çıktıyı rahat alır ve varsayılan 8192 KV taşmasını (500) önler.
+VLM_TABLE_NUM_CTX = int(os.environ.get("VLM_TABLE_NUM_CTX", "16384"))
+# Üretim üst sınırı (cap; kullanılmazsa maliyet yok). ~50 satırlık tam tablo ölçümde
+# ~2400 token üretti; 8192 truncation'ı önler.
+VLM_TABLE_NUM_PREDICT = int(os.environ.get("VLM_TABLE_NUM_PREDICT", "8192"))
+# Tek bir VLM çağrısı için HTTP zaman aşımı (sn). 32B model dilim başına dakikalar sürebilir.
+VLM_TABLE_TIMEOUT = int(os.environ.get("VLM_TABLE_TIMEOUT", "900"))
+# Kırpıntıyı VLM'e vermeden önce Tesseract OSD ile otomatik dik çevirme.
+VLM_TABLE_AUTOROTATE = os.environ.get("VLM_TABLE_AUTOROTATE", "1") not in ("0", "false", "False")
+# OSD yön güveni bu eşiğin altındaysa OSD açısına güvenilmez; aspect-ratio fallback'e düşülür.
+VLM_TABLE_OSD_MIN_CONFIDENCE = float(os.environ.get("VLM_TABLE_OSD_MIN_CONFIDENCE", "1.0"))
+# VARSAYILAN tek-çağrıdır (en tutarlı sütun hizası). Bu değer YALNIZCA --band ile
+# bantlama zorlandığında bant yüksekliği olarak kullanılır (her bant ~bu kadar piksel).
+VLM_TABLE_TILE_MAX_HEIGHT_PX = int(os.environ.get("VLM_TABLE_TILE_MAX_HEIGHT_PX", "400"))
+# Bantlar arası dikey örtüşme (px) — satırların seam'de yarıdan kesilmesini önler.
+VLM_TABLE_TILE_OVERLAP_PX = int(os.environ.get("VLM_TABLE_TILE_OVERLAP_PX", "50"))
+# Bantlamada 2..N bantların üstüne eklenen başlık şeridi yüksekliği (px). Her bant
+# sütun başlıklarını görür → başlıksız bantlardaki sütun kayması önlenir. 0 = kapalı.
+VLM_TABLE_HEADER_STRIP_PX = int(os.environ.get("VLM_TABLE_HEADER_STRIP_PX", "95"))
+# Paralel bant gönderimleri için iş parçacığı sayısı. Gerçek eşzamanlılık için
+# Ollama'nın OLLAMA_NUM_PARALLEL değeri bu sayıya eşit veya daha büyük olmalı.
+VLM_TABLE_MAX_WORKERS = int(os.environ.get("VLM_TABLE_MAX_WORKERS", "5"))
+
+# --- Tesseract Table Extraction Configuration (klasik OCR backend) ---
+# VLM'e (qwen2.5vl) alternatif, hızlı klasik backend: gömülü/döndürülmüş tabloları
+# OpenCV + Tesseract ile okur. Detaylı plan: docs/tesseract_table_extraction_plan.md
+# Backend seçimi: vlm | tesseract | paddleocr
+TABLE_EXTRACTOR = os.environ.get("TABLE_EXTRACTOR", "vlm").strip().lower()
+# OCR dili (kurulu: tur, eng, osd) ve motor (1 = LSTM).
+TESS_TABLE_LANG = os.environ.get("TESS_TABLE_LANG", "tur+eng")
+TESS_TABLE_OEM = int(os.environ.get("TESS_TABLE_OEM", "1"))
+# Tablo bütünü için varsayılan PSM. 6 = uniform block (satır yapısını korur → grid
+# reconstruction için en uygun). Alternatif: 4 (tek sütun), 11 (sparse text).
+TESS_TABLE_PSM = int(os.environ.get("TESS_TABLE_PSM", "6"))
+# Tek bir tesseract çağrısı için zaman aşımı (sn). VLM'in aksine saniyeler mertebesinde.
+TESS_TABLE_TIMEOUT = int(os.environ.get("TESS_TABLE_TIMEOUT", "120"))
+# Yön tespiti (orientation): kararlar bu uzun-kenar pikseline küçültülmüş "probe"
+# üzerinde verilir (4× trial-OCR ucuz kalsın). Nihai dönüşüm tam çözünürlükte uygulanır.
+TESS_TABLE_ORIENT_PROBE_LONG_PX = int(os.environ.get("TESS_TABLE_ORIENT_PROBE_LONG_PX", "1600"))
+# Trial-OCR (yön oylaması) sırasında kullanılan PSM — hız için 6.
+TESS_TABLE_TRIAL_PSM = int(os.environ.get("TESS_TABLE_TRIAL_PSM", "6"))
+# OSD yön güveni bu eşiğin altındaysa OSD'ye tek başına güvenilmez (bu belgelerde OSD
+# ~0.04 dönüyor); trial-OCR oylaması belirleyici olur. VLM eşiğinden (1.0) düşük.
+TESS_TABLE_OSD_MIN_CONFIDENCE = float(os.environ.get("TESS_TABLE_OSD_MIN_CONFIDENCE", "0.5"))
+# Hızlı yol: OSD güveni bu eşiği aşarsa (fitz-render'da ~2.3) 4× trial-OCR atlanır →
+# yön tespiti ~11s'den ~3s'ye iner. Güven düşükse (ham/native görüntü ~0.04) yine
+# trial-OCR oylamasına düşülür (güvenli). 0 = fast-path kapalı.
+TESS_TABLE_OSD_TRUST_CONFIDENCE = float(os.environ.get("TESS_TABLE_OSD_TRUST_CONFIDENCE", "2.0"))
+
+# --- PaddleOCR VL API Configuration ---
+# OpenAI-uyumlu endpoint (LiteLLM proxy). --vlm paddleocr ile etkinleşir.
+PADDLE_OCR_URL = os.environ.get("PADDLE_OCR_URL", "http://10.20.24.16:4000/v1")
+PADDLE_OCR_MODEL = os.environ.get("PADDLE_OCR_MODEL", "paddleocr-vl-1.6")
+PADDLE_OCR_API_KEY = os.environ.get("PADDLE_OCR_API_KEY", "none")
+PADDLE_OCR_TIMEOUT = int(os.environ.get("PADDLE_OCR_TIMEOUT", "120"))
+# Trial-OCR'da en iyi açı, ikinciyi bu orandan fazla geçerse "net kazanan" sayılır;
+# aksi halde (belirsiz) OSD / aspect / çizgi ipuçları tie-breaker olur.
+TESS_TABLE_ORIENT_MARGIN = float(os.environ.get("TESS_TABLE_ORIENT_MARGIN", "0.15"))
+
+# --- İterasyon 2/3: yüksek-çözünürlük render + çizgi temizleme + grid ---
+# Tablo bölgesi bu uzun-kenar pikseline gelecek ölçekte render edilir. fitz adaptif
+# zoom'unun (uzun kenar 2400) aksine yüksek tutulur: geniş bütçe tablosu portre
+# çerçeveye sıkıştığında sütunlar daralıp rakamlar bozuluyordu (ölçümde mean_conf
+# 36→70 sadece çizgi temizleme + yüksek çözünürlükle).
+TESS_TABLE_RENDER_LONG_PX = int(os.environ.get("TESS_TABLE_RENDER_LONG_PX", "5000"))
+# Render ölçeği bu değerle sınırlanır (çok küçük bbox'ta aşırı büyümeyi önler).
+TESS_TABLE_RENDER_MAX_ZOOM = float(os.environ.get("TESS_TABLE_RENDER_MAX_ZOOM", "16.0"))
+# Çıktı biçimi: 1 = grid → markdown tablo (İter 3), 0 = satır-gruplu düz metin (İter 1).
+TESS_TABLE_GRID = os.environ.get("TESS_TABLE_GRID", "1") not in ("0", "false", "False")
+# Sütun sınırı tespiti: x-kapsama boşluğu sayfa genişliğinin bu kesirinden genişse
+# sütun ayracı sayılır. Çok küçük → gürültü; çok büyük → komşu sütunları birleştirir.
+TESS_TABLE_COL_MIN_GAP_FRAC = float(os.environ.get("TESS_TABLE_COL_MIN_GAP_FRAC", "0.012"))
 
 # --- Local Late Chunking Configuration ---
 #

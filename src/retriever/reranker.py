@@ -20,7 +20,14 @@ class CrossEncoderReranker:
                 # Apple Silicon (MPS) üzerinde oluşan hataları önlemek için, 
                 # eğer CUDA yoksa (Mac) zorunlu "cpu" kullanıyoruz, CUDA varsa (Asus) "cuda" kullanıyoruz.
                 device = "cuda" if torch.cuda.is_available() else "cpu"
-                cls._models[model_name] = CrossEncoder(model_name, device=device)
+                try:
+                    cls._models[model_name] = CrossEncoder(model_name, device=device)
+                except Exception as e:
+                    if device == "cuda":
+                        # If GPU loading fails due to accelerate/meta-tensor issues, fall back to CPU
+                        cls._models[model_name] = CrossEncoder(model_name, device="cpu")
+                    else:
+                        raise e
             return cls._models[model_name]
 
     def rerank(

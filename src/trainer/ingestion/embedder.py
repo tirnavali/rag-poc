@@ -3,16 +3,46 @@ import os
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+import sys
+import contextlib
+import threading
 import torch
 import torch.nn.functional as F
 import warnings
+import logging
 from typing import List, Tuple, Dict, Any
-from transformers import AutoModel, AutoTokenizer, logging
+from transformers import AutoModel, AutoTokenizer
+from transformers.utils import logging as hf_logging
 from langchain_core.embeddings import Embeddings
 
 # Jina v3/v4 Flash Attention uyarılarını sustur
 warnings.filterwarnings("ignore")
-logging.set_verbosity_error()
+hf_logging.set_verbosity_error()
+logging.getLogger("transformers_modules").setLevel(logging.ERROR)
+
+# Thread-safe devnull: modül ömrü boyunca tek bir devnull dosyası açık kalır.
+# Kaıpatılmadığı için başka thread'ler "I/O operation on closed file" almaz.
+_DEVNULL = open(os.devnull, 'w')  # noqa: WPS515 — intentionally kept open
+_SILENCE_LOCK = threading.Lock()
+
+
+@contextlib.contextmanager
+def _silence_stdout_stderr():
+    """Jina gibi trust_remote_code modellerin print() ile bastığı
+    anlamsız uyarıları (flash_attn is not installed vs.) susturur.
+    Sadece model yükleme süresince aktif olur.
+
+    Thread-güvenli: sys.stdout/stderr değiştirme bir kilit altında yapılır
+    ve devnull hiç kapatılmaz; böylece eş zamanlı thread'ler kapatılmış
+    dosyaya yazmaya çalışmaz.
+    """
+    with _SILENCE_LOCK:
+        old_stdout, old_stderr = sys.stdout, sys.stderr
+        sys.stdout, sys.stderr = _DEVNULL, _DEVNULL
+        try:
+            yield
+        finally:
+            sys.stdout, sys.stderr = old_stdout, old_stderr
 
 # Monkeypatch transformers DynamicCache to support get_usable_length in newer transformers versions
 try:
@@ -47,7 +77,8 @@ class LocalLateChunkingEmbedder(Embeddings):
         embed_dim: int | None = None,
     ):
         print(f"--- Yükleniyor: {model_name} (Bu işlem ilk seferde uzun sürebilir) ---")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, local_files_only=True)
+        with _silence_stdout_stderr():
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, local_files_only=True)
 
         # Resolve target device up-front
         if torch.cuda.is_available():
@@ -60,10 +91,6 @@ class LocalLateChunkingEmbedder(Embeddings):
         # Jina v3/v4 için özel ayarlar (trust_remote_code ve eager attention)
         load_kwargs = {
             "trust_remote_code": True,
-            # transformers ≥ 4.45 may default low_cpu_mem_usage=True for
-            # trust_remote_code models, leaving weights on the meta device.
-            # The subsequent .to(device) call then fails with meta tensor error.
-            # Forcing False keeps weights on CPU during load so .to(device) works.
             "low_cpu_mem_usage": False,
             "local_files_only": True,
         }
@@ -75,9 +102,21 @@ class LocalLateChunkingEmbedder(Embeddings):
             # Performans için 'eager' (standart) attention kullanarak task desteğini garantiye alıyoruz.
             load_kwargs["attn_implementation"] = "eager"
 
-        self.model = AutoModel.from_pretrained(model_name, **load_kwargs)
-        self.model.eval()
-        self.model.to(device)
+        try:
+            with _silence_stdout_stderr():
+                self.model = AutoModel.from_pretrained(model_name, **load_kwargs)
+            self.model.eval()
+            self.model.to(device)
+        except Exception as e:
+            if device == "cuda":
+                print(f"CUDA'ya taşırken hata: {e}. CPU'da tutuluyor.")
+                # If moving to CUDA fails (e.g. OOM), we reload it cleanly on CPU
+                load_kwargs.pop("torch_dtype", None)
+                with _silence_stdout_stderr():
+                    self.model = AutoModel.from_pretrained(model_name, **load_kwargs)
+                self.model.eval()
+            else:
+                raise e
 
         self.is_jina = "jina" in model_name.lower()
         self.is_nomic = "nomic" in model_name.lower()

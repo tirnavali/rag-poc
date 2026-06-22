@@ -224,6 +224,11 @@ class DocumentAdapter(ABC):
     DocumentInput nesnelerini oluşturmak adaptörün değil, dış sistemin sorumluluğundadır.
     """
 
+    #: Son parse() çağrısında üretilen aşama bazlı artefakt yolları (gözlemlenebilirlik
+    #: index'i: {source_stem, file_hash8, markdown, atoms, packed_atoms, pages}).
+    #: Docling tabanlı olmayan adaptörlerde (örn. inline press_clip) None kalır.
+    last_artifacts: dict | None = None
+
     @abstractmethod
     def parse(self, doc: DocumentInput) -> tuple[str, list[dict]]:
         """Dökümanı tam metne ve parçalara (chunks) ayrıştırır.

@@ -1,12 +1,19 @@
 [
   {
     "id": "tbmm27-01-01-001",
-    "query": "ilk meclis birleşimini hangi başkan açtı?",
+    "query": "Meclisin 27'nci Yasama Döneminin Birinci Yılının ilk Birleşimini hangi başkan açtı?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-01-20180707",
         "pages": [
-          2
+          2,
+          31
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-04-20180712",
+        "pages": [
+          5
         ]
       }
     ],
@@ -15,31 +22,14 @@
       "tbmm-minutes",
       "page-level",
       "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-002",
-    "query": "Durmuş Yılmaz normlar hiyerarşisinde en üstte ne var dedi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          4
-        ]
-      }
-    ],
-    "golden_answer": "Yasama organının çıkardığı Anayasa ve kanunlar",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
+      "medium",
+      "cross-page",
+      "cross-document"
     ]
   },
   {
     "id": "tbmm27-01-01-003",
-    "query": "Meclis açılışında okunan Mehmet Akif şiiri hangisiydi?",
+    "query": "Meclisin 27'nci dönemin açılışında okunan Mehmet Akif Ersoy şiiri hangisiydi?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-01-20180707",
@@ -76,146 +66,16 @@
     ]
   },
   {
-    "id": "tbmm27-01-01-005",
-    "query": "Abdullah Doğru neden yeminini baştan okumak zorunda kaldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          6
-        ]
-      }
-    ],
-    "golden_answer": "Yemin metnini bir iki kelime eksik okuduğu için",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-006",
-    "query": "Ankara vekilleri yemin etmeden önce niye saygı duruşu yapıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          8
-        ]
-      }
-    ],
-    "golden_answer": "Cumhuriyetimizin kurucusu Gazi Mustafa Kemal Atatürk'ün aziz ruhu için",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-007",
-    "query": "Servet Ünsal yemin ederken neyi atladı da uyarıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          9
-        ]
-      }
-    ],
-    "golden_answer": "Yemin metninde bir satır atladığı için; Başkan 'bir satır atladınız, lütfen bir daha okur musunuz' diyerek tekrar okuttu.",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-008",
-    "query": "İsmail Ok yemin ederken hangi kelimeyi yanlış söyledi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          11
-        ]
-      }
-    ],
-    "golden_answer": "'andiçerim' kelimesi yerine 'yemin ediyorum' demiş olması",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-009",
-    "query": "Mahmut Tanal alkış yasağına ne diyerek karşı çıktı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          14
-        ]
-      }
-    ],
-    "golden_answer": "'Kurallar protestoyu engelliyor, sevinci engellemiyor; bu bir sevinçtir.' diyerek karşı çıktı.",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-010",
-    "query": "Metin Nurullah Sazak yemin ederken Başkan'a göre kaç kelimeyi atladı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          16
-        ]
-      }
-    ],
-    "golden_answer": "Üç kelime ('üç kelimeyi atladınız').",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-012",
-    "query": "Eğribel tüneli yolları önergesinin numarası kaç?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          202
-        ]
-      }
-    ],
-    "golden_answer": "6/1417",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "bulletin",
-      "hard"
-    ]
-  },
-  {
     "id": "tbmm27-01-01-013",
     "query": "Kayseri'deki IŞİD operasyonlarını meclise kim sordu?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-01-20180707",
         "pages": [
-          202
+          202,
+          298,
+          328,
+          414
         ]
       }
     ],
@@ -224,7 +84,8 @@
       "tbmm-minutes",
       "page-level",
       "bulletin",
-      "hard"
+      "hard",
+      "cross-page"
     ]
   },
   {
@@ -646,82 +507,6 @@
     ]
   },
   {
-    "id": "tbmm27-01-01-036",
-    "query": "Durmuş Yılmaz neden oturarak konuştu?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          2
-        ]
-      }
-    ],
-    "golden_answer": "Geçirdiği bir kaza nedeniyle ameliyat olduğu ve uzun müddet ayakta kalamayacağı için",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-037",
-    "query": "Mecliste yemin sırası neye göre yapıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Milletvekillerinin seçim çevreleri, soyadları ve adlarının alfabetik sıralaması dikkate alınarak",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-038",
-    "query": "Rize vekili Hayati Yazıcı neden sırasını beklemeden yemin etti?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          15
-        ]
-      }
-    ],
-    "golden_answer": "Hayati Yazıcı",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-039",
-    "query": "Meclis başkanı alkış yapanları uyarırken içtüzüğün hangi maddesini söyledi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          16
-        ]
-      }
-    ],
-    "golden_answer": "169'uncu maddesini",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
     "id": "tbmm27-01-01-040",
     "query": "Saliha Sera Kadıgil Sütlü yemin ederken takılınca ne dedi?",
     "relevant_pages": [
@@ -741,217 +526,6 @@
     ]
   },
   {
-    "id": "tbmm27-01-01-041",
-    "query": "Erzincan vekilleri yemin etmeden önce meclis ne kadar ara verdi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          14
-        ]
-      }
-    ],
-    "golden_answer": "Yirmi dakika",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-042",
-    "query": "Barış Atay'ın yemininden sonraki gürültüde meclis kaç dakika ara verdi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          17
-        ]
-      }
-    ],
-    "golden_answer": "Beş dakika",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-043",
-    "query": "Kayseri vekillerinden mazereti olup öne geçen kimdi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          21
-        ]
-      }
-    ],
-    "golden_answer": "Taner Yıldız",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-044",
-    "query": "Siirt vekilleri Meral Danış Beştaş ve Sıdık Taş niye kendi sıralarında yemin edemedi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          28
-        ]
-      }
-    ],
-    "golden_answer": "Mazeretleri nedeniyle",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-045",
-    "query": "Musa Piroğlu'ndan sonra kürsüye çağrılan Hakkari vekili kim?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          6
-        ]
-      }
-    ],
-    "golden_answer": "Husret Dinç",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-046",
-    "query": "Van milletvekili Muazzez Orhan yemin ederken neden tekrar okumak zorunda kaldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          29,
-          30
-        ]
-      }
-    ],
-    "golden_answer": "Başkan, yeminini biraz daha yüksek sesle bir daha okumasını istediği için.",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-047",
-    "query": "yemin töreni bitiminde kendi sırası geldiğinde bulunamayan Samsun vekili kim?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          30,
-          31
-        ]
-      }
-    ],
-    "golden_answer": "Ahmet Demircan",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-048",
-    "query": "meclis başkan adaylarını bildirmek için son gün ne zamandı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          31
-        ]
-      }
-    ],
-    "golden_answer": "11 Temmuz 2018 Çarşamba günü saat 24.00",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-049",
-    "query": "meclis başkanlığı seçimi ne zaman yapıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          31
-        ]
-      }
-    ],
-    "golden_answer": "12 Temmuz 2018 Perşembe günü saat 14.00",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-050",
-    "query": "27. dönem geçici başkanlığı neden Deniz Baykal üstlenemedi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          31
-        ]
-      }
-    ],
-    "golden_answer": "Sağlık sorunları nedeniyle görevini yerine getiremediğinden parlamento ikinci yaşlı üyesi sıfatıyla Durmuş Yılmaz geçici başkanlık yaptı",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-051",
-    "query": "Kayseri'deki doğal gaz tüketimi hakkında kimin sözlü sorusu var?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          202
-        ]
-      }
-    ],
-    "golden_answer": "Çetin Arık",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "bulletin",
-      "hard"
-    ]
-  },
-  {
     "id": "tbmm27-01-01-052",
     "query": "Kayseri taşımalı eğitim sorunlarını soran önerge numarası?",
     "relevant_pages": [
@@ -963,25 +537,6 @@
       }
     ],
     "golden_answer": "6/1413",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "bulletin",
-      "hard"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-053",
-    "query": "hayvanlara karşı işlenen suçlar hakkında kim önerge verdi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          202
-        ]
-      }
-    ],
-    "golden_answer": "Dirayet Dilan Taşdemir",
     "tags": [
       "tbmm-minutes",
       "page-level",
@@ -1598,25 +1153,6 @@
     ]
   },
   {
-    "id": "tbmm27-01-01-087",
-    "query": "Afyonkarahisar'dan hangi MHP'li vekil seçildi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          7
-        ]
-      }
-    ],
-    "golden_answer": "Mehmet Taytak",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
     "id": "tbmm27-01-01-089",
     "query": "Bolu'dan CHP milletvekili olarak kim yemin etti?",
     "relevant_pages": [
@@ -1674,181 +1210,8 @@
     ]
   },
   {
-    "id": "tbmm27-01-01-092",
-    "query": "Geçici kâtip üye Dersim Dağ hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          18
-        ]
-      }
-    ],
-    "golden_answer": "Diyarbakır",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-093",
-    "query": "Yemin töreninin üçüncü oturumu saat kaçta açıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          18
-        ]
-      }
-    ],
-    "golden_answer": "18.35",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-094",
-    "query": "İstanbul milletvekili Onursal Adıgüzel'den yeminini neden tekrar etmesi istendi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          18
-        ]
-      }
-    ],
-    "golden_answer": "Yemin metnini 'andiçerim' yerine 'yemin ederim' diyerek bitirdiği için Başkan tekrar ettirdi.",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-096",
-    "query": "1. Birleşimin dördüncü oturumu saat kaçta açıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          24
-        ]
-      }
-    ],
-    "golden_answer": "21.36",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-097",
-    "query": "Kocaeli'den seçilen HDP milletvekili kimdir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          24
-        ]
-      }
-    ],
-    "golden_answer": "Ömer Faruk Gergerlioğlu",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-098",
-    "query": "Konya'dan Saadet Partisi adına yemin eden milletvekili kimdir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          25
-        ]
-      }
-    ],
-    "golden_answer": "Abdulkadir Karaduman",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-099",
-    "query": "Eski bakan Abdüllatif Şener hangi ilden milletvekili seçilmiştir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          24,
-          25
-        ]
-      }
-    ],
-    "golden_answer": "Konya",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy",
-      "cross-page"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-100",
-    "query": "Eski Spor Bakanı Osman Aşkın Bak hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          27
-        ]
-      }
-    ],
-    "golden_answer": "Rize",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-101",
-    "query": "Eski milli motosikletçi Kenan Sofuoğlu hangi ilden milletvekili olarak yemin etti?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          27
-        ]
-      }
-    ],
-    "golden_answer": "Sakarya",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
     "id": "tbmm27-01-01-103",
-    "query": "1. Birleşim'de yemin törenine katılmayan (yok yazılan) Antalya ve Samsun milletvekilleri kimlerdir?",
+    "query": "Açılış birleşiminde (7 Temmuz 2018) yemin törenine katılmayan Antalya ve Samsun milletvekilleri kimlerdir?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-01-20180707",
@@ -1859,27 +1222,6 @@
       }
     ],
     "golden_answer": "Antalya'dan Deniz Baykal, Samsun'dan Ahmet Demircan.",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium",
-      "cross-page"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-104",
-    "query": "Durmuş Yılmaz başkanlığındaki üçüncü ve dördüncü oturumların katip üyeleri kimlerdir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          18,
-          24
-        ]
-      }
-    ],
-    "golden_answer": "Diyarbakır Milletvekili Dersim Dağ, İstanbul Milletvekili Rümeysa Kadak ve Gaziantep Milletvekili Müslüm Yüksel.",
     "tags": [
       "tbmm-minutes",
       "page-level",
@@ -2809,753 +2151,8 @@
     ]
   },
   {
-    "id": "tbmm27-01-01-153",
-    "query": "Van'ın Erciş ilçesinde gazetecilerin kolluk güçlerince tehdit edildiği iddiasının araştırılmasını isteyen Van milletvekili kimdir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          460
-        ]
-      }
-    ],
-    "golden_answer": "Lezgin Botan",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "bulletin",
-      "hard"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-154",
-    "query": "İsmail Ok hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          11
-        ]
-      }
-    ],
-    "golden_answer": "Balıkesir",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-155",
-    "query": "Mustafa Canbey hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          11
-        ]
-      }
-    ],
-    "golden_answer": "Balıkesir",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-156",
-    "query": "Ahmet Akın hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          11
-        ]
-      }
-    ],
-    "golden_answer": "Balıkesir",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-157",
-    "query": "Feleknas Uca hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          11
-        ]
-      }
-    ],
-    "golden_answer": "Batman",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-158",
-    "query": "Mehmet Rüştü Tiryaki hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          11
-        ]
-      }
-    ],
-    "golden_answer": "Batman",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-159",
-    "query": "Yılmaz Tunç hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          11
-        ]
-      }
-    ],
-    "golden_answer": "Bartın",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-160",
-    "query": "Garo Paylan hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          13,
-          14
-        ]
-      }
-    ],
-    "golden_answer": "Diyarbakır",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy",
-      "cross-page"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-161",
-    "query": "Mehmet Mehdi Eker hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          13,
-          14
-        ]
-      }
-    ],
-    "golden_answer": "Diyarbakır",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy",
-      "cross-page"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-162",
-    "query": "Ayşe Keşir hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          14
-        ]
-      }
-    ],
-    "golden_answer": "Düzce",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-163",
-    "query": "Okan Gaytancıoğlu hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          14
-        ]
-      }
-    ],
-    "golden_answer": "Edirne",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-164",
-    "query": "Fatma Aksal hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          14
-        ]
-      }
-    ],
-    "golden_answer": "Edirne",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-165",
-    "query": "Gürsel Erol hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          14
-        ]
-      }
-    ],
-    "golden_answer": "Elâzığ",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-166",
-    "query": "Zülfü Demirbağ hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          14
-        ]
-      }
-    ],
-    "golden_answer": "Elâzığ",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-167",
-    "query": "Ali Şahin hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          16
-        ]
-      }
-    ],
-    "golden_answer": "Gaziantep",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-168",
-    "query": "Mahmut Toğrul hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          16
-        ]
-      }
-    ],
-    "golden_answer": "Gaziantep",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-169",
-    "query": "Derya Bakbak hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          16
-        ]
-      }
-    ],
-    "golden_answer": "Gaziantep",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-170",
-    "query": "Cemal Öztürk hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          16
-        ]
-      }
-    ],
-    "golden_answer": "Giresun",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-171",
-    "query": "Necati Tığlı hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          16
-        ]
-      }
-    ],
-    "golden_answer": "Giresun",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-172",
-    "query": "Cihan Pektaş hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          16
-        ]
-      }
-    ],
-    "golden_answer": "Gümüşhane",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-173",
-    "query": "Sait Dede hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          16
-        ]
-      }
-    ],
-    "golden_answer": "Hakkâri",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-174",
-    "query": "Habip Eksik hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          18
-        ]
-      }
-    ],
-    "golden_answer": "Iğdır",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-175",
-    "query": "Recep Özel hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          18
-        ]
-      }
-    ],
-    "golden_answer": "Isparta",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-176",
-    "query": "Süreyya Sadi Bilgiç hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          18
-        ]
-      }
-    ],
-    "golden_answer": "Isparta",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-177",
-    "query": "Ahmet Erbaş hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          25
-        ]
-      }
-    ],
-    "golden_answer": "Kütahya",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-178",
-    "query": "İshak Gazel hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          25
-        ]
-      }
-    ],
-    "golden_answer": "Kütahya",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-179",
-    "query": "Osman Aşkın Bak hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          27
-        ]
-      }
-    ],
-    "golden_answer": "Rize",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-180",
-    "query": "Muhammed Avcı hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          27
-        ]
-      }
-    ],
-    "golden_answer": "Rize",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-181",
-    "query": "Engin Özkoç hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          27
-        ]
-      }
-    ],
-    "golden_answer": "Sakarya",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-182",
-    "query": "Kenan Sofuoğlu hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          27
-        ]
-      }
-    ],
-    "golden_answer": "Sakarya",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-183",
-    "query": "Ümit Dikbayır hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          27
-        ]
-      }
-    ],
-    "golden_answer": "Sakarya",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-184",
-    "query": "Bedia Özgökçe Ertan hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          29
-        ]
-      }
-    ],
-    "golden_answer": "Van",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-185",
-    "query": "Muazzez Orhan hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          29
-        ]
-      }
-    ],
-    "golden_answer": "Van",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-186",
-    "query": "Abdullah Doğru hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          6
-        ]
-      }
-    ],
-    "golden_answer": "Adana",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-187",
-    "query": "Servet Ünsal hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          9
-        ]
-      }
-    ],
-    "golden_answer": "Ankara",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-188",
-    "query": "Metin Nurullah Sazak hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          15
-        ]
-      }
-    ],
-    "golden_answer": "Eskişehir",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-01-189",
-    "query": "Onursal Adıgüzel hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-01-20180707",
-        "pages": [
-          18
-        ]
-      }
-    ],
-    "golden_answer": "İstanbul",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "deputy",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-02-001",
-    "query": "TBMM 27. Dönem 1. Yasama Yılı 2. Birleşim hangi tarihte yapıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-02-20180709",
-        "pages": [
-          1
-        ]
-      }
-    ],
-    "golden_answer": "9 Temmuz 2018 Pazartesi",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-02-002",
-    "query": "2. Birleşimin Birinci Oturumu saat kaçta açıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-02-20180709",
-        "pages": [
-          4
-        ]
-      }
-    ],
-    "golden_answer": "16.39",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "easy"
-    ]
-  },
-  {
     "id": "tbmm27-01-02-003",
-    "query": "2. Birleşimde Cumhurbaşkanı sıfatıyla ant içen kişi kimdir?",
+    "query": "9 Temmuz 2018 tarihli birleşimde Cumhurbaşkanı sıfatıyla ant içen kişi kimdir?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-02-20180709",
@@ -3573,65 +2170,8 @@
     ]
   },
   {
-    "id": "tbmm27-01-02-004",
-    "query": "Cumhurbaşkanını ant içmek üzere Genel Kurul salonuna davet etmekle görevlendirilen Başkan Vekili kimdir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-02-20180709",
-        "pages": [
-          4
-        ]
-      }
-    ],
-    "golden_answer": "Kastamonu Milletvekili Hakkı Köylü",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-02-005",
-    "query": "2. Birleşimde Ankara milletvekili olarak kâtip üye görevini kim üstlendi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-02-20180709",
-        "pages": [
-          4
-        ]
-      }
-    ],
-    "golden_answer": "Zeynep Yıldız",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-02-006",
-    "query": "Çorlu'daki yolcu treni kazası hangi ilde meydana geldi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-02-20180709",
-        "pages": [
-          6
-        ]
-      }
-    ],
-    "golden_answer": "Tekirdağ (Çorlu ilçesinde)",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "easy"
-    ]
-  },
-  {
     "id": "tbmm27-01-02-007",
-    "query": "Başkan Durmuş Yılmaz'a göre Çorlu tren kazasında kaç vatandaş hayatını kaybetti?",
+    "query": "Çorlu tren kazasında kaç vatandaş hayatını kaybetti?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-02-20180709",
@@ -3649,84 +2189,54 @@
     ]
   },
   {
-    "id": "tbmm27-01-02-008",
-    "query": "Durmuş Yılmaz'a göre Çorlu tren kazasında kaç kişi yaralandı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-02-20180709",
-        "pages": [
-          6
-        ]
-      }
-    ],
-    "golden_answer": "318 vatandaş",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
     "id": "tbmm27-01-02-009",
-    "query": "Çorlu tren kazası üzerine İYİ PARTİ Grubu adına konuşan Kocaeli milletvekili kimdir?",
+    "query": "Çorlu tren kazası üzerine grupları adına konuşan milletvekilleri kimler?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-02-20180709",
         "pages": [
-          6
+          6,
+          7,
+          8,
+          9,
+          11
         ]
       }
     ],
-    "golden_answer": "Lütfü Türkkan",
+    "golden_answer": "Lütfü Türkkan (İYİ PARTİ), Erkan Akçay (MHP), Fatma Kurtulan (HDP), Mehmet Muş (AK PARTİ), Mustafa Destici (BBP), Gültekin Uysal (DP)",
     "tags": [
       "tbmm-minutes",
-      "page-level",
+      "cross-page",
       "narrative",
       "medium"
     ]
   },
   {
     "id": "tbmm27-01-02-010",
-    "query": "Çorlu tren kazası üzerine MHP Grubu adına konuşan Manisa milletvekili kimdir?",
+    "query": "Çorlu tren kazasını Meclis'te gündeme getiren siyasi partiler hangileridir?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-02-20180709",
         "pages": [
-          6
+          6,
+          7,
+          8,
+          9,
+          11
         ]
       }
     ],
-    "golden_answer": "Erkan Akçay",
+    "golden_answer": "İYİ PARTİ, MHP, HDP, CHP, AK PARTİ, Büyük Birlik Partisi (BBP), Demokrat Parti (DP)",
     "tags": [
       "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-02-011",
-    "query": "Çorlu kazası görüşmelerinde HDP Grubu adına konuşan Fatma Kurtulan hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-02-20180709",
-        "pages": [
-          7
-        ]
-      }
-    ],
-    "golden_answer": "Mersin",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
+      "cross-page",
       "narrative",
       "medium"
     ]
   },
   {
     "id": "tbmm27-01-02-012",
-    "query": "Fatma Kurtulan, Cumhurbaşkanının yemin töreni sırasında Meclis'in neye dönüştüğünü söyledi?",
+    "query": "Fatma Kurtulan, Cumhurbaşkanının yemin törenindeki havayı neye benzetti?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-02-20180709",
@@ -3755,25 +2265,6 @@
       }
     ],
     "golden_answer": "Engin Altay",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-02-014",
-    "query": "Çorlu kazası üzerine AK PARTİ Grubu adına konuşan Mehmet Muş hangi ilin milletvekilidir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-02-20180709",
-        "pages": [
-          8
-        ]
-      }
-    ],
-    "golden_answer": "İstanbul",
     "tags": [
       "tbmm-minutes",
       "page-level",
@@ -3877,122 +2368,8 @@
     ]
   },
   {
-    "id": "tbmm27-01-02-020",
-    "query": "Mustafa Şentop'a göre Çorlu'da adli soruşturmayı kaç savcı yürütüyordu?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-02-20180709",
-        "pages": [
-          11
-        ]
-      }
-    ],
-    "golden_answer": "6 savcı",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "hard"
-    ]
-  },
-  {
-    "id": "tbmm27-01-02-021",
-    "query": "Çorlu kazası görüşmelerinde Büyük Birlik Partisi adına konuşan Ankara milletvekili kimdir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-02-20180709",
-        "pages": [
-          9
-        ]
-      }
-    ],
-    "golden_answer": "Mustafa Destici",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-02-022",
-    "query": "2. Birleşimin sonunda bakanların ant içmesi için hangi gün ve saatte toplanma kararı alındı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-02-20180709",
-        "pages": [
-          12
-        ]
-      }
-    ],
-    "golden_answer": "10 Temmuz 2018 Salı günü saat 15.00",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-02-023",
-    "query": "Cumhurbaşkanı yardımcıları ile bakanların ant içmesi Anayasa'nın hangi maddesine dayandırıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-02-20180709",
-        "pages": [
-          12
-        ]
-      }
-    ],
-    "golden_answer": "106'ncı madde",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "hard"
-    ]
-  },
-  {
-    "id": "tbmm27-01-02-024",
-    "query": "Çorlu kazası üzerine Demokrat Parti Genel Başkanı sıfatıyla konuşan Afyonkarahisar milletvekili kimdir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-02-20180709",
-        "pages": [
-          11
-        ]
-      }
-    ],
-    "golden_answer": "Gültekin Uysal",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-03-001",
-    "query": "TBMM 27. Dönem 3. Birleşim hangi tarihte toplandı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          1
-        ]
-      }
-    ],
-    "golden_answer": "10 Temmuz 2018 Salı",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "easy"
-    ]
-  },
-  {
     "id": "tbmm27-01-03-002",
-    "query": "3. Birleşimde geç kalıp ant içen İstanbul ve Kahramanmaraş milletvekilleri kimlerdir?",
+    "query": "10 Temmuz 2018'de geç kalıp ant içen İstanbul ve Kahramanmaraş milletvekilleri kimlerdir?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-03-20180710",
@@ -4029,63 +2406,6 @@
     ]
   },
   {
-    "id": "tbmm27-01-03-004",
-    "query": "İlk Cumhurbaşkanlığı kabinesinde Dışişleri Bakanlığına kim atandı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Mevlüt Çavuşoğlu",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-03-005",
-    "query": "İlk Cumhurbaşkanlığı kabinesinde Hazine ve Maliye Bakanı kim oldu?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Berat Albayrak",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-03-006",
-    "query": "İlk Cumhurbaşkanlığı kabinesinde İçişleri Bakanı kim oldu?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Süleyman Soylu",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
     "id": "tbmm27-01-03-007",
     "query": "10 Temmuz 2018'de ant içen ilk Cumhurbaşkanı Yardımcısı kimdir?",
     "relevant_pages": [
@@ -4105,44 +2425,6 @@
     ]
   },
   {
-    "id": "tbmm27-01-03-008",
-    "query": "İlk Cumhurbaşkanlığı kabinesinde Millî Savunma Bakanı kim oldu?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Hulusi Akar",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-03-009",
-    "query": "İlk Cumhurbaşkanlığı kabinesinde Sağlık Bakanı kim oldu?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Fahrettin Koca",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
     "id": "tbmm27-01-03-010",
     "query": "İlk Cumhurbaşkanlığı kabinesinde Millî Eğitim Bakanı kim oldu?",
     "relevant_pages": [
@@ -4154,177 +2436,6 @@
       }
     ],
     "golden_answer": "Ziya Selçuk",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-03-011",
-    "query": "İlk kabinede Çevre ve Şehircilik Bakanlığına kim getirildi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Murat Kurum",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-03-012",
-    "query": "İlk kabinede Tarım ve Orman Bakanı kim oldu?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Bekir Pakdemirli",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-03-013",
-    "query": "İlk kabinede Ticaret Bakanı olarak atanan kişi kimdir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Ruhsar Pekcan",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-03-014",
-    "query": "İlk kabinede Enerji ve Tabii Kaynaklar Bakanı kim oldu?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Fatih Dönmez",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-03-015",
-    "query": "İlk kabinede Gençlik ve Spor Bakanlığına kim atandı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Mehmet Muharrem Kasapoğlu",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-03-016",
-    "query": "İlk kabinede Sanayi ve Teknoloji Bakanı kim oldu?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Mustafa Varank",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-03-017",
-    "query": "İlk kabinede Kültür ve Turizm Bakanlığına kim atandı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Mehmet Ersoy",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-03-018",
-    "query": "İlk kabinede Çalışma, Sosyal Hizmetler ve Aile Bakanı kim oldu?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Zehra Zümrüt Selçuk",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-03-019",
-    "query": "İlk kabinede Ulaştırma ve Altyapı Bakanı kim oldu?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Mehmet Cahit Turhan",
     "tags": [
       "tbmm-minutes",
       "page-level",
@@ -4428,44 +2539,6 @@
     ]
   },
   {
-    "id": "tbmm27-01-03-025",
-    "query": "3. Birleşimin sonunda TBMM Başkanı seçimi için hangi gün ve saatte toplanma kararı alındı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-03-20180710",
-        "pages": [
-          6
-        ]
-      }
-    ],
-    "golden_answer": "12 Temmuz 2018 Perşembe günü saat 14.00",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-04-001",
-    "query": "TBMM 27. Dönem 4. Birleşim hangi tarihte yapıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-04-20180712",
-        "pages": [
-          1
-        ]
-      }
-    ],
-    "golden_answer": "12 Temmuz 2018 Perşembe",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "easy"
-    ]
-  },
-  {
     "id": "tbmm27-01-04-002",
     "query": "27. Dönemde Türkiye Büyük Millet Meclisi Başkanlığına kim seçildi?",
     "relevant_pages": [
@@ -4534,25 +2607,6 @@
       }
     ],
     "golden_answer": "335 oy",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "hard"
-    ]
-  },
-  {
-    "id": "tbmm27-01-04-006",
-    "query": "Binali Yıldırım, Gazi Meclis'in kaçıncı Başkanı olduğunu belirtti?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-04-20180712",
-        "pages": [
-          18
-        ]
-      }
-    ],
-    "golden_answer": "28'inci Başkan",
     "tags": [
       "tbmm-minutes",
       "page-level",
@@ -4809,7 +2863,7 @@
   },
   {
     "id": "tbmm27-01-04-020",
-    "query": "Durmuş Yılmaz 4. Birleşimde hangi 1995 soykırımının yıl dönümü dolayısıyla konuştu?",
+    "query": "Durmuş Yılmaz hangi 1995 soykırımının yıl dönümü dolayısıyla konuştu?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-04-20180712",
@@ -4824,25 +2878,6 @@
       "page-level",
       "narrative",
       "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-04-021",
-    "query": "Durmuş Yılmaz'a göre Srebrenitsa'da en az kaç Boşnak katledildi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-04-20180712",
-        "pages": [
-          9
-        ]
-      }
-    ],
-    "golden_answer": "En az 8.372 Boşnak",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "hard"
     ]
   },
   {
@@ -4884,25 +2919,6 @@
     ]
   },
   {
-    "id": "tbmm27-01-04-024",
-    "query": "4. Birleşimin Birinci Oturumunda kâtip üye olarak görev yapan Diyarbakır milletvekili kimdir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-04-20180712",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "Dersim Dağ",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
     "id": "tbmm27-01-04-025",
     "query": "TBMM Başkanı seçiminin 2. turuna kaç üye katıldı?",
     "relevant_pages": [
@@ -4922,25 +2938,6 @@
     ]
   },
   {
-    "id": "tbmm27-01-04-026",
-    "query": "4. Birleşimin İkinci Oturumu saat kaçta açıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-04-20180712",
-        "pages": [
-          17
-        ]
-      }
-    ],
-    "golden_answer": "16.43",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
     "id": "tbmm27-01-04-027",
     "query": "Binali Yıldırım, en yaşlı üye sıfatıyla görev beklenen ancak mazereti nedeniyle gelemeyen hangi Antalya milletvekiline şifa diledi?",
     "relevant_pages": [
@@ -4957,44 +2954,6 @@
       "page-level",
       "narrative",
       "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-04-028",
-    "query": "4. Birleşim sonunda gündemdeki işler için hangi gün ve saatte toplanma kararı alındı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-04-20180712",
-        "pages": [
-          20
-        ]
-      }
-    ],
-    "golden_answer": "13 Temmuz 2018 Cuma günü saat 15.00",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-05-001",
-    "query": "TBMM 27. Dönem 5. Birleşim hangi tarihte yapıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-05-20180713",
-        "pages": [
-          1
-        ]
-      }
-    ],
-    "golden_answer": "13 Temmuz 2018 Cuma",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "easy"
     ]
   },
   {
@@ -5075,7 +3034,7 @@
   },
   {
     "id": "tbmm27-01-05-006",
-    "query": "5. Birleşimde İYİ PARTİ Grubu Başkanlık Divanı üye sayısının kaça çıkarılmasını önerdi?",
+    "query": "İYİ PARTİ, TBMM Başkanlık Divanı üye sayısının kaça çıkarılmasını önerdi?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-05-20180713",
@@ -5094,7 +3053,7 @@
   },
   {
     "id": "tbmm27-01-05-007",
-    "query": "İYİ PARTİ'nin Başkanlık Divanı'nı 23'e çıkarma önerisi 5. Birleşimde ne oldu?",
+    "query": "İYİ PARTİ'nin TBMM Başkanlık Divanı üye sayısını 23'e çıkarma önerisi ne oldu?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-05-20180713",
@@ -5227,7 +3186,7 @@
   },
   {
     "id": "tbmm27-01-05-014",
-    "query": "5. Birleşimde 15 Temmuz Demokrasi ve Millî Birlik Günü için özel görüşme yapılmasını hangi parti önerdi?",
+    "query": "15 Temmuz Demokrasi ve Millî Birlik Günü için Meclis'te özel görüşme yapılmasını hangi parti önerdi?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-05-20180713",
@@ -5245,27 +3204,8 @@
     ]
   },
   {
-    "id": "tbmm27-01-05-015",
-    "query": "CHP'nin 15 Temmuz özel görüşme önerisi hangi gün ve saat için toplanmayı öngörüyordu?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-05-20180713",
-        "pages": [
-          12
-        ]
-      }
-    ],
-    "golden_answer": "15 Temmuz Pazar günü saat 13.00",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
     "id": "tbmm27-01-05-016",
-    "query": "5. Birleşimde 15 Temmuz görüşmesinde İYİ PARTİ Grubu adına konuşan İstanbul milletvekili kimdir?",
+    "query": "15 Temmuz görüşmesinde İYİ PARTİ Grubu adına konuşan İstanbul milletvekili kimdir?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-05-20180713",
@@ -5322,7 +3262,7 @@
   },
   {
     "id": "tbmm27-01-05-019",
-    "query": "5. Birleşimde Millî Eğitim Bakanı Ziya Selçuk'un sözleşmeli öğretmen uygulamasını eleştiren Ankara milletvekili kimdir?",
+    "query": "Millî Eğitim Bakanı Ziya Selçuk'un sözleşmeli öğretmen uygulamasını eleştiren Ankara milletvekili kimdir?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-05-20180713",
@@ -5359,27 +3299,8 @@
     ]
   },
   {
-    "id": "tbmm27-01-05-021",
-    "query": "AK PARTİ grup önerisi TBMM'nin hangi gün ve saatte toplanmasını öngörüyordu?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-05-20180713",
-        "pages": [
-          19
-        ]
-      }
-    ],
-    "golden_answer": "16 Temmuz 2018 Pazartesi günü saat 14.00",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
     "id": "tbmm27-01-05-022",
-    "query": "5. Birleşimde 15 Temmuz görüşmesinde AK PARTİ Grubu adına konuşan Denizli milletvekili kimdir?",
+    "query": "15 Temmuz görüşmesinde AK PARTİ Grubu adına konuşan Denizli milletvekili kimdir?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-05-20180713",
@@ -5413,44 +3334,6 @@
       "page-level",
       "narrative",
       "hard"
-    ]
-  },
-  {
-    "id": "tbmm27-01-06-001",
-    "query": "TBMM 27. Dönem 6. Birleşim hangi tarihte yapıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-06-20180716",
-        "pages": [
-          1
-        ]
-      }
-    ],
-    "golden_answer": "16 Temmuz 2018 Pazartesi",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-06-002",
-    "query": "6. Birleşimin Birinci Oturumu saat kaçta açıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-06-20180716",
-        "pages": [
-          7
-        ]
-      }
-    ],
-    "golden_answer": "14.01",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
     ]
   },
   {
@@ -5493,7 +3376,7 @@
   },
   {
     "id": "tbmm27-01-06-005",
-    "query": "6. Birleşimde, ilk söz talep eden 15 milletvekiline yerinden birer dakika söz verilmesi teamülünü hatırlatan Manisa milletvekili kimdir?",
+    "query": "İlk söz talep eden 15 milletvekiline yerinden birer dakika söz verilmesi teamülünü hatırlatan Manisa milletvekili kimdir?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-06-20180716",
@@ -5512,7 +3395,7 @@
   },
   {
     "id": "tbmm27-01-06-006",
-    "query": "İYİ PARTİ Grubunun Genel Kurulun saat 24.00'e kadar çalışmasına ilişkin önerisi 6. Birleşimde ne oldu?",
+    "query": "İYİ PARTİ Grubunun Genel Kurulun saat 24.00'e kadar çalışmasına ilişkin önerisi ne oldu?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-06-20180716",
@@ -5664,7 +3547,7 @@
   },
   {
     "id": "tbmm27-01-06-014",
-    "query": "6. Birleşimde 15 Temmuz'un yıl dönümünde Giresun'da Atapark Meydanı'nda olduklarını anlatan Giresun milletvekili kimdir?",
+    "query": "15 Temmuz'un yıl dönümünde Giresun'da Atapark Meydanı'nda olduklarını anlatan Giresun milletvekili kimdir?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-06-20180716",
@@ -5721,7 +3604,7 @@
   },
   {
     "id": "tbmm27-01-06-017",
-    "query": "6. Birleşimde AK PARTİ grup önerisi (seçim işleri) hakkında AK PARTİ adına konuşan Kırıkkale milletvekili kimdir?",
+    "query": "AK PARTİ grup önerisi (seçim işleri) hakkında AK PARTİ adına konuşan Kırıkkale milletvekili kimdir?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-06-20180716",
@@ -5739,46 +3622,8 @@
     ]
   },
   {
-    "id": "tbmm27-01-06-018",
-    "query": "6. Birleşimin Birinci Oturumunda Konya milletvekili olarak kâtip üye görevini kim yaptı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-06-20180716",
-        "pages": [
-          7
-        ]
-      }
-    ],
-    "golden_answer": "Abdulkadir Karaduman",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-06-019",
-    "query": "6. Birleşimde geçen tutanak özetine göre 5. Birleşim saat kaçta açılmıştı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-06-20180716",
-        "pages": [
-          5
-        ]
-      }
-    ],
-    "golden_answer": "15.03",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "hard"
-    ]
-  },
-  {
     "id": "tbmm27-01-06-020",
-    "query": "6. Birleşimde engelli öğretmenlerin atama beklentisini dile getiren İstanbul milletvekili kimdir?",
+    "query": "Engelli öğretmenlerin atama beklentisini dile getiren İstanbul milletvekili kimdir?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-06-20180716",
@@ -5797,7 +3642,7 @@
   },
   {
     "id": "tbmm27-01-06-021",
-    "query": "Geçen tutanak özetine göre AK PARTİ grup önerisinde TBMM Başkanlık Divanı görev dağılımında CHP Grubuna kaç kâtip üye düştü?",
+    "query": "AK PARTİ grup önerisinde TBMM Başkanlık Divanı görev dağılımında CHP Grubuna kaç kâtip üye düştü?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-06-20180716",
@@ -5831,44 +3676,6 @@
       "page-level",
       "narrative",
       "hard"
-    ]
-  },
-  {
-    "id": "tbmm27-01-07-001",
-    "query": "TBMM 27. Dönem 7. Birleşim hangi tarihte yapıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-07-20180717",
-        "pages": [
-          1
-        ]
-      }
-    ],
-    "golden_answer": "17 Temmuz 2018 Salı",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "easy"
-    ]
-  },
-  {
-    "id": "tbmm27-01-07-002",
-    "query": "7. Birleşimin Birinci Oturumu saat kaçta açıldı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-07-20180717",
-        "pages": [
-          12
-        ]
-      }
-    ],
-    "golden_answer": "15.02",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
     ]
   },
   {
@@ -5918,6 +3725,12 @@
         "pages": [
           9
         ]
+      },
+      {
+        "document_id": "tutanak-27-01-06-20180716",
+        "pages": [
+          25
+        ]
       }
     ],
     "golden_answer": "Mithat Sancar",
@@ -5925,7 +3738,9 @@
       "tbmm-minutes",
       "page-level",
       "narrative",
-      "medium"
+      "medium",
+      "cross-page",
+      "cross-document"
     ]
   },
   {
@@ -5978,63 +3793,6 @@
       }
     ],
     "golden_answer": "Burcu Köksal",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-07-009",
-    "query": "TBMM kâtip üyeliklerine AK PARTİ Grubundan seçilen Burdur milletvekili kimdir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-07-20180717",
-        "pages": [
-          9
-        ]
-      }
-    ],
-    "golden_answer": "Bayram Özçelik",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-07-010",
-    "query": "TBMM kâtip üyeliklerine AK PARTİ Grubundan seçilen Kütahya milletvekili kimdir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-07-20180717",
-        "pages": [
-          9
-        ]
-      }
-    ],
-    "golden_answer": "İshak Gazel",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-07-011",
-    "query": "TBMM idare amirliklerine MHP Grubundan seçilen Ankara milletvekili kimdir?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-07-20180717",
-        "pages": [
-          10
-        ]
-      }
-    ],
-    "golden_answer": "Erkan Haberal",
     "tags": [
       "tbmm-minutes",
       "page-level",
@@ -6101,7 +3859,7 @@
   },
   {
     "id": "tbmm27-01-07-015",
-    "query": "7. Birleşimde çocuk istismarı, kadına şiddet ve hayvan hakları konusunda gündem dışı konuşan İstanbul milletvekili kimdir?",
+    "query": "Çocuk istismarı, kadına şiddet ve hayvan hakları konusunda gündem dışı konuşan İstanbul milletvekili kimdir?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-07-20180717",
@@ -6119,44 +3877,6 @@
     ]
   },
   {
-    "id": "tbmm27-01-07-016",
-    "query": "Serkan Topal'a göre 16 yıllık AKP iktidarında kaç defa Millî Eğitim Bakanı değişti?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-07-20180717",
-        "pages": [
-          13
-        ]
-      }
-    ],
-    "golden_answer": "7 defa",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "hard"
-    ]
-  },
-  {
-    "id": "tbmm27-01-07-017",
-    "query": "Serkan Topal'a göre aynı dönemde eğitim sistemi kaç defa değiştirildi?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-07-20180717",
-        "pages": [
-          13
-        ]
-      }
-    ],
-    "golden_answer": "14 defa",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "hard"
-    ]
-  },
-  {
     "id": "tbmm27-01-07-018",
     "query": "Olağanüstü Hâl Kapsamında Bazı Tedbirler Alınması Hakkında KHK (1/4) hangi komisyona havale edildi?",
     "relevant_pages": [
@@ -6168,63 +3888,6 @@
       }
     ],
     "golden_answer": "İçişleri Komisyonu",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "hard"
-    ]
-  },
-  {
-    "id": "tbmm27-01-07-019",
-    "query": "7. Birleşimin Birinci Oturumunda Nevşehir milletvekili olarak kâtip üye görevini kim yaptı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-07-20180717",
-        "pages": [
-          12
-        ]
-      }
-    ],
-    "golden_answer": "Mustafa Açıkgöz",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-07-020",
-    "query": "7. Birleşimde Danışma Kurulu önerisine göre Meclis bir sonraki hangi gün ve saatte toplanacaktı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-07-20180717",
-        "pages": [
-          7
-        ]
-      }
-    ],
-    "golden_answer": "23 Temmuz 2018 Pazartesi günü saat 14.00",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium"
-    ]
-  },
-  {
-    "id": "tbmm27-01-07-021",
-    "query": "7. Birleşimde geçen tutanak özetine göre 6. Birleşim saat kaçta açılmıştı?",
-    "relevant_pages": [
-      {
-        "document_id": "tutanak-27-01-07-20180717",
-        "pages": [
-          8
-        ]
-      }
-    ],
-    "golden_answer": "14.01",
     "tags": [
       "tbmm-minutes",
       "page-level",
@@ -6249,6 +3912,148 @@
       "page-level",
       "narrative",
       "medium"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-154",
+    "query": "27. Dönemin ilk oturumlarında Geçici Başkanlık görevini kim yapmıştır?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          1,
+          2,
+          3,
+          31
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-02-20180709",
+        "pages": [
+          3
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          204
+        ]
+      }
+    ],
+    "golden_answer": "Durmuş Yılmaz",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "deputy",
+      "medium",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-155",
+    "query": "26'ncı yasama döneminde kaç kanun hükümsüz sayılmıştır.",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          40
+        ]
+      }
+    ],
+    "golden_answer": "192",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "bulletin",
+      "medium"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-156",
+    "query": "27nci dönemde kaç Sayıştay Başkanlığı Tezkeresi kanunlaşmıştır.",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          42
+        ]
+      }
+    ],
+    "golden_answer": "24 gelmiş 16 kanunlaşmış",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "easy"
+    ]
+  },
+  {
+    "id": "tbmm27-01-04-028",
+    "query": "TBMM 27'nci dönemde meclis başkanı kim oldu ve kaç oy ile seçildi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-04-20180712",
+        "pages": [
+          11,
+          14,
+          15,
+          17,
+          18
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-05-20180713",
+        "pages": [
+          3,
+          8
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [
+          18
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-01-01-157",
+    "query": "Cumhurbaşkanlığı hükümet sisteminin ilk kabinesi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          6
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-04-20180712",
+        "pages": [
+          3
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-03-20180710",
+        "pages": [
+          2,
+          4,
+          5
+        ]
+      }
+    ],
+    "golden_answer": "1\tFuat Oktay\tCumhurbaşkanı Yardımcısı\n2\tAbdulhamit Gül\tAdalet Bakanı\n3\tZehra Zümrüt Selçuk\tÇalışma, Sosyal Hizmetler ve Aile Bakanı\n4\tMurat Kurum\tÇevre ve Şehircilik Bakanı\n5\tMevlüt Çavuşoğlu\tDışişleri Bakanı\n6\tFatih Dönmez\tEnerji ve Tabii Kaynaklar Bakanı\n7\tMehmet Muharrem Kasapoğlu\tGençlik ve Spor Bakanı\n8\tBerat Albayrak\tHazine ve Maliye Bakanı\n9\tSüleyman Soylu\tİçişleri Bakanı\n10\tMehmet Ersoy\tKültür ve Turizm Bakanı\n11\tZiya Selçuk\tMillî Eğitim Bakanı\n12\tHulusi Akar\tMillî Savunma Bakanı\n13\tFahrettin Koca\tSağlık Bakanı\n14\tMustafa Varank\tSanayi ve Teknoloji Bakanı\n15\tBekir Pakdemirli\tTarım ve Orman Bakanı\n16\tRuhsar Pekcan\tTicaret Bakanı\n17\tMehmet Cahit Turhan\tUlaştırma ve Altyapı Bakanı'",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
     ]
   }
 ]

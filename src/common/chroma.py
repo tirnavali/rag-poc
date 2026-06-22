@@ -7,6 +7,7 @@ helpers below and stay DB-agnostic.
 from __future__ import annotations
 
 import os
+import logging
 from pathlib import Path
 from typing import Optional
 
@@ -18,6 +19,8 @@ from typing import Optional
 # versions, so we also set the env var here (all chromadb access funnels through
 # this module, imported before any client is built).
 os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
+# Silence posthog telemetry error spam
+logging.getLogger("chromadb.telemetry.product.posthog").setLevel(logging.CRITICAL)
 
 import chromadb
 from chromadb.config import Settings

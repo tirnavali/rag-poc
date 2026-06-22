@@ -67,7 +67,8 @@ class KanunTeklifiAdapter(DocumentAdapter):
             doc.document_source, doc.collection_name, doc.document_id
         )
 
-        full_text, raw_chunks = self._get_docling(doc.ocr).convert_and_pack(
+        docling = self._get_docling(doc.ocr)
+        full_text, raw_chunks = docling.convert_and_pack(
             local_source,
             min_chars=doc.min_chunk_chars or settings.MINUTES_MIN_CHUNK_CHARS,
             max_chars=doc.max_chunk_chars or settings.MINUTES_TARGET_CHUNK_CHARS,
@@ -75,6 +76,7 @@ class KanunTeklifiAdapter(DocumentAdapter):
             initial_author=doc.author,
             initial_role=doc.author_role,
         )
+        self.last_artifacts = docling.last_artifacts
 
         chunks = []
         for chunk in raw_chunks:

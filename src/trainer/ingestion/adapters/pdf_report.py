@@ -46,11 +46,13 @@ class PdfReportAdapter(DocumentAdapter):
             doc.document_source, doc.collection_name, doc.document_id
         )
 
-        full_text, raw_chunks = self._get_docling(doc.ocr).convert_and_pack(
+        docling = self._get_docling(doc.ocr)
+        full_text, raw_chunks = docling.convert_and_pack(
             local_source,
             min_chars=doc.min_chunk_chars or settings.MINUTES_MIN_CHUNK_CHARS,
             max_chars=doc.max_chunk_chars or settings.MINUTES_TARGET_CHUNK_CHARS,
         )
+        self.last_artifacts = docling.last_artifacts
 
         chunks = []
         for chunk in raw_chunks:

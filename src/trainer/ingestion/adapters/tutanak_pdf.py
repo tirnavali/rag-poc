@@ -61,6 +61,8 @@ class TutanakPdfAdapter(DocumentAdapter):
             initial_author=doc.author,
             initial_role=doc.author_role,
         )
+        # Aşama bazlı artefakt yollarını pipeline raporuna taşımak için yakala.
+        self.last_artifacts = docling.last_artifacts
 
         chunks = []
         for chunk in raw_chunks:

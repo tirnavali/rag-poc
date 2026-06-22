@@ -12,6 +12,7 @@ author-aware (segment_pack), greedy (basit min/max-char).
 import hashlib
 import json
 import os
+from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 from src.common.parsing.packer import greedy_pack  # noqa: F401 (backwards-compat re-export)
@@ -102,13 +103,31 @@ class DoclingManager:
         tokenizer_name: str | None = None,
         max_chunk_tokens: int = 400,
         min_chunk_tokens: int = 100,
+        use_vlm: bool | None = None,
+        images_scale: float = 1.0,
+        ollama_model: str | None = None,
+        ollama_url: str | None = None,
     ):
-        self._converter = MarkdownConverter(ocr_engine=ocr_engine, do_ocr=do_ocr)
+        # VLM tablo çıkarımı: argüman verilmezse settings.VLM_TABLE_EXTRACTION'dan
+        # gelir; böylece adapter'lar/pipeline değişmeden ayarı miras alır.
+        if use_vlm is None:
+            use_vlm = settings.VLM_TABLE_EXTRACTION
+        self._converter = MarkdownConverter(
+            ocr_engine=ocr_engine,
+            do_ocr=do_ocr,
+            images_scale=images_scale,
+            use_vlm=use_vlm,
+            ollama_model=ollama_model,
+            ollama_url=ollama_url,
+        )
         self.ocr_engine = self._converter.ocr_engine
         self.do_ocr = self._converter.do_ocr
         self.tokenizer_name = tokenizer_name
         self.max_chunk_tokens = max_chunk_tokens
         self.min_chunk_tokens = min_chunk_tokens
+        # Son pack() çağrısının ürettiği 4 aşamalık artefakt yolları (gözlemlenebilirlik
+        # index'i — pipeline raporuna aktarılır). Her pack() çağrısında güncellenir.
+        self.last_artifacts: Dict[str, Any] | None = None
 
     # ------------------------------------------------------------------
     # Public API
@@ -216,7 +235,9 @@ class DoclingManager:
                     # ocr_flagged eski cache'lerde yok — cache geçerli kalır,
                     # bayrak güncel quality'den post-hoc enjekte edilir.
                     self._apply_ocr_flag(cached_data["chunks"], ocr_flagged)
-                    return cached_data["full_text"], cached_data["chunks"]
+                    return self._finalize(
+                        file_path, parsed, cached_data["full_text"], cached_data["chunks"]
+                    )
                 else:
                     print("  [CACHE] Önbellekte sayfa numarası eksik, yeniden oluşturuluyor.")
             except Exception as e:
@@ -235,7 +256,7 @@ class DoclingManager:
             )
             self._apply_ocr_flag(final_chunks, ocr_flagged)
             self._save_chunk_cache(chunk_cache_file, full_text_hybrid, final_chunks)
-            return full_text_hybrid, final_chunks
+            return self._finalize(file_path, parsed, full_text_hybrid, final_chunks)
 
         # --- Author-aware path ---
         if document_type and do_pack:
@@ -279,7 +300,7 @@ class DoclingManager:
 
             self._apply_ocr_flag(final_chunks, ocr_flagged)
             self._save_chunk_cache(chunk_cache_file, full_text, final_chunks)
-            return full_text, final_chunks
+            return self._finalize(file_path, parsed, full_text, final_chunks)
 
         # --- Greedy path ---
         if do_pack:
@@ -314,11 +335,73 @@ class DoclingManager:
 
         self._apply_ocr_flag(final_chunks, ocr_flagged)
         self._save_chunk_cache(chunk_cache_file, full_text, final_chunks)
-        return full_text, final_chunks
+        return self._finalize(file_path, parsed, full_text, final_chunks)
 
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
+
+    def _finalize(
+        self,
+        file_path: str,
+        parsed: ParsedDocument,
+        full_text: str,
+        chunks: List[Dict[str, Any]],
+    ) -> Tuple[str, List[Dict[str, Any]]]:
+        """packed_atoms artefaktını yazar, last_artifacts index'ini doldurur, sonucu döner.
+
+        pack()'in tüm dönüş yollarından (cache-hit + hybrid/author-aware/greedy)
+        geçer; böylece okunabilir 'packed' artefaktı cache-hit'te de yazılır ve
+        4 aşamalık yol haritası her zaman güncel kalır.
+        """
+        source_stem = Path(file_path).stem
+        # ocr_base = "{file_hash}_{engine}{tag}" → file_hash'in ilk 8 hanesi
+        file_hash8 = (parsed.ocr_base or "").split("_")[0][:8]
+        packed_path = self._save_packed_artifact(source_stem, file_hash8, chunks)
+
+        self.last_artifacts = {
+            "source_stem": source_stem,
+            "file_hash8": file_hash8,
+            "markdown": parsed.markdown_path,
+            "atoms": parsed.atoms_path,
+            "packed_atoms": packed_path,
+            "pages": parsed.pages_path,
+        }
+        return full_text, chunks
+
+    def _save_packed_artifact(
+        self, source_stem: str, file_hash8: str, chunks: List[Dict[str, Any]]
+    ) -> str | None:
+        """Paketlenmiş chunk'ları data_lake/packed_atoms/ altına okunabilir sidecar yazar.
+
+        parse_cache/{md5}.json (chunk cache) ile aynı içerik; ama {stem}__{hash8}
+        ile anahtarlı ve gözle incelenebilir (aşama 3 — packed_atoms).
+        """
+        if not file_hash8:
+            return None
+        try:
+            packed_dir = settings.PACKED_ATOMS_DIR
+            packed_dir.mkdir(parents=True, exist_ok=True)
+            packed_path = packed_dir / f"{source_stem}__{file_hash8}_packed.json"
+            if not packed_path.exists():
+                packed_path.write_text(
+                    json.dumps(
+                        {
+                            "source_stem": source_stem,
+                            "file_hash8": file_hash8,
+                            "chunk_count": len(chunks),
+                            "chunks": chunks,
+                        },
+                        ensure_ascii=False,
+                        indent=2,
+                    ),
+                    encoding="utf-8",
+                )
+                print(f"  [PACKED] Artefakt kaydedildi: {packed_path.name}")
+            return str(packed_path)
+        except Exception as e:
+            print(f"  [WARN] Packed artefakt yazma hatası: {e}")
+            return None
 
     @staticmethod
     def _apply_ocr_flag(chunks: list, ocr_flagged: bool) -> None:

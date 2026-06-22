@@ -85,8 +85,14 @@ def _write_report(
     timings: dict,
     chunk_stats: dict,
     warnings: list,
+    artifacts: dict | None = None,
 ) -> None:
-    """Her belge için data_lake/reports/{document_id}.json sidecar yazar."""
+    """Her belge için data_lake/reports/{document_id}.json sidecar yazar.
+
+    `artifacts` verilirse, aşama bazlı artefakt yolları (markdown/atoms/packed_atoms/
+    pages) `document_id`'ye bağlı resmi index olarak kaydedilir — golden/QC araçları
+    bu blok üzerinden artefaktlara kırılgan türetme olmadan ulaşır.
+    """
     try:
         reports_dir = settings.REPORTS_DIR
         reports_dir.mkdir(parents=True, exist_ok=True)
@@ -102,6 +108,7 @@ def _write_report(
                     "timings": timings,
                     "chunk": chunk_stats,
                     "warnings": warnings,
+                    "artifacts": artifacts,
                 },
                 ensure_ascii=False,
                 indent=2,
@@ -312,7 +319,8 @@ class IngestionPipeline:
         if not chunks:
             self.manifest.upsert(doc, status="done", chunk_count=0)
             _write_report(doc.document_id, doc.collection_name, "done",
-                          timings, {"chunk_count": 0}, warnings)
+                          timings, {"chunk_count": 0}, warnings,
+                          artifacts=getattr(adapter, "last_artifacts", None))
             return IngestResult(
                 document_id=doc.document_id,
                 status="done",
@@ -460,6 +468,7 @@ class IngestionPipeline:
         _write_report(
             doc.document_id, doc.collection_name, "done",
             timings, {**cstats, "embed_mode": embed_mode}, warnings,
+            artifacts=getattr(adapter, "last_artifacts", None),
         )
 
         # ── Özet paneli ─────────────────────────────────────────────
