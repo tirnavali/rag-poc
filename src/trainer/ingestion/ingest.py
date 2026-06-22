@@ -40,6 +40,22 @@ from src.trainer.ingestion.pipeline import IngestionPipeline
 console = Console()
 
 
+def _collection_names(data: dict) -> list[str]:
+    """Manifest'ten hedef koleksiyon adlarını döndür.
+
+    Geriye dönük uyumlu: tek `"collection"` (str) ve/veya çoklu `"collections"`
+    (liste) alanlarını sırasını koruyarak tekrarsız bir listeye birleştirir.
+    """
+    names: list[str] = []
+    cols = data.get("collections")
+    if cols is not None:
+        names.extend([cols] if isinstance(cols, str) else list(cols))
+    if data.get("collection"):
+        names.append(data["collection"])
+    seen: set[str] = set()
+    return [n for n in names if not (n in seen or seen.add(n))]
+
+
 def _load_request(path: Path) -> dict:
     """Load and validate an ingest_request.json file."""
     if not path.exists():
@@ -47,8 +63,8 @@ def _load_request(path: Path) -> dict:
     data = json.loads(path.read_text(encoding="utf-8"))
     if data.get("version") != "1.0":
         raise ValueError(f"Bilinmeyen version: {data.get('version')!r} (beklenen: '1.0')")
-    if "collection" not in data:
-        raise ValueError("'collection' alanı zorunlu")
+    if not _collection_names(data):
+        raise ValueError("'collection' veya 'collections' alanından en az biri zorunlu")
     if "documents" not in data:
         raise ValueError("'documents' alanı zorunlu")
     return data
@@ -59,12 +75,15 @@ def _validate_request(data: dict) -> list[str]:
     errors = []
 
     # Python-level validations (registry, file existence, duplicate IDs)
-    collection_name = data.get("collection")
-    if collection_name not in COLLECTIONS:
-        errors.append(f"Koleksiyon '{collection_name}' tanımlı değil. Mevcut: {list(COLLECTIONS.keys())}")
-    else:
-        spec = COLLECTIONS[collection_name]
-        console.print(f"[dim]Koleksiyon: {collection_name} → {spec.embed_model} ({spec.max_context_tokens} context, {spec.embed_dim} dim)[/dim]")
+    collection_names = _collection_names(data)
+    if not collection_names:
+        errors.append("'collection' veya 'collections' alanından en az biri zorunlu")
+    for collection_name in collection_names:
+        if collection_name not in COLLECTIONS:
+            errors.append(f"Koleksiyon '{collection_name}' tanımlı değil. Mevcut: {list(COLLECTIONS.keys())}")
+        else:
+            spec = COLLECTIONS[collection_name]
+            console.print(f"[dim]Koleksiyon: {collection_name} → {spec.embed_model} ({spec.max_context_tokens} context, {spec.embed_dim} dim)[/dim]")
 
     docs = data.get("documents", [])
     if not docs:
@@ -106,56 +125,90 @@ def cmd_request(args) -> None:
         console.print(Panel("\n".join(f"[red]✗[/red] {e}" for e in errors), title="[bold red]Doğrulama Hatası[/bold red]", border_style="red"))
         sys.exit(1)
 
-    collection_name = data["collection"]
-    spec = get_spec(collection_name)
+    collection_names = _collection_names(data)
     manifest = DocumentManifest()
 
-    # DocumentInput listesi oluştur
-    # collection_name JSON root'tan gelir, per-document değildir
-    collection_name = data["collection"]
-    for d in data["documents"]:
-        d.setdefault("collection_name", collection_name)
-    documents = [DocumentInput.from_dict(d) for d in data["documents"]]
+    multi = len(collection_names) > 1
+    # (collection_name, results) — koleksiyon başına özet için
+    all_results: list[tuple[str, list]] = []
 
-    # Diff (eğer --only-changed varsa)
-    if args.only_changed:
-        new, changed, unchanged = manifest.diff(documents)
-        to_process = new + changed
-        console.print(
-            f"[dim]Yeni: {len(new)} | Değişmiş: {len(changed)} | "
-            f"Atlanacak: {len(unchanged)}[/dim]\n"
-        )
-        if not to_process:
-            console.print("[green]Tüm belgeler zaten güncel. İşlem yapılmadı.[/green]")
-            return
-        documents = to_process
+    for col_name in collection_names:
+        spec = get_spec(col_name)
+        if multi:
+            console.print(f"\n[bold cyan]══ Koleksiyon: {col_name} ══[/bold cyan]")
 
-    # Pipeline oluştur ve çalıştır
-    pipeline = IngestionPipeline(spec=spec, manifest=manifest)
-    results = pipeline.run_batch(documents, force=args.force)
+        # DocumentInput listesi — collection_name her koleksiyon için taze atanır
+        # (shared dict mutasyonundan kaçınmak için {**d, ...} kopyası)
+        documents = [
+            DocumentInput.from_dict({**d, "collection_name": col_name})
+            for d in data["documents"]
+        ]
+
+        # Diff (eğer --only-changed varsa)
+        if args.only_changed:
+            new, changed, unchanged = manifest.diff(documents)
+            to_process = new + changed
+            console.print(
+                f"[dim]Yeni: {len(new)} | Değişmiş: {len(changed)} | "
+                f"Atlanacak: {len(unchanged)}[/dim]\n"
+            )
+            if not to_process:
+                console.print(f"[green]'{col_name}': tüm belgeler zaten güncel. İşlem yapılmadı.[/green]")
+                all_results.append((col_name, []))
+                continue
+            documents = to_process
+
+        # Pipeline oluştur ve çalıştır
+        pipeline = IngestionPipeline(spec=spec, manifest=manifest)
+        results = pipeline.run_batch(documents, force=args.force)
+        all_results.append((col_name, results))
 
     # Özet
-    done = sum(1 for r in results if r.status == "done")
-    skipped = sum(1 for r in results if r.status == "skipped")
-    failed = sum(1 for r in results if r.status == "failed")
-    total_chunks = sum(r.chunk_count for r in results if r.status == "done")
+    grand_done = grand_skipped = grand_failed = grand_chunks = 0
+    summary_lines: list[str] = []
+    for col_name, results in all_results:
+        done = sum(1 for r in results if r.status == "done")
+        skipped = sum(1 for r in results if r.status == "skipped")
+        failed = sum(1 for r in results if r.status == "failed")
+        chunks = sum(r.chunk_count for r in results if r.status == "done")
+        grand_done += done
+        grand_skipped += skipped
+        grand_failed += failed
+        grand_chunks += chunks
 
-    parts = []
-    if done: parts.append(f"[green]{done} işlendi[/green]")
-    if skipped: parts.append(f"[dim]{skipped} atlandı[/dim]")
-    if failed: parts.append(f"[red]{failed} hata[/red]")
+        parts = []
+        if done: parts.append(f"[green]{done} işlendi[/green]")
+        if skipped: parts.append(f"[dim]{skipped} atlandı[/dim]")
+        if failed: parts.append(f"[red]{failed} hata[/red]")
+        if multi:
+            summary_lines.append(f"[bold cyan]{col_name}[/bold cyan]: " + ("  ".join(parts) or "[dim]—[/dim]"))
+
+    if multi:
+        summary_lines.append(
+            f"\n[bold]Toplam:[/bold] {grand_done} işlendi · {grand_skipped} atlandı · "
+            f"{grand_failed} hata · {grand_chunks} parça eklendi."
+        )
+        body = "\n".join(summary_lines)
+    else:
+        parts = []
+        if grand_done: parts.append(f"[green]{grand_done} işlendi[/green]")
+        if grand_skipped: parts.append(f"[dim]{grand_skipped} atlandı[/dim]")
+        if grand_failed: parts.append(f"[red]{grand_failed} hata[/red]")
+        body = "  ".join(parts) + f"\nToplam {grand_chunks} parça eklendi."
 
     console.print(Panel(
-        "  ".join(parts) + f"\nToplam {total_chunks} parça eklendi.",
+        body,
         title="[bold]İşlem Özeti[/bold]",
-        border_style="green" if not failed else "yellow",
+        border_style="green" if not grand_failed else "yellow",
     ))
 
-    if failed:
+    if grand_failed:
         console.print("\n[red]Hatalı belgeler:[/red]")
-        for r in results:
-            if r.status == "failed":
-                console.print(f"  [red]•[/red] {r.document_id}: {r.reason}")
+        for col_name, results in all_results:
+            for r in results:
+                if r.status == "failed":
+                    prefix = f"[{col_name}] " if multi else ""
+                    console.print(f"  [red]•[/red] {prefix}{r.document_id}: {r.reason}")
         sys.exit(1)
 
 
@@ -181,9 +234,10 @@ def cmd_validate(args) -> None:
         sys.exit(1)
 
     docs = data["documents"]
+    collection_names = _collection_names(data)
     console.print(Panel(
         f"[green]✓[/green] {len(docs)} belge doğrulandı\n"
-        f"[dim]Koleksiyon: {data['collection']}[/dim]",
+        f"[dim]Koleksiyon(lar): {', '.join(collection_names)}[/dim]",
         title="[bold green]Doğrulama Başarılı[/bold green]",
         border_style="green",
     ))
@@ -197,26 +251,29 @@ def cmd_diff(args) -> None:
         console.print(Panel("\n".join(f"[red]✗[/red] {e}" for e in errors), title="[bold red]Doğrulama Hatası[/bold red]", border_style="red"))
         sys.exit(1)
 
-    collection_name = data["collection"]
-    for d in data["documents"]:
-        d.setdefault("collection_name", collection_name)
-    documents = [DocumentInput.from_dict(d) for d in data["documents"]]
+    collection_names = _collection_names(data)
     manifest = DocumentManifest()
-    new, changed, unchanged = manifest.diff(documents)
 
-    table = Table(title="Manifest Diff")
-    table.add_column("Durum", style="bold")
-    table.add_column("Sayı", justify="right")
-    table.add_column("Örnek", style="dim")
+    for col_name in collection_names:
+        documents = [
+            DocumentInput.from_dict({**d, "collection_name": col_name})
+            for d in data["documents"]
+        ]
+        new, changed, unchanged = manifest.diff(documents)
 
-    if new:
-        table.add_row("[green]Yeni[/green]", str(len(new)), new[0].document_id if new else "")
-    if changed:
-        table.add_row("[yellow]Değişmiş[/yellow]", str(len(changed)), changed[0].document_id if changed else "")
-    if unchanged:
-        table.add_row("[dim]Atlanacak[/dim]", str(len(unchanged)), "")
+        table = Table(title=f"Manifest Diff — {col_name}")
+        table.add_column("Durum", style="bold")
+        table.add_column("Sayı", justify="right")
+        table.add_column("Örnek", style="dim")
 
-    console.print(table)
+        if new:
+            table.add_row("[green]Yeni[/green]", str(len(new)), new[0].document_id if new else "")
+        if changed:
+            table.add_row("[yellow]Değişmiş[/yellow]", str(len(changed)), changed[0].document_id if changed else "")
+        if unchanged:
+            table.add_row("[dim]Atlanacak[/dim]", str(len(unchanged)), "")
+
+        console.print(table)
 
 
 def cmd_list_collections(args) -> None:

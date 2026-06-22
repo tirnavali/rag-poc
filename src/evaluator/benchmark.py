@@ -18,6 +18,7 @@ Usage:
 from __future__ import annotations
 
 import math
+import time
 from pathlib import Path
 from typing import Any, Optional
 
@@ -50,6 +51,7 @@ class RetrievalBenchmark:
         reranker=None,
         fetch_k: Optional[int] = None,
         where_filter: Optional[dict] = None,
+        timings: Optional[dict] = None,
     ) -> list[dict]:
         """Vector search (optionally with cross-encoder rerank).
 
@@ -57,6 +59,8 @@ class RetrievalBenchmark:
             id, text, meta, score, raw_score
 
         Note: pure ANN by default unless where_filter is explicitly provided.
+        If `timings` is provided it is forwarded to VectorSearch and filled with
+        per-phase wall-clock (embed_ms, ann_ms, rerank_ms).
         """
         if fetch_k is None:
             fetch_k = max(top_k * 4, 20)
@@ -67,6 +71,7 @@ class RetrievalBenchmark:
             fetch_k=fetch_k,
             where_filter=where_filter,
             reranker=reranker,
+            timings=timings,
         )
 
         # Reformat for benchmark: text key, score from dist/rerank_score
@@ -117,13 +122,26 @@ class RetrievalBenchmark:
         """
         results: list[dict] = []
 
+        # Warm-up: first query pays CUDA/reranker cold-start; run one untimed search
+        # so latency stats below reflect steady-state, not initialization.
+        if queries:
+            try:
+                self.search(
+                    queries[0]["query"], top_k=max(k_values), reranker=reranker, fetch_k=fetch_k
+                )
+            except Exception:
+                pass
+
         for item in queries:
             qid = item.get("id", "?")
             query = item["query"]
 
+            phase: dict[str, float] = {}
+            _t0 = time.perf_counter()
             retrieved = self.search(
-                query, top_k=max(k_values), reranker=reranker, fetch_k=fetch_k
+                query, top_k=max(k_values), reranker=reranker, fetch_k=fetch_k, timings=phase
             )
+            lat_ms = (time.perf_counter() - _t0) * 1000.0
 
             # Dispatch: page_overlap → span_overlap (special) → hybrid token+chunk (golden) → legacy
             golden_pages = item.get("relevant_pages")
@@ -303,8 +321,13 @@ class RetrievalBenchmark:
                     }
                 )
 
+            # Attach timing once, regardless of which matcher branch ran above.
+            results[-1]["latency_ms"] = lat_ms
+            results[-1]["timings_ms"] = phase
+
         # Aggregate
         aggregates = _aggregate(results, k_values)
+        aggregates.update(_aggregate_timings(results))
 
         return {
             "spec": {
@@ -332,3 +355,37 @@ def _aggregate(results: list[dict], k_values: tuple[int, ...]) -> dict[str, Any]
             agg.setdefault(key, []).append(float(val))
 
     return {key: sum(vals) / len(vals) for key, vals in agg.items()}
+
+
+def _percentile(sorted_vals: list[float], q: float) -> float:
+    """Linear-interpolated percentile (q in [0,1]) over a pre-sorted list."""
+    if not sorted_vals:
+        return 0.0
+    if len(sorted_vals) == 1:
+        return sorted_vals[0]
+    pos = q * (len(sorted_vals) - 1)
+    lo = int(math.floor(pos))
+    hi = int(math.ceil(pos))
+    if lo == hi:
+        return sorted_vals[lo]
+    frac = pos - lo
+    return sorted_vals[lo] * (1 - frac) + sorted_vals[hi] * frac
+
+
+def _aggregate_timings(results: list[dict]) -> dict[str, float]:
+    """Compute latency stats (avg/p50/p95) + per-phase averages across queries."""
+    lats = [r["latency_ms"] for r in results if "latency_ms" in r]
+    if not lats:
+        return {}
+
+    lats_sorted = sorted(lats)
+    out: dict[str, float] = {
+        "latency_ms_avg": sum(lats) / len(lats),
+        "latency_ms_p50": _percentile(lats_sorted, 0.50),
+        "latency_ms_p95": _percentile(lats_sorted, 0.95),
+    }
+    for phase in ("embed_ms", "ann_ms", "rerank_ms"):
+        vals = [r["timings_ms"].get(phase, 0.0) for r in results if r.get("timings_ms")]
+        if vals:
+            out[f"{phase}_avg"] = sum(vals) / len(vals)
+    return out

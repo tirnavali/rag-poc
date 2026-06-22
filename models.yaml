@@ -25,6 +25,46 @@ model_specs:
     supports_late_chunking: true
     description: "GTE-Qwen2-1.5B: 1024 context, sliced to 768 dimensions."
 
+  jinaai/jina-embeddings-v3-ctx1024-dim1024:
+    base_model: jinaai/jina-embeddings-v3
+    max_context_tokens: 1024
+    overlap_tokens: 128
+    embed_dim: 1024
+    supports_late_chunking: true
+    description: "Jina v3: 1024 context, late chunking, 1024 output dimension (full, no MRL truncation)."
+
+  Alibaba-NLP/gte-Qwen2-1.5B-instruct-ctx1024-dim1024:
+    base_model: Alibaba-NLP/gte-Qwen2-1.5B-instruct
+    max_context_tokens: 1024
+    overlap_tokens: 128
+    embed_dim: 1024
+    supports_late_chunking: true
+    description: "GTE-Qwen2-1.5B: 1024 context, sliced to 1024 dimensions (MRL)."
+
+  BAAI/bge-m3-ctx1024:
+    base_model: BAAI/bge-m3
+    max_context_tokens: 1024
+    overlap_tokens: 128
+    embed_dim: 1024
+    supports_late_chunking: true
+    description: "BGE-M3: 1024 context, 1024 dim, hybrid dense/sparse ve late chunking uyumlu."
+
+  ytu-ce-cosmos/turkish-e5-large-ctx512:
+    base_model: ytu-ce-cosmos/turkish-e5-large
+    max_context_tokens: 512
+    overlap_tokens: 64
+    embed_dim: 1024
+    supports_late_chunking: true
+    description: "Turkish-e5-Large: 512 context, 1024 dim, Türkçe retrieval ve RAG için optimize."
+
+  nomic-ai/nomic-embed-text-v2-moe-ctx512:
+    base_model: nomic-ai/nomic-embed-text-v2-moe
+    max_context_tokens: 512
+    overlap_tokens: 64
+    embed_dim: 768
+    supports_late_chunking: true
+    description: "Nomic v2 MoE: 512 context, 768 dim, late chunking destekli."
+
 # ---------------------------------------------------------------------------
 # Collection Registry
 # ---------------------------------------------------------------------------
@@ -43,6 +83,56 @@ collections:
     collection_name: tutanaklar_qwen_ctx1024
     chroma_path: data_lake/tutanaklar_qwen_ctx1024
     embed_model: Alibaba-NLP/gte-Qwen2-1.5B-instruct-ctx1024
+    doc_type: tutanak
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  tutanaklar_bge_m3_ctx1024:
+    collection_name: tutanaklar_bge_m3_ctx1024
+    chroma_path: data_lake/tutanaklar_bge_m3_ctx1024
+    embed_model: BAAI/bge-m3-ctx1024
+    doc_type: tutanak
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  tutanaklar_turkish_e5_ctx512:
+    collection_name: tutanaklar_turkish_e5_ctx512
+    chroma_path: data_lake/tutanaklar_turkish_e5_ctx512
+    embed_model: ytu-ce-cosmos/turkish-e5-large-ctx512
+    doc_type: tutanak
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  tutanaklar_nomic_ctx512:
+    collection_name: tutanaklar_nomic_ctx512
+    chroma_path: data_lake/tutanaklar_nomic_ctx512
+    embed_model: nomic-ai/nomic-embed-text-v2-moe-ctx512
+    doc_type: tutanak
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  tutanaklar_jina_dim1024:
+    collection_name: tutanaklar_jina_dim1024
+    chroma_path: data_lake/tutanaklar_jina_dim1024
+    embed_model: jinaai/jina-embeddings-v3-ctx1024-dim1024
+    doc_type: tutanak
+    min_chunk_chars: 400
+    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  tutanaklar_qwen_dim1024:
+    collection_name: tutanaklar_qwen_dim1024
+    chroma_path: data_lake/tutanaklar_qwen_dim1024
+    embed_model: Alibaba-NLP/gte-Qwen2-1.5B-instruct-ctx1024-dim1024
     doc_type: tutanak
     min_chunk_chars: 400
     max_chunk_chars: 1500

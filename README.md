@@ -444,7 +444,8 @@ python -m src.trainer.ingestion.ingest --delete tbmm-20-1-1-19960108
 | `document_id` | Belgenin deterministik kimliği (dışarıdan) | `tbmm-20-1-1-19960108` |
 | `document_source` | PDF dosya yolu veya `http(s)` URL (null = inline) | `tutanak/raw/D20/...pdf` veya `https://cdn.tbmm.gov.tr/...pdf` |
 | `document_type` | Adapter seçici | `tutanak`, `press_clip`, `pdf_report` |
-| `collection` | Hedef koleksiyon | `tbmm_minutes_docling_jina_v4` |
+| `collection` | Hedef koleksiyon (kök seviye, tekil) | `tbmm_minutes_docling_jina_v4` |
+| `collections` | Hedef koleksiyon **listesi** (kök seviye, çoklu) — aynı belgeleri birden çok koleksiyona indeksler | `["tutanaklar_ctx1024", "tutanaklar_qwen_ctx1024"]` |
 | `document_date` | ISO tarih | `1996-01-08` |
 | `year` | Yıl (sorgu filtresi için) | `1996` |
 | `period` | TBMM dönemi | `20` |
@@ -460,6 +461,33 @@ python -m src.trainer.ingestion.ingest --delete tbmm-20-1-1-19960108
 
 **Kural:** Sorgu/ filtrede kullanacağınız alanlar yukarıdaki canonical alanlarda olmalı.
 `metadata` sadece provenance (köken bilgisi) içindir — üzerinde filtre yapılamaz.
+
+---
+
+### Çok Koleksiyona Tek Manifestte İndeksleme
+
+Aynı belge setini birden fazla koleksiyona (örn. farklı embedding modellerini karşılaştırmak
+için) tek manifestte indekslemek için kök seviyede `collection` (tekil string) yerine
+`collections` (liste) kullanın. İkisi birlikte de verilebilir; sıra korunur, tekrarlar elenir.
+
+```json
+{
+  "version": "1.0",
+  "collections": [
+    "tutanaklar_ctx1024",
+    "tutanaklar_qwen_ctx1024",
+    "tutanaklar_bge_m3_ctx1024"
+  ],
+  "documents": [ ... ]
+}
+```
+
+Sistem her koleksiyon için ayrı bir pipeline (kendi embedding modeliyle) çalıştırır, ancak
+**manifest paylaşılır** ve **parse cache** sayesinde aynı PDF yalnızca bir kez OCR/parse edilir —
+ikinci ve sonraki koleksiyonlar yalnızca yeniden embed eder (parse milisaniyeler içinde
+önbellekten okunur). `--validate`, `--diff`, `--status` her koleksiyonu ayrı ayrı raporlar.
+
+Tekil `collection` alanı geriye dönük uyumlu olarak çalışmaya devam eder.
 
 ---
 
@@ -1335,9 +1363,41 @@ Farklı chunking stratejilerini aynı ground truth üzerinde adil karşılaştı
 
 **1. Golden Dataset (Altın Veri) Hazırlama**
 
-Elinizdeki duruma göre iki farklı script kullanabilirsiniz:
+Elinizdeki duruma göre üç farklı yöntem kullanabilirsiniz:
 
-**A. Sıfırdan Sentetik Veri Üretmek:** Hiç test sorunuz yoksa, rastgele metinlerden soru ve cevap (excerpt) üretin.
+#### 🏛️ Golden Q&A Builder (Önerilen — İnteraktif Web Arayüzü)
+
+Retrieval havuzunu tarayarak veya belgeleri sayfa sayfa gezerek manuel olarak golden Q&A fixture'ı oluşturmanızı sağlayan tarayıcı tabanlı bir araç.
+
+```bash
+# Varsayılan ayarlarla başlat (port 8765, tutanaklar_ctx1024 koleksiyonu)
+python -m scripts.golden_builder
+
+# Özel port / fixture / koleksiyon
+python -m scripts.golden_builder \
+    --port 9000 \
+    --fixture tests/fixtures/golden_tbmm27001001.json \
+    --collection tutanaklar_ctx1024
+```
+
+Tarayıcıda **http://localhost:8765** adresini açın.
+
+**İki iş akışı:**
+
+| Akış | Ne zaman kullanılır? |
+|---|---|
+| **Retrieval ile işaretleme** (birincil) | Soru yazılır, üretim koleksiyonunda retrieval + cross-encoder rerank çalışır; ilgili sonuçlarda **+ golden** butonuna tıklanır. `src/evaluator/benchmark.py` page_overlap puanlayıcısı ile birebir uyumludur. |
+| **Manuel sayfa gezinme** (escape-hatch) | Sol panelden belgeler sayfa sayfa gezilir; retrieval'ın kaçırdığı ilgili sayfalar **＋ Bu sayfayı golden işaretle** butonuyla eklenir. |
+
+**Ek özellikler:**
+- Kategori etiketi: `narrative`, `deputy`, `bulletin`
+- Zorluk etiketi: `easy`, `medium`, `hard`
+- Canlı cevap doğrulama — cevap, işaretlenen sayfalarda bulunuyor mu?
+- Mevcut kayıtları düzenle / sil
+- Atomik kayıt: temp dosyaya yaz → replace (veri kaybı yok)
+- Çıktı: `tests/fixtures/golden_tbmm27001001.json` (varsayılan) — `lint_golden` / benchmark uyumlu şema
+
+**B. Sıfırdan Sentetik Veri Üretmek:** Hiç test sorunuz yoksa, rastgele metinlerden soru ve cevap (excerpt) üretin.
 ```bash
 python scripts/generate_golden.py \
     --collection tbmm_minutes_docling_jina_v3 \
@@ -1348,7 +1408,7 @@ python scripts/generate_golden.py \
 python scripts/generate_golden.py --collection tbmm_minutes_docling_jina_v3 --n 3 --dry-run
 ```
 
-**B. Mevcut Sorulara Cevap Eklemek:** Zaten sorularınız varsa (fixture), LLM ile otomatik excerpt ekleyin.
+**C. Mevcut Sorulara Cevap Eklemek:** Zaten sorularınız varsa (fixture), LLM ile otomatik excerpt ekleyin.
 ```bash
 python scripts/generate_excerpts.py \
     --fixture tests/fixtures/eval_queries_docling_d20.json \

@@ -1,0 +1,10 @@
+name: "Output Dimension Karşılaştırması — Jina v3 & Qwen2-1.5B (768 vs 1024)"
+collections:
+  - tutanaklar_ctx1024        # Jina v3 — 768 dim
+  - tutanaklar_jina_dim1024   # Jina v3 — 1024 dim
+  - tutanaklar_qwen_ctx1024   # Qwen2-1.5B — 768 dim
+  - tutanaklar_qwen_dim1024   # Qwen2-1.5B — 1024 dim
+fixture: tests/fixtures/golden_tbmm27001001.json
+top_k: [3, 5, 8, 10, 15, 20]
+reranker: true
+fetch_k: 100

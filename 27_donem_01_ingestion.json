@@ -1,6 +1,10 @@
 {
     "version": "1.0",
-    "collection": "tutanaklar_ctx1024",
+    "collections": [
+        "tutanaklar_bge_m3_ctx1024",
+        "tutanaklar_turkish_e5_ctx512",
+        "tutanaklar_nomic_ctx512"
+    ],
     "documents": [
         {
             "document_id": "tutanak-27-01-01-20180707",

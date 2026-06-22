@@ -59,7 +59,52 @@ def _fmt(value: float | None, pct: bool = False) -> str:
     return f"[{_color(value)}]{value:.2f}[/{_color(value)}]"
 
 
-def print_comparison(reports: list[dict]) -> None:
+def _fmt_ms(value: float | None) -> str:
+    """Format a latency value in ms — lower is better, so no quality-threshold coloring."""
+    if value is None:
+        return "[dim]—[/dim]"
+    if value < 50:
+        color = "green"
+    elif value < 200:
+        color = "yellow"
+    else:
+        color = "red"
+    return f"[{color}]{value:.1f} ms[/{color}]"
+
+
+# (description, short label, aggregate key) — rendered with _fmt_ms, not _fmt.
+_TIMING_ROWS: list[tuple[str, str, str]] = [
+    ("Ortalama sorgu süresi", "Latency avg", "latency_ms_avg"),
+    ("Medyan sorgu süresi", "Latency p50", "latency_ms_p50"),
+    ("p95 sorgu süresi", "Latency p95", "latency_ms_p95"),
+    ("Embedding süresi (ort.)", "Embed", "embed_ms_avg"),
+    ("ANN arama süresi (ort.)", "ANN", "ann_ms_avg"),
+    ("Reranker süresi (ort.)", "Rerank", "rerank_ms_avg"),
+]
+
+
+def _build_metric_rows(k_values: tuple[int, ...]) -> list[tuple[str, str, str]]:
+    """Dynamically build metric rows for all requested k values."""
+    rows: list[tuple[str, str, str]] = []
+    for k in sorted(k_values):
+        rows.append((f"İlk {k} sonucun doğruluk oranı", f"P@{k}", f"precision_{k}"))
+    for k in sorted(k_values):
+        rows.append((f"Doğruları ilk {k}'e getirme oranı", f"R@{k}", f"recall_{k}"))
+    for k in sorted(k_values):
+        rows.append((f"İlk {k}'de en az bir doğru bulma", f"Hit@{k}", f"hit_rate_{k}"))
+    rows += [
+        ("Doğruyu en üstte gösterme becerisi", "MRR", "mrr"),
+        ("Sıralama kalitesi (Genel başarı)", "NDCG@10", "ndcg_10"),
+    ]
+    # Token-overlap metrikleri (excerpts matcher'da dolar)
+    for k in sorted(k_values):
+        rows.append((f"Altın tokenların ilk {k}'de kapsanma oranı", f"TkR@{k}", f"token_recall_{k}"))
+        rows.append((f"İlk {k} çekilen tokenlarda alaka oranı", f"TkP@{k}", f"token_precision_{k}"))
+        rows.append((f"Token IoU@{k}", f"IoU@{k}", f"token_iou_{k}"))
+    return rows
+
+
+def print_comparison(reports: list[dict], k_values: tuple[int, ...] = (5, 10)) -> None:
     """Print a side-by-side comparison table for all collections."""
     if not reports:
         console.print("[yellow]Hiç rapor yok.[/yellow]")
@@ -78,30 +123,19 @@ def print_comparison(reports: list[dict]) -> None:
         model = r["spec"]["embed_model"]
         table.add_column(f"{name}\n[dim]{model}[/dim]", justify="center")
 
-    # Rows: each metric we want to compare
-    metric_rows = [
-        ("İlk sonucun doğruluğu", "P@1", "precision_1"),
-        ("İlk 5 sonucun doğruluk oranı", "P@5", "precision_5"),
-        ("İlk 10 sonucun doğruluk oranı", "P@10", "precision_10"),
-        ("Doğruları ilk 5'e getirme oranı", "R@5", "recall_5"),
-        ("Doğruları ilk 10'a getirme oranı", "R@10", "recall_10"),
-        ("İlk 5'te en az bir doğru bulma", "Hit@5", "hit_rate_5"),
-        ("İlk 10'da en az bir doğru bulma", "Hit@10", "hit_rate_10"),
-        ("Doğruyu en üstte gösterme becerisi", "MRR", "mrr"),
-        ("Sıralama kalitesi (Genel başarı)", "NDCG@10", "ndcg_10"),
-        # Token-overlap metrikleri (Chroma yöntemi — excerpts matcher'da dolar)
-        ("Altın tokenların ilk 5'te kapsanma oranı", "TkR@5", "token_recall_5"),
-        ("İlk 5 çekilen tokenlarda alaka oranı", "TkP@5", "token_precision_5"),
-        ("Token IoU@5 (Chroma)", "IoU@5", "token_iou_5"),
-        ("Altın tokenların ilk 10'da kapsanma oranı", "TkR@10", "token_recall_10"),
-        ("Token IoU@10 (Chroma)", "IoU@10", "token_iou_10"),
-    ]
-
-    for desc, label, key in metric_rows:
+    for desc, label, key in _build_metric_rows(k_values):
         row = [desc, label]
         for r in reports:
             val = r.get("aggregate", {}).get(key)
             row.append(_fmt(val))
+        table.add_row(*row)
+
+    # Timing rows — separate section, ms formatting (lower = better, no quality threshold)
+    table.add_section()
+    for desc, label, key in _TIMING_ROWS:
+        row = [desc, f"[bold]{label}[/bold]"]
+        for r in reports:
+            row.append(_fmt_ms(r.get("aggregate", {}).get(key)))
         table.add_row(*row)
 
     console.print(table)
@@ -146,7 +180,7 @@ def run_experiment(config_path: Path) -> list[dict]:
         )
         reports.append(report)
 
-    return reports
+    return reports, k_values
 
 
 def main() -> None:
@@ -161,8 +195,8 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    reports = run_experiment(Path(args.config))
-    print_comparison(reports)
+    reports, k_values = run_experiment(Path(args.config))
+    print_comparison(reports, k_values=k_values)
 
     if args.output:
         out_path = Path(args.output)

@@ -8,6 +8,7 @@ All chromadb.* calls go through src/common/chroma helpers; DB swap requires only
 from __future__ import annotations
 
 import math
+import time
 from typing import TYPE_CHECKING, Optional
 
 from src.common.chroma import open_collection, query_collection
@@ -33,6 +34,7 @@ class VectorSearch:
         fetch_k: Optional[int] = None,
         where_filter: Optional[dict] = None,
         reranker=None,
+        timings: Optional[dict] = None,
     ) -> list[dict]:
         """Search and optionally rerank. Returns up to top_k results.
 
@@ -42,18 +44,29 @@ class VectorSearch:
             fetch_k: candidates to pull before reranking (default: max(top_k*4, 20))
             where_filter: Chroma where dict (e.g. year filter) — passed through unchanged
             reranker: optional CrossEncoderReranker instance; if None, sort by distance
+            timings: optional dict; if provided, filled with per-phase wall-clock in ms
+                (embed_ms, ann_ms, rerank_ms). When None there is zero overhead and the
+                production path is unchanged.
 
         Returns:
             List of dicts: {id, doc, meta, dist, rerank_score or None}
         """
         n = fetch_k or max(top_k * 4, 20)
+
+        _t = time.perf_counter()
         q_vec = self.embedder.embed_query(query)
+        if timings is not None:
+            timings["embed_ms"] = (time.perf_counter() - _t) * 1000.0
+
+        _t = time.perf_counter()
         res = query_collection(
             self.collection,
             q_vec,
             n_results=n,
             where_filter=where_filter,
         )
+        if timings is not None:
+            timings["ann_ms"] = (time.perf_counter() - _t) * 1000.0
 
         # Unpack Chroma result shape: ids/docs/metas/distances are all [[...]]
         candidates: list[tuple[str, str, dict, float]] = []
@@ -64,11 +77,14 @@ class VectorSearch:
             candidates.append((cid, doc, meta, dist))
 
         # Optional reranking
+        _t = time.perf_counter()
         id_to_rerank_score: dict[str, float] = {}
         if reranker is not None and candidates:
             pairs = [(cid, doc) for cid, doc, _, _ in candidates]
             reranked = reranker.rerank(query, pairs, top_n=len(candidates))
             id_to_rerank_score = {cid: score for cid, score in reranked}
+        if timings is not None:
+            timings["rerank_ms"] = (time.perf_counter() - _t) * 1000.0
 
         # Build result list
         results: list[dict] = []
