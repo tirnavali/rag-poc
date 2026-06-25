@@ -7,7 +7,15 @@ collections:
   - tutanaklar_bge_m3_ctx1024   # BGE-M3 — 1024 dim
   - tutanaklar_turkish_e5_ctx512 # Turkish-e5-large — 1024 dim
   - tutanaklar_nomic_ctx512     # Nomic v2 MoE — 768 dim
+  # --- Chunk boyutu varyantları (chunk size karşılaştırması) ---
+  - tutanaklar_jina_chunk1024_768d   # Jina v3 — 768 dim, chunk 1024/768
+  - tutanaklar_jina_chunk1024_1024d  # Jina v3 — 1024 dim, chunk 1024/768
+  - tutanaklar_nomic_chunk256_768d   # Nomic v2 — 768 dim, chunk 256/192
+  - tutanaklar_nomic_chunk256_256d   # Nomic v2 — 256 dim, chunk 256/192
+  # --- Tier-1 yeni varyantlar ---
+  - tutanaklar_qwen_chunk256_768d    # Qwen2-1.5B — 768 dim, chunk 256/192
+  - tutanaklar_qwen_chunk256_256d    # Qwen2-1.5B — 256 dim (deneysel MRL), chunk 256/192
 fixture: tests/fixtures/golden_tbmm27001001.json
-top_k: [3, 5, 10]
+top_k: [3, 5, 10, 20]
 reranker: true
 fetch_k: 100

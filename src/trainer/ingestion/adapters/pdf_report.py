@@ -26,15 +26,19 @@ class PdfReportAdapter(DocumentAdapter):
         self._docling_ocr: Optional[DoclingManager] = docling
         self._docling_no_ocr: Optional[DoclingManager] = None
 
-    def _get_docling(self, use_ocr: bool) -> DoclingManager:
-        if use_ocr:
-            if self._docling_ocr is None:
-                self._docling_ocr = DoclingManager(do_ocr=True)
-            return self._docling_ocr
-        else:
-            if self._docling_no_ocr is None:
-                self._docling_no_ocr = DoclingManager(do_ocr=False)
-            return self._docling_no_ocr
+    def _get_docling(self, use_ocr: bool, doc: DocumentInput) -> DoclingManager:
+        # Token-tabanlı chunklama: tokenizer + token sınırları doc'tan (spec'ten enjekte) gelir.
+        cache_attr = "_docling_ocr" if use_ocr else "_docling_no_ocr"
+        mgr = getattr(self, cache_attr)
+        if mgr is None:
+            mgr = DoclingManager(
+                do_ocr=use_ocr,
+                tokenizer_name=doc.tokenizer_name,
+                max_chunk_tokens=doc.max_chunk_tokens or 512,
+                min_chunk_tokens=doc.min_chunk_tokens or 384,
+            )
+            setattr(self, cache_attr, mgr)
+        return mgr
 
     def parse(self, doc: DocumentInput) -> tuple[str, list[dict]]:
         if not doc.document_source:
@@ -46,12 +50,8 @@ class PdfReportAdapter(DocumentAdapter):
             doc.document_source, doc.collection_name, doc.document_id
         )
 
-        docling = self._get_docling(doc.ocr)
-        full_text, raw_chunks = docling.convert_and_pack(
-            local_source,
-            min_chars=doc.min_chunk_chars or settings.MINUTES_MIN_CHUNK_CHARS,
-            max_chars=doc.max_chunk_chars or settings.MINUTES_TARGET_CHUNK_CHARS,
-        )
+        docling = self._get_docling(doc.ocr, doc)
+        full_text, raw_chunks = docling.convert_and_pack(local_source)
         self.last_artifacts = docling.last_artifacts
 
         chunks = []

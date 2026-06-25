@@ -107,16 +107,13 @@ MINUTES_CHROMA = DATA_LAKE / "parliament_digital_born_minutes_vectors"
 MINUTES_COLLECTION = "tbmm_minutes"
 MINUTES_JSON_DIR = PROJECT_ROOT / "tutanak" / "extracted"
 
+# Press clip chunking — TOKEN cinsinden (ingestion pipeline, token-tabanlı).
+# Chunk boyutu koleksiyonun max_chunk_tokens'ından gelir; bu yalnız örtüşmedir.
+PRESS_CHUNK_OVERLAP_TOKENS = 64
+# Legacy/cosmetic (eski press_clips/index.py ve chunk_inspector karakter gösterimi):
 PRESS_CHUNK_SIZE = 1500
 PRESS_CHUNK_OVERLAP = 150
 MINUTES_CHUNK_SIZE = 1500
-MINUTES_CHUNK_OVERLAP = 150
-# Greedy speech-block packing thresholds (used by src/trainer/minutes/chunker.py).
-# Short consecutive speaker turns are packed into one chunk so that a 5-word
-# interjection is not stored as its own near-empty embedding.
-MINUTES_MIN_CHUNK_CHARS = 400
-MINUTES_TARGET_CHUNK_CHARS = 1500
-MINUTES_PACK_CAP_CHARS = 1950
 EMBED_BATCH_SIZE = 20
 
 RRF_K = 60
@@ -129,7 +126,7 @@ FTS_LIMIT = 15
 
 RETRIEVAL_MODE = os.environ.get("RETRIEVAL_MODE", "hybrid")  # "hybrid" | "vector"
 USE_RERANKER = os.environ.get("USE_RERANKER", "1") == "1"
-RERANK_MODEL = os.environ.get("RERANK_MODEL", "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1")
+RERANK_MODEL = os.environ.get("RERANK_MODEL", "BAAI/bge-reranker-v2-m3")
 RERANK_FETCH_K = int(os.environ.get("RERANK_FETCH_K", "100"))
 RERANK_COARSE_K = int(os.environ.get("RERANK_COARSE_K", "20"))
 RERANK_FINAL_K = int(os.environ.get("RERANK_FINAL_K", "5"))

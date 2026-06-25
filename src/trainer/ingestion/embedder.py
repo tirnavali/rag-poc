@@ -102,6 +102,11 @@ class LocalLateChunkingEmbedder(Embeddings):
             # Performans için 'eager' (standart) attention kullanarak task desteğini garantiye alıyoruz.
             load_kwargs["attn_implementation"] = "eager"
 
+        if "mursit" in model_name.lower():
+            # Mursit = ModernBERT. Varsayılan reference_compile=True torch.compile/Triton
+            # çağırır; bazı ortamlarda (ör. aarch64) CUDA kernel derlemesi başarısız olur.
+            load_kwargs["reference_compile"] = False
+
         try:
             with _silence_stdout_stderr():
                 self.model = AutoModel.from_pretrained(model_name, **load_kwargs)
@@ -121,13 +126,69 @@ class LocalLateChunkingEmbedder(Embeddings):
         self.is_jina = "jina" in model_name.lower()
         self.is_nomic = "nomic" in model_name.lower()
         self.is_qwen = "qwen" in model_name.lower()
+        # Qwen3-Embedding: son-token (last-token) havuzlama gerektirir (mean değil).
+        self.is_qwen3 = "qwen3" in model_name.lower()
+        # Jina v4: model(**inputs) yerine kendi encode_text() API'sini kullanır.
+        self.is_jina_v4 = "jina-embeddings-v4" in model_name.lower()
 
         self.max_context_tokens = max_context_tokens
         self.overlap_tokens = overlap_tokens
         self.embed_dim = embed_dim
 
+    @staticmethod
+    def _last_token_pool(last_hidden_state: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
+        """Son-token havuzlama (Qwen3-Embedding resmi yöntemi).
+
+        Sağ veya sol padding'i otomatik algılar; her dizinin son padding'siz
+        token'ının gizli durumunu döndürür.
+        """
+        left_padding = attention_mask[:, -1].sum().item() == attention_mask.shape[0]
+        if left_padding:
+            return last_hidden_state[:, -1]
+        seq_lengths = attention_mask.sum(dim=1) - 1
+        batch_idx = torch.arange(last_hidden_state.shape[0], device=last_hidden_state.device)
+        return last_hidden_state[batch_idx, seq_lengths]
+
+    def _encode_text_jina_v4(self, texts: List[str], task: str) -> List[List[float]]:
+        """Jina v4 kendi encode_text() API'siyle gömer (MRL truncate_dim destekli).
+
+        Jina v4 (Qwen2.5-VL tabanlı, ~4B) genel model(**inputs) + mean-pool
+        yoluyla kullanılamaz; encode_text task/prompt_name parametreleri ister.
+        """
+        from src.config import settings
+        prompt_name = "query" if "query" in task else "passage"
+        batch_size = max(1, settings.EMBED_BATCH_SIZE)
+        all_embeddings: List[List[float]] = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            with torch.no_grad():
+                embs = self.model.encode_text(
+                    texts=batch,
+                    task="retrieval",
+                    prompt_name=prompt_name,
+                    truncate_dim=self.embed_dim,
+                )
+            for e in embs:
+                t = e if isinstance(e, torch.Tensor) else torch.as_tensor(e)
+                t = F.normalize(t.float().unsqueeze(0), p=2, dim=1).squeeze(0)
+                all_embeddings.append(t.cpu().tolist())
+            if self.model.device.type == "cuda":
+                torch.cuda.empty_cache()
+        return all_embeddings
+
     def embed_documents(self, texts: List[str], task: str = "retrieval.passage") -> List[List[float]]:
-        """Uyumluluk için standart gömme (ortalama havuzlama kullanır)."""
+        """Uyumluluk için standart gömme.
+
+        Mini-batch'ler hâlinde işlenir: tüm chunk'lar tek forward pass'e
+        verilirse (örn. 1817 parça) padding'li tensör ve attention matrisi
+        belleği patlatıp OOM'a yol açar. EMBED_BATCH_SIZE ile sınırlanır.
+
+        Havuzlama model bazlı: Jina v4 kendi API'si, Qwen3 son-token,
+        diğerleri ortalama havuzlama.
+        """
+        if self.is_jina_v4:
+            return self._encode_text_jina_v4(texts, task)
+
         if self.is_nomic:
             prefix = "search_query: " if "query" in task else "search_document: "
             texts = [prefix + text for text in texts]
@@ -136,25 +197,52 @@ class LocalLateChunkingEmbedder(Embeddings):
                 prefix = "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
                 texts = [prefix + text for text in texts]
 
-        inputs = self.tokenizer(texts, padding=True, truncation=True, return_tensors="pt").to(self.model.device)
-        with torch.no_grad():
-            # Jina v3/v4 için task parametresi
-            if self.is_jina:
-                outputs = self.model(**inputs, task=task)
+        from src.config import settings
+        batch_size = max(1, settings.EMBED_BATCH_SIZE)
+        all_embeddings: List[List[float]] = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            inputs = self.tokenizer(batch, padding=True, truncation=True, return_tensors="pt").to(self.model.device)
+            with torch.no_grad():
+                # Jina v3 için task parametresi
+                if self.is_jina:
+                    outputs = self.model(**inputs, task=task)
+                else:
+                    outputs = self.model(**inputs)
+            if self.is_qwen3:
+                # Qwen3-Embedding son-token havuzlama ister (mean değil)
+                embeddings = self._last_token_pool(outputs.last_hidden_state, inputs["attention_mask"])
             else:
-                outputs = self.model(**inputs)
-        embeddings = outputs.last_hidden_state.mean(dim=1)
-        if self.embed_dim is not None:
-            embeddings = embeddings[:, :self.embed_dim]
-        embeddings = F.normalize(embeddings, p=2, dim=1)
-        return embeddings.cpu().tolist()
+                embeddings = outputs.last_hidden_state.mean(dim=1)
+            if self.embed_dim is not None:
+                embeddings = embeddings[:, :self.embed_dim]
+            embeddings = F.normalize(embeddings, p=2, dim=1)
+            all_embeddings.extend(embeddings.cpu().tolist())
+            # Batch ara belleğini serbest bırak (unified memory'de kritik)
+            del inputs, outputs, embeddings
+            if self.model.device.type == "cuda":
+                torch.cuda.empty_cache()
+        return all_embeddings
 
     def embed_query(self, text: str, task: str = "retrieval.query") -> List[float]:
         return self.embed_documents([text], task=task)[0]
 
-    def embed_with_late_chunking(self, full_text: str, spans: List[Tuple[int, int]], 
+    def _standard_chunk_embeddings(
+        self, full_text: str, spans: List[Tuple[int, int]], task: str
+    ) -> List[List[float]]:
+        """Late chunking uyumsuz modeller için chunk metinlerini bağımsız gömer.
+
+        Qwen3 (son-token havuzlama) ve Jina v4 (encode_text API) span-bazlı
+        token havuzlamayla uyumsuzdur; her chunk'ı kendi metniyle gömeriz.
+        """
+        chunk_texts = [full_text[start:end] for (start, end) in spans]
+        return self.embed_documents(chunk_texts, task=task)
+
+    def embed_with_late_chunking(self, full_text: str, spans: List[Tuple[int, int]],
                                 task: str = "retrieval.passage") -> List[List[float]]:
         """Tek bir belge üzerinde late chunking uygular."""
+        if self.is_qwen3 or self.is_jina_v4:
+            return self._standard_chunk_embeddings(full_text, spans, task)
         if self.is_nomic:
             prefix = "search_query: " if "query" in task else "search_document: "
             shift = len(prefix)
@@ -229,6 +317,10 @@ class LocalLateChunkingEmbedder(Embeddings):
 
         Document link: https://openreview.net/notes/edits/attachment?id=7eUlqSx02t&name=pdf
         """
+        if self.is_qwen3 or self.is_jina_v4:
+            # Late chunking uyumsuz modeller: standart chunk-bazlı gömme
+            return self._standard_chunk_embeddings(full_text, spans, task)
+
         if max_tokens is None:
             max_tokens = self.max_context_tokens
         if overlap_tokens is None:

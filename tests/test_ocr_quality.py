@@ -278,13 +278,13 @@ def _parsed_doc(ocr_flagged: bool) -> ParsedDocument:
 class TestPackOcrFlag:
     def test_greedy_pack_carries_flag(self, isolated_dirs):
         mgr = _make_manager()
-        _, chunks = mgr.pack(_parsed_doc(True), "belge.pdf", min_chars=5, max_chars=50)
+        _, chunks = mgr.pack(_parsed_doc(True), "belge.pdf")
         assert chunks
         assert all(c["metadata"]["ocr_flagged"] is True for c in chunks)
 
     def test_unflagged_document(self, isolated_dirs):
         mgr = _make_manager()
-        _, chunks = mgr.pack(_parsed_doc(False), "belge.pdf", min_chars=5, max_chars=50)
+        _, chunks = mgr.pack(_parsed_doc(False), "belge.pdf")
         assert all(c["metadata"]["ocr_flagged"] is False for c in chunks)
 
     def test_parsed_without_quality_defaults_false(self, isolated_dirs):
@@ -292,15 +292,16 @@ class TestPackOcrFlag:
         mgr = _make_manager()
         parsed = _parsed_doc(False)
         parsed.quality = {}
-        _, chunks = mgr.pack(parsed, "belge.pdf", min_chars=5, max_chars=50)
+        _, chunks = mgr.pack(parsed, "belge.pdf")
         assert all(c["metadata"]["ocr_flagged"] is False for c in chunks)
 
     def test_chunk_cache_hit_injects_flag(self, isolated_dirs):
         """ocr_flagged içermeyen eski Level-2 cache geçerli kalır, bayrak enjekte edilir."""
         parsed = _parsed_doc(True)
-        min_chars, max_chars, do_pack = 5, 50, True
+        do_pack = True
+        # Tokenizer'sız manager → fallback cache anahtarı
         cache_key = hashlib.md5(
-            f"{parsed.ocr_base}_{min_chars}_{max_chars}_{do_pack}".encode()
+            f"{parsed.ocr_base}_fallback_{do_pack}".encode()
         ).hexdigest()
         old_cache = {
             "full_text": parsed.full_text,
@@ -317,9 +318,7 @@ class TestPackOcrFlag:
         )
 
         mgr = _make_manager()
-        _, chunks = mgr.pack(
-            parsed, "belge.pdf", min_chars=min_chars, max_chars=max_chars, do_pack=do_pack
-        )
+        _, chunks = mgr.pack(parsed, "belge.pdf", do_pack=do_pack)
         assert chunks[0]["metadata"]["ocr_flagged"] is True
 
 

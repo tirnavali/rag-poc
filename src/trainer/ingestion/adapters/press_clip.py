@@ -11,8 +11,6 @@ from __future__ import annotations
 import hashlib
 from typing import Optional
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-
 from src.common.chunking import split_with_offsets
 from src.config import settings
 from src.trainer.ingestion.adapters.base import DocumentAdapter, DocumentInput
@@ -22,13 +20,14 @@ class PressClipAdapter(DocumentAdapter):
     """Press clip from inline text in metadata.
 
     document_source is IGNORED — content comes from metadata.dokuman_metni.
+    Chunklama **token-tabanlıdır**: boyut doc.max_chunk_tokens (token), tokenizer
+    doc.tokenizer_name ile ölçülür.
     """
 
-    def __init__(self, splitter: Optional[RecursiveCharacterTextSplitter] = None):
-        self.splitter = splitter or RecursiveCharacterTextSplitter(
-            chunk_size=settings.PRESS_CHUNK_SIZE,
-            chunk_overlap=settings.PRESS_CHUNK_OVERLAP,
-        )
+    def __init__(self, splitter=None):
+        # splitter yalnızca testlerde enjekte edilir; üretimde parse() içinde
+        # doc.tokenizer_name + doc.max_chunk_tokens ile token-tabanlı kurulur.
+        self.splitter = splitter
 
     def parse(self, doc: DocumentInput) -> tuple[str, list[dict]]:
         text = (doc.metadata or {}).get("dokuman_metni", "")
@@ -53,14 +52,15 @@ class PressClipAdapter(DocumentAdapter):
         full_text = prefix + text
         offset = len(prefix)
 
-        # Split with character offsets
-        chunk_size = doc.max_chunk_chars or self.splitter._chunk_size
-        chunk_overlap = self.splitter._chunk_overlap
+        # Token-tabanlı bölme — char ofsetleri late chunking için korunur.
+        chunk_size = doc.max_chunk_tokens or 512
+        chunk_overlap = settings.PRESS_CHUNK_OVERLAP_TOKENS
 
         parts_with_offsets = split_with_offsets(
             text,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
+            tokenizer_name=doc.tokenizer_name,
         )
 
         chunks = []

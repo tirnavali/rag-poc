@@ -65,6 +65,65 @@ model_specs:
     supports_late_chunking: true
     description: "Nomic v2 MoE: 512 context, 768 dim, late chunking destekli."
 
+  nomic-ai/nomic-embed-text-v2-moe-ctx512-dim256:
+    base_model: nomic-ai/nomic-embed-text-v2-moe
+    max_context_tokens: 512
+    overlap_tokens: 64
+    embed_dim: 256
+    supports_late_chunking: true
+    description: "Nomic v2 MoE: 512 context, 256 dim (Matryoshka kırpma), late chunking destekli."
+
+  Alibaba-NLP/gte-Qwen2-1.5B-instruct-ctx1024-dim256:
+    base_model: Alibaba-NLP/gte-Qwen2-1.5B-instruct
+    max_context_tokens: 1024
+    overlap_tokens: 128
+    embed_dim: 256
+    supports_late_chunking: true
+    description: "GTE-Qwen2-1.5B: 1024 context, 256 dim (agresif MRL kırpma — deneysel)."
+
+  # --- Qwen3-Embedding-0.6B: son-token havuzlama, MRL (32–1024) ---
+  Qwen/Qwen3-Embedding-0.6B-ctx1024-dim1024:
+    base_model: Qwen/Qwen3-Embedding-0.6B
+    max_context_tokens: 1024
+    overlap_tokens: 128
+    embed_dim: 1024
+    supports_late_chunking: true
+    description: "Qwen3-Embedding-0.6B: 1024 ctx, 1024 dim (tam), son-token havuzlama; standart chunking."
+
+  Qwen/Qwen3-Embedding-0.6B-ctx1024-dim768:
+    base_model: Qwen/Qwen3-Embedding-0.6B
+    max_context_tokens: 1024
+    overlap_tokens: 128
+    embed_dim: 768
+    supports_late_chunking: true
+    description: "Qwen3-Embedding-0.6B: 1024 ctx, 768 dim (MRL kırpma), son-token havuzlama; standart chunking."
+
+  # --- Mursit (ModernBERT, ortalama havuzlama, prefix yok, Türkçe-native) ---
+  newmindai/Mursit-Large-ctx1024:
+    base_model: newmindai/Mursit-Large
+    max_context_tokens: 1024
+    overlap_tokens: 128
+    embed_dim: 1024
+    supports_late_chunking: true
+    description: "Mursit-Large (ModernBERT-large): 1024 ctx, 1024 dim, Türkçe-native, late chunking."
+
+  newmindai/Mursit-Base-ctx512:
+    base_model: newmindai/Mursit-Base
+    max_context_tokens: 512
+    overlap_tokens: 64
+    embed_dim: 768
+    supports_late_chunking: true
+    description: "Mursit-Base (ModernBERT-base): 512 ctx, 768 dim, hafif Türkçe-native, late chunking."
+
+  # --- Jina v4 (retrieval LoRA, encode_text API, mean pooling, MRL 2048→1024) ---
+  jinaai/jina-embeddings-v4-ctx8192-dim1024:
+    base_model: jinaai/jina-embeddings-v4
+    max_context_tokens: 8192
+    overlap_tokens: 256
+    embed_dim: 1024
+    supports_late_chunking: true
+    description: "Jina v4 (retrieval): 8192 ctx, 1024 dim (MRL), encode_text API; standart chunking."
+
 # ---------------------------------------------------------------------------
 # Collection Registry
 # ---------------------------------------------------------------------------
@@ -74,8 +133,6 @@ collections:
     chroma_path: data_lake/tutanaklar_ctx1024
     embed_model: jinaai/jina-embeddings-v3-ctx1024
     doc_type: tutanak
-    min_chunk_chars: 400
-    max_chunk_chars: 1500
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
@@ -84,8 +141,6 @@ collections:
     chroma_path: data_lake/tutanaklar_qwen_ctx1024
     embed_model: Alibaba-NLP/gte-Qwen2-1.5B-instruct-ctx1024
     doc_type: tutanak
-    min_chunk_chars: 400
-    max_chunk_chars: 1500
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
@@ -94,8 +149,6 @@ collections:
     chroma_path: data_lake/tutanaklar_bge_m3_ctx1024
     embed_model: BAAI/bge-m3-ctx1024
     doc_type: tutanak
-    min_chunk_chars: 400
-    max_chunk_chars: 1500
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
@@ -104,8 +157,6 @@ collections:
     chroma_path: data_lake/tutanaklar_turkish_e5_ctx512
     embed_model: ytu-ce-cosmos/turkish-e5-large-ctx512
     doc_type: tutanak
-    min_chunk_chars: 400
-    max_chunk_chars: 1500
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
@@ -114,8 +165,6 @@ collections:
     chroma_path: data_lake/tutanaklar_nomic_ctx512
     embed_model: nomic-ai/nomic-embed-text-v2-moe-ctx512
     doc_type: tutanak
-    min_chunk_chars: 400
-    max_chunk_chars: 1500
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
@@ -124,8 +173,6 @@ collections:
     chroma_path: data_lake/tutanaklar_jina_dim1024
     embed_model: jinaai/jina-embeddings-v3-ctx1024-dim1024
     doc_type: tutanak
-    min_chunk_chars: 400
-    max_chunk_chars: 1500
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 
@@ -134,8 +181,109 @@ collections:
     chroma_path: data_lake/tutanaklar_qwen_dim1024
     embed_model: Alibaba-NLP/gte-Qwen2-1.5B-instruct-ctx1024-dim1024
     doc_type: tutanak
-    min_chunk_chars: 400
-    max_chunk_chars: 1500
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  # --- Chunk boyutu kıyası: Jina v3 büyük chunk (1024/768), 768d vs 1024d ---
+  tutanaklar_jina_chunk1024_768d:
+    collection_name: tutanaklar_jina_chunk1024_768d
+    chroma_path: data_lake/tutanaklar_jina_chunk1024_768d
+    embed_model: jinaai/jina-embeddings-v3-ctx1024
+    doc_type: tutanak
+    max_chunk_tokens: 1024
+    min_chunk_tokens: 768
+
+  tutanaklar_jina_chunk1024_1024d:
+    collection_name: tutanaklar_jina_chunk1024_1024d
+    chroma_path: data_lake/tutanaklar_jina_chunk1024_1024d
+    embed_model: jinaai/jina-embeddings-v3-ctx1024-dim1024
+    doc_type: tutanak
+    max_chunk_tokens: 1024
+    min_chunk_tokens: 768
+
+  # --- Chunk boyutu kıyası: Qwen2-1.5B küçük chunk (256/192), 768d vs 256d ---
+  tutanaklar_qwen_chunk256_768d:
+    collection_name: tutanaklar_qwen_chunk256_768d
+    chroma_path: data_lake/tutanaklar_qwen_chunk256_768d
+    embed_model: Alibaba-NLP/gte-Qwen2-1.5B-instruct-ctx1024
+    doc_type: tutanak
+    max_chunk_tokens: 256
+    min_chunk_tokens: 192
+
+  tutanaklar_qwen_chunk256_256d:
+    collection_name: tutanaklar_qwen_chunk256_256d
+    chroma_path: data_lake/tutanaklar_qwen_chunk256_256d
+    embed_model: Alibaba-NLP/gte-Qwen2-1.5B-instruct-ctx1024-dim256
+    doc_type: tutanak
+    max_chunk_tokens: 256
+    min_chunk_tokens: 192
+
+  # --- Chunk boyutu kıyası: Nomic v2 küçük chunk (256/192), 768d vs 256d (Matryoshka) ---
+  tutanaklar_nomic_chunk256_768d:
+    collection_name: tutanaklar_nomic_chunk256_768d
+    chroma_path: data_lake/tutanaklar_nomic_chunk256_768d
+    embed_model: nomic-ai/nomic-embed-text-v2-moe-ctx512
+    doc_type: tutanak
+    max_chunk_tokens: 256
+    min_chunk_tokens: 192
+
+  tutanaklar_nomic_chunk256_256d:
+    collection_name: tutanaklar_nomic_chunk256_256d
+    chroma_path: data_lake/tutanaklar_nomic_chunk256_256d
+    embed_model: nomic-ai/nomic-embed-text-v2-moe-ctx512-dim256
+    doc_type: tutanak
+    max_chunk_tokens: 256
+    min_chunk_tokens: 192
+
+  # =========================================================================
+  # 8-Kombinasyon Benchmark Matrisi (K-1..K-8)
+  # K-1 -> tutanaklar_nomic_chunk256_768d (mevcut)
+  # K-6 -> tutanaklar_bge_m3_ctx1024     (mevcut, dense-only)
+  # K-7 -> tutanaklar_nomic_ctx512       (mevcut; Nomic ctx limiti 512)
+  # =========================================================================
+
+  # --- K-2: Qwen3-0.6B, chunk 512, 1024 dim ---
+  tutanaklar_qwen3_chunk512_1024d:
+    collection_name: tutanaklar_qwen3_chunk512_1024d
+    chroma_path: data_lake/tutanaklar_qwen3_chunk512_1024d
+    embed_model: Qwen/Qwen3-Embedding-0.6B-ctx1024-dim1024
+    doc_type: tutanak
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+
+  # --- K-8: Qwen3-0.6B, chunk 256, 768 dim (MRL) ---
+  tutanaklar_qwen3_chunk256_768d:
+    collection_name: tutanaklar_qwen3_chunk256_768d
+    chroma_path: data_lake/tutanaklar_qwen3_chunk256_768d
+    embed_model: Qwen/Qwen3-Embedding-0.6B-ctx1024-dim768
+    doc_type: tutanak
+    max_chunk_tokens: 256
+    min_chunk_tokens: 192
+
+  # --- K-3: Mursit-Large, chunk 384, 1024 dim ---
+  tutanaklar_mursit_large_chunk384:
+    collection_name: tutanaklar_mursit_large_chunk384
+    chroma_path: data_lake/tutanaklar_mursit_large_chunk384
+    embed_model: newmindai/Mursit-Large-ctx1024
+    doc_type: tutanak
+    max_chunk_tokens: 384
+    min_chunk_tokens: 288
+
+  # --- K-4: Mursit-Base, chunk 256, 768 dim ---
+  tutanaklar_mursit_base_chunk256:
+    collection_name: tutanaklar_mursit_base_chunk256
+    chroma_path: data_lake/tutanaklar_mursit_base_chunk256
+    embed_model: newmindai/Mursit-Base-ctx512
+    doc_type: tutanak
+    max_chunk_tokens: 256
+    min_chunk_tokens: 192
+
+  # --- K-5: Jina v4, chunk 512, 1024 dim (MRL) ---
+  tutanaklar_jina_v4_chunk512_1024d:
+    collection_name: tutanaklar_jina_v4_chunk512_1024d
+    chroma_path: data_lake/tutanaklar_jina_v4_chunk512_1024d
+    embed_model: jinaai/jina-embeddings-v4-ctx8192-dim1024
+    doc_type: tutanak
     max_chunk_tokens: 512
     min_chunk_tokens: 384
 

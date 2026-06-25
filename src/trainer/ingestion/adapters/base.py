@@ -102,11 +102,15 @@ class DocumentInput:
     ocr: bool = True
     """Dijital üretilmiş (metin katmanlı) PDF'ler için False yapın. OCR'ı atlar, işlemi hızlandırır."""
 
-    min_chunk_chars: Optional[int] = None
-    """Koleksiyon düzeyindeki minimum parça boyutunu (karakter) geçersiz kılar."""
+    max_chunk_tokens: Optional[int] = None
+    """Koleksiyon düzeyindeki maksimum parça boyutunu (token) geçersiz kılar."""
 
-    max_chunk_chars: Optional[int] = None
-    """Koleksiyon düzeyindeki maksimum parça boyutunu (karakter) geçersiz kılar."""
+    min_chunk_tokens: Optional[int] = None
+    """Koleksiyon düzeyindeki minimum parça boyutunu (token) geçersiz kılar."""
+
+    tokenizer_name: Optional[str] = None
+    """Token sayımı/chunklama için HuggingFace tokenizer adı (genelde embed_model).
+    Pipeline tarafından CollectionSpec'ten enjekte edilir."""
 
     # ─── Sistem Bilgileri (Otomatik yönetilir) ─────────
     content_hash: Optional[str] = None
@@ -135,8 +139,9 @@ class DocumentInput:
             "topics": self.topics,
             "metadata": self.metadata,
             "ocr": self.ocr,
-            "min_chunk_chars": self.min_chunk_chars,
-            "max_chunk_chars": self.max_chunk_chars,
+            "max_chunk_tokens": self.max_chunk_tokens,
+            "min_chunk_tokens": self.min_chunk_tokens,
+            "tokenizer_name": self.tokenizer_name,
             "content_hash": self.content_hash,
         }
         return {k: v for k, v in d.items() if v is not None}
@@ -161,8 +166,9 @@ class DocumentInput:
             topics=d.get("topics"),
             metadata=d.get("metadata"),
             ocr=d.get("ocr", True),
-            min_chunk_chars=d.get("min_chunk_chars"),
-            max_chunk_chars=d.get("max_chunk_chars"),
+            max_chunk_tokens=d.get("max_chunk_tokens"),
+            min_chunk_tokens=d.get("min_chunk_tokens"),
+            tokenizer_name=d.get("tokenizer_name"),
             content_hash=d.get("content_hash"),
         )
 

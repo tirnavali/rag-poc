@@ -15,8 +15,10 @@ def mock_spec():
     """Minimal collection spec for testing."""
     spec = MagicMock(spec=CollectionSpec)
     spec.name = "test_collection"
-    spec.min_chunk_chars = 500
-    spec.max_chunk_chars = 1000
+    spec.embed_model = "test-model"
+    spec.doc_type = None
+    spec.max_chunk_tokens = 512
+    spec.min_chunk_tokens = 384
     return spec
 
 

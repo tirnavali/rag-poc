@@ -226,13 +226,15 @@ class IngestionPipeline:
         cstats: dict = {}
         embed_mode = "standard"
 
-        # Inject spec-level chunk params if not overridden per-document
-        if doc.min_chunk_chars is None or doc.max_chunk_chars is None:
-            doc = DocumentInput(**{
-                **doc.to_dict(),
-                "min_chunk_chars": doc.min_chunk_chars or self.spec.min_chunk_chars,
-                "max_chunk_chars": doc.max_chunk_chars or self.spec.max_chunk_chars,
-            })
+        # Inject spec-level token chunk params + tokenizer if not overridden per-document.
+        # Chunklama token-tabanlıdır: tokenizer_name = embed_model (late chunking destekliyse).
+        doc = DocumentInput(**{
+            **doc.to_dict(),
+            "max_chunk_tokens": doc.max_chunk_tokens or self.spec.max_chunk_tokens,
+            "min_chunk_tokens": doc.min_chunk_tokens or self.spec.min_chunk_tokens,
+            "tokenizer_name": doc.tokenizer_name
+            or (self.spec.embed_model if self.spec.supports_late_chunking else None),
+        })
 
         # ── 1. Manifest kontrolü ────────────────────────────────────
         t1 = time.perf_counter()
@@ -287,9 +289,13 @@ class IngestionPipeline:
                 reason="already_ingested",
             )
 
-        if existing and existing.content_hash != doc.content_hash:
+        # İçerik değişmişse VEYA --force ile yeniden işleniyorsa eski chunk'ları sil.
+        # force, chunklama parametreleri (token boyutu) değişince oluşacak orphan
+        # chunk'ları (yeni sayı < eski sayı) önler — bu koleksiyonda bu document için.
+        if existing and (existing.content_hash != doc.content_hash or force):
+            reason = "içerik değişmiş" if existing.content_hash != doc.content_hash else "--force"
             _console.print(
-                f"  [dim][1/6 MANIFEST][/dim] UPDATE — içerik değişmiş, eski chunk'lar siliniyor..."
+                f"  [dim][1/6 MANIFEST][/dim] UPDATE — {reason}, eski chunk'lar siliniyor..."
             )
             self._delete_chunks(doc.document_id)
 

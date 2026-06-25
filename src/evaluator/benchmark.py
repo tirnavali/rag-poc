@@ -212,16 +212,16 @@ class RetrievalBenchmark:
                 first_hit_rank = next((rank for rank, h in enumerate(retrieved_hits, 1) if h), None)
                 metrics["mrr"] = 1.0 / first_hit_rank if first_hit_rank is not None else 0.0
                 
-                gains_10 = [1 if h else 0 for h in retrieved_hits[:10]]
-                n_rel = min(10, len(relevant_keys))
-                ideal_10 = [1] * n_rel + [0] * (10 - n_rel)
-                
                 def dcg(hits_list):
                     return sum(rel / math.log2(i + 2) for i, rel in enumerate(hits_list))
-                
-                actual_dcg = dcg(gains_10)
-                ideal_dcg = dcg(ideal_10)
-                metrics["ndcg_10"] = actual_dcg / ideal_dcg if ideal_dcg > 0 else 0.0
+
+                for k in k_values:
+                    gains_k = [1 if h else 0 for h in retrieved_hits[:k]]
+                    n_rel_k = min(k, len(relevant_keys))
+                    ideal_k = [1] * n_rel_k + [0] * (k - n_rel_k)
+                    actual_dcg = dcg(gains_k)
+                    ideal_dcg = dcg(ideal_k)
+                    metrics[f"ndcg_{k}"] = actual_dcg / ideal_dcg if ideal_dcg > 0 else 0.0
 
                 results.append(
                     {
@@ -248,7 +248,8 @@ class RetrievalBenchmark:
                     metrics[f"hit_rate_{k}"] = 1.0 if metrics[f"precision_{k}"] > 0 else 0.0
                     metrics[f"evidence_coverage_{k}"] = sm.evidence_coverage_at_k(retrieved_spans, golden, k)
                 metrics["mrr"] = sm.mrr_span(retrieved_spans, golden)
-                metrics["ndcg_10"] = 0.0  # NDCG over overlapping spans is ill-defined
+                for k in k_values:
+                    metrics[f"ndcg_{k}"] = 0.0  # NDCG over overlapping spans is ill-defined
 
                 results.append(
                     {
@@ -304,11 +305,13 @@ class RetrievalBenchmark:
                         metrics[f"recall_{k}"] = rm.recall_at_k(retrieved_ids, relevant_ids, k)
                         metrics[f"hit_rate_{k}"] = rm.hit_rate_at_k(retrieved_ids, relevant_ids, k)
                     metrics["mrr"] = rm.mrr(retrieved_ids, relevant_ids)
-                    metrics["ndcg_10"] = rm.ndcg_at_k(retrieved_ids, relevant_ids, 10)
+                    for k in k_values:
+                        metrics[f"ndcg_{k}"] = rm.ndcg_at_k(retrieved_ids, relevant_ids, k)
                     matcher_parts.append(id_key)
                 else:
                     metrics["mrr"] = 0.0
-                    metrics["ndcg_10"] = 0.0
+                    for k in k_values:
+                        metrics[f"ndcg_{k}"] = 0.0
 
                 results.append(
                     {

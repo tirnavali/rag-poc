@@ -534,21 +534,19 @@ def cmd_add_collection(args) -> None:
     doc_type_value = _wiz_choice(4, TOTAL, "Belge Tipi",
         "Koleksiyondaki belgelerin türü.", type_choices)
 
-    # Step 5 — chunk params
-    chunk_defaults = dict(min_chunk_chars=400, max_chunk_chars=1500, max_chunk_tokens=512, min_chunk_tokens=384)
+    # Step 5 — chunk params (TOKEN-tabanlı; karakter parametresi yok)
+    chunk_defaults = dict(max_chunk_tokens=512, min_chunk_tokens=384)
     console.print()
     console.print(Panel(
-        "[dim]Varsayılan değerler:[/dim]\n\n"
-        f"  min_chunk_chars={chunk_defaults['min_chunk_chars']}   "
-        f"max_chunk_chars={chunk_defaults['max_chunk_chars']}\n"
+        "[dim]Varsayılan değerler (chunk boyutu token cinsindendir):[/dim]\n\n"
         f"  max_chunk_tokens={chunk_defaults['max_chunk_tokens']}  "
         f"min_chunk_tokens={chunk_defaults['min_chunk_tokens']}",
-        title=f"[bold]Adım 5 / {TOTAL}  —  Chunk Parametreleri[/bold]",
+        title=f"[bold]Adım 5 / {TOTAL}  —  Chunk Parametreleri (token)[/bold]",
         border_style="blue",
     ))
     chunk_params = dict(chunk_defaults)
     if Confirm.ask("  [bold cyan]>[/bold cyan] Özelleştir mi?", default=False):
-        for field in ("min_chunk_chars", "max_chunk_chars", "max_chunk_tokens", "min_chunk_tokens"):
+        for field in ("max_chunk_tokens", "min_chunk_tokens"):
             while True:
                 raw = Prompt.ask(f"  {field}", default=str(chunk_defaults[field])).strip()
                 if raw.isdigit() and int(raw) > 0:
@@ -573,8 +571,6 @@ def cmd_add_collection(args) -> None:
         ("chroma_path", chroma_path),
         ("embed_model", embed_model),
         ("doc_type", doc_type_value),
-        ("min_chunk_chars", str(chunk_params["min_chunk_chars"])),
-        ("max_chunk_chars", str(chunk_params["max_chunk_chars"])),
         ("max_chunk_tokens", str(chunk_params["max_chunk_tokens"])),
         ("min_chunk_tokens", str(chunk_params["min_chunk_tokens"])),
     ]
@@ -599,8 +595,6 @@ def cmd_add_collection(args) -> None:
     new_entry["chroma_path"] = chroma_path
     new_entry["embed_model"] = embed_model
     new_entry["doc_type"] = doc_type_value
-    new_entry["min_chunk_chars"] = chunk_params["min_chunk_chars"]
-    new_entry["max_chunk_chars"] = chunk_params["max_chunk_chars"]
     new_entry["max_chunk_tokens"] = chunk_params["max_chunk_tokens"]
     new_entry["min_chunk_tokens"] = chunk_params["min_chunk_tokens"]
 
@@ -626,8 +620,6 @@ def cmd_add_collection(args) -> None:
             db_path=_Path(chroma_path),
             embed_model=embed_model,
             doc_type=DocumentType(doc_type_value),
-            min_chunk_chars=chunk_params["min_chunk_chars"],
-            max_chunk_chars=chunk_params["max_chunk_chars"],
             max_chunk_tokens=chunk_params["max_chunk_tokens"],
             min_chunk_tokens=chunk_params["min_chunk_tokens"],
         )
@@ -698,12 +690,8 @@ def cmd_inspect(args) -> None:
             max_chunk_tokens=spec.max_chunk_tokens,
             min_chunk_tokens=spec.min_chunk_tokens,
         )
-        min_chars = spec.min_chunk_chars
-        max_chars = spec.max_chunk_chars
     else:
         mgr = DoclingManager()
-        min_chars = getattr(spec, "min_chunk_chars", None) or 400
-        max_chars = getattr(spec, "max_chunk_chars", None) or 1500
 
     doc_type = args.document_type or None
     limit = args.limit or 20
@@ -711,8 +699,6 @@ def cmd_inspect(args) -> None:
     console.print(f"\n[dim]Parse ediliyor: {file_path} ...[/dim]")
     full_text, chunks = mgr.convert_and_pack(
         file_path,
-        min_chars=min_chars,
-        max_chars=max_chars,
         document_type=doc_type,
     )
 

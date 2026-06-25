@@ -8,9 +8,94 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(PROJECT_ROOT))
 
-from src.common.parsing.docling_manager import DoclingManager
+from src.common.parsing.docling_manager import (
+    DoclingManager,
+    _atom_char_spans,
+    token_pack_atoms,
+)
 from docling.backend.docling_parse_backend import DoclingParseDocumentBackend
 from docling.datamodel.base_models import InputFormat
+
+
+# ---------------------------------------------------------------------------
+# Atom-tabanlı token paketleme (birincil span yolu) — hızlı birim testleri.
+# Gerçek PDF/model gerektirmez; full_text = "\n\n".join(atom.text) değişmezini
+# ve OCR-bağışık span üretimini doğrular.
+# ---------------------------------------------------------------------------
+
+# Kelime-tabanlı sahte token sayacı (HF modeli yüklemeden).
+_word_tokens = lambda t: len(t.split())
+
+
+def _atoms_to_full_text(atoms):
+    return "\n\n".join(a["text"] for a in atoms)
+
+
+def test_atom_spans_are_exact_against_full_text():
+    """Her atom full_text'te birebir bulunur; span aritmetiği doğru."""
+    atoms = [
+        {"text": "Birinci paragraf.", "pages": [1]},
+        {"text": "Birinci paragraf.", "pages": [1]},  # tekrar — cursor sırayı korumalı
+        {"text": "Üçüncü farklı içerik.", "pages": [2]},
+    ]
+    full_text = _atoms_to_full_text(atoms)
+    spans = _atom_char_spans(atoms, full_text)
+    assert all(s is not None for s in spans)
+    # Tekrarlayan atomlar farklı (ilerleyen) ofsetlere oturmalı
+    assert spans[0][0] < spans[1][0]
+    for a, s in zip(atoms, spans):
+        assert full_text[s[0]:s[1]] == a["text"]
+
+
+def test_token_pack_spans_match_text_and_no_charspan_needed():
+    """OCR-bozuk senaryo: atomlarda hiç charspan yok; yine de %100 span üretilir
+    ve her chunk için full_text[span] == chunk.text."""
+    atoms = [
+        {"text": "Alfa bir iki uc.", "pages": [1]},
+        {"text": "Beta dort bes.", "pages": [1]},
+        {"text": "Gama alti yedi sekiz dokuz on.", "pages": [2]},
+    ]
+    full_text = _atoms_to_full_text(atoms)
+    chunks = token_pack_atoms(
+        atoms, full_text, count_tokens=_word_tokens, max_tokens=8, min_tokens=2
+    )
+    assert chunks, "Hiç chunk üretilmedi"
+    for c in chunks:
+        assert c["span"] is not None
+        assert full_text[c["span"][0]:c["span"][1]] == c["text"]
+
+
+def test_token_pack_keeps_table_atom_whole():
+    """max_chunk_tokens'ı aşmayan tablo atomu tek chunk içinde bütün kalır
+    (ortadan bölünmez)."""
+    table = "| Ad | İl |\n| Levent Gök | Ankara |\n| Celal Adan | İstanbul |"
+    atoms = [
+        {"text": "Giriş paragrafı kısa.", "pages": [1]},
+        {"text": table, "pages": [1]},
+        {"text": "Tablodan sonra gelen açıklama metni.", "pages": [1]},
+    ]
+    full_text = _atoms_to_full_text(atoms)
+    chunks = token_pack_atoms(
+        atoms, full_text, count_tokens=_word_tokens, max_tokens=12, min_tokens=2
+    )
+    # Tablo metni tek bir chunk içinde tam geçmeli
+    assert any(table in c["text"] for c in chunks), "Tablo atomu ortadan bölündü!"
+
+
+def test_token_pack_oversize_atom_becomes_own_chunk():
+    """Tek başına max_tokens'ı aşan atom kendi chunk'ı olur, bölünmez."""
+    big = " ".join(f"kelime{i}" for i in range(40))  # 40 token
+    atoms = [
+        {"text": "Kısa giriş.", "pages": [1]},
+        {"text": big, "pages": [1]},
+    ]
+    full_text = _atoms_to_full_text(atoms)
+    chunks = token_pack_atoms(
+        atoms, full_text, count_tokens=_word_tokens, max_tokens=10, min_tokens=2
+    )
+    assert any(c["text"] == big for c in chunks), "Büyük atom bütün bir chunk olmadı"
+    for c in chunks:
+        assert full_text[c["span"][0]:c["span"][1]] == c["text"]
 
 
 def test_docling_manager_uses_pypdfium_backend():
@@ -139,13 +224,9 @@ def test_docling_conversion_and_packing(pdf_path: str, verbose: bool = False, co
     
     manager = DoclingManager()
     
-    # Dönüştürme ve Paketleme
-    min_chars = 400
-    max_chars = 1500
+    # Dönüştürme ve Paketleme (token-tabanlı; tokenizer'sız manager → fallback)
     full_text, chunks = manager.convert_and_pack(
-        pdf_path, 
-        min_chars=min_chars, 
-        max_chars=max_chars,
+        pdf_path,
         do_pack=do_pack
     )
     

@@ -152,14 +152,9 @@ class CollectionSpec:
     doc_type: DocumentType = DocumentType.CUSTOM
     """Document source type: GAZETE, TUTANAK, ONERGE, CUSTOM."""
 
-    min_chunk_chars: int = 400
-    """Minimum chunk boyutu (karakter). Docling greedy_pack parametresi."""
-
-    max_chunk_chars: int = 1500
-    """Maksimum chunk boyutu (karakter). Docling greedy_pack parametresi."""
-
     max_chunk_tokens: int = 512
-    """HybridChunker max token/chunk. embed_model tokenizer ile ölçülür (~1600 char Türkçe)."""
+    """HybridChunker max token/chunk. embed_model tokenizer ile ölçülür. Chunk boyutunu
+    belirleyen birincil parametre (token-tabanlı chunklama)."""
 
     min_chunk_tokens: int = 384
     """Post-process min token merge eşiği. Bu altındaki chunk'lar bir sonrakiyle birleşir."""
@@ -217,8 +212,6 @@ def _build_collections() -> dict[str, CollectionSpec]:
             db_path=chroma_path,
             embed_model=cfg["embed_model"],
             doc_type=doc_type,
-            min_chunk_chars=cfg.get("min_chunk_chars", 400),
-            max_chunk_chars=cfg.get("max_chunk_chars", 1500),
             max_chunk_tokens=cfg.get("max_chunk_tokens", 512),
             min_chunk_tokens=cfg.get("min_chunk_tokens", 384),
         )

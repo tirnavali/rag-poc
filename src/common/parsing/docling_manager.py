@@ -19,6 +19,12 @@ from src.common.parsing.packer import greedy_pack  # noqa: F401 (backwards-compa
 from src.common.parsing.markdown_converter import MarkdownConverter, ParsedDocument
 from src.config import settings
 
+# Chunklama token-tabanlıdır (HybridChunker). Bu karakter sınırları yalnızca
+# tokenizer/dl_doc bulunamadığında devreye giren greedy güvenlik ağı içindir;
+# normal üretim yolunda kullanılmaz.
+_FALLBACK_MIN_CHARS = 500
+_FALLBACK_MAX_CHARS = 1500
+
 
 def greedy_pack_atoms(
     atoms: List[Dict[str, Any]],
@@ -74,6 +80,106 @@ def greedy_pack_atoms(
         )
 
     return packed_chunks
+
+
+def _atom_char_spans(
+    atoms: List[Dict[str, Any]], full_text: str, join_str: str = "\n\n"
+) -> List[Tuple[int, int] | None]:
+    """Her atomun `full_text` içindeki (start, end) char-aralığını döndürür.
+
+    `full_text = join_str.join(a["text"] for a in atoms)` değişmezine dayanır
+    (bkz. MarkdownConverter). Bu yüzden atom metni `full_text`'te birebir bulunur
+    ve span deterministiktir — OCR bozulmasından etkilenmez. Sıralı bir imleçle
+    `find` kullanılır (greedy güvenlik ağıyla aynı desen); bulunamayan atom için
+    None döner (beklenmez).
+    """
+    spans: List[Tuple[int, int] | None] = []
+    cursor = 0
+    for atom in atoms:
+        t = atom["text"]
+        idx = full_text.find(t, cursor)
+        if idx == -1:
+            idx = full_text.find(t)
+        if idx == -1:
+            spans.append(None)
+            continue
+        end = idx + len(t)
+        spans.append((idx, end))
+        cursor = end
+    return spans
+
+
+def token_pack_atoms(
+    atoms: List[Dict[str, Any]],
+    full_text: str,
+    count_tokens,
+    max_tokens: int,
+    min_tokens: int,
+    join_str: str = "\n\n",
+) -> List[Dict[str, Any]]:
+    """Atomları **token-tabanlı** greedy paketler; span'ı `full_text`'ten türetir.
+
+    greedy_pack_atoms ile aynı mantık, tek fark boyutun karakter yerine token
+    cinsinden ölçülmesi. Her atom bölünmez (tablo = tek atom → asla ortadan
+    kesilmez); tek başına `max_tokens`'ı aşan atom kendi chunk'ı olur. Chunk
+    span'ı, paketlenen atomların `full_text` içindeki uç ofsetlerinden gelir;
+    chunk metni `full_text[span]` ile birebir aynıdır (late chunking güvencesi).
+
+    Args:
+        count_tokens: metin → token sayısı (seçili embedding tokenizer'ı).
+    Returns:
+        list[dict]: {text, span, label, page, pages} — metadata pack() içinde tamamlanır.
+    """
+    atom_spans = _atom_char_spans(atoms, full_text, join_str=join_str)
+    # Token sayımı atom başına önceden hesaplanır (toplamsal yaklaşım — subword
+    # sınır birleşmeleri nedeniyle hafifçe fazla tahmin eder → chunk'lar limiti
+    # aşmaz, güvenli yönde). _min_token_merge'deki O(N^2) yeniden sayımı önler.
+    atom_tokens = [count_tokens(a["text"]) for a in atoms]
+
+    chunks: List[Dict[str, Any]] = []
+    cur_idx: List[int] = []  # mevcut chunk'a giren atom indeksleri
+    cur_tokens = 0
+
+    def _flush():
+        if not cur_idx:
+            return
+        first, last = cur_idx[0], cur_idx[-1]
+        s0 = atom_spans[first]
+        s1 = atom_spans[last]
+        if s0 is None or s1 is None:
+            return  # span çıkarılamadı (beklenmez) — chunk'ı düşür
+        start, end = s0[0], s1[1]
+        merged_pages = sorted(
+            {p for i in cur_idx for p in atoms[i].get("pages", [])}
+        )
+        chunks.append(
+            {
+                "text": full_text[start:end],
+                "span": (start, end),
+                "label": "Packed",
+                "page": merged_pages[0] if merged_pages else None,
+                "pages": merged_pages,
+            }
+        )
+
+    for i, atom in enumerate(atoms):
+        n = atom_tokens[i]
+        if not cur_idx:
+            cur_idx = [i]
+            cur_tokens = n
+            continue
+        proposed = cur_tokens + n
+        # min_tokens'a ulaştıysak ve bir sonrakini eklemek max'ı aşıyorsa kes.
+        if cur_tokens >= min_tokens and proposed > max_tokens:
+            _flush()
+            cur_idx = [i]
+            cur_tokens = n
+        else:
+            cur_idx.append(i)
+            cur_tokens = proposed
+
+    _flush()
+    return chunks
 
 
 class DoclingManager:
@@ -136,8 +242,6 @@ class DoclingManager:
     def convert_and_pack(
         self,
         file_path: str,
-        min_chars: int = 500,
-        max_chars: int = 1500,
         do_pack: bool = True,
         document_type: str | None = None,
         initial_author: str | None = None,
@@ -147,12 +251,11 @@ class DoclingManager:
         """
         PDF → chunk'lar.  MarkdownConverter.convert() + DoclingManager.pack() zinciri.
 
-        İmza ve dönüş tipi değişmez — tüm çağıranlar (adapter'lar) güncelleme gerektirmez.
+        Chunklama **token-tabanlıdır**: boyut, tokenizer_name + max_chunk_tokens /
+        min_chunk_tokens ile belirlenir (HybridChunker). Karakter sınırı yoktur.
 
         quality_document_type: Yalnızca kalite (karakter sapması) karşılaştırması için
-            kullanılan tip etiketi. Verilmezse author-aware'in tetiklenmemesini
-            istediği halde kalite kontrolü yapmak isteyen adapter'lar için
-            (ör. pdf_report). Boş bırakılırsa document_type kullanılır.
+            kullanılan tip etiketi. Boş bırakılırsa document_type kullanılır.
         """
         use_hybrid = bool(self.tokenizer_name)
         parsed = self._converter.convert(
@@ -163,8 +266,6 @@ class DoclingManager:
         return self.pack(
             parsed,
             file_path,
-            min_chars=min_chars,
-            max_chars=max_chars,
             do_pack=do_pack,
             document_type=document_type,
             initial_author=initial_author,
@@ -175,25 +276,32 @@ class DoclingManager:
         self,
         parsed: ParsedDocument,
         file_path: str,
-        min_chars: int = 500,
-        max_chars: int = 1500,
         do_pack: bool = True,
         document_type: str | None = None,
         initial_author: str | None = None,
         initial_role: str | None = None,
     ) -> Tuple[str, List[Dict[str, Any]]]:
         """
-        ParsedDocument'ı chunk'lara paketler.
+        ParsedDocument'ı **token-tabanlı** chunk'lara paketler.
 
         Level-2 (chunk) önbelleği kullanır; cache hit'te doğrudan döner.
-        Üç paketleme yolunu destekler: hybrid, author-aware, greedy.
+
+        Birincil yol atom-tabanlı token paketleme (`_atom_token_pack`): atomlar
+        seçili tokenizer ile max_chunk_tokens'a kadar greedy paketlenir; span,
+        atomların `full_text` içindeki ofsetlerinden türetilir (charspan
+        provenance'a bağlı DEĞİL → OCR belgelerde de %100 span, late chunking
+        aktif). Tablo tek atom olduğundan asla ortadan bölünmez. Yazar metadata'sı
+        post-hoc atanır (tag_chunks_post_hoc).
+
+        Yalnızca tokenizer yoksa basit bir karakter greedy güvenlik ağına düşülür
+        — bu yol üretimde çalışmaz. (`_hybrid_pack` artık kullanılmıyor; HybridChunker
+        OCR'da charspan=(0,0) → span=None ürettiği için bırakıldı.)
 
         Args:
             parsed:         MarkdownConverter.convert() çıktısı.
             file_path:      Yalnızca metadata (kaynak adı) için kullanılır.
-            min_chars / max_chars: Greedy / author-aware yollar için chunk sınırları.
             do_pack:        False ise atomlar chunk olarak olduğu gibi döner.
-            document_type:  Author-aware yol için doküman tipi (ör. "tutanak").
+            document_type:  Author tagging için doküman tipi (ör. "tutanak").
             initial_author / initial_role: İlk konuşmacı bilgisi.
 
         Returns:
@@ -204,17 +312,16 @@ class DoclingManager:
         full_text = parsed.full_text
         ocr_flagged = bool((parsed.quality or {}).get("ocr_flagged", False))
 
-        # Level-2 chunk cache key — aynı şema, mevcut cache dosyaları geçerli kalır
+        # Level-2 chunk cache key — token params (hybrid) veya fallback
+        author_tag = f"_author_{document_type}" if document_type else ""
         if use_hybrid:
-            author_tag = f"_author_{document_type}" if document_type else ""
             chunk_cache_key = hashlib.md5(
-                f"{parsed.ocr_base}_hybrid_{self.tokenizer_name}_{self.max_chunk_tokens}"
+                f"{parsed.ocr_base}_atompack_{self.tokenizer_name}_{self.max_chunk_tokens}"
                 f"_{self.min_chunk_tokens}{author_tag}".encode()
             ).hexdigest()
         else:
-            author_tag = f"_author_{document_type}" if document_type else ""
             chunk_cache_key = hashlib.md5(
-                f"{parsed.ocr_base}_{min_chars}_{max_chars}_{do_pack}{author_tag}".encode()
+                f"{parsed.ocr_base}_fallback_{do_pack}{author_tag}".encode()
             ).hexdigest()
 
         cache_dir = settings.PARSE_CACHE_DIR
@@ -245,67 +352,29 @@ class DoclingManager:
 
         join_str = "\n\n"
 
-        # --- Hybrid path ---
-        if use_hybrid and parsed.dl_doc is not None:
-            full_text_hybrid, final_chunks = self._hybrid_pack(
-                parsed.dl_doc,
+        # --- Atom token-pack (token-aware) — birincil yol ---
+        # Span `full_text`'ten türetilir → OCR'da da %100 span, late chunking aktif.
+        if use_hybrid and parsed.atoms:
+            full_text_packed, final_chunks = self._atom_token_pack(
+                parsed,
                 file_path,
                 document_type=document_type,
                 initial_author=initial_author,
                 initial_role=initial_role,
             )
             self._apply_ocr_flag(final_chunks, ocr_flagged)
-            self._save_chunk_cache(chunk_cache_file, full_text_hybrid, final_chunks)
-            return self._finalize(file_path, parsed, full_text_hybrid, final_chunks)
+            self._save_chunk_cache(chunk_cache_file, full_text_packed, final_chunks)
+            return self._finalize(file_path, parsed, full_text_packed, final_chunks)
 
-        # --- Author-aware path ---
-        if document_type and do_pack:
-            from src.common.parsing.author_extractor import tag_atoms
-            from src.common.parsing.extractors import get_extractor
-            from src.common.parsing.segment_pack import segment_aware_pack
-
-            extractor = get_extractor(document_type)
-            tagged = tag_atoms(
-                atoms_data,
-                extractor,
-                initial_author=initial_author,
-                initial_role=initial_role,
-            )
-            packed = segment_aware_pack(
-                tagged,
-                min_chars=min_chars,
-                max_chars=max_chars,
-                join_str=join_str,
-                inject_continuation_prefix=False,
-            )
-
-            final_chunks = []
-            current_search_pos = 0
-            for chunk in packed:
-                p_text = chunk["text"]
-                start_idx = full_text.find(p_text, current_search_pos)
-                span = None
-                if start_idx != -1:
-                    span = (start_idx, start_idx + len(p_text))
-                    current_search_pos = start_idx + 1
-                merged_meta = {
-                    "source": os.path.basename(file_path),
-                    "char_count": len(p_text),
-                    "is_packed": True,
-                    "type": "AuthorAwarePacked",
-                    "ocr_engine": self.ocr_engine,
-                    **chunk["metadata"],
-                }
-                final_chunks.append({"text": p_text, "span": span, "metadata": merged_meta})
-
-            self._apply_ocr_flag(final_chunks, ocr_flagged)
-            self._save_chunk_cache(chunk_cache_file, full_text, final_chunks)
-            return self._finalize(file_path, parsed, full_text, final_chunks)
-
-        # --- Greedy path ---
+        # --- Karakter greedy güvenlik ağı (yalnız tokenizer/dl_doc yoksa) ---
+        if use_hybrid:
+            print("  [WARN] tokenizer var ama dl_doc yok — karakter greedy fallback'e düşülüyor.")
         if do_pack:
             final_items = greedy_pack_atoms(
-                atoms_data, min_chars=min_chars, max_chars=max_chars, join_str=join_str
+                atoms_data,
+                min_chars=_FALLBACK_MIN_CHARS,
+                max_chars=_FALLBACK_MAX_CHARS,
+                join_str=join_str,
             )
         else:
             final_items = atoms_data
@@ -416,6 +485,74 @@ class DoclingManager:
         except Exception as e:
             print(f"  [WARN] Chunk önbellek yazma hatası: {e}")
 
+    def _atom_token_pack(
+        self,
+        parsed: ParsedDocument,
+        file_path: str,
+        document_type: str | None = None,
+        initial_author: str | None = None,
+        initial_role: str | None = None,
+    ):
+        """Atom granülünde token-aware paketleme — span `full_text`'ten türetilir.
+
+        Birincil yol. HybridChunker'ın charspan provenance'ına bağımlı olmadığı
+        için taranmış/OCR belgelerde de %100 span üretir (late chunking devre dışı
+        kalmaz). Docling'in atom yapısı korunur (tablo = tek atom → bölünmez).
+        """
+        from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
+
+        full_text = parsed.full_text
+        atoms = parsed.atoms
+
+        tokenizer = HuggingFaceTokenizer.from_pretrained(
+            model_name=self.tokenizer_name,
+            max_tokens=self.max_chunk_tokens,
+        )
+
+        packed = token_pack_atoms(
+            atoms,
+            full_text,
+            count_tokens=tokenizer.count_tokens,
+            max_tokens=self.max_chunk_tokens,
+            min_tokens=self.min_chunk_tokens,
+        )
+
+        chunks = []
+        for p in packed:
+            chunks.append(
+                {
+                    "text": p["text"],
+                    "span": p["span"],
+                    "metadata": {
+                        "source": os.path.basename(file_path),
+                        "char_count": len(p["text"]),
+                        "is_packed": True,
+                        "type": "AtomPacked",
+                        "ocr_engine": self.ocr_engine,
+                        "headings": [],
+                        "page": p.get("page"),
+                        "pages": p.get("pages", []),
+                    },
+                }
+            )
+
+        print(f"  [ATOMPACK] {len(atoms)} atom → {len(chunks)} chunk (token-aware, span %100)")
+
+        if document_type:
+            from src.common.parsing.author_extractor import tag_chunks_post_hoc
+            from src.common.parsing.extractors import get_extractor
+
+            extractor = get_extractor(document_type)
+            tag_chunks_post_hoc(
+                chunks,
+                extractor,
+                initial_author=initial_author,
+                initial_role=initial_role,
+            )
+            print(f"  [ATOMPACK] Author meta uygulandı ({document_type})")
+
+        return full_text, chunks
+
     def _hybrid_pack(
         self,
         dl_doc,
@@ -424,7 +561,12 @@ class DoclingManager:
         initial_author: str | None = None,
         initial_role: str | None = None,
     ):
-        """HybridChunker ile belgeyi parçala, charspan'ları kullan, min-token merge uygula."""
+        """[ARTIK KULLANILMIYOR — _atom_token_pack ile değiştirildi]
+
+        HybridChunker ile belgeyi parçala, charspan'ları kullan, min-token merge uygula.
+        OCR belgelerde charspan=(0,0) → span=None ürettiği için bırakıldı; referans/
+        karşılaştırma amacıyla korunuyor.
+        """
         from docling.chunking import HybridChunker
         from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
         from docling_core.transforms.serializer.markdown import MarkdownDocSerializer as _MDS

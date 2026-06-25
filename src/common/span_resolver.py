@@ -20,6 +20,20 @@ def _file_hash(path: str) -> str:
     return h.hexdigest()
 
 
+def _atompack_chunk_cache_key(spec, ocr_base: str) -> str:
+    """docling_manager.pack (atom-token-pack yol) ile birebir aynı chunk cache anahtarı.
+
+    Token-tabanlı: tokenizer_name=spec.embed_model + max/min_chunk_tokens (+ author_tag).
+    """
+    author_tag = (
+        f"_author_{spec.doc_type.value}" if getattr(spec, "doc_type", None) else ""
+    )
+    return hashlib.md5(
+        f"{ocr_base}_atompack_{spec.embed_model}_{spec.max_chunk_tokens}"
+        f"_{spec.min_chunk_tokens}{author_tag}".encode()
+    ).hexdigest()
+
+
 def chunk_id_to_span(chunk_id: str, spec, manifest_conn=None) -> dict | None:
     """Resolve single chunk_id to {'document_id', 'char_start', 'char_end', 'text'}.
 
@@ -57,9 +71,7 @@ def chunk_id_to_span(chunk_id: str, spec, manifest_conn=None) -> dict | None:
         ocr_engine = settings.OCR_ENGINE
         ocr_tag = ""
         ocr_base = f"{file_hash}_{ocr_engine}{ocr_tag}"
-        chunk_cache_key = hashlib.md5(
-            f"{ocr_base}_{spec.min_chunk_chars}_{spec.max_chunk_chars}_True".encode()
-        ).hexdigest()
+        chunk_cache_key = _atompack_chunk_cache_key(spec, ocr_base)
         cache_file = settings.PARSE_CACHE_DIR / f"{chunk_cache_key}.json"
 
         if not cache_file.exists():
@@ -139,15 +151,13 @@ def resolve_spans_from_cache(chunk_ids: list[str], spec) -> tuple[list[dict], li
             ocr_engine = settings.OCR_ENGINE
             ocr_tag = ""
             ocr_base = f"{file_hash}_{ocr_engine}{ocr_tag}"
-            chunk_cache_key = hashlib.md5(
-                f"{ocr_base}_{spec.min_chunk_chars}_{spec.max_chunk_chars}_True".encode()
-            ).hexdigest()
+            chunk_cache_key = _atompack_chunk_cache_key(spec, ocr_base)
             cache_file = cache_dir / f"{chunk_cache_key}.json"
 
             if not cache_file.exists():
                 errors.append(
                     f"`{chunk_id}` — cache bulunamadı "
-                    f"(koleksiyon: {spec.name}, min={spec.min_chunk_chars}, max={spec.max_chunk_chars})"
+                    f"(koleksiyon: {spec.name}, max_tok={spec.max_chunk_tokens}, min_tok={spec.min_chunk_tokens})"
                 )
                 continue
 

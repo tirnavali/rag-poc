@@ -55,11 +55,7 @@ def _parse_doc(doc_path: str) -> Tuple[str, List[Tuple[int, int]]]:
         try:
             from src.common.parsing.docling_manager import DoclingManager
             dm = DoclingManager()
-            full_text, chunks = dm.convert_and_pack(
-                doc_path,
-                min_chars=settings.MINUTES_MIN_CHUNK_CHARS,
-                max_chars=settings.MINUTES_TARGET_CHUNK_CHARS,
-            )
+            full_text, chunks = dm.convert_and_pack(doc_path)
             if chunks:
                 spans = [c["span"] for c in chunks]
                 return full_text, spans
@@ -70,7 +66,7 @@ def _parse_doc(doc_path: str) -> Tuple[str, List[Tuple[int, int]]]:
     with open(doc_path, "r", encoding="utf-8", errors="replace") as f:
         full_text = f.read()
 
-    chunk_size = settings.MINUTES_TARGET_CHUNK_CHARS
+    chunk_size = 1500  # düz-metin fallback için sabit pencere (karakter)
     spans = []
     pos = 0
     while pos < len(full_text):
