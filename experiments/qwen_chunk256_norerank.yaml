@@ -1,0 +1,8 @@
+name: "Qwen chunk256 — sadece norerank (recall@100 embedding tabanı)"
+collections:
+  - tutanaklar_qwen_chunk256_768d
+  - tutanaklar_qwen_chunk256_256d
+fixture: tests/fixtures/golden_tbmm27001001.json
+top_k: [10, 20, 100]
+reranker: false
+fetch_k: 100

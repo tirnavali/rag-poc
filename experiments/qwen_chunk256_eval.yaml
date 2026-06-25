@@ -1,0 +1,13 @@
+name: "Qwen2 chunk256 — Nomic vs Qwen küçük-chunk karşılaştırması (TBMM 27/1 Golden)"
+collections:
+  - tutanaklar_nomic_chunk256_768d    # şu an en iyi (reranker ON)
+  - tutanaklar_nomic_chunk256_256d    # şu an en iyi (reranker OFF)
+  - tutanaklar_qwen_chunk256_768d     # yeni: Qwen × chunk256, 768d (Tier-1 aday)
+  - tutanaklar_qwen_chunk256_256d     # yeni: Qwen × chunk256, 256d (deneysel MRL)
+  # baz çizgisi: büyük-chunk Qwen
+  - tutanaklar_qwen_ctx1024           # Qwen chunk512, 768d
+  - tutanaklar_qwen_dim1024           # Qwen chunk512, 1024d
+fixture: tests/fixtures/golden_tbmm27001001.json
+top_k: [3, 5, 10]
+reranker: true
+fetch_k: 100
