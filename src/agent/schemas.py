@@ -12,7 +12,7 @@ class SearchQueryDraft(BaseModel):
     """Single search query with optional filters."""
     text: str = Field(..., description="Refined search sentence for vector search")
     filters: Optional[FilterCriteria] = Field(None, description="Metadata filters (year, author, etc.)")
-    top_k: int = Field(5, description="Number of results to retrieve")
+    top_k: int = Field(10, description="Number of results to retrieve")
 
 
 class CollectionSearchPlan(BaseModel):

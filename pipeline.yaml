@@ -176,7 +176,7 @@ agent:
             "mode": "parallel|sequential",
             "priority": 1,
             "query_drafts": [
-              {"text": "arama_sorgusu", "filters": {"year": 1997, "author": null}, "top_k": 5}
+              {"text": "arama_sorgusu", "filters": {"year": 1997, "author": null}, "top_k": 10}
             ]
           }
         ],

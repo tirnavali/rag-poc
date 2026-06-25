@@ -18,7 +18,7 @@ from src.common.schemas import FilterCriteria
 
 def test_search_query_draft_defaults():
     d = SearchQueryDraft(text="Kardak")
-    assert d.top_k == 5
+    assert d.top_k == 10
     assert d.filters is None
 
 

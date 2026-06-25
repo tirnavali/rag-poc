@@ -55,7 +55,7 @@ class SearchTool:
         collection_key: str,
         query_text: str,
         filters: dict | None = None,
-        top_k: int = 5,
+        top_k: int = 10,
     ) -> dict:
         """Search a collection and return formatted results.
 

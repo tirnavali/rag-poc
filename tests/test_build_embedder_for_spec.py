@@ -19,6 +19,13 @@ class TestBuildEmbedderForSpec:
         from src.common.embeddings import build_embedder_for_spec
         from src.trainer.ingestion.embedder import LocalLateChunkingEmbedder
 
+        MODEL_SPECS["jinaai/jina-embeddings-v3"] = {
+            "max_context_tokens": 8192,
+            "overlap_tokens": 128,
+            "embed_dim": 768,
+            "supports_late_chunking": True,
+        }
+
         spec = CollectionSpec(
             name="test_jina",
             db_path="/tmp",
@@ -36,9 +43,16 @@ class TestBuildEmbedderForSpec:
 
     def test_ollama_spec_returns_l2_wrapped(self):
         """Spec with supports_late_chunking=False → L2NormalizedEmbeddings wrapping OllamaEmbeddings."""
-        from src.config.collections import CollectionSpec
+        from src.config.collections import CollectionSpec, MODEL_SPECS
         from src.common.embeddings import build_embedder_for_spec, L2NormalizedEmbeddings
         from langchain_ollama import OllamaEmbeddings
+
+        MODEL_SPECS["nomic-embed-text-v2-moe"] = {
+            "max_context_tokens": 512,
+            "overlap_tokens": 64,
+            "embed_dim": 768,
+            "supports_late_chunking": False,
+        }
 
         spec = CollectionSpec(
             name="test_nomic",

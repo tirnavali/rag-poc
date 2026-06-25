@@ -61,7 +61,7 @@ JSON çıktısı:
       "mode": "parallel|sequential",
       "priority": 1,
       "query_drafts": [
-        {{"text": "arama_sorgusu", "top_k": 5}}
+        {{"text": "arama_sorgusu", "top_k": 10}}
       ]
     }}
   ],
@@ -369,11 +369,11 @@ class PlanningAgent:
                 text = d.get("text")
                 if not isinstance(text, str) or not text.strip():
                     continue
-                top_k = d.get("top_k", 5)
+                top_k = d.get("top_k", 10)
                 drafts.append(SearchQueryDraft(
                     text=text.strip(),
                     filters=None,  # FilterExtractor doldurur; LLM filtreleri yok sayılır
-                    top_k=top_k if isinstance(top_k, int) and top_k > 0 else 5,
+                    top_k=top_k if isinstance(top_k, int) and top_k > 0 else 10,
                 ))
             if not drafts:
                 continue

@@ -75,7 +75,7 @@ class TestBenchmarkPageOverlap:
         assert "precision_2" in result["metrics"]
         assert "precision_3" in result["metrics"]
         assert "mrr" in result["metrics"]
-        assert "ndcg_10" in result["metrics"]
+        assert "ndcg_3" in result["metrics"]
 
         # Explanation of metrics:
         # retrieved chunks:
@@ -91,9 +91,9 @@ class TestBenchmarkPageOverlap:
         #
         # MRR: first hit at rank 1 -> 1.0
         #
-        # NDCG@10:
+        # NDCG@3:
         # gains = [1, 1, 0]
-        # ideal = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0] (since there are 2 relevant keys)
+        # ideal = [1, 1, 0] (since there are 2 relevant keys)
         # actual_dcg = 1/log2(2) + 1/log2(3) = 1 + 0.6309 = 1.6309
         # ideal_dcg = 1/log2(2) + 1/log2(3) = 1.6309
         # NDCG = 1.0
@@ -111,4 +111,4 @@ class TestBenchmarkPageOverlap:
         assert result["metrics"]["hit_rate_3"] == 1.0
 
         assert result["metrics"]["mrr"] == 1.0
-        assert abs(result["metrics"]["ndcg_10"] - 1.0) < 1e-6
+        assert abs(result["metrics"]["ndcg_3"] - 1.0) < 1e-6

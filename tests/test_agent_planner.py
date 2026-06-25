@@ -10,7 +10,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from src.agent.planner import PlanningAgent
-from src.agent.schemas import CollectionSearchPlan, SearchPlan, SearchQueryDraft
+from src.agent.schemas import CollectionSearchPlan, SearchPlan, SearchQueryDraft, ValidationResult
 from src.agent.tracer import PipelineTracer
 from src.common.llm_client_pool import LLMClientPool
 from src.common.schemas import ExtractedFilterResponse, FilterCriteria
@@ -18,6 +18,30 @@ from src.config.pipeline_loader import load_pipeline_config
 
 
 def _agent(filter_extractor=None) -> PlanningAgent:
+    from src.config.collections import register_spec, CollectionSpec
+    from src.config.document_types import DocumentType
+    from pathlib import Path
+    try:
+        register_spec("tbmm_minutes", CollectionSpec(
+            name="tbmm_minutes",
+            db_path=Path("/tmp"),
+            embed_model="jinaai/jina-embeddings-v3-ctx1024",
+            doc_type=DocumentType.TUTANAK,
+        ))
+        register_spec("gazete_arsivi", CollectionSpec(
+            name="gazete_arsivi",
+            db_path=Path("/tmp"),
+            embed_model="jinaai/jina-embeddings-v3-ctx1024",
+            doc_type=DocumentType.GAZETE,
+        ))
+        register_spec("test", CollectionSpec(
+            name="test",
+            db_path=Path("/tmp"),
+            embed_model="jinaai/jina-embeddings-v3-ctx1024",
+            doc_type=DocumentType.CUSTOM,
+        ))
+    except Exception:
+        pass
     cfg = load_pipeline_config()
     pool = LLMClientPool.from_config(cfg)
     return PlanningAgent(cfg, pool, filter_extractor)
@@ -257,6 +281,10 @@ def test_run_restricts_to_session_collections(monkeypatch):
         agent._answer_tool, "generate",
         lambda query, context, mufettis_mode=False: ("t", "ok"),
     )
+    monkeypatch.setattr(
+        agent._sanitizer, "validate",
+        lambda *a, **kw: ValidationResult(passes=True),
+    )
     monkeypatch.setattr(agent._sanitizer, "sanitize", lambda *a, **kw: "ok")
     agent._bad_words = None
     agent._classifier = None
@@ -300,6 +328,10 @@ def test_reretrieval_stays_within_session_collections(monkeypatch):
     monkeypatch.setattr(
         agent._answer_tool, "generate",
         lambda query, context, mufettis_mode=False: ("t", "ok"),
+    )
+    monkeypatch.setattr(
+        agent._sanitizer, "validate",
+        lambda *a, **kw: ValidationResult(passes=True),
     )
     monkeypatch.setattr(agent._sanitizer, "sanitize", lambda *a, **kw: "ok")
     agent._bad_words = None
@@ -470,6 +502,10 @@ def test_legacy_run_propagates_extracted_filters_to_search(monkeypatch):
     monkeypatch.setattr(
         agent._answer_tool, "generate",
         lambda query, context, mufettis_mode=False: ("t", "ok"),
+    )
+    monkeypatch.setattr(
+        agent._sanitizer, "validate",
+        lambda *a, **kw: ValidationResult(passes=True),
     )
     monkeypatch.setattr(agent._sanitizer, "sanitize", lambda *a, **kw: "ok")
     # Gate'leri sadeleştir.
