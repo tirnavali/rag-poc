@@ -13,7 +13,7 @@ from src.common.parsing.docling_manager import (
     _atom_char_spans,
     token_pack_atoms,
 )
-from docling.backend.docling_parse_backend import DoclingParseDocumentBackend
+from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
 from docling.datamodel.base_models import InputFormat
 
 
@@ -99,12 +99,16 @@ def test_token_pack_oversize_atom_becomes_own_chunk():
 
 
 def test_docling_manager_uses_pypdfium_backend():
-    """DoclingManager'ın PDF formatı için varsayılan Docling backend'i kullandığını doğrular."""
+    """DoclingManager'ın PDF formatı için PyPdfium backend'i kullandığını doğrular.
+
+    Varsayılan Docling backend'i (DoclingParse) bazı gömülü fontları yanlış çözüp
+    glyph-substitution bozulması üretir ("Adalet" → "AGaOeW"); PyPdfium bunu giderir.
+    """
     manager = DoclingManager(do_ocr=False)
     format_options = manager._converter.converter.format_to_options
     assert InputFormat.PDF in format_options
     pdf_option = format_options[InputFormat.PDF]
-    assert pdf_option.backend == DoclingParseDocumentBackend
+    assert pdf_option.backend == PyPdfiumDocumentBackend
 
 
 @pytest.mark.slow

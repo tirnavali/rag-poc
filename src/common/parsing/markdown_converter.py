@@ -27,6 +27,7 @@ from docling.datamodel.pipeline_options import (
     PdfPipelineOptions,
     TesseractCliOcrOptions,
 )
+from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling_core.transforms.serializer.markdown import MarkdownDocSerializer
 
@@ -104,9 +105,16 @@ class MarkdownConverter:
         else:
             pipeline_options = PdfPipelineOptions(do_ocr=False, images_scale=self.images_scale)
 
+        # PyPdfium backend: gömülü fontun ToUnicode/CMap eşlemesi bozuk PDF'lerde
+        # Docling'in varsayılan backend'i native metin katmanını yanlış Unicode'a
+        # çevirir ("Adalet" → "AGaOeW"). PyPdfium bu glyph-substitution bozulmasını
+        # giderir. (4608ce5'te eklenmiş, MarkdownConverter refaktöründe kaybolmuştu.)
         self.converter = DocumentConverter(
             format_options={
-                InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
+                InputFormat.PDF: PdfFormatOption(
+                    pipeline_options=pipeline_options,
+                    backend=PyPdfiumDocumentBackend,
+                )
             }
         )
 
@@ -149,7 +157,10 @@ class MarkdownConverter:
                 vlm_tag = f"_vlm-{self.ollama_model}"
         else:
             vlm_tag = ""
-        ocr_base = f"{file_hash}_{self.ocr_engine}{ocr_tag}_scale{self.images_scale}{vlm_tag}"
+        # _pypdfium: PyPdfium backend'iyle üretilen (doğru-kodlanmış) atom'lar, eski
+        # varsayılan-backend (bozuk) cache'inden ayrı anahtarlansın; aksi halde
+        # reingest eski bozuk metni cache'ten okur.
+        ocr_base = f"{file_hash}_{self.ocr_engine}{ocr_tag}_scale{self.images_scale}_pypdfium{vlm_tag}"
         ocr_cache_key = hashlib.md5(ocr_base.encode()).hexdigest()
 
         cache_dir = settings.PARSE_CACHE_DIR
