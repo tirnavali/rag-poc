@@ -6,9 +6,13 @@
 <title>Golden Q&A Builder</title>
 <style>
   :root {
-    --bg: #0f1115; --panel: #181b22; --panel2: #1f232c; --border: #2a2f3a;
-    --fg: #e6e8ec; --muted: #9aa3b2; --accent: #4f8cff; --accent2: #2dd4bf;
-    --warn: #f59e0b; --ok: #22c55e; --chip: #28303f;
+    /* kabuk: saf-siyahtan ılık-koyuya — uzun oturumda halation/kontrast yorgunluğu azalır */
+    --bg: #15171c; --panel: #1c1f27; --panel2: #242833; --border: #313745;
+    --fg: #dfe3ea; --muted: #9aa3b2; --accent: #5b94ff; --accent2: #34d8c4;
+    --warn: #f59e0b; --ok: #22c55e; --chip: #2a3140;
+    /* okuma yüzeyi: sıcak kâğıt — yoğun tutanak metnini okumak için */
+    --paper: #f4efe4; --paper-card: #fbf8f1; --paper-border: #e0d6c3;
+    --ink: #26221b; --ink-muted: #6f6757; --ink-head: #0e6f6a;
   }
   * { box-sizing: border-box; }
   body {
@@ -40,12 +44,20 @@
   .nav { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--panel); flex-wrap: wrap; }
   .nav select { max-width: 260px; }
   .nav input.page-jump { width: 64px; text-align: center; }
-  .page-view { flex: 1; overflow: auto; padding: 18px 22px; }
-  .page-view .md { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
-  .md h2, .md h3 { color: var(--accent2); margin: .6em 0 .3em; font-size: 15px; }
-  .md table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13px; }
-  .md th, .md td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; vertical-align: top; }
-  .md p { margin: .4em 0; }
+  .page-view { flex: 1; overflow: auto; padding: 22px 22px 60px; background: var(--paper); }
+  .page-view .md {
+    background: var(--paper-card); border: 1px solid var(--paper-border); border-radius: 10px;
+    padding: 30px 38px; max-width: 74ch; margin: 0 auto;          /* satır ölçüsü ~74 karakter */
+    color: var(--ink); font-size: 16px; line-height: 1.78;        /* ferah okuma tipografisi */
+    box-shadow: 0 1px 3px rgba(0,0,0,.18); text-rendering: optimizeLegibility;
+  }
+  .md h2, .md h3 { color: var(--ink-head); margin: 1.2em 0 .4em; font-size: 18px; font-weight: 700; line-height: 1.35; }
+  .md table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 14px; line-height: 1.5; }
+  .md th, .md td { border: 1px solid var(--paper-border); padding: 6px 10px; text-align: left; vertical-align: top; }
+  .md th { background: #efe7d7; color: var(--ink); font-weight: 700; }
+  .md p { margin: .65em 0; }
+  .md strong, .md b { color: #15110a; }
+  .md a { color: #1d6fb8; }
   .pane { padding: 14px 16px; flex: 0 0 auto; }
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px 16px; }
   .card + .card { margin-top: 12px; }
@@ -56,6 +68,9 @@
   .searchrow textarea { flex: 1; min-height: 48px; }
   .searchrow .kbox { display: flex; flex-direction: column; width: 84px; }
   .searchrow .kbox input { width: 100%; }
+  .searchrow .kbox.rr { width: auto; justify-content: flex-end; }
+  .rrbtn { background: var(--panel2); border: 1px solid var(--border); color: var(--muted); border-radius: 20px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+  .rrbtn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
   .searchrow .gobtn { white-space: nowrap; padding: 10px 14px; }
   /* sonuçlar */
   .results { margin-top: 12px; max-height: 42vh; overflow: auto; border: 1px solid var(--border); border-radius: 10px; }
@@ -68,7 +83,7 @@
   .res .rhead { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 10px; }
   .res .rhead .pg { color: var(--accent2); font-weight: 600; }
   .res .rhead .sc { color: var(--ok); font-variant-numeric: tabular-nums; }
-  .res .snip { font-size: 12.5px; margin-top: 3px; color: var(--fg); max-height: 3.4em; overflow: hidden; }
+  .res .snip { font-size: 13.5px; line-height: 1.55; margin-top: 4px; color: var(--fg); max-height: 4.6em; overflow: hidden; }
   .res .markbtn { flex: 0 0 auto; align-self: center; font-size: 12px; padding: 5px 9px; border-radius: 18px; background: var(--panel2); border: 1px solid var(--border); color: var(--muted); font-weight: 600; }
   .res .markbtn.on { background: var(--ok); border-color: var(--ok); color: #06210f; }
   .res .markbtn:disabled { opacity: .35; }
@@ -96,7 +111,7 @@
   .entry { padding: 9px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 8px; }
   .entry:hover { background: var(--panel); }
   .entry .body { flex: 1; min-width: 0; cursor: pointer; }
-  .entry .q { font-size: 13px; }
+  .entry .q { font-size: 13.5px; line-height: 1.5; }
   .entry .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .entry .entry-actions { display: flex; gap: 4px; flex-shrink: 0; padding-top: 2px; }
   .entry .entry-actions button { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); padding: 2px 7px; font-size: 12px; cursor: pointer; }
@@ -105,7 +120,7 @@
   .edit-badge { display:none; font-size:11px; background: rgba(79,140,255,.15); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; padding: 2px 8px; margin-left: 4px; vertical-align: middle; }
   .editing .edit-badge { display: inline; }
   .editing .card-title { color: var(--warn); }
-  .pagebtn-bar { position: sticky; top: 0; background: var(--bg); padding-bottom: 10px; margin-bottom: 4px; z-index: 2; }
+  .pagebtn-bar { position: sticky; top: 0; background: var(--paper); padding: 4px 0 12px; margin: -4px 0 4px; z-index: 2; }
   kbd { background: var(--panel2); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; font-size: 11px; }
 </style>
 </head>
@@ -146,10 +161,14 @@
             <label style="margin:0 0 4px">Sonuç</label>
             <input id="topk" type="number" min="1" max="100" value="30">
           </div>
+          <div class="kbox rr">
+            <label style="margin:0 0 4px">Havuz</label>
+            <button class="rrbtn" id="rrBtn" type="button" title="Etiketleme havuzunun reranker ile mi yoksa salt embedding (tarafsız) ile mi toplanacağını seçer">Reranker</button>
+          </div>
           <button class="gobtn" id="searchBtn">Ara</button>
         </div>
         <div class="results" id="results"></div>
-        <div class="hint" id="searchHint">Sonuçlar tüm derlemden gelir (retrieval + cross-encoder rerank). İlgili sonuçta <b>+ golden</b> ile o sayfayı işaretleyin.</div>
+        <div class="hint" id="searchHint">Sonuçlar tüm derlemden gelir (rerank kapalı — embedding tabanı havuz). İlgili sonuçta <b>+ golden</b> ile o sayfayı işaretleyin.</div>
       </div>
 
       <!-- 2) Kayıt formu -->
@@ -194,6 +213,7 @@ const state = {
   selMarks: new Map(),           // key `${doc}#${page}` -> {document_id, page, label}
   entries: [],                   // tüm golden sorular
   cat: null, diff: null, editId: null,
+  useReranker: false,            // etiketleme havuzu varsayılan: reranker KAPALI (tarafsız embedding havuzu)
 };
 const CATS = ["narrative", "deputy", "bulletin"];
 const DIFFS = ["easy", "medium", "hard"];
@@ -265,6 +285,12 @@ function buildTagRows(){
     state.diff = state.diff === b.dataset.diff ? null : b.dataset.diff; syncTags();
   });
 }
+
+function syncReranker(){
+  const b = $("rrBtn");
+  b.classList.toggle("on", state.useReranker);
+  b.textContent = state.useReranker ? "Reranker: açık" : "Reranker: kapalı";
+}
 function syncTags(){
   $("catRow").querySelectorAll(".tagbtn").forEach(b => b.classList.toggle("on", b.dataset.cat === state.cat));
   $("diffRow").querySelectorAll(".tagbtn").forEach(b => b.classList.toggle("on", b.dataset.diff === state.diff));
@@ -280,7 +306,7 @@ async function runSearch(){
   try {
     const res = await getJSON("/api/retrieve", {
       method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ query, top_k })
+      body: JSON.stringify({ query, top_k, use_reranker: state.useReranker })
     });
     if(res.error){
       $("results").innerHTML = "";
@@ -290,7 +316,8 @@ async function runSearch(){
     }
     state.results = res.results || [];
     renderResults();
-    $("searchHint").innerHTML = `${state.results.length} sonuç · <code>${esc(res.collection)}</code> · ilgili olanı <b>+ golden</b> ile işaretleyin, satıra tıklayınca sayfası solda açılır.`;
+    const mode = res.reranker ? "rerank açık" : "rerank kapalı — embedding havuzu";
+    $("searchHint").innerHTML = `${state.results.length} sonuç · <code>${esc(res.collection)}</code> · ${mode} · ilgili olanı <b>+ golden</b> ile işaretleyin, satıra tıklayınca sayfası solda açılır.`;
   } catch(e){ $("searchHint").innerHTML = `<span style="color:#ffc2c2">İstek hatası: ${esc(""+e)}</span>`; }
   finally { $("searchBtn").disabled = false; }
 }
@@ -519,6 +546,8 @@ $("pageJump").onchange = () => {
 };
 $("addPageBtn").onclick = addCurrentPageManual;
 $("searchBtn").onclick = runSearch;
+$("rrBtn").onclick = () => { state.useReranker = !state.useReranker; syncReranker(); };
+syncReranker();
 $("query").addEventListener("keydown", (e) => {
   if(e.key === "Enter" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); runSearch(); }
 });

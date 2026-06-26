@@ -31,6 +31,7 @@ class VectorRetriever:
         fetch_k: int = settings.RETRIEVE_FETCH_K,
         mufettis_mode: bool = False,
         where_filter: Optional[dict] = None,
+        rerank: Optional[bool] = None,
     ) -> RetrievalResult:
         """Retrieve and post-process. Applies date filtering + metadata prefix + window cropping.
 
@@ -40,6 +41,10 @@ class VectorRetriever:
             fetch_k: candidates before reranking
             mufettis_mode: use deep research settings (40 results, 150 fetch)
             where_filter: pre-extracted filter dictionary (bypasses automatic date extraction)
+            rerank: per-call override for cross-encoder reranking. None = use settings.USE_RERANKER
+                (default behavior). True/False forces rerank on/off for this call only — used by
+                golden_builder to build an unbiased (rerank-off) labeling pool without touching
+                the global setting.
 
         Returns:
             RetrievalResult TypedDict with documents/metadatas/distances in list-of-lists shape.
@@ -70,9 +75,10 @@ class VectorRetriever:
             _find_years(where_filter)
             parsed_dates = {"years": years_found, "exact_dates": []}
 
-        # Build reranker if enabled
+        # Build reranker if enabled (per-call `rerank` overrides the global setting)
+        use_reranker = settings.USE_RERANKER if rerank is None else rerank
         reranker = None
-        if settings.USE_RERANKER:
+        if use_reranker:
             from src.retriever.reranker import CrossEncoderReranker
             reranker = CrossEncoderReranker()
 

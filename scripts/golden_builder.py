@@ -4,7 +4,7 @@ bağımlılıksız (stdlib) HTTP arayüzü.
 
     python -m scripts.golden_builder            # http://localhost:8765
     python -m scripts.golden_builder --port 9000 --fixture path/to/golden.json
-    python -m scripts.golden_builder --collection tutanaklar_ctx1024
+    python -m scripts.golden_builder --collection tutanaklar_nomic_chunk256_768d
 
 İki çalışma akışı vardır:
 
@@ -91,23 +91,49 @@ def _discover_documents() -> list[dict]:
             "_pages_path": str(pages_path),
         }
 
-    # 2) pages/ dizininden: reports'ta yer almayan dosyaları da ekle
+    # 2) pages/ dizininden: reports'ta yer almayan dosyaları da ekle.
+    # VLM açıkken artefaktlar __vlm sufiksiyle yazılır; aynı belgenin eski (VLM'siz)
+    # plain sidecar'ı bayat kalıp golden_builder'da "hayalet bozuk belge" olarak
+    # görünür. Bu yüzden plain ve __vlm aynı belge sayılır (base = sufiksiz ad) ve
+    # __vlm (kanonik) tercih edilir; report zaten kapsayan base'ler atlanır.
+    # base = tablo-çıkarıcı sufiksleri (__vlm/__tess/__paddle[-model]) ve _pages.json
+    # soyulmuş ad; aynı belgenin farklı çıkarıcı varyantları tek belgede toplanır.
+    def _pages_base(name: str) -> str:
+        b = name[: -len("_pages.json")] if name.endswith("_pages.json") else name
+        b = re.sub(r"__paddle(-[\w.\-]+)?$", "", b)
+        for suf in ("__vlm", "__tess"):
+            if b.endswith(suf):
+                b = b[: -len(suf)]
+        return b
+
+    report_bases = {_pages_base(Path(d["_pages_path"]).name) for d in docs.values()}
+
+    by_base: dict[str, list[Path]] = {}
     for pages_file in sorted(PAGES_DIR.glob("*_pages.json")):
-        stem = pages_file.name  # örn: tbmm27001002__30ee9f62_pages.json
-        # reports'tan zaten eklendiyse atla
-        already = any(
-            Path(d["_pages_path"]) == pages_file for d in docs.values()
-        )
-        if already:
-            continue
-        # document_id olarak dosya adının stem kısmını kullan
-        doc_id = pages_file.stem.replace("_pages", "")  # tbmm27001002__30ee9f62
+        by_base.setdefault(_pages_base(pages_file.name), []).append(pages_file)
+
+    # kanonik tercih sırası: __vlm > __tess > __paddle > plain
+    def _variant_rank(f: Path) -> int:
+        n = f.name
+        if n.endswith("__vlm_pages.json"):
+            return 0
+        if n.endswith("__tess_pages.json"):
+            return 1
+        if "__paddle" in n:
+            return 2
+        return 3
+
+    for base, files in sorted(by_base.items()):
+        if base in report_bases:
+            continue  # report kanonik artefaktıyla zaten ekledi
+        chosen = sorted(files, key=_variant_rank)[0]
+        doc_id = chosen.stem.replace("_pages", "")
         docs[doc_id] = {
             "document_id": doc_id,
             "document_source": "",
             "session": None,
             "document_date": "",
-            "_pages_path": str(pages_file),
+            "_pages_path": str(chosen),
         }
 
     # session numarasına göre sırala (tutanaklar önce, diğerleri sona)
@@ -219,7 +245,7 @@ class Handler(BaseHTTPRequestHandler):
     # sınıf değişkenleri server kurulumunda atanır
     manifest_path: Path | None = None  # None = otomatik keşif (önerilen)
     fixture_path: Path = DEFAULT_FIXTURE
-    collection_name: str = "tutanaklar_ctx1024"  # retrieval havuzu (üretim koleksiyonu)
+    collection_name: str = "tutanaklar_nomic_chunk256_768d"  # retrieval havuzu (üretim koleksiyonu)
     _docs_cache: list[dict] | None = None
     _docs_index: dict[str, dict] | None = None
     _retriever = None  # lazy: ilk /api/retrieve çağrısında kurulur
@@ -383,6 +409,10 @@ class Handler(BaseHTTPRequestHandler):
         except (ValueError, TypeError):
             top_k = 30
         top_k = max(1, min(top_k, 100))
+        # Rerank havuz seçimini per-call kontrol eder; global settings.USE_RERANKER'a
+        # dokunmaz (ThreadingHTTPServer'da global mutasyon thread-race olur). UI her
+        # zaman açıkça gönderir; anahtar yoksa eski REST davranışı (açık) korunur.
+        use_reranker = bool(payload.get("use_reranker", True))
 
         retr = self._get_retriever()
         if retr is None:
@@ -396,7 +426,7 @@ class Handler(BaseHTTPRequestHandler):
 
         # rerank havuzu top_k'nın en az 4 katı (sağlıklı cross-encoder seçimi için)
         fetch_k = max(top_k * 4, 120)
-        res = retr.retrieve(query, top_k=top_k, fetch_k=fetch_k)
+        res = retr.retrieve(query, top_k=top_k, fetch_k=fetch_k, rerank=use_reranker)
         docs = res["documents"][0]
         metas = res["metadatas"][0]
         dists = res["distances"][0]
@@ -430,7 +460,12 @@ class Handler(BaseHTTPRequestHandler):
                 }
             )
         return self._send_json(
-            {"query": query, "collection": self.collection_name, "results": out}
+            {
+                "query": query,
+                "collection": self.collection_name,
+                "reranker": use_reranker,
+                "results": out,
+            }
         )
 
     def _handle_delete(self, payload: dict):
@@ -598,8 +633,8 @@ def main() -> int:
     ap.add_argument("--fixture", type=Path, default=DEFAULT_FIXTURE)
     ap.add_argument(
         "--collection",
-        default="tutanaklar_ctx1024",
-        help="Retrieval havuzu için üretim koleksiyonu (models.yaml). Vars: tutanaklar_ctx1024",
+        default="tutanaklar_nomic_chunk256_768d",
+        help="Retrieval havuzu için üretim koleksiyonu (models.yaml). Vars: tutanaklar_nomic_chunk256_768d",
     )
     ap.add_argument(
         "--manifest",
