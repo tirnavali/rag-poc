@@ -1,6 +1,6 @@
 {
     "version": "1.0",
-    "collection": "tbmm_tutanaklar_nomic_v2",
+    "collection": "tutanaklar_nomic_chunk256_768d",
     "documents": [
         {
             "document_id": "tutanak-27-02-01-20181001",
@@ -61,6 +61,91 @@
             "period": 27,
             "legislative_year": 2,
             "session": 6,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": true,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-02-07-20181016",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c003/tbmm27003007.pdf",
+            "document_date": "2018-10-16",
+            "period": 27,
+            "legislative_year": 2,
+            "session": 7,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": true,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-02-08-20181017",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c003/tbmm27003008.pdf",
+            "document_date": "2018-10-17",
+            "period": 27,
+            "legislative_year": 2,
+            "session": 8,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": true,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-02-09-20181023",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c003/tbmm27003009.pdf",
+            "document_date": "2018-10-23",
+            "period": 27,
+            "legislative_year": 2,
+            "session": 9,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": true,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-02-10-20181024",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c003/tbmm27003010.pdf",
+            "document_date": "2018-10-24",
+            "period": 27,
+            "legislative_year": 2,
+            "session": 10,
+            "author": "TBMM",
+            "author_role": "meclis",
+            "source_name": "TBMM Tutanakları",
+            "ocr": true,
+            "metadata": {
+                "is_full_minutes": true,
+                "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
+            }
+        },
+        {
+            "document_id": "tutanak-27-02-11-20181030",
+            "document_type": "tutanak",
+            "document_source": "http://www5.tbmm.gov.tr/tutanaklar/TUTANAK/TBMM/d27/c003/tbmm27003011.pdf",
+            "document_date": "2018-10-30",
+            "period": 27,
+            "legislative_year": 2,
+            "session": 11,
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",

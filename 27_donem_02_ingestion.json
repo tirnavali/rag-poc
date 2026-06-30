@@ -1,6 +1,6 @@
 {
     "version": "1.0",
-    "collection": "tbmm_tutanaklar_nomic_v2",
+    "collection": "tutanaklar_nomic_chunk256_768d",
     "documents": [
         {
             "document_id": "tutanak-27-02-01-20181001",
@@ -13,7 +13,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -30,7 +30,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -47,7 +47,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -64,7 +64,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -81,7 +81,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -98,7 +98,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -115,7 +115,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -132,7 +132,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -149,7 +149,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -166,7 +166,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -183,7 +183,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -200,7 +200,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -217,7 +217,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -234,7 +234,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -251,7 +251,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -268,7 +268,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -285,7 +285,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -302,7 +302,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -319,7 +319,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -336,7 +336,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -353,7 +353,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -370,7 +370,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -387,7 +387,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -404,7 +404,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -421,7 +421,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -438,7 +438,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -455,7 +455,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -472,7 +472,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -489,7 +489,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -506,7 +506,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -523,7 +523,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -540,7 +540,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -557,7 +557,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -574,7 +574,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -591,7 +591,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -608,7 +608,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -625,7 +625,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -642,7 +642,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -659,7 +659,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -676,7 +676,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -693,7 +693,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -710,7 +710,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -727,7 +727,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -744,7 +744,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -761,7 +761,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -778,7 +778,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -795,7 +795,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -812,7 +812,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -829,7 +829,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -846,7 +846,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -863,7 +863,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -880,7 +880,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -897,7 +897,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -914,7 +914,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -931,7 +931,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -948,7 +948,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -965,7 +965,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -982,7 +982,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -999,7 +999,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1016,7 +1016,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1033,7 +1033,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1050,7 +1050,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1067,7 +1067,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1084,7 +1084,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1101,7 +1101,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1118,7 +1118,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1135,7 +1135,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1152,7 +1152,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1169,7 +1169,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1186,7 +1186,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1203,7 +1203,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1220,7 +1220,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1237,7 +1237,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1254,7 +1254,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1271,7 +1271,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1288,7 +1288,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1305,7 +1305,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1322,7 +1322,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1339,7 +1339,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1356,7 +1356,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1373,7 +1373,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1390,7 +1390,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1407,7 +1407,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1424,7 +1424,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1441,7 +1441,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1458,7 +1458,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1475,7 +1475,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1492,7 +1492,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1509,7 +1509,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1526,7 +1526,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1543,7 +1543,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1560,7 +1560,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1577,7 +1577,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1594,7 +1594,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1611,7 +1611,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1628,7 +1628,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1645,7 +1645,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1662,7 +1662,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1679,7 +1679,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1696,7 +1696,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1713,7 +1713,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1730,7 +1730,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="
@@ -1747,7 +1747,7 @@
             "author": "TBMM",
             "author_role": "meclis",
             "source_name": "TBMM Tutanakları",
-            "ocr": false,
+            "ocr": true,
             "metadata": {
                 "is_full_minutes": true,
                 "kaynak_url": "https://www5.tbmm.gov.tr/develop/owa/tutanak_dergisi_pdfler.birlesimler?v_meclis=1&v_donem=d27&v_yasama_yili=2&v_cilt="

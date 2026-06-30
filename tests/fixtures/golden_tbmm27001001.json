@@ -34,7 +34,59 @@
       {
         "document_id": "tutanak-27-01-02-20180709",
         "pages": [
-          6
+          6,
+          8
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-01-20181001",
+        "pages": [
+          156,
+          330,
+          333,
+          334,
+          339
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [
+          27,
+          29,
+          30,
+          32
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          81
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          9,
+          66,
+          67
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-06-20180716",
+        "pages": [
+          14
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          242
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          50
         ]
       }
     ],
@@ -43,7 +95,9 @@
       "tbmm-minutes",
       "page-level",
       "narrative",
-      "easy"
+      "easy",
+      "cross-page",
+      "cross-document"
     ]
   },
   {
@@ -558,25 +612,33 @@
   },
   {
     "id": "tbmm27-01-09-002",
-    "query": "27.nci dönemde OHAL uzatılmasına yönelik eleştiriler",
+    "query": "OHAL uzatılmasına yönelik eleştiriler",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-09-20180724",
         "pages": [
           50,
           51,
+          63,
+          64,
+          67,
           74,
+          84,
           85,
           90,
+          99,
           100,
+          121,
           131
         ]
       },
       {
         "document_id": "tutanak-27-01-08-20180723",
         "pages": [
+          43,
           62,
           63,
+          64,
           65,
           71,
           89,
@@ -585,7 +647,27 @@
           108,
           114,
           125,
+          157,
           162
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-07-20180717",
+        "pages": [
+          25,
+          26
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          231
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-06-20180716",
+        "pages": [
+          21
         ]
       }
     ],
@@ -617,6 +699,1331 @@
       "page-level",
       "deputy",
       "medium",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-02-01-001",
+    "query": "avrupa birliğinin demir yollarının iyileştirilmesi için para hibe ettiği iddiası",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-01-20181001",
+        "pages": [
+          3,
+          152,
+          154,
+          155
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          21
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-01-002",
+    "query": "27ci dönemde yaşanan çorlu tren kazasında devletin hatası neydi",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-01-20181001",
+        "pages": [
+          167,
+          168,
+          170,
+          171,
+          172,
+          333,
+          336,
+          337
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          81
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-02-20180709",
+        "pages": [
+          8
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          66
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-06-001",
+    "query": "Kerbela olayı",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          3,
+          150,
+          163,
+          170,
+          265
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          103
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [
+          94
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-06-002",
+    "query": "FETÖ davaları nedeniyle yaşanan mağduriyet",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          160
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          54,
+          55,
+          56,
+          57,
+          58,
+          108
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          220,
+          243
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          99
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [
+          120,
+          122,
+          123
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-07-20181016",
+        "pages": [
+          165
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-08-20180723",
+        "pages": [
+          91
+        ]
+      }
+    ],
+    "golden_answer": "arzumuz bu kararların ve bu uygulamaların hakkaniyetli olmasıdır ama bize gelen, bizlere intikal eden birçok konunun ne kadar çok insanı mağdur ettiğini görmekten de üzüntü duyuyoruz\n\nFETÖ soruşturmaları nedeniyle kamuda çok sayıda kadroda boşalma söz konusu olmuştur. Yirmi bir günlük temel eğitim nedeniyle hâkimler, doktorlar, avukatlar ve kamuda çalışan çok sayıda kişi işini bırakıp askerlik görevini yerine getireceklerdir. Bu yirmi bir günlük temel eğitim kamuda yeni boşalmalara sebebiyet verecektir, bu da vatandaşların mağduriyetine neden olacaktır\n\nŞimdi, 15 Temmuz sonrası adaletsizlik uygulamaları yine FETÖ'nün ekmeğine yağ çalar\n\nTürkiye'de hâl böyleyse ve yargıç teminatı kalmamışsa FETÖ soruşturmalarından sağlıklı sonuç almak hiç mümkün değildir,",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-10-001",
+    "query": "Doğu türkistanın yaşadığı zulüm",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          14,
+          15
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          150,
+          160
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-09-20181023",
+        "pages": [
+          50
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "medium",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-10-002",
+    "query": "27nci dönemde ranta yönelik eleştiriler",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          15,
+          16,
+          17
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          58
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          178,
+          229
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          118,
+          121
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-09-20181023",
+        "pages": [
+          45
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-10-003",
+    "query": "kıbrısta yaşanan zulüm",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          74
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-08-20180723",
+        "pages": [
+          45
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-06-003",
+    "query": "müslümanların yaşatılan zulümler nelerdir",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          150,
+          151,
+          163,
+          170
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          103,
+          214
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-09-20181023",
+        "pages": [
+          44,
+          88
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-07-20181016",
+        "pages": [
+          144,
+          145,
+          147,
+          150,
+          153,
+          156
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          14,
+          17,
+          25
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-08-20180723",
+        "pages": [
+          89,
+          95
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-04-20180712",
+        "pages": [
+          9
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [
+          94
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-01-07-004",
+    "query": "demokrasinin uygulanmasına yönelik eleştiriler",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-07-20180717",
+        "pages": [
+          17,
+          20
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [
+          53,
+          119
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          256
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          194,
+          195
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-06-20180716",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          17,
+          57,
+          58,
+          91
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          207,
+          212
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-08-20180723",
+        "pages": [
+          8,
+          108
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-05-20180713",
+        "pages": [
+          16
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-11-001",
+    "query": "hükümet hukuk sistemini nasıl savunuyor",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          233
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          52,
+          53,
+          54,
+          65,
+          66,
+          112
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-04-20180712",
+        "pages": [
+          8
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          286
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-01-10-003",
+    "query": "üniversite sistemine yönelik eleştiriler",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          49,
+          87
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          56,
+          57,
+          58,
+          59,
+          60
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          226
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [
+          82
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-06-004",
+    "query": "IŞİD saldırıları hakkında",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          161,
+          181
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-08-20180723",
+        "pages": [
+          46,
+          137
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-10-004",
+    "query": "eyt mağduriyeti",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          36,
+          70,
+          81
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          156
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-07-20181016",
+        "pages": [
+          125
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          175
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          51,
+          138
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-06-005",
+    "query": "Muhalefetin ekonomi konusundaki eleştirileri",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          175,
+          204,
+          234,
+          250,
+          290,
+          306,
+          359,
+          360,
+          361
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          18,
+          37,
+          38,
+          71
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          12,
+          51,
+          107
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-07-20181016",
+        "pages": [
+          126
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          467,
+          468
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-08-20180723",
+        "pages": [
+          96
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-11-002",
+    "query": "meclis personelinin sorunları",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          299,
+          300,
+          304
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-07-20181016",
+        "pages": [
+          103
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-06-20180716",
+        "pages": [
+          14
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-01-06-001",
+    "query": "15 temmuz darbesi hakkında görüşler",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-06-20180716",
+        "pages": [
+          21,
+          23
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-05-20180713",
+        "pages": [
+          16,
+          18,
+          19
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-08-20180723",
+        "pages": [
+          87
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-10-005",
+    "query": "güvenlik politikalarına yönelik eleştiriler",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          91,
+          92,
+          93
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          57
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          227,
+          467
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-08-20180723",
+        "pages": [
+          95,
+          96,
+          121
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [
+          78
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-04-20181004",
+        "pages": [
+          3,
+          4
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-01-003",
+    "query": "türkiye'nin uluslararası ilişkilerdeki diplomasi başarısı",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-01-20181001",
+        "pages": [
+          83,
+          84,
+          85,
+          86
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-07-20181016",
+        "pages": [
+          161,
+          163
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [
+          25,
+          88
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-06-006",
+    "query": "Türkiye Kalkınma Bankası temel kanun",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          201,
+          216,
+          218,
+          219,
+          237,
+          238,
+          247,
+          248,
+          256,
+          260,
+          346,
+          347,
+          348,
+          350,
+          352,
+          355,
+          356,
+          363,
+          364,
+          372,
+          373,
+          380,
+          383,
+          393,
+          394,
+          397
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-02-05-001",
+    "query": "içtüzük değişikliği 2018",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          51,
+          55,
+          64,
+          65,
+          69,
+          74,
+          76,
+          82,
+          85,
+          96,
+          97,
+          112,
+          114,
+          218,
+          222,
+          223,
+          225,
+          226,
+          227,
+          228,
+          229,
+          231
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [
+          9
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-08-20180723",
+        "pages": [
+          75
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          14
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-01-06-002",
+    "query": "konuşma süreleri yetersizliği şikâyeti",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-06-20180716",
+        "pages": [
+          7,
+          24
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          211,
+          215
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          32,
+          77
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          194
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          95
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-06-007",
+    "query": "Sağlıkta şiddet olayları",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          188,
+          189,
+          190,
+          191,
+          192,
+          194
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          47,
+          48,
+          140,
+          188,
+          190
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          29
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          75
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-06-008",
+    "query": "Enflasyon rakamları hakkında yapılan eleştiriler",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          2,
+          154,
+          173,
+          174,
+          175,
+          198,
+          203,
+          207,
+          214,
+          234,
+          244,
+          306
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-07-20181016",
+        "pages": [
+          127
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          167
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-07-20180717",
+        "pages": [
+          21
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-10-006",
+    "query": "Yeni havalimanı inşaatındaki işçi ölümleri",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          45,
+          46,
+          47,
+          48,
+          49
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          151,
+          152
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-09-20181023",
+        "pages": [
+          77
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          175
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-01-004",
+    "query": "Koruculara yönelik saldırı iddiaları",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-01-20181001",
+        "pages": [
+          317,
+          318
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          465,
+          466
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-05-002",
+    "query": "güvenlik korucularının özlük hakları",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          155,
+          156,
+          157
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          442,
+          464,
+          476
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-06-009",
+    "query": "Yerel afetler (sel, dolu, heyelan) sonrası vatandaşın mağduriyeti",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          2,
+          158
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          231,
+          232,
+          444
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-01-20181001",
+        "pages": [
+          106,
+          107,
+          108,
+          109
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-09-20181023",
+        "pages": [
+          68,
+          71,
+          74,
+          80
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [
+          29
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-06-20180716",
+        "pages": [
+          17
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          63
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-01-07-005",
+    "query": "devletin denetleme görevini yerine getirmediğine yönelik eleştiriler",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-07-20180717",
+        "pages": [
+          4
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-08-20180723",
+        "pages": [
+          45
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-10-007",
+    "query": "Eğitimde müfredat ve ‘milli-manevi değerler’ tartışmaları",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          26,
+          27,
+          59
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [
+          19
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-07-20180717",
+        "pages": [
+          14
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-05-003",
+    "query": "okulların güvenliği",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          28
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          66
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          119
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-08-001",
+    "query": "trafik kazaları hakkında",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          158,
+          179,
+          180,
+          190,
+          193,
+          240,
+          242,
+          245,
+          248,
+          249,
+          250,
+          260,
+          455
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
       "cross-page"
     ]
   }
