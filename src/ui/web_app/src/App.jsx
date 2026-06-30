@@ -11,7 +11,8 @@ import {
   Clock,
   ChevronDown,
   ChevronUp,
-  Brain
+  Brain,
+  HelpCircle
 } from 'lucide-react';
 
 const API_BASE = '/api';
@@ -119,8 +120,11 @@ export default function App() {
   const [currentMemory, setCurrentMemory] = useState({ history: [], max_turns: 5 });
   const [expandedTraceIdx, setExpandedTraceIdx] = useState({});
   const [expandedSourceIdx, setExpandedSourceIdx] = useState({});
+  // Grounded clarification (did-you-mean) round over the live socket.
+  const [clarification, setClarification] = useState(null); // { questions, answers }
 
   const messagesEndRef = useRef(null);
+  const wsRef = useRef(null);
 
   useEffect(() => {
     init();
@@ -264,6 +268,7 @@ export default function App() {
     setCurrentSources([]);
     setCurrentMemory({ history: [], max_turns: 5 });
     setExpandedTraceIdx({});
+    setClarification(null);
 
     // Optimistically update message list
     setMessages(prev => [...prev, { role: 'user', content: query, created_at: new Date().toISOString() }]);
@@ -271,6 +276,7 @@ export default function App() {
     const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${wsProto}//${window.location.host}${API_BASE}/chat/stream`;
     const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
 
     ws.onopen = () => {
       ws.send(JSON.stringify({
@@ -302,6 +308,10 @@ export default function App() {
         setCurrentSources(data.sources);
       } else if (data.type === 'memory') {
         setCurrentMemory({ history: data.history || [], max_turns: data.max_turns || 5 });
+      } else if (data.type === 'clarification') {
+        // Server is waiting for the user to narrow scope before retrieval.
+        setCurrentStatus('');
+        setClarification({ questions: data.questions || [], answers: {} });
       } else if (data.type === 'error') {
         setCurrentStatus(`Hata oluştu: ${data.content}`);
       }
@@ -310,9 +320,31 @@ export default function App() {
     ws.onclose = async () => {
       setIsGenerating(false);
       setCurrentStatus('');
+      setClarification(null);
       await fetchSessions();
       await loadSessionMessages(activeSessionId);
     };
+  };
+
+  const selectClarifyOption = (axis, value) => {
+    setClarification(prev => {
+      if (!prev) return prev;
+      const answers = { ...prev.answers };
+      if (value === null) delete answers[axis];   // "Fark etmez" → skip axis
+      else answers[axis] = value;
+      return { ...prev, answers };
+    });
+  };
+
+  const submitClarification = () => {
+    if (!clarification || !wsRef.current) return;
+    try {
+      wsRef.current.send(JSON.stringify({ answers: clarification.answers || {} }));
+    } catch (e) {
+      // socket already closed — nothing to do
+    }
+    setClarification(null);
+    setCurrentStatus('Sorgu daraltılıyor...');
   };
 
   const toggleTraceExpand = (idx) => {
@@ -419,6 +451,39 @@ export default function App() {
                   <div className="status-indicator pulse">
                     <Clock size={16} />
                     {currentStatus}
+                  </div>
+                )}
+                {clarification && (
+                  <div className="clarify-card">
+                    <div className="clarify-header">
+                      <HelpCircle size={16} />
+                      <span>Sorunuzu biraz daraltalım</span>
+                    </div>
+                    {clarification.questions.map((q, qi) => (
+                      <div key={qi} className="clarify-question">
+                        <div className="clarify-q-text">{q.text}</div>
+                        <div className="clarify-options">
+                          {q.options.map((opt, oi) => (
+                            <button
+                              key={oi}
+                              className={`clarify-opt ${clarification.answers[q.axis] === opt ? 'selected' : ''}`}
+                              onClick={() => selectClarifyOption(q.axis, opt)}
+                            >
+                              {opt}
+                            </button>
+                          ))}
+                          <button
+                            className={`clarify-opt ${clarification.answers[q.axis] === undefined ? 'selected' : ''}`}
+                            onClick={() => selectClarifyOption(q.axis, null)}
+                          >
+                            Fark etmez
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <button className="clarify-submit" onClick={submitClarification}>
+                      Devam et
+                    </button>
                   </div>
                 )}
                 {currentThinking && (

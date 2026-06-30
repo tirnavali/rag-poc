@@ -251,6 +251,13 @@ class ClarificationConfig:
         gate = config.get("ambiguity", {})
         self.min_distinct_years = int(gate.get("min_distinct_years", 3))
         self.dominance_ratio = float(gate.get("dominance_ratio", 0.6))
+        # Also clarify when the query itself is broad/unscoped (no year + generic
+        # "X hakkında bilgi" phrasing), independent of facet diversity.
+        self.vague_query_clarify = bool(gate.get("vague_query_clarify", True))
+        markers = gate.get("vague_markers")
+        self.vague_markers = (
+            [str(m).lower() for m in markers] if isinstance(markers, list) else None
+        )
         # LLM used only to phrase the (deterministically mined) facets as questions.
         self.block = config.get("block", "fast-01")
         self.model_key = config.get("model_key", "planner")

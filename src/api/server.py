@@ -1,5 +1,6 @@
 import asyncio
 import json
+import threading
 import uuid
 import logging
 from contextlib import asynccontextmanager
@@ -116,7 +117,28 @@ async def chat_stream(websocket: WebSocket):
         
         queue = asyncio.Queue()
         loop = asyncio.get_running_loop()
-        
+
+        # Interactive grounded clarification over the same socket: the producer
+        # thread blocks on this event after emitting a question; the consume loop
+        # below receives the user's answer and unblocks it.
+        clarify_event = threading.Event()
+        clarify_holder: dict = {"answers": {}}
+
+        def web_clarification_callback(questions):
+            payload = [
+                {"axis": q.axis, "text": q.text, "options": list(q.options)}
+                for q in questions
+            ]
+            clarify_holder["answers"] = {}
+            clarify_event.clear()
+            asyncio.run_coroutine_threadsafe(
+                queue.put({"type": "clarification", "questions": payload}), loop
+            )
+            # Block this worker thread until the consume loop sets the answer.
+            if not clarify_event.wait(timeout=300):
+                return {}  # timeout → proceed without narrowing
+            return clarify_holder.get("answers", {})
+
         # Phase callback to translate events into WS status updates
         def on_phase(name: str, block, model, details: dict):
             phase_messages = {
@@ -195,7 +217,7 @@ async def chat_stream(websocket: WebSocket):
                         on_phase=on_phase,
                         session_collections=production_keys,
                         stream_callback=stream_callback,
-                        clarification_callback=None, # Non-interactive clarification in web UI for now
+                        clarification_callback=web_clarification_callback,
                         deep_mode=mufettis_mode,
                         on_phase_end=on_phase_end,
                         chat_history=chat_history,
@@ -256,12 +278,24 @@ async def chat_stream(websocket: WebSocket):
                 chunk_dict = chunk
             else:
                 chunk_dict = {"type": chunk["type"], "content": chunk["content"]}
-                
+
+            if chunk_dict["type"] == "clarification":
+                # Send the grounded question(s) and wait for the user's choice on
+                # the same socket; the producer thread is blocked meanwhile.
+                await websocket.send_json(chunk_dict)
+                try:
+                    ans_raw = await websocket.receive_text()
+                    clarify_holder["answers"] = (json.loads(ans_raw) or {}).get("answers", {}) or {}
+                except Exception:
+                    clarify_holder["answers"] = {}
+                clarify_event.set()
+                continue
+
             if chunk_dict["type"] == "thinking":
                 thinking_text += chunk_dict["content"]
             elif chunk_dict["type"] == "content":
                 answer_text += chunk_dict["content"]
-                
+
             await websocket.send_json(chunk_dict)
             
         # Send trace at the end

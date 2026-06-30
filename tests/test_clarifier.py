@@ -53,6 +53,46 @@ def test_ambiguity_gate_false_on_empty():
     assert AmbiguityGate(cfg).is_ambiguous(FacetSet(total=0)) is False
 
 
+def _ohal_facets():
+    """Mirrors the live "ohal" probe: results cluster in 2 years, one collection."""
+    return FacetSet(
+        years=[FacetValue(value="1980", count=9), FacetValue(value="1981", count=1)],
+        collections=[FacetValue(value="tutanaklar", count=10)],
+        total=10,
+    )
+
+
+def test_ambiguity_gate_triggers_on_vague_query():
+    """Broad/unscoped query ("...hakkında bilgi") clarifies even when facets cluster."""
+    cfg = ClarificationConfig({"ambiguity": {"min_distinct_years": 3, "dominance_ratio": 0.6}})
+    fs = _ohal_facets()  # would be False on facet-diversity alone
+    assert AmbiguityGate(cfg).is_ambiguous(fs) is False  # no query → not vague
+    assert AmbiguityGate(cfg).is_ambiguous(fs, "ohal konusunda bilgi istiyorum") is True
+
+
+def test_ambiguity_gate_specific_query_with_year_not_vague():
+    """An explicit year means the user already scoped it → no clarification."""
+    cfg = ClarificationConfig({"ambiguity": {"min_distinct_years": 3, "dominance_ratio": 0.6}})
+    fs = _ohal_facets()
+    assert AmbiguityGate(cfg).is_ambiguous(fs, "1980 ohal hakkında bilgi") is False
+
+
+def test_ambiguity_gate_vague_query_needs_askable_facet():
+    """Vague query but nothing to ask about (single year/collection) → no clarification."""
+    cfg = ClarificationConfig({"ambiguity": {"min_distinct_years": 3, "dominance_ratio": 0.6}})
+    fs = FacetSet(
+        years=[FacetValue(value="1980", count=10)],
+        collections=[FacetValue(value="tutanaklar", count=10)],
+        total=10,
+    )
+    assert AmbiguityGate(cfg).is_ambiguous(fs, "ohal hakkında bilgi") is False
+
+
+def test_ambiguity_gate_vague_clarify_disabled():
+    cfg = ClarificationConfig({"ambiguity": {"vague_query_clarify": False}})
+    assert AmbiguityGate(cfg).is_ambiguous(_ohal_facets(), "ohal hakkında bilgi") is False
+
+
 def test_query_refiner_build_questions_grounded_options():
     # pool=None → LLM phrasing fails gracefully to default texts; options stay grounded.
     cfg = ClarificationConfig({"question_count": 3})

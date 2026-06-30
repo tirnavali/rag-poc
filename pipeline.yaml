@@ -167,6 +167,8 @@ agent:
     ambiguity:
       min_distinct_years: 3      # >= bu kadar farklı yıl → belirsiz
       dominance_ratio: 0.6       # en baskın facet oranı < bu → belirsiz
+      vague_query_clarify: true  # yıl/özne içermeyen genel "X hakkında bilgi" sorgularında da sor
+      # vague_markers: [...]     # (ops.) varsayılan Türkçe genel-sorgu işaretçilerini ezmek için
     block: fast-01
     model_key: planner
     temperature: 0.2
@@ -326,15 +328,15 @@ policy:
 
 allocation:
   enabled: false       # stage-2: kapalıyken düz fetch_k tek havuz (reserve yok)
-  defaults:    { primary: 2, reserve: 2, fetch_k: 10 }
+  defaults:    { primary: 2, reserve: 2, fetch_k: 15 }
   by_query_type:
-    fact:       { primary: 2, reserve: 2, fetch_k: 10 }
-    summary:    { primary: 3, reserve: 2, fetch_k: 10 }
-    comparison: { primary: 3, reserve: 2, fetch_k: 12 }
-    reasoning:  { primary: 3, reserve: 2, fetch_k: 12 }
-    policy:     { primary: 3, reserve: 3, fetch_k: 15 }
-  max_per_document: 1
-  max_total_primary: 12
+    fact:       { primary: 2, reserve: 2, fetch_k: 15 }
+    summary:    { primary: 3, reserve: 2, fetch_k: 15 }
+    comparison: { primary: 3, reserve: 2, fetch_k: 15 }
+    reasoning:  { primary: 3, reserve: 2, fetch_k: 15 }
+    policy:     { primary: 3, reserve: 3, fetch_k: 18 }
+  max_per_document: 3    # belge başına 3 chunk (1 idi → tek belgeden de zengin bağlam)
+  max_total_primary: 15  # bağlama girecek toplam chunk tavanı (12 idi)
 
 judge:
   mode: hybrid

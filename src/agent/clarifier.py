@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from collections import Counter
 
 from src.agent.schemas import (
@@ -33,6 +34,16 @@ _DEFAULT_QUESTION_TEXT = {
     "scope": "Hangi kaynak türünde arayayım?",
     "topic": "Hangi konuya odaklanayım?",
 }
+
+# Explicit year in the query → the user already scoped it; don't treat as vague.
+_YEAR_RE = re.compile(r"\b(18|19|20)\d{2}\b")
+
+# Generic "X hakkında bilgi / X nedir" phrasings that signal a broad, unscoped
+# information request even when the probe results happen to cluster narrowly.
+_DEFAULT_VAGUE_MARKERS = (
+    "bilgi", "hakkında", "hakkinda", "konusunda", "nedir", "ne demek",
+    "anlat", "açıkla", "acikla", "genel", "özet", "ozet", "bahset",
+)
 
 
 def _topics_of(meta: dict) -> list[str]:
@@ -92,8 +103,11 @@ class AmbiguityGate:
     def __init__(self, config) -> None:
         self._min_distinct_years = config.min_distinct_years
         self._dominance_ratio = config.dominance_ratio
+        self._vague_clarify = getattr(config, "vague_query_clarify", True)
+        markers = getattr(config, "vague_markers", None)
+        self._vague_markers = tuple(markers) if markers else _DEFAULT_VAGUE_MARKERS
 
-    def is_ambiguous(self, facets: FacetSet) -> bool:
+    def is_ambiguous(self, facets: FacetSet, query: str = "") -> bool:
         if facets.total == 0:
             return False  # nothing to narrow against; let retrieval proceed
         # Many distinct years → broad temporal scope.
@@ -105,7 +119,31 @@ class AmbiguityGate:
                 top = axis[0].count
                 if top / facets.total < self._dominance_ratio:
                     return True
+        # Facet-diversity didn't fire, but the *query itself* is broad/unscoped
+        # (e.g. "ohal hakkında bilgi") — clarify as long as there is at least one
+        # facet axis to narrow on, so the user can pick a year/topic/source.
+        if (
+            self._vague_clarify
+            and self._is_vague_query(query)
+            and self._has_askable_facet(facets)
+        ):
+            return True
         return False
+
+    def _has_askable_facet(self, facets: FacetSet) -> bool:
+        return (
+            len(facets.years) > 1
+            or len(facets.topics) > 1
+            or len(facets.collections) > 1
+        )
+
+    def _is_vague_query(self, query: str) -> bool:
+        if not query:
+            return False
+        q = query.lower()
+        if _YEAR_RE.search(q):
+            return False  # explicit year → already scoped, not vague
+        return any(m in q for m in self._vague_markers)
 
 
 class QueryRefiner:

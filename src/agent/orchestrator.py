@@ -276,14 +276,19 @@ class OrchestratorAgent:
                 sources=[c.metadata for c in state.assembled_chunks],
                 context=context,
             )
-            if validation and not getattr(validation, "passes", True) and getattr(validation, "corrected_answer", None):
-                state.final_answer = validation.corrected_answer
+            # Non-destructive: validation is an advisory quality signal only. We do
+            # NOT overwrite the answering agent's (strong-model) text with the
+            # sanitizer's (weaker-model) corrected_answer, which tended to condense
+            # and crop long answers. passes/issues stay visible in the trace.
             if ctx and validation:
                 ctx.update_details(passes=getattr(validation, "passes", True))
                 if self._config.expose_thinking:
                     issues = getattr(validation, "issues", None)
                     if issues:
                         ctx.update_details(issues=issues)
+                    if not getattr(validation, "passes", True) and getattr(validation, "corrected_answer", None):
+                        # Surface the suggestion for transparency, but don't apply it.
+                        ctx.update_details(suggested_correction=validation.corrected_answer[:600])
 
         with tracer.phase("citation") as ctx:
             state.citations = CitationBuilder.build(state.assembled_chunks)
@@ -322,7 +327,7 @@ class OrchestratorAgent:
                     topics=len(state.facets.topics),
                 )
 
-        if not self._gate.is_ambiguous(state.facets):
+        if not self._gate.is_ambiguous(state.facets, state.user_query):
             return
 
         max_turns = cfg.max_turns_deep if deep_mode else cfg.max_turns_normal
