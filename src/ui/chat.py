@@ -110,6 +110,7 @@ def _run_agent_query(
     console,
     debug_mode: bool = False,
     session_collections: list[str] | None = None,
+    chat_history: list[dict] | None = None,
 ) -> tuple[list[dict], list[float], str, str, dict]:
     """Execute a query via the Planning Agent pipeline."""
     sources: list[dict] = []
@@ -172,6 +173,7 @@ def _run_agent_query(
                 session_collections=session_collections,
                 clarification_callback=clarification_callback,
                 deep_mode=mufettis_active,
+                chat_history=chat_history,
             )
             thinking_text = output.thinking
             answer_text = output.answer
@@ -344,6 +346,7 @@ def main(agent_mode: bool = False, pipeline_path: str | None = None) -> None:
                 console,
                 debug_mode=state.debug_mode,
                 session_collections=selected_collection_names,
+                chat_history=list(state.chat_history),
             )
             ts = datetime.now().strftime("%H:%M")
             if thinking_text.strip():
@@ -363,7 +366,8 @@ def main(agent_mode: bool = False, pipeline_path: str | None = None) -> None:
             if state.debug_mode:
                 print_debug(debug_info, state.debug_mode)
             print_sources(sources, dists)
-            state.chat_history.append({"soru": raw, "yanit": answer_text})
+            state.chat_history.append({"role": "user", "content": raw})
+            state.chat_history.append({"role": "assistant", "content": answer_text})
             state.last_sources = sources
             continue
 
@@ -519,7 +523,8 @@ def main(agent_mode: bool = False, pipeline_path: str | None = None) -> None:
             print_debug(debug_info, state.debug_mode)
         print_sources(sources, dists)
 
-        state.chat_history.append({"soru": raw, "yanit": answer_text})
+        state.chat_history.append({"role": "user", "content": raw})
+        state.chat_history.append({"role": "assistant", "content": answer_text})
         state.last_sources = sources
 
 

@@ -101,6 +101,7 @@ class OrchestratorAgent:
         deep_mode: bool = False,
         on_phase: Optional[callable] = None,
         on_phase_end: Optional[callable] = None,
+        chat_history: Optional[list] = None,
     ) -> AgentOutput:
         state = OrchestratorState(request_id=str(uuid.uuid4()), user_query=query)
         tracer = PipelineTracer(on_phase=on_phase, on_phase_end=on_phase_end)
@@ -126,6 +127,8 @@ class OrchestratorAgent:
                 and scope_result.confidence >= self._config.classifier.confidence_threshold
             ):
                 return self._off_domain_output(query, tracer)
+            if scope_result.scope == "conversational":
+                return self._conversational_output(query, chat_history, tracer, stream_callback)
             # Validate intent's collection picks against the production universe.
             prod = set(self._production)
             state.selected_collections = [
@@ -252,7 +255,7 @@ class OrchestratorAgent:
         # ---- Stage 6: answer → sanitize → cite ----
         with tracer.phase("answering") as ctx:
             context = self._build_context(state)
-            thinking, answer = self._answer_tool.generate(query=query, context=context)
+            thinking, answer = self._answer_tool.generate(query=query, context=context, chat_history=chat_history)
             state.final_answer = answer
             if stream_callback is not None:
                 try:
@@ -580,3 +583,76 @@ class OrchestratorAgent:
             expanded=state.expanded,
             clarification=state.clarification,
         )
+
+    def _conversational_output(
+        self,
+        query: str,
+        chat_history: Optional[list],
+        tracer: PipelineTracer,
+        stream_callback: Optional[callable] = None,
+    ) -> AgentOutput:
+        with tracer.phase("answering") as ctx:
+            ans_cfg = self._config.answering
+            block_name = ans_cfg.block
+            model_key = ans_cfg.model_key
+
+            client = self._pool.get_client(block_name)
+            model = self._pool.get_model_for_block(block_name, model_key)
+
+            sys_prompt = (
+                "Sen yardımsever bir yapay zeka arşiv asistanısın. "
+                "Kullanıcı ile olan geçmiş konuşmana (hafızaya) ve güncel sorusuna dayanarak doğrudan ve doğal bir yanıt ver. "
+                "Arşiv taraması yapmana gerek yoktur. Kısa, samimi ve Türkçe cevap ver."
+            )
+
+            history_messages = []
+            for m in (chat_history or []):
+                role = m.get("role") or "user"
+                msg_content = m.get("content") or ""
+                if not msg_content:
+                    continue
+                if role == "assistant":
+                    msg_content = msg_content[:1500]
+                history_messages.append({"role": role, "content": msg_content})
+
+            stream = client.chat(
+                model=model,
+                messages=[
+                    {"role": "system", "content": sys_prompt},
+                    *history_messages,
+                    {"role": "user", "content": query},
+                ],
+                options={
+                    "temperature": ans_cfg.temperature,
+                    "num_predict": min(ans_cfg.num_predict, self._config.get_block(block_name).max_num_predict),
+                },
+                stream=True,
+            )
+
+            thinking = ""
+            content = ""
+            for chunk in stream:
+                if hasattr(chunk.message, "thinking") and chunk.message.thinking:
+                    thinking += chunk.message.thinking
+                if hasattr(chunk.message, "content") and chunk.message.content:
+                    token = chunk.message.content
+                    content += token
+                    if stream_callback is not None:
+                        try:
+                            stream_callback({"type": "content", "content": token})
+                        except Exception:
+                            pass
+
+            if ctx:
+                ctx.update_details(answer_chars=len(content))
+                if self._config.expose_thinking:
+                    if thinking:
+                        ctx.update_details(thinking=thinking)
+                    ctx.update_details(answer_preview=content[:600])
+
+            return AgentOutput(
+                answer=content,
+                thinking=thinking,
+                scope="conversational",
+                trace=tracer.events,
+            )

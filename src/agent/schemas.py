@@ -71,7 +71,7 @@ class BadWordsResult(BaseModel):
 
 class ScopeResult(BaseModel):
     """Output of the IntentAnalyzer (extended ScopeClassifier) LLM call."""
-    scope: Literal["in_scope", "off_domain"] = Field(..., description="Scope classification")
+    scope: Literal["in_scope", "off_domain", "conversational"] = Field(..., description="Scope classification")
     confidence: float = Field(..., description="Classifier confidence in [0, 1]", ge=0.0, le=1.0)
     selected_collections: list[str] = Field(
         default_factory=list,
@@ -143,7 +143,7 @@ class AgentOutput(BaseModel):
     """Final output from the Planning Agent pipeline."""
     answer: str = Field(..., description="Generated answer text")
     thinking: str = Field(default="", description="LLM thinking/reasoning text")
-    scope: Literal["in_scope", "off_domain", "bad_word"] = Field(
+    scope: Literal["in_scope", "off_domain", "bad_word", "conversational"] = Field(
         default="in_scope",
         description="Pre-planner gate classification; controls UI rendering",
     )

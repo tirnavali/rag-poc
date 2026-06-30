@@ -42,6 +42,7 @@ def _mock_config(
     cfg = SimpleNamespace(
         classifier=classifier_cfg,
         get_block=lambda name: block_cfg,
+        get_collection_catalog=lambda: "- col_x (X — örnek): doc_type=tutanak",
     )
     return cfg
 
@@ -123,6 +124,45 @@ def test_classifier_parses_selected_collections():
     result = classifier.classify("1997 bütçe görüşmeleri", PipelineTracer())
 
     assert result.selected_collections == ["tutanaklar_ctx1024", "gazete_arsivi"]
+
+
+def test_classifier_parses_conversational():
+    """Greetings/chitchat get the 'conversational' scope (whitelisted in classify)."""
+    cfg = _mock_config()
+    pool, _ = _mock_pool({"scope": "conversational", "confidence": 1.0, "reason": "selam"})
+    classifier = ScopeClassifier(pool, cfg)
+
+    result = classifier.classify("nasılsın?", PipelineTracer())
+
+    assert result.scope == "conversational"
+    assert result.confidence == 1.0
+
+
+def test_classifier_catalog_prompt_does_not_fail_open():
+    """Regression: a prompt with {catalog} AND a literal JSON example ({"scope": ...})
+    must not crash. str.format() treated the JSON braces as fields and raised
+    KeyError('"scope"') → fail-open in_scope/0.0 for every query. The fix uses
+    .replace('{catalog}', ...). Mock returns a non-default scope so a regression
+    (fail-open) is unmistakable: fail-open would give in_scope/0.0, not conversational/1.0.
+    """
+    prompt = (
+        "Koleksiyonlar:\n{catalog}\n"
+        'JSON çıktısı:\n'
+        '{"scope": "in_scope" veya "conversational", "confidence": 0.0-1.0, "reason": "..."}'
+    )
+    cfg = _mock_config(prompt=prompt)
+    pool, client = _mock_pool({"scope": "conversational", "confidence": 1.0, "reason": "selam"})
+    classifier = ScopeClassifier(pool, cfg)
+
+    result = classifier.classify("selam", PipelineTracer())
+
+    # Not the fail-open default → .format() did not blow up on the JSON braces.
+    assert result.scope == "conversational"
+    assert result.confidence == 1.0
+    # And the catalog was actually substituted into the system prompt sent to the LLM.
+    sent_system = client.chat.call_args.kwargs["messages"][0]["content"]
+    assert "{catalog}" not in sent_system
+    assert "col_x" in sent_system
 
 
 def test_classifier_selected_collections_defaults_empty():

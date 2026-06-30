@@ -90,7 +90,7 @@ def _agent(
 
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False: ("thinking", "Cevap metni."),
+        lambda query, context, mufettis_mode=False, chat_history=None: ("thinking", "Cevap metni."),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
     return agent
@@ -134,6 +134,40 @@ def test_orchestrator_happy_path_returns_answer(monkeypatch):
     assert len(out.sources) >= 4
     assert out.assembly
     assert out.policy_result.allowed_collections == ["col_a", "col_b"]
+
+
+def test_orchestrator_conversational_bypasses_retrieval(monkeypatch):
+    """A 'conversational' scope answers from chat_history and skips RAG entirely."""
+    from types import SimpleNamespace
+    from src.agent.schemas import ScopeResult
+
+    agent = _agent(monkeypatch, plan_collections=("col_a",))
+
+    classifier = MagicMock()
+    classifier.classify.return_value = ScopeResult(
+        scope="conversational", confidence=1.0, selected_collections=[], reason="selam"
+    )
+    agent._classifier = classifier
+
+    search_called = {"n": 0}
+    def _search(*a, **kw):
+        search_called["n"] += 1
+        return _make_search_result([], [], "col_a")
+    monkeypatch.setattr(agent._search_tool, "search", _search)
+
+    def _fake_chat(*a, **kw):
+        assert kw.get("stream") is True
+        yield SimpleNamespace(message=SimpleNamespace(content="İyiyim,", thinking=""))
+        yield SimpleNamespace(message=SimpleNamespace(content=" teşekkürler!", thinking=""))
+    client = MagicMock()
+    client.chat.side_effect = _fake_chat
+    monkeypatch.setattr(agent._pool, "get_client", lambda block: client)
+
+    out = agent.run("selam", chat_history=[{"role": "user", "content": "merhaba"}])
+
+    assert out.scope == "conversational"
+    assert out.answer == "İyiyim, teşekkürler!"
+    assert search_called["n"] == 0  # retrieval bypassed
 
 
 def test_orchestrator_zero_chunks_returns_clarify(monkeypatch):
@@ -189,7 +223,7 @@ def test_orchestrator_single_collection_failure_continues(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -255,7 +289,7 @@ def test_orchestrator_propagates_extracted_filters_to_retrieval(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -297,7 +331,7 @@ def test_orchestrator_falls_back_to_refined_query_when_no_drafts(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -341,7 +375,7 @@ def test_orchestrator_runs_each_planner_draft_as_parallel_query(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -379,7 +413,7 @@ def test_orchestrator_caps_query_variants(monkeypatch):
         return _make_search_result([f"x-{query_text}-0", f"x-{query_text}-1"],
                                     [f"d-{query_text}-0", f"d-{query_text}-1"], collection_key)
     monkeypatch.setattr(agent._search_tool, "search", _search)
-    monkeypatch.setattr(agent._answer_tool, "generate", lambda query, context, mufettis_mode=False: ("t", "ok"))
+    monkeypatch.setattr(agent._answer_tool, "generate", lambda query, context, mufettis_mode=False, chat_history=None: ("t", "ok"))
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
     agent.run("q", session_collections=["col_a"])
@@ -420,7 +454,7 @@ def _clarify_agent(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search",
                         lambda collection_key, query_text, filters=None, top_k=5: _ambiguous_result(collection_key))
     monkeypatch.setattr(agent._answer_tool, "generate",
-                        lambda query, context, mufettis_mode=False: ("t", "ok"))
+                        lambda query, context, mufettis_mode=False, chat_history=None: ("t", "ok"))
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
     return agent, captured
 

@@ -40,12 +40,14 @@ class ScopeClassifier:
         ) as phase_ctx:
             try:
                 client = self._pool.get_client(block_name)
-                # Prompt may reference {catalog} for tool/db selection; format
-                # defensively so an unparameterized prompt still works.
+                # Prompt may reference {catalog} for tool/db selection. Use a
+                # targeted .replace() rather than str.format(): the prompt is
+                # full of literal JSON braces ({"scope": ...}) and str.format()
+                # would treat them as replacement fields and raise KeyError.
                 system_prompt = cfg.prompt
                 if "{catalog}" in system_prompt:
-                    system_prompt = system_prompt.format(
-                        catalog=self._config.get_collection_catalog()
+                    system_prompt = system_prompt.replace(
+                        "{catalog}", self._config.get_collection_catalog()
                     )
                 res = client.chat(
                     model=model,
@@ -66,9 +68,9 @@ class ScopeClassifier:
                 raw_cols = data.get("selected_collections", []) or []
                 selected = [str(c).strip() for c in raw_cols if str(c).strip()] if isinstance(raw_cols, list) else []
                 # Tolerant: a malformed/missing scope falls open to in_scope rather
-                # than raising (qwen occasionally emits an off-schema object).
+                # instead of raising (qwen occasionally emits an off-schema object).
                 scope = data.get("scope") or data.get("Scope") or "in_scope"
-                if scope not in ("in_scope", "off_domain"):
+                if scope not in ("in_scope", "off_domain", "conversational"):
                     scope = "in_scope"
                 result = ScopeResult(
                     scope=scope,
@@ -84,6 +86,6 @@ class ScopeClassifier:
                 scope=result.scope,
                 confidence=result.confidence,
                 selected_collections=result.selected_collections,
-                reason=result.reason[:120],
+                reason=result.reason[:300],
             )
             return result

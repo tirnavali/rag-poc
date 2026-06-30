@@ -324,6 +324,7 @@ class RAGService:
         clarification_callback=None,
         deep_mode: bool = False,
         on_phase_end=None,
+        chat_history: Optional[list] = None,
     ):
         """Run the unified OrchestratorAgent pipeline.
 
@@ -350,4 +351,5 @@ class RAGService:
             deep_mode=deep_mode,
             on_phase=on_phase,
             on_phase_end=on_phase_end,
+            chat_history=chat_history,
         )

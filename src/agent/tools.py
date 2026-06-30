@@ -182,6 +182,7 @@ class AnswerTool:
         context: str,
         *,
         mufettis_mode: bool = False,
+        chat_history: list | None = None,
     ) -> tuple[str, str]:
         """Generate answer via the answering agent LLM.
 
@@ -215,10 +216,18 @@ class AnswerTool:
         thinking = ""
         content = ""
 
+        history_messages = []
+        for m in (chat_history or []):
+            msg_content = m["content"]
+            if m["role"] == "assistant":
+                msg_content = msg_content[:1500]
+            history_messages.append({"role": m["role"], "content": msg_content})
+
         stream = client.chat(
             model=model,
             messages=[
                 {"role": "system", "content": sys_prompt},
+                *history_messages,
                 {"role": "user", "content": user_msg},
             ],
             options=options,
