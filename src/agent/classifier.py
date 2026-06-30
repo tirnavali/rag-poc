@@ -14,10 +14,12 @@ logger = logging.getLogger(__name__)
 
 
 class ScopeClassifier:
-    """One LLM call that returns {scope, confidence, reason}.
+    """IntentAnalyzer: one LLM call returning {scope, confidence, selected_collections, reason}.
 
-    Fail-open: any LLM/parse failure returns ScopeResult(in_scope, 0.0, "")
-    so the caller's threshold check naturally allows the query through.
+    Doubles as the mini intent analysis (tool/db selection): besides the in/off
+    domain gate it picks which collection(s) the query points at. Fail-open: any
+    LLM/parse failure returns ScopeResult(in_scope, 0.0, [], "") so the caller's
+    threshold check allows the query through and the planner selects freely.
     """
 
     def __init__(self, pool: LLMClientPool, config: PipelineConfig) -> None:
@@ -38,10 +40,17 @@ class ScopeClassifier:
         ) as phase_ctx:
             try:
                 client = self._pool.get_client(block_name)
+                # Prompt may reference {catalog} for tool/db selection; format
+                # defensively so an unparameterized prompt still works.
+                system_prompt = cfg.prompt
+                if "{catalog}" in system_prompt:
+                    system_prompt = system_prompt.format(
+                        catalog=self._config.get_collection_catalog()
+                    )
                 res = client.chat(
                     model=model,
                     messages=[
-                        {"role": "system", "content": cfg.prompt},
+                        {"role": "system", "content": system_prompt},
                         {"role": "user", "content": f"Sorgu: {query}"},
                     ],
                     options={
@@ -52,18 +61,29 @@ class ScopeClassifier:
                     think=bool(cfg.think) if cfg.think is not None else False,
                 )
                 data = json.loads(extract_json_from_text(res.message.content))
+                if not isinstance(data, dict):
+                    raise ValueError("classifier did not return a JSON object")
+                raw_cols = data.get("selected_collections", []) or []
+                selected = [str(c).strip() for c in raw_cols if str(c).strip()] if isinstance(raw_cols, list) else []
+                # Tolerant: a malformed/missing scope falls open to in_scope rather
+                # than raising (qwen occasionally emits an off-schema object).
+                scope = data.get("scope") or data.get("Scope") or "in_scope"
+                if scope not in ("in_scope", "off_domain"):
+                    scope = "in_scope"
                 result = ScopeResult(
-                    scope=data["scope"],
-                    confidence=float(data.get("confidence", 0.0)),
+                    scope=scope,
+                    confidence=float(data.get("confidence", 0.0) or 0.0),
+                    selected_collections=selected,
                     reason=str(data.get("reason", "")),
                 )
             except Exception as e:
                 logger.warning("ScopeClassifier failed (%s); failing open to in_scope", e)
-                result = ScopeResult(scope="in_scope", confidence=0.0, reason="")
+                result = ScopeResult(scope="in_scope", confidence=0.0, selected_collections=[], reason="")
 
             phase_ctx.update_details(
                 scope=result.scope,
                 confidence=result.confidence,
+                selected_collections=result.selected_collections,
                 reason=result.reason[:120],
             )
             return result

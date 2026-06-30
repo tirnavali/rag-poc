@@ -70,10 +70,50 @@ class BadWordsResult(BaseModel):
 
 
 class ScopeResult(BaseModel):
-    """Output of the ScopeClassifier LLM call."""
+    """Output of the IntentAnalyzer (extended ScopeClassifier) LLM call."""
     scope: Literal["in_scope", "off_domain"] = Field(..., description="Scope classification")
     confidence: float = Field(..., description="Classifier confidence in [0, 1]", ge=0.0, le=1.0)
+    selected_collections: list[str] = Field(
+        default_factory=list,
+        description="Tool/db selection: collection keys the intent points to. "
+        "Empty → planner selects freely from the full catalog (fail-open).",
+    )
     reason: str = Field(default="", description="Short Turkish rationale, surfaced in trace")
+
+
+class FacetValue(BaseModel):
+    """A single mined facet value with its frequency in the probe results."""
+    value: str = Field(..., description="Facet value (e.g. '1997', 'bütçe', 'Hürriyet')")
+    count: int = Field(..., description="How many probe hits carried this value")
+
+
+class FacetSet(BaseModel):
+    """Deterministically mined facets from the probe-retrieval metadata."""
+    years: list[FacetValue] = Field(default_factory=list, description="Distinct years, most frequent first")
+    topics: list[FacetValue] = Field(default_factory=list, description="Distinct topics, most frequent first")
+    authors: list[FacetValue] = Field(default_factory=list, description="Distinct authors/speakers, most frequent first")
+    collections: list[FacetValue] = Field(default_factory=list, description="Distinct source collections")
+    total: int = Field(0, description="Number of probe hits the facets were mined from")
+
+
+class ClarificationQuestion(BaseModel):
+    """One grounded did-you-mean question phrased from mined facets."""
+    axis: Literal["year", "scope", "topic"] = Field(..., description="Which dimension this narrows")
+    text: str = Field(..., description="Question text shown to the user")
+    options: list[str] = Field(default_factory=list, description="Facet-grounded answer options (real values only)")
+
+
+class ClarificationResult(BaseModel):
+    """Outcome of the clarification stage (interactive or auto)."""
+    asked: bool = Field(False, description="True when questions were put to the user")
+    auto_applied: bool = Field(False, description="True when the strongest facet was auto-applied (non-interactive)")
+    turns: int = Field(0, description="How many clarification turns ran")
+    questions: list[ClarificationQuestion] = Field(default_factory=list, description="Questions generated this run")
+    # Resolved constraints
+    year: Optional[int] = Field(None, description="Chosen year → FilterCriteria.year")
+    collections: list[str] = Field(default_factory=list, description="Chosen collection narrowing")
+    topic: Optional[str] = Field(None, description="Chosen topic → appended to the search query")
+    note: str = Field("", description="Assumption note surfaced to the user (auto path)")
 
 
 class SuggestionList(BaseModel):
@@ -129,6 +169,7 @@ class AgentOutput(BaseModel):
     evidence_decision: Optional[EvidenceDecision] = Field(None, description="EvidenceJudge final decision (orchestrator path)")
     assembly: list[ContextAssemblyItem] = Field(default_factory=list, description="Assembled context slot provenance (orchestrator path)")
     expanded: bool = Field(False, description="True when expansion ran (orchestrator path)")
+    clarification: Optional[ClarificationResult] = Field(None, description="Clarification stage outcome (orchestrator path)")
 
 
 class Chunk(BaseModel):
@@ -197,6 +238,7 @@ class EvidenceDecision(BaseModel):
     missing_aspects: list[str] = Field(default_factory=list, description="What is missing when not sufficient")
     action: Literal["answer", "expand", "clarify", "refuse"] = Field(..., description="Next step the orchestrator must take")
     judge_type: Literal["heuristic", "llm"] = Field("heuristic", description="Which decision path produced this")
+    reasoning: str = Field("", description="Short Turkish rationale for the decision (surfaced per-stage in the UI)")
 
 
 class OrchestratorState(BaseModel):
@@ -211,7 +253,13 @@ class OrchestratorState(BaseModel):
     assembled_chunks: list[Chunk] = Field(default_factory=list, description="Chunks placed into primary context slots")
     balanced_context: list[ContextAssemblyItem] = Field(default_factory=list, description="Slot-level provenance for assembled context")
     evidence_decision: Optional[EvidenceDecision] = Field(None, description="Latest EvidenceJudge decision")
-    expanded: bool = Field(False, description="True when ExpansionPlanner consumed reserves")
+    expanded: bool = Field(False, description="True when ExpansionPlanner ran")
+    expand_iterations: int = Field(0, description="How many bounded re-query expansions have run")
+    facets: Optional[FacetSet] = Field(None, description="Facets mined from the probe retrieval")
+    clarification: Optional[ClarificationResult] = Field(None, description="Clarification stage outcome")
+    applied_constraints: dict[str, Any] = Field(default_factory=dict, description="Constraints applied from clarification (year/collections/topic)")
+    clarify_turns: int = Field(0, description="Clarification turns consumed")
+    selected_collections: list[str] = Field(default_factory=list, description="Tool/db selection from IntentAnalyzer")
     final_answer: str = Field("", description="Generated answer text")
     citations: list[dict[str, Any]] = Field(default_factory=list, description="Citation dicts produced by CitationBuilder")
     trace: list[AgentTraceEvent] = Field(default_factory=list, description="Per-stage trace events")

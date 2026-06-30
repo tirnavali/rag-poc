@@ -37,7 +37,6 @@ from src.ui.views import (
     print_sources,
     print_user,
 )
-from src.ui.components.collection_selector import select_collections_interactive
 from src.retriever.multi_source import MultiSourceRetriever
 
 
@@ -128,24 +127,51 @@ def _run_agent_query(
 
     with console.status(status_msg, spinner="dots") as status:
         def on_phase(name: str, block, model, details: dict) -> None:
-            if name == "planning":
+            if name == "classification":
+                status.update("[bold yellow]🧭 Niyet analizi…[/bold yellow]")
+            elif name == "probe":
+                status.update("[bold yellow]🔎 Ön tarama (facet çıkarımı)…[/bold yellow]")
+            elif name == "clarification":
+                status.update("[bold yellow]❓ Sorgu daraltma…[/bold yellow]")
+            elif name == "planning":
                 status.update(f"[bold yellow]🤖 Planlama ({model})…[/bold yellow]")
             elif name == "retrieval":
-                coll = details.get("collection", "?")
-                q = details.get("query", "")
-                status.update(f"[bold yellow]🔍 Arama: {coll} — {q}[/bold yellow]")
-            elif name == "re_retrieval":
-                status.update("[bold yellow]↻ Yeniden arama (filtreler gevşetildi)…[/bold yellow]")
+                status.update("[bold yellow]🔍 Çeşitlendirilmiş arama…[/bold yellow]")
+            elif name == "expansion":
+                status.update("[bold yellow]↻ Yeniden arama (sorgu genişletildi)…[/bold yellow]")
             elif name == "answering":
                 status.update(f"[bold yellow]✍️ Yanıt üretiliyor ({model})…[/bold yellow]")
             elif name == "validation":
                 status.update("[bold yellow]✅ Doğrulama…[/bold yellow]")
+
+        def clarification_callback(questions: list) -> dict:
+            """Pause the spinner, ask grounded did-you-mean questions, read choices."""
+            status.stop()
+            answers: dict = {}
+            console.print("\n[bold cyan]Sorgunuzu daraltmak için:[/bold cyan]")
+            for q in questions:
+                console.print(f"\n[bold]{q.text}[/bold]")
+                for i, opt in enumerate(q.options, 1):
+                    console.print(f"  [cyan]{i}.[/cyan] {opt}")
+                console.print("  [dim]0. Fark etmez / hepsini ara[/dim]")
+                try:
+                    raw = input("Seçim: ").strip()
+                except (EOFError, KeyboardInterrupt):
+                    raw = "0"
+                if raw.isdigit():
+                    n = int(raw)
+                    if 1 <= n <= len(q.options):
+                        answers[q.axis] = q.options[n - 1]
+            status.start()
+            return answers
 
         try:
             output = service.run_agent(
                 query,
                 on_phase=on_phase,
                 session_collections=session_collections,
+                clarification_callback=clarification_callback,
+                deep_mode=mufettis_active,
             )
             thinking_text = output.thinking
             answer_text = output.answer
@@ -237,22 +263,21 @@ def main(agent_mode: bool = False, pipeline_path: str | None = None) -> None:
         console.print(Align.center(Text("✓  Arşiv hazır — sorularınızı yazabilirsiniz", style="bold green")))
     console.print()
 
-    # ─── Startup: Collection Selection ────────────────────────────────
-    console.print("[bold cyan]📚 Koleksiyon Seçimi[/bold cyan]")
-    console.print("Sorgulamak için koleksiyonları seçin.\n")
+    # ─── Startup: Production Collections (no manual selection) ─────────
+    # The system runs only over production_ready collections; the old manual
+    # collection-selection step is gone.
+    from src.config.collections import COLLECTIONS, get_production_collection_keys
 
-    try:
-        selected_specs = select_collections_interactive(
-            defaults=["gazete_arsivi", "tbmm_minutes"]
-        )
-    except ValueError as e:
-        print_error(f"Hata: {e}")
+    production_keys = get_production_collection_keys()
+    if not production_keys:
+        print_error("Hata: production_ready koleksiyon yok (models.yaml).")
         sys.exit(1)
+    selected_specs = [COLLECTIONS[k] for k in production_keys]
+    names = ", ".join(production_keys)
+    console.print(f"[green]✓ Production koleksiyon(lar): {names}[/green]\n")
 
-    console.print(f"[green]✓ {len(selected_specs)} koleksiyon seçildi[/green]\n")
-
-    # Collection names used by the orchestrator's policy stage.
-    selected_collection_names: list[str] = [spec.name for spec in selected_specs]
+    # Collection keys used by the orchestrator (policy stage when enabled).
+    selected_collection_names: list[str] = list(production_keys)
 
     # Create multi-collection retriever for this session
     multi_retriever = MultiSourceRetriever(specs=selected_specs)

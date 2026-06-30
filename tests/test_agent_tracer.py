@@ -69,15 +69,39 @@ def test_on_phase_callback_error_does_not_break_pipeline():
 def test_print_trace_smoke(capsys):
     t = PipelineTracer()
     with t.phase("planning", block="fast-01", model="m") as c:
-        c.update_details(intent="factual", resources="tbmm_minutes")
+        c.update_details(intent="factual", collections=["tutanaklar_nomic_chunk256_768d"])
     with t.phase("retrieval") as c:
-        c.update_details(collection="tbmm_minutes", result_count=2)
+        c.update_details(per_collection={"tutanaklar_nomic_chunk256_768d": {"fetched": 10, "returned": 3}})
+    with t.phase("judge") as c:
+        c.update_details(action="answer", judge_type="heuristic", confidence=0.85)
     with t.phase("answering", block="gpu-01", model="g") as c:
         c.update_details(context_chars=120)
     with t.phase("validation") as c:
-        c.update_details(passes=True, checks={"is_turkish": True})
+        c.update_details(passes=True)
     t.print_trace()
     out = capsys.readouterr().out
-    assert "PHASE 1: Planning" in out
-    assert "PHASE 4: Validation" in out
+    assert "Planning" in out
+    assert "Retrieval" in out
+    assert "total: 3 results" in out  # per_collection 'returned' is summed, not 0
+    assert "Validation" in out
     assert t.trace_id in out
+
+
+def test_on_phase_end_fires_with_completed_event():
+    """on_phase_end receives the completed event with its filled-in details."""
+    seen = []
+    t = PipelineTracer(on_phase_end=lambda ev: seen.append(ev))
+    with t.phase("judge") as c:
+        c.update_details(action="answer", reasoning="yeterli kanıt")
+    assert len(seen) == 1
+    assert seen[0].phase == "judge"
+    assert seen[0].details["reasoning"] == "yeterli kanıt"
+
+
+def test_on_phase_end_errors_never_break_pipeline():
+    def boom(ev):
+        raise RuntimeError("listener exploded")
+    t = PipelineTracer(on_phase_end=boom)
+    with t.phase("planning"):
+        pass
+    assert len(t.events) == 1  # phase still recorded

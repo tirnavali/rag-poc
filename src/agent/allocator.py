@@ -53,7 +53,7 @@ class AllocationPlanner:
 
         Filters are translated to ChromaDB `where` syntax here (the orchestrator
         path's single choke point), so SearchTool receives the same already-
-        translated dict as the PlanningAgent path (planner.py `_execute_single`).
+        translated dict as the rest of the retrieval path expects.
         A raw model_dump (e.g. {"year_lte": 2000}) is NOT a valid Chroma filter:
         `year_lte`/`year_gte` are not real metadata fields and multi-field dicts
         need a `$and` wrapper — ChromaFilterTranslator handles both.

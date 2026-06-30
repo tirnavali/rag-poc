@@ -61,6 +61,8 @@ class PlannerConfig:
         self.block = config.get("block", "fast-01")
         self.model_key = config.get("model_key", "planner")
         self.default_query_count = config.get("default_query_count", 2)
+        # Normal mode caps query diversification (one search per variant, RRF-fused).
+        self.normal_max_query_variants = int(config.get("normal_max_query_variants", 5))
         self.search_strategy = config.get("search_strategy", "auto")
         self.plan_prompt = config.get("plan_prompt", "")
         self.think = config.get("think", None)
@@ -156,6 +158,9 @@ class PolicyConfig:
     """Collection-access policy configuration."""
 
     def __init__(self, config: dict) -> None:
+        # Stage-2: off by default. When disabled the orchestrator allows the
+        # planner-suggested collections through unchanged.
+        self.enabled = bool(config.get("enabled", False))
         self.mode = config.get("mode", "session_intersection")
 
 
@@ -172,6 +177,9 @@ class AllocationConfig:
     """Per-query-type retrieval budget configuration."""
 
     def __init__(self, config: dict) -> None:
+        # Stage-2: off by default. When disabled the orchestrator builds a flat
+        # single-pool execution plan from `defaults.fetch_k` (no reserve split).
+        self.enabled = bool(config.get("enabled", False))
         defaults = config.get("defaults", {})
         self._defaults = _AllocationBudget(
             primary=int(defaults.get("primary", 2)),
@@ -220,6 +228,35 @@ class JudgeConfig:
         self.llm = _JudgeLLMConfig(config.get("llm", {}))
         self.max_expand_iterations = int(config.get("max_expand_iterations", 1))
         self.on_low_confidence = config.get("on_low_confidence", "expand")
+        # "requery" = ExpansionPlanner issues new diversified retrieval (default);
+        # "reserve" = legacy reserve-chunk promotion (no new vector calls).
+        self.expand_strategy = config.get("expand", {}).get("strategy", "requery")
+
+
+class ClarificationConfig:
+    """Grounded clarification (did-you-mean) stage configuration.
+
+    Probe-retrieves a small set, mines facets from their metadata, and — when the
+    query is ambiguous — asks the user to narrow year/scope/topic. In
+    non-interactive contexts (no callback) the strongest facet is auto-applied.
+    """
+
+    def __init__(self, config: dict) -> None:
+        self.enabled = bool(config.get("enabled", True))
+        self.probe_k = int(config.get("probe_k", 20))
+        self.question_count = int(config.get("question_count", 3))
+        self.max_turns_normal = int(config.get("max_turns_normal", 1))
+        self.max_turns_deep = int(config.get("max_turns_deep", 2))
+        # Ambiguity gate: ask only when the probe results are spread out.
+        gate = config.get("ambiguity", {})
+        self.min_distinct_years = int(gate.get("min_distinct_years", 3))
+        self.dominance_ratio = float(gate.get("dominance_ratio", 0.6))
+        # LLM used only to phrase the (deterministically mined) facets as questions.
+        self.block = config.get("block", "fast-01")
+        self.model_key = config.get("model_key", "planner")
+        self.temperature = float(config.get("temperature", 0.2))
+        self.think = config.get("think", False)
+        self.prompt = config.get("prompt", "")
 
 
 class PipelineConfig:
@@ -232,6 +269,9 @@ class PipelineConfig:
         }
 
         agent_cfg = config.get("agent", {})
+        # When true, each stage's LLM reasoning/output is attached to its trace
+        # event details so the UI can show per-stage thinking.
+        self.expose_thinking = bool(agent_cfg.get("expose_thinking", True))
         self.bad_words_filter = BadWordsFilterConfig(agent_cfg.get("bad_words_filter", {}))
         self.classifier = ClassifierConfig(agent_cfg.get("classifier", {}))
         self.suggester = SuggesterConfig(agent_cfg.get("suggester", {}))
@@ -242,6 +282,7 @@ class PipelineConfig:
             agent_cfg.get("off_domain_fallback_suggestions", [])
         )
         self.planner = PlannerConfig(agent_cfg.get("planner", {}))
+        self.clarification = ClarificationConfig(agent_cfg.get("clarification", {}))
         self.answering = AgentConfig(agent_cfg.get("answering", {}))
         self.sanitizer = AgentConfig(agent_cfg.get("sanitizer", {}))
         self.filter_extractor = AgentConfig(agent_cfg.get("filter_extractor", {

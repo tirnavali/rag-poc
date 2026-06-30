@@ -21,13 +21,35 @@ def _chunk(cid: str, collection: str) -> Chunk:
     )
 
 
-def _judge(llm_enabled: bool = False) -> EvidenceJudge:
+def _judge(llm_enabled: bool = False, min_rerank_score: float = 0.0) -> EvidenceJudge:
     cfg = JudgeConfig({
-        "heuristic": {"min_chunks": 4, "min_collection_coverage": 2},
+        "heuristic": {"min_chunks": 4, "min_collection_coverage": 2,
+                      "min_rerank_score": min_rerank_score},
         "llm": {"enabled": llm_enabled, "borderline_band": [2, 4]},
         "max_expand_iterations": 1,
     })
     return EvidenceJudge(cfg, client_pool=None)
+
+
+def test_judge_relevance_floor_drops_irrelevant_chunks():
+    """Chunks below min_rerank_score are dropped (very irrelevant), informative kept."""
+    keep = _chunk("a", "col_a")          # rerank_score 0.5
+    drop = _chunk("b", "col_b")
+    drop.rerank_score = 0.001            # below floor
+    state = OrchestratorState(request_id="r", user_query="q", assembled_chunks=[keep, drop])
+    _judge(min_rerank_score=0.02).run(state)
+    ids = {c.chunk_id for c in state.assembled_chunks}
+    assert ids == {"a"}
+    assert any(e.startswith("relevance_floor_dropped") for e in state.errors)
+
+
+def test_judge_relevance_floor_keeps_all_when_every_chunk_below():
+    """Lenient: if every chunk is below the floor, keep them all rather than zeroing out."""
+    c1 = _chunk("a", "col_a"); c1.rerank_score = 0.001
+    c2 = _chunk("b", "col_b"); c2.rerank_score = 0.001
+    state = OrchestratorState(request_id="r", user_query="q", assembled_chunks=[c1, c2])
+    _judge(min_rerank_score=0.02).run(state)
+    assert len(state.assembled_chunks) == 2
 
 
 def test_judge_no_chunks_clarify():

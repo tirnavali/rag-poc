@@ -1,4 +1,15 @@
-"""OrchestratorAgent — explicit state-machine pipeline replacing PlanningAgent retry loops."""
+"""OrchestratorAgent — the single agent pipeline.
+
+Unifies the former legacy/orchestrator split into one explicit state machine:
+
+  bad_words? → intent (scope + tool/db) → probe + facets + clarification →
+  planning → policy? → allocation? → retrieve → assemble → judge →
+  (bounded re-query → re-assemble → re-judge) → answer → sanitize → cite
+
+Stage-2 gates (`bad_words_filter`, `policy`, `allocation`) are toggled per-stage
+in pipeline.yaml; when disabled the orchestrator supplies sensible fallbacks
+(allowed = planner suggestions; flat single-pool execution plans).
+"""
 from __future__ import annotations
 
 import time
@@ -8,7 +19,10 @@ from typing import Optional
 
 from src.agent.allocator import AllocationPlanner
 from src.agent.assembler import BalancedContextAssembler
+from src.agent.bad_words_filter import BadWordsFilter
 from src.agent.citations import CitationBuilder
+from src.agent.clarifier import AmbiguityGate, FacetMiner, QueryRefiner
+from src.agent.classifier import ScopeClassifier
 from src.agent.expander import ExpansionPlanner
 from src.agent.judge import EvidenceJudge
 from src.agent.planner import Planner
@@ -17,13 +31,19 @@ from src.agent.sanitizer import SanitizerAgent
 from src.agent.schemas import (
     AgentOutput,
     Chunk,
+    ClarificationResult,
+    CollectionExecutionPlan,
     EvidenceDecision,
     OrchestratorState,
+    PolicyResult,
     RetrievalOutput,
+    SearchPlan,
 )
+from src.agent.suggester import Suggester
 from src.agent.tools import AnswerTool, SearchTool
 from src.agent.tracer import PipelineTracer
 from src.common.llm_client_pool import LLMClientPool
+from src.config.collections import COLLECTIONS, get_production_collection_keys
 from src.config.pipeline_loader import PipelineConfig
 
 
@@ -38,11 +58,7 @@ _REFUSE_MESSAGES = {
 
 
 class OrchestratorAgent:
-    """Runs the new state-machine pipeline.
-
-    Components: Planner → Policy → Allocator → Retrieve → Assembler →
-    Judge → (Expand → Re-Judge) → Answer → Sanitizer → Citation.
-    """
+    """The single agentic RAG pipeline (see module docstring for the stage order)."""
 
     def __init__(self, config: PipelineConfig, client_pool: LLMClientPool, filter_extractor=None) -> None:
         self._config = config
@@ -56,67 +72,137 @@ class OrchestratorAgent:
         self._expander = ExpansionPlanner()
         self._answer_tool = AnswerTool(client_pool, config)
         self._sanitizer = SanitizerAgent(client_pool, config)
+        # Gates / clarification
+        self._bad_words = (
+            BadWordsFilter(config.bad_words_filter)
+            if getattr(config, "bad_words_filter", None) and config.bad_words_filter.enabled
+            else None
+        )
+        self._classifier = (
+            ScopeClassifier(client_pool, config)
+            if getattr(config, "classifier", None) and config.classifier.enabled
+            else None
+        )
+        self._suggester = Suggester(client_pool, config)
+        self._facet_miner = FacetMiner()
+        self._gate = AmbiguityGate(config.clarification)
+        self._refiner = QueryRefiner(client_pool, config)
+        # The live retrieval universe — agent only ever sees production collections.
+        self._production = get_production_collection_keys()
+
+    # ====================================================================== run
 
     def run(
         self,
         query: str,
-        session_collections: list[str],
+        session_collections: Optional[list[str]] = None,
         stream_callback: Optional[callable] = None,
+        clarification_callback: Optional[callable] = None,
+        deep_mode: bool = False,
+        on_phase: Optional[callable] = None,
+        on_phase_end: Optional[callable] = None,
     ) -> AgentOutput:
-        state = OrchestratorState(
-            request_id=str(uuid.uuid4()),
-            user_query=query,
-        )
-        tracer = PipelineTracer()
+        state = OrchestratorState(request_id=str(uuid.uuid4()), user_query=query)
+        tracer = PipelineTracer(on_phase=on_phase, on_phase_end=on_phase_end)
+        session_collections = session_collections or []
 
+        # ---- Stage 0: bad-words gate (stage-2; off by default) ----
+        if self._bad_words is not None:
+            bw = self._bad_words.check(query)
+            with tracer.phase("bad_words_filter", details={"matched": bw.matched, "matched_terms": bw.matched_terms}):
+                pass
+            if bw.matched:
+                return AgentOutput(
+                    answer=self._config.bad_words_filter.response_message,
+                    scope="bad_word",
+                    trace=tracer.events,
+                )
+
+        # ---- Stage 1: intent (scope + tool/db selection) ----
+        if self._classifier is not None:
+            scope_result = self._classifier.classify(query, tracer)
+            if (
+                scope_result.scope == "off_domain"
+                and scope_result.confidence >= self._config.classifier.confidence_threshold
+            ):
+                return self._off_domain_output(query, tracer)
+            # Validate intent's collection picks against the production universe.
+            prod = set(self._production)
+            state.selected_collections = [
+                c for c in scope_result.selected_collections if c in COLLECTIONS and c in prod
+            ]
+
+        # ---- Stage 1.5/1.6: probe + facets + grounded clarification ----
+        if self._config.clarification.enabled:
+            self._clarify(state, tracer, clarification_callback, deep_mode)
+
+        # ---- Stage 2: planning (intent + constraints → diversified plan) ----
         with tracer.phase("planning") as ctx:
-            state.planner_output = self._planner.plan(query, tracer)
+            state.planner_output = self._planner.plan(
+                query,
+                tracer,
+                # Restrict the planner's catalog + routing to the production universe.
+                selected_collections=state.selected_collections or self._production,
+                constraints=state.applied_constraints or None,
+                max_variants=self._config.planner.normal_max_query_variants,
+            )
             if ctx and state.planner_output:
                 ctx.update_details(
                     intent=state.planner_output.intent,
                     query_type=state.planner_output.query_type,
-                    suggested_collections=[r.collection for r in state.planner_output.resources],
+                    collections=[r.collection for r in state.planner_output.resources],
+                    drafts={r.collection: [d.text for d in r.query_drafts]
+                            for r in state.planner_output.resources},
                 )
+                if self._config.expose_thinking and state.planner_output.reasoning:
+                    ctx.update_details(reasoning=state.planner_output.reasoning)
 
+        # ---- Stage 2a: policy (stage-2; off → allow planner suggestions) ----
         with tracer.phase("policy") as ctx:
-            self._policy.run(state, session_collections)
+            if self._config.policy.enabled:
+                self._policy.run(state, session_collections)
+            else:
+                suggested = [r.collection for r in state.planner_output.resources] if state.planner_output else []
+                state.policy_result = PolicyResult(allowed_collections=suggested, denied_collections=[])
             if ctx and state.policy_result:
                 ctx.update_details(
+                    enabled=self._config.policy.enabled,
                     allowed=state.policy_result.allowed_collections,
                     denied=state.policy_result.denied_collections,
                 )
         if not state.policy_result.allowed_collections:
             return self._build_refuse_output(state, "no_allowed_collections", tracer)
 
+        # ---- Stage 2b: allocation (stage-2; off → flat single-pool plans) ----
         with tracer.phase("allocation") as ctx:
-            self._allocator.run(state)
+            if self._config.allocation.enabled:
+                self._allocator.run(state)
+            else:
+                state.collection_plans = self._flat_plans_for(
+                    state.planner_output, state.policy_result.allowed_collections
+                )
             if ctx:
                 ctx.update_details(
+                    enabled=self._config.allocation.enabled,
                     plans=[
                         {"collection": p.collection_name, "primary": p.retrieval_budget,
-                         "reserve": p.reserve_budget, "fetch_k": p.fetch_k,
-                         "drafts": p.query_drafts or [state.user_query]}
+                         "reserve": p.reserve_budget, "fetch_k": p.fetch_k}
                         for p in state.collection_plans
                     ],
-                    query_type=state.planner_output.query_type if state.planner_output else "fact",
                 )
         if not state.collection_plans:
             return self._build_refuse_output(state, "no_allowed_collections", tracer)
 
+        # ---- Stage 3: retrieval (parallel fan-out + RRF + rerank) ----
         with tracer.phase("retrieval") as ctx:
-            self._retrieve_all(state)
+            state.retrieval_results = self._run_retrieval(state.collection_plans, self._fallback_query(state))
             if ctx:
-                ctx.update_details(
-                    per_collection={
-                        name: {
-                            "fetched": ro.fetched_count,
-                            "returned": ro.returned_count,
-                            "latency_ms": ro.latency_ms,
-                        }
-                        for name, ro in state.retrieval_results.items()
-                    }
-                )
+                ctx.update_details(per_collection={
+                    name: {"fetched": ro.fetched_count, "returned": ro.returned_count, "latency_ms": ro.latency_ms}
+                    for name, ro in state.retrieval_results.items()
+                })
 
+        # ---- Stage 4: assembly ----
         with tracer.phase("assembly") as ctx:
             self._assembler.run(state)
             if ctx:
@@ -125,6 +211,7 @@ class OrchestratorAgent:
                     collection_coverage=len({c.collection_name for c in state.assembled_chunks}),
                 )
 
+        # ---- Stage 5: judge ----
         with tracer.phase("judge") as ctx:
             self._judge.run(state)
             if ctx and state.evidence_decision:
@@ -132,17 +219,22 @@ class OrchestratorAgent:
                     judge_type=state.evidence_decision.judge_type,
                     action=state.evidence_decision.action,
                     confidence=state.evidence_decision.confidence,
+                    missing_aspects=state.evidence_decision.missing_aspects,
                 )
+                if self._config.expose_thinking and state.evidence_decision.reasoning:
+                    ctx.update_details(reasoning=state.evidence_decision.reasoning)
 
+        # ---- Stage 5.1: bounded re-query expansion ----
         max_iters = self._config.judge.max_expand_iterations
         if state.evidence_decision.action == "expand" and max_iters > 0:
             with tracer.phase("expansion") as ctx:
-                self._expander.run(state)
+                if self._config.judge.expand_strategy == "requery":
+                    self._requery_expand(state, tracer)
+                    self._assembler.run(state)
+                else:
+                    self._expander.run(state)
                 if ctx:
-                    ctx.update_details(
-                        expanded=state.expanded,
-                        post_count=len(state.assembled_chunks),
-                    )
+                    ctx.update_details(expanded=state.expanded, post_count=len(state.assembled_chunks))
             with tracer.phase("judge_post_expand") as ctx:
                 self._judge.run(state)
                 if ctx and state.evidence_decision:
@@ -157,11 +249,9 @@ class OrchestratorAgent:
         if action == "refuse":
             return self._build_refuse_output(state, "judge_refuse", tracer)
 
+        # ---- Stage 6: answer → sanitize → cite ----
         with tracer.phase("answering") as ctx:
             context = self._build_context(state)
-            # Token-level streaming through AnswerTool is not yet exposed; the
-            # callback is fired once with the completed answer so downstream
-            # consumers can branch on stream vs. blocking behavior.
             thinking, answer = self._answer_tool.generate(query=query, context=context)
             state.final_answer = answer
             if stream_callback is not None:
@@ -171,6 +261,10 @@ class OrchestratorAgent:
                     pass
             if ctx:
                 ctx.update_details(answer_chars=len(answer), context_chars=len(context))
+                if self._config.expose_thinking:
+                    if thinking:
+                        ctx.update_details(thinking=thinking)
+                    ctx.update_details(answer_preview=answer[:600])
 
         with tracer.phase("validation") as ctx:
             validation = self._sanitizer.validate(
@@ -183,6 +277,10 @@ class OrchestratorAgent:
                 state.final_answer = validation.corrected_answer
             if ctx and validation:
                 ctx.update_details(passes=getattr(validation, "passes", True))
+                if self._config.expose_thinking:
+                    issues = getattr(validation, "issues", None)
+                    if issues:
+                        ctx.update_details(issues=issues)
 
         with tracer.phase("citation") as ctx:
             state.citations = CitationBuilder.build(state.assembled_chunks)
@@ -200,33 +298,139 @@ class OrchestratorAgent:
             evidence_decision=state.evidence_decision,
             assembly=state.balanced_context,
             expanded=state.expanded,
+            clarification=state.clarification,
         )
 
-    def _retrieve_all(self, state: OrchestratorState) -> None:
-        plans = [p for p in state.collection_plans if p.enabled]
-        if not plans:
+    # ============================================================== clarify
+
+    def _clarify(self, state, tracer, clarification_callback, deep_mode) -> None:
+        """Probe-retrieve, mine facets, and (if ambiguous) narrow year/scope/topic."""
+        cfg = self._config.clarification
+        probe_cols = state.selected_collections or self._production
+
+        with tracer.phase("probe") as ctx:
+            probe_results = self._probe(state.user_query, probe_cols, cfg.probe_k)
+            state.facets = self._facet_miner.mine(probe_results)
+            if ctx:
+                ctx.update_details(
+                    probed=len(probe_cols),
+                    hits=state.facets.total,
+                    years=len(state.facets.years),
+                    topics=len(state.facets.topics),
+                )
+
+        if not self._gate.is_ambiguous(state.facets):
             return
 
-        # Fan out one search per (collection × planner draft). The planner emits
-        # several query rewrites per collection; running them all and RRF-fusing
-        # the ranked lists is what makes that query expansion actually count.
-        # A collection with no drafts degrades to a single search on the raw
-        # query. All searches share one pool so collections AND drafts run
-        # concurrently (each search is I/O-bound: Chroma + Ollama rerank).
-        # When a collection has no planner drafts, fall back to the filter-words-
-        # stripped refined_query (FilterExtractor) rather than the raw query, so
-        # filter tokens don't pollute the vector search — mirroring RAGService.
+        max_turns = cfg.max_turns_deep if deep_mode else cfg.max_turns_normal
+        with tracer.phase("clarification") as ctx:
+            if clarification_callback is not None and max_turns > 0:
+                questions = self._refiner.build_questions(state.user_query, state.facets, tracer)
+                if questions:
+                    try:
+                        answers = clarification_callback(questions)
+                    except Exception:
+                        answers = None
+                    constraints = self._refiner.resolve(questions, answers)
+                    state.applied_constraints = constraints
+                    state.clarify_turns = 1
+                    state.clarification = ClarificationResult(
+                        asked=True, turns=1, questions=questions,
+                        year=constraints.get("year"),
+                        collections=constraints.get("collections", []),
+                        topic=constraints.get("topic"),
+                    )
+            else:
+                # Non-interactive: auto-apply the strongest facet + assumption note.
+                constraints, note = self._refiner.auto_constraints(state.facets)
+                state.applied_constraints = constraints
+                state.clarification = ClarificationResult(
+                    auto_applied=bool(constraints), note=note,
+                    year=constraints.get("year"), topic=constraints.get("topic"),
+                )
+            if ctx and state.clarification:
+                ctx.update_details(
+                    asked=state.clarification.asked,
+                    auto_applied=state.clarification.auto_applied,
+                    constraints=state.applied_constraints,
+                )
+
+    def _probe(self, query: str, collections: list[str], probe_k: int) -> list[dict]:
+        """Cheap broad retrieval over `collections` to mine facets from."""
+        def _one(name):
+            try:
+                return self._search_tool.search(collection_key=name, query_text=query, filters=None, top_k=probe_k)
+            except Exception:
+                return {"documents": [], "metadatas": [], "distances": []}
+
+        if not collections:
+            return []
+        with ThreadPoolExecutor(max_workers=min(8, len(collections))) as ex:
+            return list(ex.map(_one, collections))
+
+    def _off_domain_output(self, query: str, tracer: PipelineTracer) -> AgentOutput:
+        suggestions = self._suggester.suggest(query, tracer)
+        template = (
+            self._config.off_domain_response_template
+            or "Bu sistem alan dışında.\n1. {suggestion_0}\n2. {suggestion_1}\n3. {suggestion_2}"
+        )
+        padded = (suggestions + ["", "", ""])[:3]
+        answer = template.format(suggestion_0=padded[0], suggestion_1=padded[1], suggestion_2=padded[2])
+        return AgentOutput(answer=answer, scope="off_domain", suggestions=suggestions, trace=tracer.events)
+
+    # ====================================================== allocation fallback
+
+    def _flat_plans_for(self, search_plan: Optional[SearchPlan], allowed: list[str]) -> list[CollectionExecutionPlan]:
+        """Build flat single-pool execution plans (allocation disabled).
+
+        Reuses AllocationPlanner's filter/draft mapping but with a flat budget:
+        all fused hits flow into the primary pool (reserve=0), capped downstream
+        by `allocation.max_total_primary`.
+        """
+        filters_by = AllocationPlanner._collect_first_filters(search_plan) if search_plan else {}
+        drafts_by = AllocationPlanner._collect_draft_texts(search_plan) if search_plan else {}
+        qt = search_plan.query_type if search_plan else "fact"
+        fetch_k = self._config.allocation.budget_for(qt).fetch_k
+        plans = []
+        for idx, name in enumerate(allowed):
+            plans.append(CollectionExecutionPlan(
+                collection_name=name,
+                priority=idx + 1,
+                retrieval_budget=fetch_k,
+                reserve_budget=0,
+                fetch_k=fetch_k,
+                filters=filters_by.get(name, {}),
+                query_drafts=drafts_by.get(name, []),
+                route_reason="flat_allocation_disabled",
+            ))
+        return plans
+
+    def _fallback_query(self, state: OrchestratorState) -> str:
         refined = state.planner_output.refined_query if state.planner_output else None
-        fallback_query = refined or state.user_query
-        tasks: list[tuple[int, str]] = []  # (plan_index, query_text)
-        for pi, plan in enumerate(plans):
+        return refined or state.user_query
+
+    # ============================================================ retrieval
+
+    def _run_retrieval(self, plans: list[CollectionExecutionPlan], fallback_query: str) -> dict[str, RetrievalOutput]:
+        """Fan out one search per (collection × draft), RRF-fuse per collection.
+
+        Returns a fresh RetrievalOutput map; does not mutate state, so the same
+        helper serves both the initial retrieval and bounded re-query expansion.
+        """
+        active = [p for p in plans if p.enabled]
+        results: dict[str, RetrievalOutput] = {}
+        if not active:
+            return results
+
+        tasks: list[tuple[int, str]] = []
+        for pi, plan in enumerate(active):
             drafts = plan.query_drafts or [fallback_query]
             for draft in drafts:
                 tasks.append((pi, draft))
 
         def _one(task):
             pi, query_text = task
-            plan = plans[pi]
+            plan = active[pi]
             t0 = time.perf_counter()
             try:
                 result = self._search_tool.search(
@@ -240,25 +444,20 @@ class OrchestratorAgent:
             chunks = self._dict_to_chunks(result, plan.collection_name)
             return pi, chunks, (time.perf_counter() - t0) * 1000
 
-        # Ranked chunk lists per collection (one list per successful draft).
-        draft_lists: dict[int, list[list[Chunk]]] = {pi: [] for pi in range(len(plans))}
-        latency_by_plan: dict[int, float] = {pi: 0.0 for pi in range(len(plans))}
+        draft_lists: dict[int, list[list[Chunk]]] = {pi: [] for pi in range(len(active))}
+        latency_by_plan: dict[int, float] = {pi: 0.0 for pi in range(len(active))}
 
         with ThreadPoolExecutor(max_workers=min(16, max(1, len(tasks)))) as ex:
             for pi, payload, latency in ex.map(_one, tasks):
                 latency_by_plan[pi] = max(latency_by_plan[pi], latency)
-                name = plans[pi].collection_name
-                if isinstance(payload, Exception):
-                    state.errors.append(f"retrieval_failed:{name}:{type(payload).__name__}")
-                else:
+                if not isinstance(payload, Exception):
                     draft_lists[pi].append(payload)
 
-        for pi, plan in enumerate(plans):
+        for pi, plan in enumerate(active):
             fused = self._fuse_draft_chunks(draft_lists[pi])
             primary = fused[: plan.retrieval_budget]
-            reserve_end = plan.retrieval_budget + plan.reserve_budget
-            reserve = fused[plan.retrieval_budget:reserve_end]
-            state.retrieval_results[plan.collection_name] = RetrievalOutput(
+            reserve = fused[plan.retrieval_budget: plan.retrieval_budget + plan.reserve_budget]
+            results[plan.collection_name] = RetrievalOutput(
                 collection_name=plan.collection_name,
                 chunks=primary,
                 reserve_chunks=reserve,
@@ -267,17 +466,59 @@ class OrchestratorAgent:
                 latency_ms=latency_by_plan[pi],
                 filter_applied=plan.filters or {},
             )
+        return results
+
+    def _requery_expand(self, state: OrchestratorState, tracer: PipelineTracer) -> None:
+        """Bounded re-query: broaden the plan, retrieve anew, merge unique chunks.
+
+        Unlike reserve-promotion this issues fresh vector searches. New chunks are
+        appended to the existing primary buffers and the matching execution plan's
+        budget is raised so the re-assembly step can surface them.
+        """
+        broader = self._planner.broaden(
+            state.user_query,
+            state.planner_output,
+            tracer,
+            selected_collections=state.selected_collections or self._production,
+        )
+        if broader is None or not broader.resources:
+            return
+
+        # A hallucinated collection key fails safely inside SearchTool (KeyError →
+        # caught and dropped in _run_retrieval), so no catalog pre-filter is needed.
+        allowed = [r.collection for r in broader.resources]
+        requery_plans = self._flat_plans_for(broader, allowed)
+        new_results = self._run_retrieval(requery_plans, broader.refined_query or state.user_query)
+        if not new_results:
+            return
+
+        existing_by = {p.collection_name: p for p in state.collection_plans}
+        plan_by_name = {p.collection_name: p for p in requery_plans}
+        added_total = 0
+        for name, rr_new in new_results.items():
+            rr = state.retrieval_results.get(name)
+            if rr is None:
+                state.retrieval_results[name] = rr_new
+                state.collection_plans.append(plan_by_name[name])
+                added_total += len(rr_new.chunks)
+                continue
+            seen = {c.chunk_id for c in rr.chunks}
+            added = [c for c in rr_new.chunks if c.chunk_id not in seen]
+            if added:
+                rr.chunks = rr.chunks + added
+                if name in existing_by:
+                    existing_by[name].retrieval_budget += len(added)
+                added_total += len(added)
+
+        if added_total > 0:
+            state.expanded = True
+        state.expand_iterations += 1
+
+    # =============================================================== helpers
 
     @staticmethod
     def _fuse_draft_chunks(draft_lists: list[list["Chunk"]], k: int = 60) -> list["Chunk"]:
-        """RRF-merge the ranked chunk lists produced by a collection's query drafts.
-
-        Each draft is one ranked list; a chunk's fused score sums ``1/(k+rank)``
-        over the drafts that surfaced it, so chunks found by several rewrites rank
-        highest. Dedup is by ``chunk_id``, keeping the instance with the best
-        rerank score. Zero drafts → empty; a single draft passes through unchanged
-        (preserving the reranker's order).
-        """
+        """RRF-merge the ranked chunk lists produced by a collection's query drafts."""
         if not draft_lists:
             return []
         if len(draft_lists) == 1:
@@ -318,25 +559,15 @@ class OrchestratorAgent:
     def _build_context(state: OrchestratorState) -> str:
         blocks = []
         for i, c in enumerate(state.assembled_chunks, start=1):
-            blocks.append(
-                f"[{i}] ({c.collection_name}/{c.document_id}/{c.chunk_id})\n{c.text}"
-            )
+            blocks.append(f"[{i}] ({c.collection_name}/{c.document_id}/{c.chunk_id})\n{c.text}")
         return "\n\n".join(blocks)
 
-    def _build_refuse_output(
-        self,
-        state: OrchestratorState,
-        reason: str,
-        tracer: PipelineTracer,
-    ) -> AgentOutput:
+    def _build_refuse_output(self, state: OrchestratorState, reason: str, tracer: PipelineTracer) -> AgentOutput:
         message = _REFUSE_MESSAGES.get(reason, _REFUSE_MESSAGES["judge_refuse"])
         if state.evidence_decision is None and reason == "no_allowed_collections":
             state.evidence_decision = EvidenceDecision(
-                sufficient=False,
-                confidence=0.0,
-                action="refuse",
-                missing_aspects=[reason],
-                judge_type="heuristic",
+                sufficient=False, confidence=0.0, action="refuse",
+                missing_aspects=[reason], judge_type="heuristic",
             )
         return AgentOutput(
             answer=message,
@@ -347,4 +578,5 @@ class OrchestratorAgent:
             evidence_decision=state.evidence_decision,
             assembly=state.balanced_context,
             expanded=state.expanded,
+            clarification=state.clarification,
         )

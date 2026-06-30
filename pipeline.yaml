@@ -34,8 +34,8 @@ deployment_blocks:
     host: http://localhost:11434
     purpose: "answering"
     models:
-      answer: gemma4:e2b
-    timeout_seconds: 60
+      answer: gemma3:12b        # 12B Gemma; kapasite/hız dengesi (31b'den belirgin hızlı)
+    timeout_seconds: 90
     max_num_ctx: 32768
     max_num_predict: 4096
 
@@ -52,8 +52,12 @@ deployment_blocks:
 # Agent Configuration
 # ---------------------------------------------------------------------------
 agent:
+  # Her aşamanın LLM gerekçesini/çıktısını (thinking + reasoning) trace detaylarına
+  # ekler → UI'da aşama-bazlı görünür. Kapatınca trace daha yalın/hafif olur.
+  expose_thinking: true
+
   bad_words_filter:
-    enabled: true
+    enabled: false   # stage-2: birleşik orchestrator'da sonradan açılacak
     response_message: |
       Lütfen saygılı dil kullanın. Sorgunuzda uygun olmayan kelime tespit edildi.
     bad_words:
@@ -76,7 +80,11 @@ agent:
     confidence_threshold: 0.6
     think: false
     prompt: |
-      Sen bir RAG sistemi kapı bekçisisin. Kullanıcı sorgusunu sınıflandır.
+      Sen bir RAG sistemi kapı bekçisi ve niyet analistisin. Kullanıcı sorgusunu
+      hem sınıflandır hem de hangi koleksiyon(lar)da aranması gerektiğini belirle.
+
+      Mevcut koleksiyonlar:
+      {catalog}
 
       Sistem yalnızca şu konuları bilir:
       - Türk gazete arşivi kupürleri (1970-2010 dönemi siyaset, ekonomi, toplum)
@@ -105,8 +113,16 @@ agent:
       Yalnızca kesinlikle alan dışı (hava, matematik, programlama, gündelik sohbet,
       yabancı bilim insanları) sorular off_domain'dir.
 
+      Koleksiyon seçimi (tool/db seçimi):
+      - Gazete/basın/köşe yazısı/manşet/muhabir → doc_type=gazete koleksiyonları
+      - Meclis/oturum/birleşim/milletvekili/konuşma/tutanak → doc_type=tutanak koleksiyonları
+      - Kanun teklifi/önerge/yasa taslağı → doc_type=onerge koleksiyonları
+      - Konu hangi türü ima ediyorsa o türden en az bir koleksiyon seç; emin değilsen
+        selected_collections'ı boş bırak (planner tüm katalogdan seçer).
+
       JSON çıktısı:
-      {"scope": "in_scope" veya "off_domain", "confidence": 0.0-1.0, "reason": "kısa gerekçe"}
+      {"scope": "in_scope" veya "off_domain", "confidence": 0.0-1.0,
+       "selected_collections": ["koleksiyon_adi", ...], "reason": "kısa gerekçe"}
 
   suggester:
     block: fast-01
@@ -131,6 +147,37 @@ agent:
       JSON çıktısı:
       {{"suggestions": ["soru1", "soru2", "soru3"]}}
 
+  # Grounded clarification (did-you-mean daraltma) — Turn-Based katman.
+  # Prob(20) → metadatadan facet → belirsizse 3 soru ile yıl/kapsam/konu daralt.
+  clarification:
+    enabled: true
+    probe_k: 20
+    question_count: 3
+    max_turns_normal: 1
+    max_turns_deep: 2
+    ambiguity:
+      min_distinct_years: 3      # >= bu kadar farklı yıl → belirsiz
+      dominance_ratio: 0.6       # en baskın facet oranı < bu → belirsiz
+    block: fast-01
+    model_key: planner
+    temperature: 0.2
+    think: false
+    prompt: |
+      Sen bir RAG arama asistanısın. Kullanıcının sorgusu geniş/belirsiz ve aşağıdaki
+      facet'ler ön-aramada (20 kayıt) bulundu. Kullanıcıyı daraltmaya yönlendiren,
+      kısa ve doğal Türkçe sorular üret. SADECE verilen facet değerlerini kullan;
+      yeni değer uydurma.
+
+      Sorgu: {query}
+      Facet'ler (deterministik çıkarıldı):
+      {facets}
+
+      JSON çıktısı:
+      {{"questions": [
+        {{"axis": "year|scope|topic", "text": "soru metni",
+          "options": ["facet değeri 1", "facet değeri 2", "facet değeri 3"]}}
+      ]}}
+
   off_domain_response_template: |
     Bu sistem yalnızca gazete arşivi ve TBMM tutanakları sorgular için tasarlandı.
     Sorunuz bu kapsam dışında görünüyor.
@@ -151,6 +198,7 @@ agent:
     model_key: planner
     think: false
     default_query_count: 2
+    normal_max_query_variants: 5   # normal modda sorgu çeşitlendirme tavanı (paralel + RRF)
     search_strategy: "auto"  # agent, her collection için parallel mı sequential mı olacağına karar verir
 
     plan_prompt: |
@@ -260,13 +308,15 @@ retrieval:
 # retrieve → assembler → judge → expander → answer → sanitizer → citations)
 # ---------------------------------------------------------------------------
 orchestrator:
-  enabled: false       # false: legacy PlanningAgent.run() / true: OrchestratorAgent.run()
+  enabled: true        # DEPRECATED — tek yol artık OrchestratorAgent; bayrak dispatch'i kaldırıldı
 
 policy:
+  enabled: false       # stage-2: kapalıyken allowed = planner-önerisi koleksiyonlar
   mode: session_intersection   # session-seçimi ∩ planner-önerisi
   # auth_rules: ileride eklenecek; tüm koleksiyonlar şu an public
 
 allocation:
+  enabled: false       # stage-2: kapalıyken düz fetch_k tek havuz (reserve yok)
   defaults:    { primary: 2, reserve: 2, fetch_k: 10 }
   by_query_type:
     fact:       { primary: 2, reserve: 2, fetch_k: 10 }
@@ -280,15 +330,18 @@ allocation:
 judge:
   mode: hybrid
   heuristic:
-    min_chunks: 4
-    min_collection_coverage: 2
-    min_rerank_score: 0.0
+    # Gevşek: bilgilendirici veri kalsın, yalnızca çok alakasız chunk elensin.
+    min_chunks: 2
+    min_collection_coverage: 1
+    min_rerank_score: 0.02     # bu eşiğin altındaki chunk'lar answer'dan önce düşürülür
   llm:
     enabled: true
     block: fast-01
     model_key: judge
-    borderline_band: [2, 4]
+    borderline_band: [1, 2]
     max_borderline_score_floor: 0.35
     timeout_seconds: 5
   max_expand_iterations: 1
   on_low_confidence: expand
+  expand:
+    strategy: requery   # requery: yeni çeşitlendirilmiş retrieve / reserve: eski reserve-promote

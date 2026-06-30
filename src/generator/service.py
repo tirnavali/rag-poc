@@ -69,7 +69,6 @@ class RAGService:
         self.generator = OllamaGenerator()
         self.filter_extractor = FilterExtractor()
         self._pipeline_config_path = pipeline_config_path
-        self._agent = None
         self._orchestrator = None
 
     @staticmethod
@@ -297,27 +296,8 @@ class RAGService:
     # Agent pipeline (Planning Agent orchestration)
     # ------------------------------------------------------------------
 
-    def _get_agent(self):
-        """Lazy-init the Planning Agent with pipeline config."""
-        if self._agent is not None:
-            return self._agent
-
-        from src.config.pipeline_loader import load_pipeline_config
-        from src.common.llm_client_pool import LLMClientPool
-        from src.agent.planner import PlanningAgent
-
-        config = load_pipeline_config(self._pipeline_config_path)
-        if config is None:
-            raise RuntimeError(
-                "pipeline.yaml not found. Run without --agent or provide --pipeline <path>"
-            )
-
-        pool = LLMClientPool.from_config(config)
-        self._agent = PlanningAgent(config, pool, self.filter_extractor)
-        return self._agent
-
     def _get_orchestrator(self):
-        """Lazy-init the OrchestratorAgent with pipeline config."""
+        """Lazy-init the OrchestratorAgent (the single agent pipeline)."""
         if self._orchestrator is not None:
             return self._orchestrator
 
@@ -335,47 +315,39 @@ class RAGService:
         self._orchestrator = OrchestratorAgent(config, pool, self.filter_extractor)
         return self._orchestrator
 
-    def _orchestrator_enabled(self) -> bool:
-        """Read the orchestrator feature flag without forcing agent construction."""
-        from src.config.pipeline_loader import load_pipeline_config
-        config = load_pipeline_config(self._pipeline_config_path)
-        return bool(config is not None and getattr(config, "orchestrator", None) and config.orchestrator.enabled)
-
     def run_agent(
         self,
         query: str,
         on_phase=None,
         session_collections: Optional[list[str]] = None,
         stream_callback=None,
+        clarification_callback=None,
+        deep_mode: bool = False,
+        on_phase_end=None,
     ):
-        """Run the agent pipeline.
-
-        Dispatches to OrchestratorAgent when `pipeline.yaml: orchestrator.enabled`
-        is true; otherwise runs the legacy PlanningAgent.
+        """Run the unified OrchestratorAgent pipeline.
 
         Args:
             query: user query
-            on_phase: optional callback(name, block, model, details) for legacy path
-            session_collections: collections the user selected at session start.
-                Both paths honor it: orchestrator via PolicyEnforcer, legacy via
-                PlanningAgent's catalog restriction + plan intersection.
-            stream_callback: optional callable invoked by the orchestrator path
-                when the final answer is ready; reserved for future token-level
-                streaming.
+            on_phase: optional per-phase callback (forwarded to the tracer)
+            session_collections: collections the user selected at session start
+                (honored by PolicyEnforcer when the policy stage is enabled)
+            stream_callback: optional callable invoked when the final answer is ready
+            clarification_callback: optional callable(questions) -> {axis: choice}
+                for the grounded clarification stage. None → non-interactive
+                (auto-applies the strongest facet). MCP/batch leave this None.
+            deep_mode: müfettiş/deep research — allows more clarification turns.
 
         Returns:
             AgentOutput with answer, thinking, trace, plan, validation, sources.
         """
-        if self._orchestrator_enabled():
-            orchestrator = self._get_orchestrator()
-            return orchestrator.run(
-                query,
-                session_collections or [],
-                stream_callback=stream_callback,
-            )
-
-        from src.agent.tracer import PipelineTracer as AgentPipelineTracer
-
-        agent = self._get_agent()
-        tracer = AgentPipelineTracer(on_phase=on_phase)
-        return agent.run(query, trace=tracer, session_collections=session_collections)
+        orchestrator = self._get_orchestrator()
+        return orchestrator.run(
+            query,
+            session_collections or [],
+            stream_callback=stream_callback,
+            clarification_callback=clarification_callback,
+            deep_mode=deep_mode,
+            on_phase=on_phase,
+            on_phase_end=on_phase_end,
+        )

@@ -21,7 +21,7 @@ Bağlam parçaları:
 Yanıt JSON formatında ve sadece bu alanlarla:
 {{"sufficient": true|false, "confidence": 0.0-1.0,
   "action": "answer"|"expand"|"clarify"|"refuse",
-  "missing_aspects": ["..."]}}
+  "missing_aspects": ["..."], "reason": "kısa Türkçe gerekçe"}}
 """
 
 
@@ -39,8 +39,23 @@ class EvidenceJudge:
         self._pool = client_pool
 
     def run(self, state: OrchestratorState) -> OrchestratorState:
-        chunks = state.assembled_chunks
         h = self._config.heuristic
+
+        # Relevance floor: drop very-irrelevant chunks (near-zero rerank score)
+        # while keeping merely-informative ones. Lenient by design — if every
+        # chunk is below the floor we keep them all rather than zeroing out.
+        if h.min_rerank_score > 0.0 and state.assembled_chunks:
+            kept = [c for c in state.assembled_chunks if c.rerank_score >= h.min_rerank_score]
+            if kept and len(kept) < len(state.assembled_chunks):
+                dropped = len(state.assembled_chunks) - len(kept)
+                state.assembled_chunks = kept
+                state.balanced_context = [
+                    item for item in state.balanced_context
+                    if item.chunk_id in {c.chunk_id for c in kept}
+                ]
+                state.errors.append(f"relevance_floor_dropped:{dropped}")
+
+        chunks = state.assembled_chunks
 
         if len(chunks) == 0:
             state.evidence_decision = EvidenceDecision(
@@ -49,6 +64,7 @@ class EvidenceJudge:
                 action="clarify",
                 missing_aspects=["no_results"],
                 judge_type="heuristic",
+                reasoning="Hiç sonuç bulunamadı; netleştirme gerekiyor.",
             )
             return state
 
@@ -59,6 +75,7 @@ class EvidenceJudge:
                 confidence=0.85,
                 action="answer",
                 judge_type="heuristic",
+                reasoning=f"{len(chunks)} chunk, {coverage} koleksiyon → yeterli (heuristik eşik).",
             )
             return state
 
@@ -74,6 +91,7 @@ class EvidenceJudge:
             action="expand",
             missing_aspects=["insufficient_chunks"],
             judge_type="heuristic",
+            reasoning=f"{len(chunks)} chunk yetersiz; yeniden arama (expand).",
         )
         return state
 
@@ -129,6 +147,7 @@ class EvidenceJudge:
                 action=data.get("action", "expand"),
                 missing_aspects=list(data.get("missing_aspects", []) or []),
                 judge_type="llm",
+                reasoning=str(data.get("reason", "")),
             )
         except Exception:
             return None
@@ -141,4 +160,5 @@ class EvidenceJudge:
             action="expand",
             missing_aspects=["insufficient_chunks"],
             judge_type="heuristic",
+            reasoning="LLM yargısı alınamadı; güvenli varsayılan: yeniden arama (expand).",
         )

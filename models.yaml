@@ -226,6 +226,7 @@ collections:
     doc_type: tutanak
     max_chunk_tokens: 256
     min_chunk_tokens: 192
+    production_ready: true   # canlı sistem yalnızca production_ready koleksiyonları kullanır
 
   tutanaklar_nomic_chunk256_256d:
     collection_name: tutanaklar_nomic_chunk256_256d
@@ -288,4 +289,4 @@ collections:
     min_chunk_tokens: 384
 
 defaults:
-  tutanak: tutanaklar_ctx1024
+  tutanak: tutanaklar_nomic_chunk256_768d   # production_ready koleksiyon

@@ -17,6 +17,11 @@ class CitationBuilder:
                 "chunk_id": c.chunk_id,
                 "source_title": c.source_title,
                 "doc_type": c.doc_type,
+                "document_type": c.metadata.get("document_type") or c.doc_type,
+                "source_name": c.metadata.get("source_name") or c.metadata.get("publication") or c.collection_name,
+                "date": c.metadata.get("date") or c.metadata.get("document_date") or str(c.metadata.get("year", "")),
+                "title": c.metadata.get("source_title") or c.metadata.get("title") or c.source_title,
+                "author": c.metadata.get("author") or c.metadata.get("speaker") or "Belirtilmemiş",
                 "metadata": dict(c.metadata),
             }
             for i, c in enumerate(chunks)

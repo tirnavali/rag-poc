@@ -108,3 +108,29 @@ def test_classifier_fail_open_on_invalid_json():
 
     assert result.scope == "in_scope"
     assert result.confidence == 0.0
+
+
+def test_classifier_parses_selected_collections():
+    """IntentAnalyzer surfaces tool/db selection alongside the scope verdict."""
+    cfg = _mock_config()
+    pool, _ = _mock_pool({
+        "scope": "in_scope", "confidence": 0.9,
+        "selected_collections": ["tutanaklar_ctx1024", "gazete_arsivi"],
+        "reason": "meclis",
+    })
+    classifier = ScopeClassifier(pool, cfg)
+
+    result = classifier.classify("1997 bütçe görüşmeleri", PipelineTracer())
+
+    assert result.selected_collections == ["tutanaklar_ctx1024", "gazete_arsivi"]
+
+
+def test_classifier_selected_collections_defaults_empty():
+    """Missing selected_collections → empty list (planner selects freely)."""
+    cfg = _mock_config()
+    pool, _ = _mock_pool({"scope": "in_scope", "confidence": 0.9, "reason": "x"})
+    classifier = ScopeClassifier(pool, cfg)
+
+    result = classifier.classify("q", PipelineTracer())
+
+    assert result.selected_collections == []

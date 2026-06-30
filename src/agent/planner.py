@@ -1,31 +1,25 @@
-"""Planning Agent — orchestrates retrieval, answering, and validation.
+"""Planner — intent-aware search-plan generation for the OrchestratorAgent.
 
-Receives a user query, generates a search plan, executes searches across
-collections, routes results to the answering agent, and validates output.
+Owns plan generation only: turns a user query (plus optional tool/db selection
+from the IntentAnalyzer and constraints from the clarification stage) into a
+SearchPlan with diversified query drafts. It does NOT run retrieval, answering,
+sanitizer, or any retry loops — those live in the orchestrator and its stages.
 """
 from __future__ import annotations
 
 import json
 import logging
-import re as _re
-from concurrent.futures import ThreadPoolExecutor
 
-from src.agent.bad_words_filter import BadWordsFilter
-from src.agent.classifier import ScopeClassifier
-from src.agent.sanitizer import SanitizerAgent
 from src.agent.schemas import (
-    AgentOutput,
     CollectionSearchPlan,
     SearchPlan,
     SearchQueryDraft,
-    ValidationResult,
 )
-from src.agent.suggester import Suggester
-from src.agent.tools import AnswerTool, ContextBuilderTool, SearchTool
 from src.agent.tracer import PipelineTracer
-from src.common.filter_translators import build_chroma_where, mask_filters
+from src.common.filter_translators import mask_filters
 from src.common.llm_client_pool import LLMClientPool
 from src.common.llm_utils import extract_json_from_text
+from src.common.schemas import FilterCriteria
 from src.config.collections import COLLECTIONS
 from src.config.pipeline_loader import PipelineConfig
 
@@ -95,40 +89,20 @@ JSON çıktısı (aynı format):
 }}
 """
 
-NOTHING_FOUND_PATTERNS = _re.compile(
-    r"bulunamadı|bilgi\s+yok|kaynaklarda\s+yer\s+almıyor|tespit\s+edilemedi|"
-    r"bilgiye\s+ulaşılamadı|mevcut\s+değil|yer\s+almamaktadır|"
-    r"bilgi\s+bulunmamaktadır|yanıt\s+veremiyorum",
-    _re.IGNORECASE,
-)
 
-GAP_FILL_PROMPT = """Önceki arama soruyu yanıtlayacak bilgiyi bulamadı.
-Kullanıcının sorusunda aradığı spesifik bilgiyi bulmak için yeni hedefli arama sorguları üret.
+class Planner:
+    """Generates and refines SearchPlans for the orchestrator.
 
-Mevcut koleksiyonlar:
-{catalog}
+    Public API:
+      * ``plan()``  — base plan from the query + intent selection + clarification constraints.
+      * ``broaden()`` — a broader plan for bounded re-query expansion.
+    """
 
-Orijinal soru: {query}
-Yetersiz yanıt: {answer}
-Sorunlar: {issues}
-
-Özellikle şunlara odaklan:
-- Soruda geçen spesifik kavramları farklı kelimelerle ifade et
-- Eş anlamlı terimler, alternatif yazımlar dene
-- Daha geniş veya daha dar kapsam alternatifleri ekle
-- top_k değerini artır (en az 8)
-
-JSON çıktısı (aynı format):
-{{
-  "intent": "...",
-  "resources": [...],
-  "reasoning": "..."
-}}
-"""
-
-
-class PlanningAgent:
-    """Planning Agent that orchestrates the full RAG pipeline."""
+    # Tolerant coercion of LLM output: qwen occasionally emits an invalid token in
+    # these fields, which would otherwise raise a Pydantic ValidationError and crash
+    # the whole plan into the fallback path.
+    _VALID_INTENTS = {"factual", "comparative", "analytical", "temporal", "unknown"}
+    _VALID_QUERY_TYPES = {"fact", "summary", "comparison", "reasoning", "policy"}
 
     def __init__(
         self,
@@ -140,213 +114,85 @@ class PlanningAgent:
         self._pool = client_pool
         self._filter_extractor = filter_extractor
         self._last_planner_error: str | None = None
-        self._search_tool = SearchTool(config, client_pool)
-        self._context_tool = ContextBuilderTool(config)
-        self._answer_tool = AnswerTool(client_pool, config)
-        self._sanitizer = SanitizerAgent(client_pool, config)
-        self._bad_words = (
-            BadWordsFilter(config.bad_words_filter)
-            if getattr(config, "bad_words_filter", None) and config.bad_words_filter.enabled
-            else None
-        )
-        self._classifier = (
-            ScopeClassifier(client_pool, config)
-            if getattr(config, "classifier", None) and config.classifier.enabled
-            else None
-        )
-        self._suggester = Suggester(client_pool, config)
 
-    def run(
+    # ------------------------------------------------------------------ public
+
+    def plan(
         self,
         query: str,
+        tracer: "PipelineTracer | None" = None,
         *,
-        trace: PipelineTracer | None = None,
-        session_collections: list[str] | None = None,
-    ) -> AgentOutput:
-        """Execute the full agent pipeline.
+        selected_collections: list[str] | None = None,
+        constraints: dict | None = None,
+        max_variants: int | None = None,
+        depth: int | None = None,
+    ) -> SearchPlan:
+        """Build an executable SearchPlan.
 
         Args:
-            query: user query
-            trace: optional existing tracer (creates new one if None)
-            session_collections: collections the user selected at session start.
-                When given, the planner is restricted to these (catalog filtered
-                upfront + plan resources intersected as a safety net), mirroring
-                the OrchestratorAgent's PolicyEnforcer. None = no restriction.
-
-        Returns:
-            AgentOutput with answer, trace, plan, and validation.
+            selected_collections: tool/db selection from the IntentAnalyzer. When
+                given, the plan is restricted to these (catalog filtered upfront +
+                resource intersection). Empty/None = planner selects freely.
+            constraints: clarification narrowing — ``{"year": int, "topic": str,
+                "collections": list[str]}`` — applied after FilterExtractor.
+            max_variants: cap on total query drafts (breadth). Defaults to
+                ``planner.normal_max_query_variants``.
+            depth: minimum per-draft top_k (depth). Optional.
         """
-        tracer = trace or PipelineTracer()
+        tracer = tracer or PipelineTracer()
+        allowed = set(selected_collections) if selected_collections else None
 
-        # Stage 1: bad-words filter (cheapest, no LLM, fail-closed on match)
-        if self._bad_words is not None:
-            bw = self._bad_words.check(query)
-            with tracer.phase(
-                "bad_words_filter",
-                details={"matched": bw.matched, "matched_terms": bw.matched_terms},
-            ):
-                pass
-            if bw.matched:
-                return AgentOutput(
-                    answer=self._config.bad_words_filter.response_message,
-                    scope="bad_word",
-                    suggestions=[],
-                    plan=None,
-                    validation=None,
-                    sources=[],
-                    trace=tracer.events,
-                )
-
-        # Stage 2: scope classifier (LLM, fail-open)
-        if self._classifier is not None:
-            scope_result = self._classifier.classify(query, tracer)
-            if (
-                scope_result.scope == "off_domain"
-                and scope_result.confidence >= self._config.classifier.confidence_threshold
-            ):
-                suggestions = self._suggester.suggest(query, tracer)
-                answer = self._format_off_domain_answer(suggestions)
-                return AgentOutput(
-                    answer=answer,
-                    scope="off_domain",
-                    suggestions=suggestions,
-                    plan=None,
-                    validation=None,
-                    sources=[],
-                    trace=tracer.events,
-                )
-
-        # Phase 1: Generate search plan
-        allowed = set(session_collections) if session_collections else None
         plan = self._generate_plan(query, tracer, allowed_keys=allowed)
         if plan is None:
             plan = self._fallback_plan(query, allowed_keys=allowed)
-
-        # Phase 1b: Enforce session collection selection (safety net)
         if allowed:
-            plan = self._enforce_session_collections(query, plan, allowed, tracer)
+            plan = self._restrict_to(plan, allowed, query)
 
-        # Phase 1c: Populate filters via FilterExtractor (single source of truth)
         plan = self._apply_filter_extractor(query, plan, tracer)
+        if constraints:
+            self._apply_constraints(plan, constraints)
 
-        # Phase 2: Execute searches
-        all_results = self._execute_plan(plan, tracer)
+        cap = max_variants if max_variants is not None else self._config.planner.normal_max_query_variants
+        self._cap_variants(plan, cap)
+        if depth:
+            self._apply_depth(plan, depth)
+        return plan
 
-        # Phase 2b: Re-retrieval if needed — loop up to the configured retry count,
-        # broadening the plan each pass until enough results are found.
-        re_retrieved = False
-        current_plan = plan
-        attempts = 0
-        while attempts < self._config.planner.re_retrieval_max_retries and self._needs_reretrieval(all_results):
-            broader_plan = self._generate_broader_plan(query, current_plan, all_results, tracer, allowed_keys=allowed)
-            if broader_plan is None:
-                break
-            # Re-retrieval da session seçimine sadık kalmalı (broadening sorguyu
-            # genişletir, koleksiyon kümesini değil).
-            if allowed:
-                broader_plan = self._enforce_session_collections(query, broader_plan, allowed, tracer)
-            new_results = self._execute_plan(broader_plan, tracer, phase="re_retrieval")
-            all_results = self._merge_results(all_results, new_results)
-            current_plan = broader_plan
-            re_retrieved = True
-            attempts += 1
+    def broaden(
+        self,
+        query: str,
+        previous_plan: SearchPlan,
+        tracer: "PipelineTracer | None" = None,
+        *,
+        selected_collections: list[str] | None = None,
+        max_variants: int | None = None,
+    ) -> SearchPlan | None:
+        """Generate a broader plan for bounded re-query expansion.
 
-        # Phase 3: Build context and answer
-        context, sources = self._context_tool.build(all_results)
-        thinking, answer = self._call_answering(query, context, tracer)
+        Returns None when the LLM fails (caller keeps the original results).
+        """
+        tracer = tracer or PipelineTracer()
+        allowed = set(selected_collections) if selected_collections else None
 
-        # Phase 4: Validate
-        validation = self._validate_output(query, answer, sources, tracer, context)
+        plan = self._generate_broader_plan(query, previous_plan, tracer, allowed_keys=allowed)
+        if plan is None:
+            return None
+        if allowed:
+            plan = self._restrict_to(plan, allowed, query)
+        plan = self._apply_filter_extractor(query, plan, tracer)
+        cap = max_variants if max_variants is not None else self._config.planner.normal_max_query_variants
+        self._cap_variants(plan, cap)
+        return plan
 
-        # If validation failed, try sanitization. Prefer the corrected_answer the
-        # sanitizer already produced in the validation call (no extra LLM round-trip);
-        # fall back to a dedicated sanitize() call only when none was returned.
-        if validation and not validation.passes:
-            sanitizer_cfg = self._config.sanitizer
-            for attempt in range(sanitizer_cfg.max_retries):
-                if validation.corrected_answer:
-                    answer = validation.corrected_answer
-                elif validation.retry_hint:
-                    answer = self._sanitizer.sanitize(query, answer, context)
-                else:
-                    break
-                validation = self._validate_output(query, answer, sources, tracer, context)
-                if validation and validation.passes:
-                    break
-
-        # Phase 4b: Quality-based re-retrieval
-        quality_re_retrieved = False
-        if self._needs_quality_reretrieval(answer, validation):
-            gap_plan = self._generate_gap_fill_plan(query, answer, validation, tracer, allowed_keys=allowed)
-            if gap_plan and allowed:
-                gap_plan = self._enforce_session_collections(query, gap_plan, allowed, tracer)
-            if gap_plan:
-                gap_results = self._execute_plan(
-                    gap_plan, tracer, phase="quality_reretrieval"
-                )
-                all_results = self._merge_results(all_results, gap_results)
-                context, sources = self._context_tool.build(all_results)
-                thinking, answer = self._call_answering(query, context, tracer)
-                validation = self._validate_output(query, answer, sources, tracer, context)
-                quality_re_retrieved = True
-
-        # Collect source metadata for output (dedup by chunk_id)
-        seen_chunk_ids: set[str] = set()
-        source_metas = []
-        for result in all_results:
-            for meta in result.get("metadatas", []):
-                cid = meta.get("chunk_id") or str(id(meta))
-                if cid not in seen_chunk_ids:
-                    seen_chunk_ids.add(cid)
-                    source_metas.append(meta)
-
-        return AgentOutput(
-            answer=answer,
-            thinking=thinking,
-            plan=plan,
-            validation=validation,
-            trace=tracer.events,
-            sources=source_metas,
-            re_retrieved=re_retrieved,
-            quality_re_retrieved=quality_re_retrieved,
-        )
-
-    def _format_off_domain_answer(self, suggestions: list[str]) -> str:
-        """Render the off-domain response template with up to 3 suggestions."""
-        template = (
-            self._config.off_domain_response_template
-            or "Bu sistem alan dışında.\n1. {suggestion_0}\n2. {suggestion_1}\n3. {suggestion_2}"
-        )
-        padded = (suggestions + ["", "", ""])[:3]
-        return template.format(
-            suggestion_0=padded[0],
-            suggestion_1=padded[1],
-            suggestion_2=padded[2],
-        )
-
-    # Allowed enum values for tolerant coercion of LLM output (qwen occasionally
-    # emits a sentence/invalid token in these fields, which would otherwise raise
-    # a Pydantic ValidationError and crash the whole plan into the fallback path).
-    _VALID_INTENTS = {"factual", "comparative", "analytical", "temporal", "unknown"}
-    _VALID_QUERY_TYPES = {"fact", "summary", "comparison", "reasoning", "policy"}
+    # --------------------------------------------------------- plan generation
 
     def _parse_plan(self, plan_data: dict) -> SearchPlan:
-        """Build a SearchPlan from a parsed JSON dict.
+        """Build a SearchPlan from a parsed JSON dict, tolerant of LLM schema slips.
 
-        Tolerant of LLM schema violations so a single bad field never discards the
-        whole plan (which would dump to the fallback path and log a scary
-        "planner failed" warning):
-
-        * out-of-enum ``intent``/``query_type`` → coerced to a safe default;
-        * a resource missing/blank ``collection`` is skipped;
-        * a draft missing/blank ``text`` is skipped;
-        * a resource left with no usable drafts is skipped.
-
+        Out-of-enum ``intent``/``query_type`` are coerced to safe defaults; a
+        resource missing/blank ``collection`` or with no usable drafts is skipped.
         ``filters`` emitted by the planner LLM are intentionally DROPPED here —
-        FilterExtractor is the single source of truth for metadata filters
-        (populated later in ``_apply_filter_extractor``), and parsing the LLM's
-        filters would both be redundant and crash on invalid values
-        (e.g. document_type='gazete').
+        FilterExtractor is the single source of truth (populated later).
         """
         intent = plan_data.get("intent", "unknown")
         if intent not in self._VALID_INTENTS:
@@ -419,8 +265,6 @@ class PlanningAgent:
             # so strip them before parsing instead of feeding json.loads raw text.
             return self._parse_plan(json.loads(extract_json_from_text(res.message.content)))
         except Exception as e:
-            # Record the real reason; the bare-except fallback used to hide it,
-            # making every parse failure look like a generic "planner failed".
             self._last_planner_error = f"{type(e).__name__}: {e}"
             logger.warning("Planner LLM call failed: %s", self._last_planner_error)
             return None
@@ -434,41 +278,14 @@ class PlanningAgent:
         """Generate a search plan using the planning agent LLM.
 
         When ``allowed_keys`` is given, the catalog shown to the planner is
-        restricted to those collections so it can only route within the user's
-        session selection.
+        restricted to those collections so it can only route within the selection.
+        The orchestrator owns the "planning" trace phase; this method does the
+        LLM work and returns None on failure (the caller applies fallback logic).
         """
-        planner_cfg = self._config.planner
-        block_name = planner_cfg.block
-        model_key = planner_cfg.model_key
-        model = self._pool.get_model_for_block(block_name, model_key)
         catalog = self._config.get_collection_catalog(allowed_keys=allowed_keys)
-
         system_prompt = PLAN_SYSTEM_PROMPT.format(catalog=catalog)
-
-        with tracer.phase(
-            "planning",
-            block=block_name,
-            model=model,
-            details={"query": query[:100]},
-        ) as phase_ctx:
-            self._last_planner_error = None
-            plan = self._call_planner_llm(f"Sorgu: {query}", system_prompt)
-            if plan is None:
-                phase_ctx.update_details(
-                    error=self._last_planner_error or "planner LLM returned None"
-                )
-                return None
-
-            query_drafts_summary = {
-                r.collection: [d.text for d in r.query_drafts]
-                for r in plan.resources
-            }
-            phase_ctx.update_details(
-                intent=plan.intent,
-                resources=", ".join(r.collection for r in plan.resources),
-                query_drafts=query_drafts_summary,
-            )
-            return plan
+        self._last_planner_error = None
+        return self._call_planner_llm(f"Sorgu: {query}", system_prompt)
 
     def _apply_filter_extractor(
         self,
@@ -478,18 +295,11 @@ class PlanningAgent:
     ) -> SearchPlan:
         """Populate every query_draft.filters from FilterExtractor (single source of truth).
 
-        Planner artık filtreleri inline çıkarmıyor; metadata filtrelerinin tek
-        doğruluk kaynağı FilterExtractor. Çıkarım orijinal sorgu üzerinde BİR KEZ
-        yapılır (filtreler ifade biçiminin değil kullanıcı niyetinin özelliğidir).
-        Çıkan FilterCriteria her koleksiyona, o türün indekslediği alanlarla
-        MASKELENEREK uygulanır (çapraz-tür over-filtering'i önler). has_filter_hints
-        ipucu yoksa extract() LLM çağrısı yapmadan boş filtre döner.
-
-        refined_query (filtre kelimeleri çıkarılmış sorgu) orchestrator retrieval'ı
-        için plan'a taşınır; planner yolu kendi LLM draft metinlerini korur.
-
-        filter_extractor enjekte edilmediyse (offline testler) no-op'tur.
-        Mutasyonu in-place yapar ve plan'ı döndürür.
+        Extraction runs ONCE on the original query (filters are a property of user
+        intent, not phrasing). The resulting FilterCriteria is applied to each
+        collection MASKED to the fields that type indexes (avoids cross-type
+        over-filtering). ``refined_query`` is carried onto the plan for retrieval.
+        No-op when filter_extractor is not injected (offline tests).
         """
         if self._filter_extractor is None:
             return plan
@@ -515,7 +325,6 @@ class PlanningAgent:
                 masked_applied = masked.model_dump(exclude_none=True) if masked else {}
                 per_collection_applied[resource.collection] = masked_applied
                 for draft in resource.query_drafts:
-                    # Aliasing'i önlemek için her draft'a ayrı kopya ver.
                     draft.filters = masked.model_copy() if masked_applied else None
             if ctx:
                 ctx.update_details(
@@ -527,9 +336,8 @@ class PlanningAgent:
     def _fallback_plan(self, query: str, allowed_keys: set[str] | None = None) -> SearchPlan:
         """Generate a fallback plan when the planner LLM fails.
 
-        When ``allowed_keys`` is given, search exactly the user-selected
-        collections (instead of the configured fallback set), so the session
-        selection is honored even on the fallback path.
+        When ``allowed_keys`` is given, search exactly those collections instead of
+        the configured fallback set, so the selection is honored on the fallback path.
         """
         fb = self._config.planner
         if allowed_keys:
@@ -545,6 +353,8 @@ class PlanningAgent:
                 filters=fq.get("filters"),
                 top_k=fq.get("top_k", 10),
             ))
+        if not drafts:
+            drafts = [SearchQueryDraft(text=query, filters=None, top_k=10)]
 
         resources = [
             CollectionSearchPlan(
@@ -562,274 +372,83 @@ class PlanningAgent:
             reasoning="Fallback plan (planner LLM failed)",
         )
 
-    def _enforce_session_collections(
-        self,
-        query: str,
-        plan: SearchPlan,
-        allowed: set[str],
-        tracer: PipelineTracer,
-    ) -> SearchPlan:
-        """Intersect the plan's collections with the user's session selection.
-
-        Mirrors the OrchestratorAgent's PolicyEnforcer for the legacy path: the
-        catalog is already filtered upfront, but the planner LLM may still
-        hallucinate an out-of-scope collection. Drop those here. If nothing
-        survives (planner misrouted entirely), rebuild a fallback plan scoped to
-        the selected collections so they ARE searched.
-        """
-        with tracer.phase("policy") as ctx:
-            kept = [r for r in plan.resources if r.collection in allowed]
-            dropped = [r.collection for r in plan.resources if r.collection not in allowed]
-            if kept:
-                plan.resources = kept
-            else:
-                plan = self._fallback_plan(query, allowed_keys=allowed)
-                kept = plan.resources
-            if ctx:
-                ctx.update_details(
-                    allowed=sorted(allowed),
-                    kept=[r.collection for r in kept],
-                    dropped=dropped,
-                )
-        return plan
-
-    def _execute_plan(
-        self,
-        plan: SearchPlan,
-        tracer: PipelineTracer,
-        *,
-        phase: str = "retrieval",
-    ) -> list[dict]:
-        """Execute the search plan and return results per collection.
-
-        Resources run in priority order. Within a resource, ``mode="parallel"``
-        runs its query drafts concurrently on a thread pool (search is I/O-bound:
-        Chroma query + Ollama rerank); ``mode="sequential"`` runs them in order.
-        """
-        all_results: list[dict] = []
-        sorted_resources = sorted(plan.resources, key=lambda r: r.priority)
-
-        for resource in sorted_resources:
-            if resource.mode == "parallel" and len(resource.query_drafts) > 1:
-                with ThreadPoolExecutor(max_workers=len(resource.query_drafts)) as pool:
-                    futures = [
-                        pool.submit(self._execute_single, resource.collection, draft, tracer, phase)
-                        for draft in resource.query_drafts
-                    ]
-                    all_results.extend(f.result() for f in futures)
-            else:
-                for draft in resource.query_drafts:
-                    all_results.append(
-                        self._execute_single(resource.collection, draft, tracer, phase)
-                    )
-
-        return all_results
-
-    def _execute_single(
-        self,
-        collection: str,
-        draft: SearchQueryDraft,
-        tracer: PipelineTracer,
-        phase: str = "retrieval",
-    ) -> dict:
-        """Execute a single search query draft."""
-        where_filter = None
-        if draft.filters:
-            # build_chroma_where resolves `author` to the collection's actual
-            # labels ($in) instead of a brittle exact-match $eq.
-            where_filter = build_chroma_where(draft.filters, collection)
-
-        with tracer.phase(
-            phase,
-            details={
-                "collection": collection,
-                "query": draft.text[:80],
-            },
-        ) as phase_ctx:
-            result = self._search_tool.search(
-                collection_key=collection,
-                query_text=draft.text,
-                filters=where_filter,
-                top_k=draft.top_k,
-            )
-            count = len(result.get("documents", []))
-            phase_ctx.update_details(result_count=count)
-            return result
-
-    def _needs_reretrieval(self, all_results: list[dict]) -> bool:
-        """Check if re-retrieval should be triggered."""
-        rr = self._config.planner
-        if not rr.re_retrieval_enabled:
-            return False
-
-        total = sum(len(r.get("documents", [])) for r in all_results)
-        return total < rr.re_retrieval_min_results
-
-    def _needs_quality_reretrieval(
-        self,
-        answer: str,
-        validation: ValidationResult,
-    ) -> bool:
-        """Check if quality-based re-retrieval should be triggered."""
-        if not self._config.planner.re_retrieval_on_quality_failure:
-            return False
-        if not validation.passes:
-            return True
-        return bool(NOTHING_FOUND_PATTERNS.search(answer))
-
     def _generate_broader_plan(
         self,
         query: str,
         previous_plan: SearchPlan,
-        all_results: list[dict],
         tracer: PipelineTracer,
         allowed_keys: set[str] | None = None,
     ) -> SearchPlan | None:
-        """Generate a broader plan for re-retrieval.
+        """Generate a broader plan for re-query expansion.
 
-        When ``allowed_keys`` is given, the catalog is restricted to the session
-        selection so re-retrieval broadens the QUERY, not the collection set
-        (otherwise the broadening prompt would route to out-of-scope collections).
+        When ``allowed_keys`` is given, the catalog is restricted to the selection
+        so re-query broadens the QUERY, not the collection set.
         """
         catalog = self._config.get_collection_catalog(allowed_keys=allowed_keys)
         system_prompt = RE_RETRIEVAL_PROMPT.format(
             catalog=catalog,
             query=query,
             previous_plan=previous_plan.model_dump_json(indent=2),
-            result_count=sum(len(r.get("documents", [])) for r in all_results),
+            result_count=0,
         )
         return self._call_planner_llm(f"Sorgu: {query}", system_prompt)
 
-    def _generate_gap_fill_plan(
-        self,
-        query: str,
-        answer: str,
-        validation: ValidationResult,
-        tracer: PipelineTracer,
-        allowed_keys: set[str] | None = None,
-    ) -> SearchPlan | None:
-        """Generate a targeted plan to fill the information gap in a failing answer.
+    # --------------------------------------------------------------- shaping
 
-        When ``allowed_keys`` is given, the catalog is restricted to the session
-        selection so gap-fill stays within the user's chosen collections.
+    def _restrict_to(self, plan: SearchPlan, allowed: set[str], query: str) -> SearchPlan:
+        """Intersect the plan's collections with ``allowed`` (intent selection).
+
+        If nothing survives (planner misrouted entirely), rebuild a fallback plan
+        scoped to the selection so the chosen collections ARE searched.
         """
-        catalog = self._config.get_collection_catalog(allowed_keys=allowed_keys)
-        issues_text = "; ".join(validation.issues) if validation.issues else "Yanıt soruyu karşılamıyor"
-        system_prompt = GAP_FILL_PROMPT.format(
-            catalog=catalog,
-            query=query,
-            answer=answer[:500],
-            issues=issues_text,
-        )
-        return self._call_planner_llm(f"Sorgu: {query}", system_prompt)
+        kept = [r for r in plan.resources if r.collection in allowed]
+        if kept:
+            plan.resources = kept
+            return plan
+        return self._fallback_plan(query, allowed_keys=allowed)
 
-    def _merge_results(
-        self,
-        original: list[dict],
-        new: list[dict],
-    ) -> list[dict]:
-        """Merge re-retrieval results with original results, deduplicating."""
-        seen_ids: set[str] = set()
-        merged = []
+    def _apply_constraints(self, plan: SearchPlan, constraints: dict) -> None:
+        """Apply clarification narrowing (year / topic / collections) in place."""
+        year = constraints.get("year")
+        topic = constraints.get("topic")
+        cols = constraints.get("collections")
 
-        for result in original:
-            merged.append(result)
-            for meta in result.get("metadatas", []):
-                cid = meta.get("chunk_id", "")
-                if cid:
-                    seen_ids.add(cid)
+        if cols:
+            kept = [r for r in plan.resources if r.collection in set(cols)]
+            if kept:
+                plan.resources = kept
 
-        for result in new:
-            new_docs = []
-            new_metas = []
-            new_dists = []
-            for doc, meta, dist in zip(
-                result.get("documents", []),
-                result.get("metadatas", []),
-                result.get("distances", []),
-            ):
-                cid = meta.get("chunk_id", "")
-                if cid not in seen_ids:
-                    seen_ids.add(cid)
-                    new_docs.append(doc)
-                    new_metas.append(meta)
-                    new_dists.append(dist)
+        for resource in plan.resources:
+            for draft in resource.query_drafts:
+                if year is not None:
+                    f = draft.filters.model_copy() if draft.filters else FilterCriteria()
+                    f.year = int(year)
+                    draft.filters = f
+                if topic and topic.lower() not in draft.text.lower():
+                    draft.text = f"{draft.text} {topic}".strip()
 
-            if new_docs:
-                merged.append({
-                    "documents": new_docs,
-                    "metadatas": new_metas,
-                    "distances": new_dists,
-                })
+    def _cap_variants(self, plan: SearchPlan, cap: int) -> None:
+        """Trim total query drafts down to ``cap`` (breadth), never below 1/resource."""
+        if cap <= 0:
+            return
+        total = sum(len(r.query_drafts) for r in plan.resources)
+        if total <= cap:
+            return
+        ordered = sorted(plan.resources, key=lambda r: r.priority)
+        while total > cap:
+            trimmed = False
+            for r in reversed(ordered):
+                if len(r.query_drafts) > 1:
+                    r.query_drafts.pop()
+                    total -= 1
+                    trimmed = True
+                    if total <= cap:
+                        break
+            if not trimmed:
+                break  # every resource at 1 draft; don't drop whole collections
 
-        return merged
-
-    def _call_answering(
-        self,
-        query: str,
-        context: str,
-        tracer: PipelineTracer,
-    ) -> tuple[str, str]:
-        """Call the answering agent LLM."""
-        ans_cfg = self._config.answering
-        block_name = ans_cfg.block
-        model_key = ans_cfg.model_key
-        model = self._pool.get_model_for_block(block_name, model_key)
-
-        with tracer.phase(
-            "answering",
-            block=block_name,
-            model=model,
-            details={"context_chars": len(context)},
-        ):
-            return self._answer_tool.generate(query, context)
-
-    def _validate_output(
-        self,
-        query: str,
-        answer: str,
-        sources: list[dict],
-        tracer: PipelineTracer,
-        context: str = "",
-    ) -> ValidationResult:
-        """Validate the output using the sanitizer agent."""
-        sanitizer_cfg = self._config.sanitizer
-        block_name = sanitizer_cfg.block
-        model_key = sanitizer_cfg.model_key
-        model = self._pool.get_model_for_block(block_name, model_key)
-
-        with tracer.phase(
-            "validation",
-            block=block_name,
-            model=model,
-        ) as phase_ctx:
-            validation = self._sanitizer.validate(query, answer, sources, context)
-            phase_ctx.update_details(
-                passes=validation.passes,
-                checks=validation.checks,
-                issues=validation.issues,
-            )
-            return validation
-
-
-class Planner:
-    """Thin facade exposing only plan generation for the OrchestratorAgent.
-
-    Reuses PlanningAgent's prompt and fallback logic; does not run retrieval,
-    answering, sanitizer, or any retry loops.
-    """
-
-    def __init__(self, config: PipelineConfig, client_pool: LLMClientPool, filter_extractor=None) -> None:
-        self._inner = PlanningAgent(config, client_pool, filter_extractor)
-
-    def plan(
-        self,
-        query: str,
-        tracer: "PipelineTracer | None" = None,
-    ) -> SearchPlan:
-        tracer = tracer or PipelineTracer()
-        plan = self._inner._generate_plan(query, tracer)
-        if plan is None:
-            plan = self._inner._fallback_plan(query)
-        plan = self._inner._apply_filter_extractor(query, plan, tracer)
-        return plan
+    def _apply_depth(self, plan: SearchPlan, depth: int) -> None:
+        """Raise each draft's top_k to at least ``depth`` (retrieval depth)."""
+        for resource in plan.resources:
+            for draft in resource.query_drafts:
+                draft.top_k = max(draft.top_k, int(depth))

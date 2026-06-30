@@ -162,6 +162,10 @@ class CollectionSpec:
     context_weight: int = 5
     """LLM context'e kaç chunk katılacak (per-collection retrieval)."""
 
+    production_ready: bool = False
+    """True ise canlı sistemin kullandığı koleksiyon. False = deneysel/test koleksiyonu;
+    agent yolu (probe, planner kataloğu, oturum) bunları görmez."""
+
     def __post_init__(self):
         if self.embed_model not in MODEL_SPECS:
             raise KeyError(
@@ -214,6 +218,7 @@ def _build_collections() -> dict[str, CollectionSpec]:
             doc_type=doc_type,
             max_chunk_tokens=cfg.get("max_chunk_tokens", 512),
             min_chunk_tokens=cfg.get("min_chunk_tokens", 384),
+            production_ready=bool(cfg.get("production_ready", False)),
         )
         result[key] = spec
     return result
@@ -270,6 +275,19 @@ def get_model_specs() -> dict[str, dict[str, Any]]:
 def get_collection_names() -> list[str]:
     """Return all registered collection names."""
     return list(COLLECTIONS.keys())
+
+
+def get_production_collection_keys() -> list[str]:
+    """Return the keys of production-ready collections — the live retrieval universe.
+
+    The agent path (probe, planner catalog, session) works ONLY over these, never
+    the experimental/comparison collections. Falls back to the per-doc-type
+    defaults if no collection is explicitly flagged, so the system is never empty.
+    """
+    keys = [k for k, spec in COLLECTIONS.items() if spec.production_ready]
+    if keys:
+        return keys
+    return [k for k in DEFAULT_COLLECTION_FOR_TYPE.values() if k in COLLECTIONS]
 
 
 def get_available_collections() -> list[dict[str, Any]]:

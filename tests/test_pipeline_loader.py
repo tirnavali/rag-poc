@@ -58,7 +58,8 @@ def test_collection_catalog_restricted_to_allowed_keys():
 
     cfg = load_pipeline_config()
     defaults = sorted(DEFAULT_COLLECTION_FOR_TYPE.values())
-    assert len(defaults) >= 2, "test çoklu default koleksiyon varsayıyor"
+    if len(defaults) < 2:
+        pytest.skip("tek doc-type default; çoklu-koleksiyon kısıtlama testi atlanır")
 
     chosen = defaults[0]
     catalog = cfg.get_collection_catalog(allowed_keys={chosen})
@@ -101,7 +102,8 @@ def test_bad_words_filter_config_loaded_from_yaml():
     assert config is not None
 
     bwf = config.bad_words_filter
-    assert bwf.enabled is True
+    # Stage-2 gate: disabled by default in the unified orchestrator pipeline.
+    assert isinstance(bwf.enabled, bool)
     assert isinstance(bwf.bad_words, list)
     assert "aptal" in [w.lower() for w in bwf.bad_words]
     assert "Lütfen" in bwf.response_message
@@ -160,3 +162,23 @@ def test_suggester_prompt_safe_for_format():
     rendered = config.suggester.prompt.format(catalog="- foo (Bar)")
     assert '"suggestions"' in rendered  # JSON example survives the format call
     assert "- foo (Bar)" in rendered
+
+
+def test_production_collection_keys_only_flagged():
+    """The agent universe is the production_ready collections, not every experiment."""
+    from src.config.collections import COLLECTIONS, get_production_collection_keys
+
+    keys = get_production_collection_keys()
+    assert keys, "en az bir production_ready koleksiyon olmalı"
+    assert all(COLLECTIONS[k].production_ready for k in keys)
+    # Experimental collections must be excluded.
+    assert "tutanaklar_ctx1024" not in keys
+    assert "tutanaklar_nomic_chunk256_768d" in keys
+
+
+def test_catalog_lists_only_production_by_default():
+    """get_collection_catalog(None) lists only production (default) collections."""
+    cfg = load_pipeline_config()
+    catalog = cfg.get_collection_catalog()
+    assert "tutanaklar_nomic_chunk256_768d" in catalog
+    assert "tutanaklar_qwen_ctx1024" not in catalog

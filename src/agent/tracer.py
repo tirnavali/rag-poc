@@ -25,10 +25,12 @@ class PipelineTracer:
         self,
         trace_id: str | None = None,
         on_phase: Optional[Any] = None,
+        on_phase_end: Optional[Any] = None,
     ) -> None:
         self.trace_id = trace_id or uuid.uuid4().hex[:12]
         self.events: list[AgentTraceEvent] = []
         self._on_phase = on_phase
+        self._on_phase_end = on_phase_end
         self._start_time: float | None = None
         self._current_phase: str | None = None
         self._current_block: str | None = None
@@ -86,6 +88,13 @@ class PipelineTracer:
             details=details or {},
         )
         self.events.append(event)
+        # Notify a listener that a phase COMPLETED, with its filled-in details
+        # (used for live per-stage UI streaming). Never break the pipeline.
+        if self._on_phase_end is not None:
+            try:
+                self._on_phase_end(event)
+            except Exception:
+                pass
         return event
 
     def print_trace(self, console: Console | None = None) -> None:
@@ -97,79 +106,95 @@ class PipelineTracer:
         lines.append(f"[dim]Trace:[/dim] {self.trace_id} | [dim]{ts}[/dim]")
         lines.append("")
 
-        planning_events = [e for e in self.events if e.phase == "planning"]
-        retrieval_events = [e for e in self.events if e.phase in ("retrieval", "re_retrieval", "quality_reretrieval")]
-        answering_events = [e for e in self.events if e.phase == "answering"]
-        validation_events = [e for e in self.events if e.phase == "validation"]
+        def _ev(phase: str):
+            return next((e for e in self.events if e.phase == phase), None)
 
-        if planning_events:
-            lines.append("[bold cyan]PHASE 1: Planning[/bold cyan]")
-            for ev in planning_events:
-                block_info = f"[dim]{ev.block}[/dim]" if ev.block else ""
-                model_info = f"[dim]{ev.model}[/dim]" if ev.model else ""
-                latency = f"[yellow]{ev.latency_ms / 1000:.1f}s[/yellow]"
-                parts = [p for p in [block_info, model_info, latency] if p]
-                lines.append(f"  {' | '.join(parts)}")
-                if ev.details.get("intent"):
-                    lines.append(f"  intent: [green]{ev.details['intent']}[/green] | resources: {ev.details.get('resources', '')}")
-                drafts = ev.details.get("query_drafts", {})
-                if drafts:
-                    for coll, queries in drafts.items():
-                        lines.append(f"    [dim]{coll}:[/dim] {queries}")
+        def _lat(ev) -> str:
+            return f"[yellow]{ev.latency_ms / 1000:.1f}s[/yellow]"
 
-        if retrieval_events:
+        # ── Intent / scope ────────────────────────────────────────────────
+        cls = _ev("classification")
+        if cls:
+            scope = cls.details.get("scope", "?")
+            sel = cls.details.get("selected_collections", [])
+            lines.append(f"[bold]Intent:[/bold] scope=[green]{scope}[/green] | tool/db: {sel or '—'} | {_lat(cls)}")
+
+        # ── Clarification ─────────────────────────────────────────────────
+        probe = _ev("probe")
+        clar = _ev("clarification")
+        if probe:
+            d = probe.details
+            lines.append(f"[bold]Probe:[/bold] {d.get('hits', 0)} kayıt | {d.get('years', 0)} yıl, {d.get('topics', 0)} konu")
+        if clar:
+            d = clar.details
+            mode = "soruldu" if d.get("asked") else ("oto" if d.get("auto_applied") else "atlandı")
+            lines.append(f"[bold]Clarification:[/bold] {mode} | kısıt: {d.get('constraints') or '—'}")
+
+        # ── Planning ──────────────────────────────────────────────────────
+        plan = _ev("planning")
+        if plan:
             lines.append("")
-            lines.append("[bold blue]PHASE 2: Retrieval[/bold blue]")
-            for ev in retrieval_events:
-                coll = ev.details.get("collection", "?")
-                count = ev.details.get("result_count", 0)
-                latency = f"[yellow]{ev.latency_ms / 1000:.1f}s[/yellow]"
-                if ev.phase == "re_retrieval":
-                    reason = ev.details.get("reason", "insufficient sources")
-                    lines.append(f"  [bold yellow]Re-retrieval[/bold yellow] ({reason})")
-                elif ev.phase == "quality_reretrieval":
-                    lines.append(f"  [bold magenta]Quality Re-retrieval[/bold magenta] (answer quality)")
-                lines.append(f"  {coll}: {count} results | {latency}")
-                query_text = ev.details.get("query", "")
-                if query_text:
-                    lines.append(f"    [dim]q: {query_text}[/dim]")
+            lines.append("[bold cyan]Planning[/bold cyan]")
+            lines.append(f"  intent: [green]{plan.details.get('intent', '?')}[/green] | {_lat(plan)}")
+            cols = plan.details.get("collections", [])
+            lines.append(f"  koleksiyonlar: {', '.join(cols) if cols else '—'}")
+            for coll, queries in (plan.details.get("drafts", {}) or {}).items():
+                lines.append(f"    [dim]{coll}:[/dim] {queries}")
 
-            initial_results = sum(
-                e.details.get("result_count", 0)
-                for e in retrieval_events
-                if e.phase == "retrieval"
-            )
-            all_results = sum(e.details.get("result_count", 0) for e in retrieval_events)
-            if all_results != initial_results:
-                # Initial retrieval came up short and re-retrieval kicked in; show
-                # both so "total: 0" doesn't read as a dead end when later passes
-                # actually found results. (Raw sum, pre-dedup across passes.)
-                lines.append(
-                    f"  total: {initial_results} initial → {all_results} after re-retrieval (pre-dedup)"
-                )
+        # ── Policy / Allocation (stage-2 gates) ───────────────────────────
+        pol = _ev("policy")
+        alloc = _ev("allocation")
+        if pol:
+            on = pol.details.get("enabled")
+            lines.append(f"[bold]Policy:[/bold] {'açık' if on else 'kapalı'} | allowed: {pol.details.get('allowed', [])}")
+        if alloc and not alloc.details.get("enabled", True):
+            lines.append("[bold]Allocation:[/bold] kapalı (düz fetch_k tek havuz)")
+
+        # ── Retrieval (orchestrator: per_collection) ──────────────────────
+        retr = _ev("retrieval")
+        if retr:
+            lines.append("")
+            lines.append("[bold blue]Retrieval[/bold blue]")
+            per = retr.details.get("per_collection", {})
+            total = 0
+            if per:
+                for name, info in per.items():
+                    returned = info.get("returned", 0)
+                    fetched = info.get("fetched", 0)
+                    total += returned
+                    lines.append(f"  {name}: {returned}/{fetched} (returned/fetched)")
             else:
-                lines.append(f"  total: {initial_results} results")
+                # legacy shape fallback
+                total = retr.details.get("result_count", 0)
+            lines.append(f"  total: {total} results | {_lat(retr)}")
 
-        if answering_events:
-            lines.append("")
-            lines.append("[bold magenta]PHASE 3: Answering[/bold magenta]")
-            for ev in answering_events:
-                block_info = f"[dim]{ev.block}[/dim]" if ev.block else ""
-                model_info = f"[dim]{ev.model}[/dim]" if ev.model else ""
-                ctx_chars = ev.details.get("context_chars", 0)
-                latency = f"[yellow]{ev.latency_ms / 1000:.1f}s[/yellow]"
-                parts = [p for p in [block_info, model_info, f"context: {ctx_chars} chars", latency] if p]
-                lines.append(f"  {' | '.join(parts)}")
+        exp = _ev("expansion")
+        if exp:
+            lines.append(f"  [yellow]↻ re-query:[/yellow] expanded={exp.details.get('expanded')} → {exp.details.get('post_count', '?')} chunk")
 
-        if validation_events:
+        # ── Assembly / Judge ──────────────────────────────────────────────
+        asm = _ev("assembly")
+        if asm:
+            lines.append(f"[bold]Assembly:[/bold] {asm.details.get('primary_count', 0)} chunk | kapsam {asm.details.get('collection_coverage', 0)}")
+        jdg = _ev("judge")
+        if jdg:
+            d = jdg.details
+            lines.append(f"[bold]Judge:[/bold] {d.get('action', '?')} ([dim]{d.get('judge_type', '?')}[/dim], conf={d.get('confidence', '?')})")
+
+        # ── Answering ─────────────────────────────────────────────────────
+        ans = _ev("answering")
+        if ans:
             lines.append("")
-            lines.append("[bold green]PHASE 4: Validation[/bold green]")
-            for ev in validation_events:
-                passed = ev.details.get("passes", False)
-                checks = ev.details.get("checks", {})
-                check_str = ", ".join(f"{k}{'✓' if v else '✗'}" for k, v in checks.items())
-                status = "[green]PASS[/green]" if passed else "[red]FAIL[/red]"
-                lines.append(f"  sanitizer: {status} | [{check_str}]")
+            lines.append("[bold magenta]Answering[/bold magenta]")
+            lines.append(f"  context: {ans.details.get('context_chars', 0)} chars | {_lat(ans)}")
+
+        # ── Validation ────────────────────────────────────────────────────
+        val = _ev("validation")
+        if val:
+            lines.append("")
+            passed = val.details.get("passes", False)
+            status = "[green]PASS[/green]" if passed else "[red]FAIL[/red]"
+            lines.append(f"[bold green]Validation[/bold green] {status}")
 
         total_sec = self.total_latency_ms / 1000
         lines.append("")
