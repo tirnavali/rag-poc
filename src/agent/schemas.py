@@ -151,6 +151,12 @@ class AgentOutput(BaseModel):
         default_factory=list,
         description="Populated only when scope='off_domain'",
     )
+    rabbit_holes: list[str] = Field(
+        default_factory=list,
+        description="Facet-grounded drill-down suggestions for broad/ambiguous "
+        "in-scope queries (shown as clickable chips); also mirrors off_domain "
+        "suggestions so the UI renders one chip mechanism for both.",
+    )
     plan: Optional[SearchPlan] = Field(None, description="The search plan that was executed")
     validation: Optional[ValidationResult] = Field(None, description="Output validation result")
     trace: list[AgentTraceEvent] = Field(
@@ -256,6 +262,7 @@ class OrchestratorState(BaseModel):
     expanded: bool = Field(False, description="True when ExpansionPlanner ran")
     expand_iterations: int = Field(0, description="How many bounded re-query expansions have run")
     facets: Optional[FacetSet] = Field(None, description="Facets mined from the probe retrieval")
+    rabbit_holes: list[str] = Field(default_factory=list, description="Facet-grounded drill-down suggestions for broad/ambiguous queries")
     clarification: Optional[ClarificationResult] = Field(None, description="Clarification stage outcome")
     applied_constraints: dict[str, Any] = Field(default_factory=dict, description="Constraints applied from clarification (year/collections/topic)")
     clarify_turns: int = Field(0, description="Clarification turns consumed")

@@ -11,8 +11,7 @@ import {
   Clock,
   ChevronDown,
   ChevronUp,
-  Brain,
-  HelpCircle
+  Brain
 } from 'lucide-react';
 
 const API_BASE = '/api';
@@ -120,8 +119,8 @@ export default function App() {
   const [currentMemory, setCurrentMemory] = useState({ history: [], max_turns: 5 });
   const [expandedTraceIdx, setExpandedTraceIdx] = useState({});
   const [expandedSourceIdx, setExpandedSourceIdx] = useState({});
-  // Grounded clarification (did-you-mean) round over the live socket.
-  const [clarification, setClarification] = useState(null); // { questions, answers }
+  // Facet-grounded "rabbit hole" drill-down suggestions (clickable chips).
+  const [currentSuggestions, setCurrentSuggestions] = useState([]);
 
   const messagesEndRef = useRef(null);
   const wsRef = useRef(null);
@@ -254,10 +253,13 @@ export default function App() {
     }
   };
 
-  const sendMessage = () => {
-    if (!input.trim() || isGenerating || !activeSessionId) return;
+  const sendMessage = (queryText) => {
+    // queryText is a string when called from a suggestion chip; when used as a
+    // button onClick handler the arg is a SyntheticEvent, so fall back to input.
+    const raw = typeof queryText === 'string' ? queryText : input;
+    if (!raw.trim() || isGenerating || !activeSessionId) return;
 
-    const query = input.trim();
+    const query = raw.trim();
     setInput('');
     setIsGenerating(true);
     setSelectedMessageIdx(null);
@@ -268,7 +270,7 @@ export default function App() {
     setCurrentSources([]);
     setCurrentMemory({ history: [], max_turns: 5 });
     setExpandedTraceIdx({});
-    setClarification(null);
+    setCurrentSuggestions([]);
 
     // Optimistically update message list
     setMessages(prev => [...prev, { role: 'user', content: query, created_at: new Date().toISOString() }]);
@@ -306,12 +308,10 @@ export default function App() {
         setCurrentTrace(prev => (data.events && data.events.length >= prev.length ? data.events : prev));
       } else if (data.type === 'sources') {
         setCurrentSources(data.sources);
+      } else if (data.type === 'suggestions') {
+        setCurrentSuggestions(data.suggestions || []);
       } else if (data.type === 'memory') {
         setCurrentMemory({ history: data.history || [], max_turns: data.max_turns || 5 });
-      } else if (data.type === 'clarification') {
-        // Server is waiting for the user to narrow scope before retrieval.
-        setCurrentStatus('');
-        setClarification({ questions: data.questions || [], answers: {} });
       } else if (data.type === 'error') {
         setCurrentStatus(`Hata oluştu: ${data.content}`);
       }
@@ -320,31 +320,11 @@ export default function App() {
     ws.onclose = async () => {
       setIsGenerating(false);
       setCurrentStatus('');
-      setClarification(null);
+      // Persisted message (from DB) carries its own suggestions; clear live ones.
+      setCurrentSuggestions([]);
       await fetchSessions();
       await loadSessionMessages(activeSessionId);
     };
-  };
-
-  const selectClarifyOption = (axis, value) => {
-    setClarification(prev => {
-      if (!prev) return prev;
-      const answers = { ...prev.answers };
-      if (value === null) delete answers[axis];   // "Fark etmez" → skip axis
-      else answers[axis] = value;
-      return { ...prev, answers };
-    });
-  };
-
-  const submitClarification = () => {
-    if (!clarification || !wsRef.current) return;
-    try {
-      wsRef.current.send(JSON.stringify({ answers: clarification.answers || {} }));
-    } catch (e) {
-      // socket already closed — nothing to do
-    }
-    setClarification(null);
-    setCurrentStatus('Sorgu daraltılıyor...');
   };
 
   const toggleTraceExpand = (idx) => {
@@ -358,6 +338,31 @@ export default function App() {
     if (e.key === 'Enter') {
       sendMessage();
     }
+  };
+
+  // Facet-grounded "rabbit hole" drill-down chips; clicking one fires it as a query.
+  const renderSuggestions = (list) => {
+    if (!list || list.length === 0) return null;
+    return (
+      <div className="rabbit-holes">
+        <div className="rabbit-holes-label">
+          <Compass size={13} />
+          <span>İlgili olabilir — derinleşmek için:</span>
+        </div>
+        <div className="rabbit-holes-chips">
+          {list.map((s, i) => (
+            <button
+              key={i}
+              className="suggestion-chip"
+              disabled={isGenerating}
+              onClick={(e) => { e.stopPropagation(); sendMessage(s); }}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   const activeSessionTitle = sessions.find(s => s.id === activeSessionId)?.title || 'Sohbet';
@@ -430,10 +435,11 @@ export default function App() {
                     onClick={() => handleMessageClick(idx)}
                     style={{ cursor: 'pointer' }}
                   >
-                    <div 
+                    <div
                       className="message-bubble"
                       dangerouslySetInnerHTML={{ __html: parseMarkdown(m.content) }}
                     />
+                    {m.role === 'assistant' && renderSuggestions(m.suggestions)}
                     {m.created_at && (
                       <span className="message-time">
                         {formatTime(m.created_at)}
@@ -451,39 +457,6 @@ export default function App() {
                   <div className="status-indicator pulse">
                     <Clock size={16} />
                     {currentStatus}
-                  </div>
-                )}
-                {clarification && (
-                  <div className="clarify-card">
-                    <div className="clarify-header">
-                      <HelpCircle size={16} />
-                      <span>Sorunuzu biraz daraltalım</span>
-                    </div>
-                    {clarification.questions.map((q, qi) => (
-                      <div key={qi} className="clarify-question">
-                        <div className="clarify-q-text">{q.text}</div>
-                        <div className="clarify-options">
-                          {q.options.map((opt, oi) => (
-                            <button
-                              key={oi}
-                              className={`clarify-opt ${clarification.answers[q.axis] === opt ? 'selected' : ''}`}
-                              onClick={() => selectClarifyOption(q.axis, opt)}
-                            >
-                              {opt}
-                            </button>
-                          ))}
-                          <button
-                            className={`clarify-opt ${clarification.answers[q.axis] === undefined ? 'selected' : ''}`}
-                            onClick={() => selectClarifyOption(q.axis, null)}
-                          >
-                            Fark etmez
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    <button className="clarify-submit" onClick={submitClarification}>
-                      Devam et
-                    </button>
                   </div>
                 )}
                 {currentThinking && (
@@ -506,9 +479,10 @@ export default function App() {
                     </span>
                   </>
                 )}
+                {renderSuggestions(currentSuggestions)}
               </div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </div>
 

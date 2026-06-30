@@ -9,9 +9,10 @@ from src.common.llm_utils import extract_json_from_text
 from src.config.pipeline_loader import PipelineConfig
 
 
-SANITIZER_PROMPT = """Sen bir RAG yanıt doğrulama ve düzeltme uzmanısın.
+SANITIZER_PROMPT = """Sen bir RAG yanıt doğrulama uzmanısın.
 
-Görevin: Verilen yanıtı kontrol etmek ve gerekirse düzeltmek.
+Görevin: Verilen yanıtı kontrol etmek ve KISA bir karar JSON'u döndürmek.
+Yanıtı YENİDEN YAZMA veya kopyalama — sadece değerlendir.
 
 Kontrol kriterleri:
 {criteria}
@@ -29,7 +30,7 @@ DEĞERLENDİRME KURALLARI (çok önemli — varsayılan tutum GEÇER yönündedi
   doğru ve BAĞLAM'a dayanıyorsa "passes": true döndür.
 - Emin değilsen "passes": true döndür.
 
-JSON çıktısı:
+SADECE şu kısa JSON'u döndür (yanıt metnini ASLA tekrar etme):
 {{
   "passes": true/false,
   "checks": {{
@@ -38,15 +39,10 @@ JSON çıktısı:
     "no_hallucination": true/false,
     "is_turkish": true/false
   }},
-  "issues": ["sorun 1", "sorun 2"],
-  "corrected_answer": "düzeltiysen burada, yoksa orijinal yanıt"
+  "issues": ["kısa sorun açıklaması", ...]
 }}
 
-Eğer yanıt tüm kriterleri karşılıyorsa "passes": true döndür ve
-"corrected_answer" alanını orijinal yanıtla aynı bırak.
-
-Eğer yanıt başarısız olursa (yukarıdaki a-d durumları), kaynaklara dayanarak
-düzeltilmiş versiyonunu "corrected_answer" alanında döndür.
+"issues" yalnızca "passes": false olduğunda dolu olmalı; aksi halde boş liste.
 """
 
 
@@ -102,13 +98,21 @@ class SanitizerAgent:
 
         try:
             think_val = sanitizer_cfg.think if sanitizer_cfg.think is not None else False
+            block = self._config.get_block(block_name)
             res = client.chat(
                 model=model,
                 messages=[
                     {"role": "system", "content": prompt},
                     {"role": "user", "content": user_content},
                 ],
-                options={"temperature": sanitizer_cfg.temperature},
+                # Validation output is a tiny decision JSON; cap num_predict so the
+                # model can't spend seconds regenerating long text. (Previously it
+                # echoed the entire answer into a discarded corrected_answer field,
+                # which dominated latency — ~24s on long answers.)
+                options={
+                    "temperature": sanitizer_cfg.temperature,
+                    "num_predict": min(256, block.max_num_predict),
+                },
                 format="json",
                 think=think_val,
             )
@@ -117,17 +121,15 @@ class SanitizerAgent:
             checks = parsed.get("checks", {})
             issues = parsed.get("issues", [])
             passes = parsed.get("passes", True)
-            corrected = parsed.get("corrected_answer")
-            # Only surface a correction when it actually differs from the input.
-            if corrected is not None and corrected.strip() == answer.strip():
-                corrected = None
 
+            # Validation is advisory/non-destructive: the orchestrator never applies
+            # a correction, so we don't ask the model to produce one.
             return ValidationResult(
                 passes=passes,
                 checks=checks,
                 issues=issues,
                 retry_hint=sanitizer_cfg.retry_prompt if not passes else None,
-                corrected_answer=corrected if not passes else None,
+                corrected_answer=None,
             )
         except Exception as e:
             # Fail-open: a broken validator must not block the answer or trigger
@@ -161,46 +163,3 @@ class SanitizerAgent:
             label = " | ".join(parts) if parts else "(metaveri yok, içerik BAĞLAM'da)"
             lines.append(f"  Kaynak {i}: {label}")
         return "\n".join(lines) + ("\n" if lines else "")
-
-    def sanitize(
-        self,
-        query: str,
-        answer: str,
-        context: str,
-    ) -> str:
-        """Attempt to fix a failing answer.
-
-        Args:
-            query: original user query
-            answer: current (failing) answer
-            context: retrieved context text
-
-        Returns:
-            Corrected answer text.
-        """
-        sanitizer_cfg = self._config.sanitizer
-        block_name = sanitizer_cfg.block
-        model_key = sanitizer_cfg.model_key
-
-        client = self._pool.get_client(block_name)
-        model = self._pool.get_model_for_block(block_name, model_key)
-
-        prompt = (
-            f"Önceki yanıt yetersiz bulundu. {sanitizer_cfg.retry_prompt}\n\n"
-            f"SORU: {query}\n\n"
-            f"BAĞLAM:\n{context}\n\n"
-            f"Önceki YANIT:\n{answer}\n\n"
-            f"Düzeltilmiş yanıtı ver. Sadece yanıtı döndür, açıklama ekleme."
-        )
-
-        try:
-            res = client.chat(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                options={"temperature": sanitizer_cfg.temperature},
-                think=sanitizer_cfg.think if sanitizer_cfg.think is not None else False,
-            )
-            corrected = res.message.content.strip()
-            return corrected if corrected else answer
-        except Exception:
-            return answer

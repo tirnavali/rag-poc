@@ -1,6 +1,5 @@
 import asyncio
 import json
-import threading
 import uuid
 import logging
 from contextlib import asynccontextmanager
@@ -118,33 +117,11 @@ async def chat_stream(websocket: WebSocket):
         queue = asyncio.Queue()
         loop = asyncio.get_running_loop()
 
-        # Interactive grounded clarification over the same socket: the producer
-        # thread blocks on this event after emitting a question; the consume loop
-        # below receives the user's answer and unblocks it.
-        clarify_event = threading.Event()
-        clarify_holder: dict = {"answers": {}}
-
-        def web_clarification_callback(questions):
-            payload = [
-                {"axis": q.axis, "text": q.text, "options": list(q.options)}
-                for q in questions
-            ]
-            clarify_holder["answers"] = {}
-            clarify_event.clear()
-            asyncio.run_coroutine_threadsafe(
-                queue.put({"type": "clarification", "questions": payload}), loop
-            )
-            # Block this worker thread until the consume loop sets the answer.
-            if not clarify_event.wait(timeout=300):
-                return {}  # timeout → proceed without narrowing
-            return clarify_holder.get("answers", {})
-
         # Phase callback to translate events into WS status updates
         def on_phase(name: str, block, model, details: dict):
             phase_messages = {
                 "classification": "🧭 Niyet analizi yapılıyor...",
-                "probe": "🔎 Ön tarama yapılıyor...",
-                "clarification": "❓ Sorgu daraltılıyor...",
+                "rabbit_holes": "🐇 İlgili öneriler hazırlanıyor...",
                 "planning": "🤖 Planlama ve arama kararı alınıyor...",
                 "retrieval": "🔍 Arşiv taranıyor (Çeşitlendirilmiş arama)...",
                 "re_retrieval": "🔄 Yeniden arama tetiklendi (Yetersiz kaynak)...",
@@ -186,7 +163,8 @@ async def chat_stream(websocket: WebSocket):
         thinking_text = ""
         trace_events = []
         sources = []
-        
+        suggestions = []
+
         # Send initial status
         await websocket.send_json({
             "type": "status",
@@ -194,7 +172,7 @@ async def chat_stream(websocket: WebSocket):
         })
         
         def blocking_producer():
-            nonlocal answer_text, thinking_text, trace_events, sources
+            nonlocal answer_text, thinking_text, trace_events, sources, suggestions
             try:
                 if agent_mode:
                     from src.config.collections import get_production_collection_keys
@@ -217,15 +195,15 @@ async def chat_stream(websocket: WebSocket):
                         on_phase=on_phase,
                         session_collections=production_keys,
                         stream_callback=stream_callback,
-                        clarification_callback=web_clarification_callback,
                         deep_mode=mufettis_mode,
                         on_phase_end=on_phase_end,
                         chat_history=chat_history,
                     )
-                    
+
                     answer_text = output.answer
                     thinking_text = output.thinking
                     sources = output.sources
+                    suggestions = list(getattr(output, "rabbit_holes", []) or [])
                     
                     if output.thinking:
                         asyncio.run_coroutine_threadsafe(
@@ -279,18 +257,6 @@ async def chat_stream(websocket: WebSocket):
             else:
                 chunk_dict = {"type": chunk["type"], "content": chunk["content"]}
 
-            if chunk_dict["type"] == "clarification":
-                # Send the grounded question(s) and wait for the user's choice on
-                # the same socket; the producer thread is blocked meanwhile.
-                await websocket.send_json(chunk_dict)
-                try:
-                    ans_raw = await websocket.receive_text()
-                    clarify_holder["answers"] = (json.loads(ans_raw) or {}).get("answers", {}) or {}
-                except Exception:
-                    clarify_holder["answers"] = {}
-                clarify_event.set()
-                continue
-
             if chunk_dict["type"] == "thinking":
                 thinking_text += chunk_dict["content"]
             elif chunk_dict["type"] == "content":
@@ -309,9 +275,15 @@ async def chat_stream(websocket: WebSocket):
             "type": "sources",
             "sources": sources
         })
-        
+
+        # Send facet-grounded rabbit-hole suggestions (clickable chips)
+        await websocket.send_json({
+            "type": "suggestions",
+            "suggestions": suggestions
+        })
+
         # Save assistant message
-        db.add_message(session_id, "assistant", answer_text, sources=sources, trace=trace_events, memory=chat_history)
+        db.add_message(session_id, "assistant", answer_text, sources=sources, trace=trace_events, memory=chat_history, suggestions=suggestions)
         
         await websocket.close()
         

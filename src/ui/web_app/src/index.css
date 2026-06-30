@@ -761,90 +761,56 @@ body {
   border-radius: 4px;
 }
 
-/* Grounded clarification (did-you-mean) card */
-.clarify-card {
+/* Facet-grounded "rabbit hole" drill-down suggestions */
+.rabbit-holes {
   align-self: flex-start;
   width: 100%;
   max-width: 640px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-left: 4px solid var(--tbmm-blue-accent);
-  border-radius: 12px;
-  padding: 16px 18px;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow-sm);
+  margin-top: 10px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
 }
 
-.clarify-header {
+.rabbit-holes-label {
   font-family: var(--font-heading);
   font-weight: 600;
-  font-size: 14px;
-  color: var(--tbmm-blue);
+  font-size: 12.5px;
+  color: var(--text-muted, #64748b);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-.clarify-question {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.clarify-q-text {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--text-main);
-}
-
-.clarify-options {
+.rabbit-holes-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.clarify-opt {
+.suggestion-chip {
   font-family: var(--font-primary);
   font-size: 13px;
   padding: 6px 14px;
   border-radius: 999px;
   border: 1px solid var(--border-color);
+  border-left: 3px solid var(--tbmm-blue-accent);
   background: var(--bg-app);
   color: var(--text-main);
   cursor: pointer;
   transition: all 0.15s ease;
+  text-align: left;
 }
 
-.clarify-opt:hover {
+.suggestion-chip:hover:not(:disabled) {
   border-color: var(--tbmm-blue-accent);
   color: var(--tbmm-blue-accent);
+  transform: translateY(-1px);
 }
 
-.clarify-opt.selected {
-  background: var(--tbmm-blue-accent);
-  border-color: var(--tbmm-blue-accent);
-  color: #fff;
-}
-
-.clarify-submit {
-  align-self: flex-end;
-  font-family: var(--font-primary);
-  font-weight: 600;
-  font-size: 13px;
-  padding: 8px 20px;
-  border-radius: 8px;
-  border: none;
-  background: var(--grad-premium);
-  color: #fff;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.clarify-submit:hover {
-  opacity: 0.9;
+.suggestion-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 

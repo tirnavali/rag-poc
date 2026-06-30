@@ -333,7 +333,8 @@ class RAGService:
             on_phase: optional per-phase callback (forwarded to the tracer)
             session_collections: collections the user selected at session start
                 (honored by PolicyEnforcer when the policy stage is enabled)
-            stream_callback: optional callable invoked when the final answer is ready
+            stream_callback: optional callable invoked per token during answering
+                ({"type": "content"|"thinking", "content": <delta>}) for live streaming
             clarification_callback: optional callable(questions) -> {axis: choice}
                 for the grounded clarification stage. None → non-interactive
                 (auto-applies the strongest facet). MCP/batch leave this None.

@@ -244,6 +244,10 @@ class ClarificationConfig:
     def __init__(self, config: dict) -> None:
         self.enabled = bool(config.get("enabled", True))
         self.probe_k = int(config.get("probe_k", 20))
+        # Number of facet-grounded "rabbit hole" drill-down suggestions to surface
+        # for broad/ambiguous queries (replaces the old hard-narrowing behavior).
+        self.suggestion_count = int(config.get("suggestion_count", 3))
+        # DEPRECATED — no longer used (query is no longer narrowed pre-answer).
         self.question_count = int(config.get("question_count", 3))
         self.max_turns_normal = int(config.get("max_turns_normal", 1))
         self.max_turns_deep = int(config.get("max_turns_deep", 2))

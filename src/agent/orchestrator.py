@@ -31,7 +31,6 @@ from src.agent.sanitizer import SanitizerAgent
 from src.agent.schemas import (
     AgentOutput,
     Chunk,
-    ClarificationResult,
     CollectionExecutionPlan,
     EvidenceDecision,
     OrchestratorState,
@@ -135,10 +134,6 @@ class OrchestratorAgent:
                 c for c in scope_result.selected_collections if c in COLLECTIONS and c in prod
             ]
 
-        # ---- Stage 1.5/1.6: probe + facets + grounded clarification ----
-        if self._config.clarification.enabled:
-            self._clarify(state, tracer, clarification_callback, deep_mode)
-
         # ---- Stage 2: planning (intent + constraints → diversified plan) ----
         with tracer.phase("planning") as ctx:
             state.planner_output = self._planner.plan(
@@ -205,6 +200,12 @@ class OrchestratorAgent:
                     for name, ro in state.retrieval_results.items()
                 })
 
+        # ---- Stage 3.5: facet mining + rabbit-hole suggestions ----
+        # Reuses the retrieval we just ran (no extra probe pass): mine facets from
+        # the hits and, for broad/ambiguous queries, offer drill-down suggestions.
+        if self._config.clarification.enabled:
+            self._suggest_rabbit_holes(state, tracer)
+
         # ---- Stage 4: assembly ----
         with tracer.phase("assembly") as ctx:
             self._assembler.run(state)
@@ -255,13 +256,13 @@ class OrchestratorAgent:
         # ---- Stage 6: answer → sanitize → cite ----
         with tracer.phase("answering") as ctx:
             context = self._build_context(state)
-            thinking, answer = self._answer_tool.generate(query=query, context=context, chat_history=chat_history)
+            # Forward tokens to the UI as they arrive (real streaming) instead of
+            # dumping the whole answer in one chunk after ~full generation latency.
+            thinking, answer = self._answer_tool.generate(
+                query=query, context=context, chat_history=chat_history,
+                stream_callback=stream_callback,
+            )
             state.final_answer = answer
-            if stream_callback is not None:
-                try:
-                    stream_callback({"type": "content", "content": answer})
-                except Exception:
-                    pass
             if ctx:
                 ctx.update_details(answer_chars=len(answer), context_chars=len(context))
                 if self._config.expose_thinking:
@@ -276,19 +277,16 @@ class OrchestratorAgent:
                 sources=[c.metadata for c in state.assembled_chunks],
                 context=context,
             )
-            # Non-destructive: validation is an advisory quality signal only. We do
-            # NOT overwrite the answering agent's (strong-model) text with the
-            # sanitizer's (weaker-model) corrected_answer, which tended to condense
-            # and crop long answers. passes/issues stay visible in the trace.
+            # Non-destructive: validation is an advisory quality signal only. The
+            # validator returns just a decision JSON (passes/checks/issues) — it no
+            # longer regenerates the answer, which used to dominate latency. We
+            # surface passes/issues in the trace but never alter the answer.
             if ctx and validation:
                 ctx.update_details(passes=getattr(validation, "passes", True))
                 if self._config.expose_thinking:
                     issues = getattr(validation, "issues", None)
                     if issues:
                         ctx.update_details(issues=issues)
-                    if not getattr(validation, "passes", True) and getattr(validation, "corrected_answer", None):
-                        # Surface the suggestion for transparency, but don't apply it.
-                        ctx.update_details(suggested_correction=validation.corrected_answer[:600])
 
         with tracer.phase("citation") as ctx:
             state.citations = CitationBuilder.build(state.assembled_chunks)
@@ -307,74 +305,47 @@ class OrchestratorAgent:
             assembly=state.balanced_context,
             expanded=state.expanded,
             clarification=state.clarification,
+            rabbit_holes=state.rabbit_holes,
         )
 
     # ============================================================== clarify
 
-    def _clarify(self, state, tracer, clarification_callback, deep_mode) -> None:
-        """Probe-retrieve, mine facets, and (if ambiguous) narrow year/scope/topic."""
-        cfg = self._config.clarification
-        probe_cols = state.selected_collections or self._production
+    def _suggest_rabbit_holes(self, state, tracer) -> None:
+        """Mine facets from the main retrieval results and, for broad/ambiguous
+        queries, surface facet-grounded drill-down ("rabbit hole") suggestions.
 
-        with tracer.phase("probe") as ctx:
-            probe_results = self._probe(state.user_query, probe_cols, cfg.probe_k)
-            state.facets = self._facet_miner.mine(probe_results)
+        There is no separate probe pass: facets come from the retrieval we already
+        ran in Stage 3. We never narrow the query — broad queries are answered
+        broadly and the user is offered suggestions to dig deeper. The phase is
+        emitted unconditionally so the debug trace shows which query produced which
+        suggestions (and why none, when not ambiguous).
+        """
+        cfg = self._config.clarification
+        with tracer.phase("rabbit_holes") as ctx:
+            # Reshape retrieval hits into the {"metadatas": [...]} form FacetMiner expects.
+            results = [
+                {"metadatas": [c.metadata for c in ro.chunks]}
+                for ro in state.retrieval_results.values()
+            ]
+            state.facets = self._facet_miner.mine(results)
+            ambiguous = self._gate.is_ambiguous(state.facets, state.user_query)
+            if ambiguous:
+                count = getattr(cfg, "suggestion_count", 3)
+                state.rabbit_holes = self._refiner.rabbit_holes(
+                    state.user_query, state.facets, count
+                )
             if ctx:
                 ctx.update_details(
-                    probed=len(probe_cols),
+                    query=state.user_query,
                     hits=state.facets.total,
-                    years=len(state.facets.years),
-                    topics=len(state.facets.topics),
+                    ambiguous=ambiguous,
+                    facets_used={
+                        "years": [f.value for f in state.facets.years[:2]],
+                        "topics": [f.value for f in state.facets.topics[:2]],
+                        "authors": [f.value for f in state.facets.authors[:1]],
+                    },
+                    suggestions=state.rabbit_holes,
                 )
-
-        if not self._gate.is_ambiguous(state.facets, state.user_query):
-            return
-
-        max_turns = cfg.max_turns_deep if deep_mode else cfg.max_turns_normal
-        with tracer.phase("clarification") as ctx:
-            if clarification_callback is not None and max_turns > 0:
-                questions = self._refiner.build_questions(state.user_query, state.facets, tracer)
-                if questions:
-                    try:
-                        answers = clarification_callback(questions)
-                    except Exception:
-                        answers = None
-                    constraints = self._refiner.resolve(questions, answers)
-                    state.applied_constraints = constraints
-                    state.clarify_turns = 1
-                    state.clarification = ClarificationResult(
-                        asked=True, turns=1, questions=questions,
-                        year=constraints.get("year"),
-                        collections=constraints.get("collections", []),
-                        topic=constraints.get("topic"),
-                    )
-            else:
-                # Non-interactive: auto-apply the strongest facet + assumption note.
-                constraints, note = self._refiner.auto_constraints(state.facets)
-                state.applied_constraints = constraints
-                state.clarification = ClarificationResult(
-                    auto_applied=bool(constraints), note=note,
-                    year=constraints.get("year"), topic=constraints.get("topic"),
-                )
-            if ctx and state.clarification:
-                ctx.update_details(
-                    asked=state.clarification.asked,
-                    auto_applied=state.clarification.auto_applied,
-                    constraints=state.applied_constraints,
-                )
-
-    def _probe(self, query: str, collections: list[str], probe_k: int) -> list[dict]:
-        """Cheap broad retrieval over `collections` to mine facets from."""
-        def _one(name):
-            try:
-                return self._search_tool.search(collection_key=name, query_text=query, filters=None, top_k=probe_k)
-            except Exception:
-                return {"documents": [], "metadatas": [], "distances": []}
-
-        if not collections:
-            return []
-        with ThreadPoolExecutor(max_workers=min(8, len(collections))) as ex:
-            return list(ex.map(_one, collections))
 
     def _off_domain_output(self, query: str, tracer: PipelineTracer) -> AgentOutput:
         suggestions = self._suggester.suggest(query, tracer)
@@ -384,7 +355,10 @@ class OrchestratorAgent:
         )
         padded = (suggestions + ["", "", ""])[:3]
         answer = template.format(suggestion_0=padded[0], suggestion_1=padded[1], suggestion_2=padded[2])
-        return AgentOutput(answer=answer, scope="off_domain", suggestions=suggestions, trace=tracer.events)
+        return AgentOutput(
+            answer=answer, scope="off_domain", suggestions=suggestions,
+            rabbit_holes=suggestions, trace=tracer.events,
+        )
 
     # ====================================================== allocation fallback
 
@@ -587,6 +561,7 @@ class OrchestratorAgent:
             assembly=state.balanced_context,
             expanded=state.expanded,
             clarification=state.clarification,
+            rabbit_holes=state.rabbit_holes,
         )
 
     def _conversational_output(

@@ -1,12 +1,14 @@
-"""Grounded clarification (did-you-mean) — the Turn-Based narrowing layer.
+"""Facet-grounded "rabbit hole" suggestions for broad/ambiguous queries.
 
-Flow: a cheap probe retrieval surfaces ~20 hits; ``FacetMiner`` extracts real
-facets (years/topics/authors/collections) from their metadata; ``AmbiguityGate``
-decides whether the query is too broad; ``QueryRefiner`` phrases up to N grounded
-questions whose options are the mined facet values only (never hallucinated).
+Flow: the orchestrator's main retrieval already surfaces the hits; ``FacetMiner``
+extracts real facets (years/topics/authors/collections) from their metadata;
+``AmbiguityGate`` decides whether the query is too broad; ``QueryRefiner.rabbit_holes``
+builds drill-down suggestions whose values are the mined facets only (never
+hallucinated). The query is NOT narrowed — suggestions are advisory.
 
-The orchestrator owns the probe retrieval (it has the SearchTool); this module is
-pure given the probe results, so it is trivially unit-testable offline.
+These classes are pure given the retrieval metadata, so they are trivially
+unit-testable offline. (Earlier this layer ran a separate probe retrieval and
+narrowed the query with a hard year filter; both were removed.)
 """
 from __future__ import annotations
 
@@ -251,8 +253,57 @@ class QueryRefiner:
                 constraints["topic"] = value
         return constraints
 
+    def rabbit_holes(self, query: str, facets: FacetSet, count: int = 3) -> list[str]:
+        """Build facet-grounded drill-down ("rabbit hole") suggestions.
+
+        Deterministic (no LLM): combines the original query with the most frequent
+        mined facet values, diversified across axes (year / topic / author) so the
+        N suggestions aren't all years. Suggestions that merely echo the query or
+        duplicate another are dropped. Fail-open: no usable facets → empty list
+        (the orchestrator then simply shows no chips).
+        """
+        q = (query or "").strip()
+        q_low = q.lower()
+
+        # Per-axis candidate pools, most frequent first. Skip facet values already
+        # present in the query (e.g. query "1980 ohal" shouldn't suggest "... 1980").
+        years = [f.value for f in facets.years[:2] if f.value and f.value.lower() not in q_low]
+        topics = [f.value for f in facets.topics[:2] if f.value and f.value.lower() not in q_low]
+        authors = [f.value for f in facets.authors[:1] if f.value and f.value.lower() not in q_low]
+
+        # Round-robin across axes so the result set spans dimensions, not just years.
+        axes = [years, topics, authors]
+        ordered: list[str] = []
+        idx = 0
+        while any(idx < len(axis) for axis in axes):
+            for axis in axes:
+                if idx < len(axis):
+                    ordered.append(axis[idx])
+                if len(ordered) >= count:
+                    break
+            if len(ordered) >= count:
+                break
+            idx += 1
+
+        out: list[str] = []
+        seen: set[str] = set()
+        for value in ordered:
+            suggestion = f"{q} {value}".strip() if q else str(value).strip()
+            key = suggestion.lower()
+            if not suggestion or key == q_low or key in seen:
+                continue
+            seen.add(key)
+            out.append(suggestion)
+            if len(out) >= count:
+                break
+        return out
+
     def auto_constraints(self, facets: FacetSet) -> tuple[dict, str]:
         """Non-interactive narrowing: apply the single strongest facet + a note.
+
+        DEPRECATED — no longer called from the orchestrator path. Broad/ambiguous
+        queries now surface ``rabbit_holes`` suggestions instead of being narrowed
+        by a hard year filter. Kept for backward compatibility / tests.
 
         Prefers the most frequent year (clearest narrowing for this corpus); if no
         years are present, falls back to the most frequent topic.

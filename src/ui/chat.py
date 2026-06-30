@@ -130,10 +130,8 @@ def _run_agent_query(
         def on_phase(name: str, block, model, details: dict) -> None:
             if name == "classification":
                 status.update("[bold yellow]🧭 Niyet analizi…[/bold yellow]")
-            elif name == "probe":
-                status.update("[bold yellow]🔎 Ön tarama (facet çıkarımı)…[/bold yellow]")
-            elif name == "clarification":
-                status.update("[bold yellow]❓ Sorgu daraltma…[/bold yellow]")
+            elif name == "rabbit_holes":
+                status.update("[bold yellow]🐇 İlgili öneriler hazırlanıyor…[/bold yellow]")
             elif name == "planning":
                 status.update(f"[bold yellow]🤖 Planlama ({model})…[/bold yellow]")
             elif name == "retrieval":
@@ -145,33 +143,11 @@ def _run_agent_query(
             elif name == "validation":
                 status.update("[bold yellow]✅ Doğrulama…[/bold yellow]")
 
-        def clarification_callback(questions: list) -> dict:
-            """Pause the spinner, ask grounded did-you-mean questions, read choices."""
-            status.stop()
-            answers: dict = {}
-            console.print("\n[bold cyan]Sorgunuzu daraltmak için:[/bold cyan]")
-            for q in questions:
-                console.print(f"\n[bold]{q.text}[/bold]")
-                for i, opt in enumerate(q.options, 1):
-                    console.print(f"  [cyan]{i}.[/cyan] {opt}")
-                console.print("  [dim]0. Fark etmez / hepsini ara[/dim]")
-                try:
-                    raw = input("Seçim: ").strip()
-                except (EOFError, KeyboardInterrupt):
-                    raw = "0"
-                if raw.isdigit():
-                    n = int(raw)
-                    if 1 <= n <= len(q.options):
-                        answers[q.axis] = q.options[n - 1]
-            status.start()
-            return answers
-
         try:
             output = service.run_agent(
                 query,
                 on_phase=on_phase,
                 session_collections=session_collections,
-                clarification_callback=clarification_callback,
                 deep_mode=mufettis_active,
                 chat_history=chat_history,
             )
@@ -238,6 +214,7 @@ def _run_agent_query(
                 "re_retrieved": output.re_retrieved,
                 "quality_re_retrieved": output.quality_re_retrieved,
                 "validation_passed": output.validation.passes if output.validation else None,
+                "rabbit_holes": list(getattr(output, "rabbit_holes", []) or []),
             }
         except Exception as e:
             answer_text = f"**Hata:** {type(e).__name__} – {e}"
@@ -363,6 +340,11 @@ def main(agent_mode: bool = False, pipeline_path: str | None = None) -> None:
                 border_style="cyan",
                 padding=(1, 2),
             ))
+            rabbit_holes = debug_info.get("rabbit_holes") or []
+            if rabbit_holes:
+                console.print("\n[bold cyan]🐇 İlgili olabilir — derinleşmek için:[/bold cyan]")
+                for i, s in enumerate(rabbit_holes, 1):
+                    console.print(f"  [cyan]{i}.[/cyan] {s}")
             if state.debug_mode:
                 print_debug(debug_info, state.debug_mode)
             print_sources(sources, dists)

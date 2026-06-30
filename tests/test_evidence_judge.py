@@ -78,15 +78,27 @@ def test_judge_heuristic_expand_when_below_threshold_and_llm_disabled():
 
 
 class _FakeLLMClient:
-    """Returns a fixed chat response payload to drive judge decisions."""
+    """Returns a fixed chat response payload to drive judge decisions.
+
+    Mirrors the real BlockClient: chat() accepts only the supported kwargs
+    (model/messages/options/format/think) — NOT `timeout` — and returns an
+    object with attribute access (``.message.content``), like ollama. An earlier
+    fake accepted **kwargs and returned a dict, which masked a production
+    TypeError (judge passed an unsupported `timeout` kwarg) so the LLM judge
+    silently never ran.
+    """
 
     def __init__(self, response_text: str) -> None:
         self.response_text = response_text
         self.calls: list[dict] = []
 
-    def chat(self, **kwargs):
-        self.calls.append(kwargs)
-        return {"message": {"content": self.response_text}}
+    def chat(self, *, model, messages, options=None, format=None, think=None):
+        import types
+        self.calls.append({"model": model, "messages": messages,
+                           "options": options, "format": format, "think": think})
+        return types.SimpleNamespace(
+            message=types.SimpleNamespace(content=self.response_text)
+        )
 
 
 class _FakeLLMPool:
@@ -127,6 +139,12 @@ def test_judge_llm_path_returns_answer_action():
     assert state.evidence_decision.action == "answer"
     assert state.evidence_decision.judge_type == "llm"
     assert len(client.calls) == 1
+    # Lock the bug fix: call must use the supported, capped, JSON-formatted shape.
+    call = client.calls[0]
+    assert "timeout" not in call
+    assert call["format"] == "json"
+    assert call["think"] is False
+    assert call["options"]["num_predict"] <= 256
 
 
 def test_judge_llm_invalid_json_falls_back_to_heuristic_expand():

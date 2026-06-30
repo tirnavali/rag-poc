@@ -183,11 +183,17 @@ class AnswerTool:
         *,
         mufettis_mode: bool = False,
         chat_history: list | None = None,
+        stream_callback: callable = None,
     ) -> tuple[str, str]:
         """Generate answer via the answering agent LLM.
 
+        Args:
+            stream_callback: if given, called with ``{"type": "content"|"thinking",
+                "content": <delta>}`` for each token as it arrives, so the UI can
+                render the answer progressively instead of all at once.
+
         Returns:
-            (thinking, content) tuple.
+            (thinking, content) tuple (full accumulated text).
         """
         ans_cfg = self._config.answering
         block_name = ans_cfg.block
@@ -235,13 +241,23 @@ class AnswerTool:
             think=ans_cfg.think if ans_cfg.think is not None else False,
         )
 
+        def _emit(kind: str, delta: str) -> None:
+            if stream_callback is not None and delta:
+                try:
+                    stream_callback({"type": kind, "content": delta})
+                except Exception:
+                    pass
+
         for chunk in stream:
             if hasattr(chunk.message, "thinking") and chunk.message.thinking:
                 thinking += chunk.message.thinking
+                _emit("thinking", chunk.message.thinking)
             if hasattr(chunk.message, "content") and chunk.message.content:
                 content += chunk.message.content
+                _emit("content", chunk.message.content)
 
         if not content.strip():
             content = "Arşivde bu soruyu yanıtlayacak yeterli bilgi bulunamadı."
+            _emit("content", content)  # nothing streamed → emit the fallback once
 
         return thinking, content

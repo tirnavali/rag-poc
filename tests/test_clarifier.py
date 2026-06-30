@@ -136,8 +136,37 @@ def test_query_refiner_resolve_skips_blank_and_unknown_axes():
 
 
 def test_query_refiner_auto_constraints_prefers_top_year():
+    # DEPRECATED path kept for backward compat; no longer used by the orchestrator.
     refiner = QueryRefiner(None, None)
     fs = FacetMiner().mine(_results())
     constraints, note = refiner.auto_constraints(fs)
     assert "year" in constraints
     assert note  # assumption note surfaced for non-interactive mode
+
+
+def test_rabbit_holes_diversifies_across_axes():
+    refiner = QueryRefiner(None, None)
+    fs = FacetMiner().mine(_results())
+    out = refiner.rabbit_holes("susurluk", fs, count=3)
+    assert len(out) == 3
+    # All suggestions are query + a mined facet value (top year, topic, author).
+    assert all(s.startswith("susurluk ") for s in out)
+    # Diversified, not three years: includes the top topic and top author too.
+    assert "susurluk 1997" in out
+    assert "susurluk bütçe" in out
+    assert "susurluk A" in out
+
+
+def test_rabbit_holes_skips_facet_values_already_in_query():
+    refiner = QueryRefiner(None, None)
+    fs = FacetMiner().mine(_results())
+    out = refiner.rabbit_holes("1997 bütçe", fs, count=3)
+    # 1997 and bütçe are already in the query → they must not be re-suggested.
+    assert "1997 bütçe 1997" not in out
+    assert "1997 bütçe bütçe" not in out
+    assert all(s != "1997 bütçe" for s in out)
+
+
+def test_rabbit_holes_empty_when_no_facets():
+    refiner = QueryRefiner(None, None)
+    assert refiner.rabbit_holes("anything", FacetSet(total=0), count=3) == []

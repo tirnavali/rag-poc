@@ -32,30 +32,48 @@ def test_validate_fail_open_marks_validation_skipped(monkeypatch):
     assert res.issues and "skipped" in res.issues[0].lower()
 
 
-def test_validate_captures_corrected_answer_on_failure(monkeypatch):
+def test_validate_failure_reports_issues_without_correction(monkeypatch):
     sanitizer, pool, cfg = _sanitizer()
     client = pool.get_client(cfg.sanitizer.block)
     payload = (
-        '{"passes": false, "checks": {"is_turkish": true}, '
-        '"issues": ["eksik"], "corrected_answer": "düzeltilmiş metin"}'
+        '{"passes": false, "checks": {"is_turkish": true}, "issues": ["eksik"]}'
     )
     monkeypatch.setattr(client, "chat", lambda **k: _stub_chat_response(payload))
     res = sanitizer.validate("soru", "ham yanıt", [])
     assert res.passes is False
-    assert res.corrected_answer == "düzeltilmiş metin"
+    assert res.issues == ["eksik"]
+    # Validation is advisory: it never produces a correction to apply.
+    assert res.corrected_answer is None
+    assert res.retry_hint  # retry hint surfaced on failure
 
 
-def test_validate_drops_identical_corrected_answer(monkeypatch):
+def test_validate_never_returns_corrected_answer(monkeypatch):
+    """Even if the model emits a corrected_answer field, it is ignored — the
+    validator no longer regenerates the answer (latency fix)."""
     sanitizer, pool, cfg = _sanitizer()
     client = pool.get_client(cfg.sanitizer.block)
     payload = (
-        '{"passes": true, "checks": {}, "issues": [], '
-        '"corrected_answer": "aynı yanıt"}'
+        '{"passes": false, "checks": {}, "issues": ["x"], '
+        '"corrected_answer": "model yine de yazdı"}'
     )
     monkeypatch.setattr(client, "chat", lambda **k: _stub_chat_response(payload))
-    res = sanitizer.validate("soru", "aynı yanıt", [])
-    # passes=True → no correction surfaced
+    res = sanitizer.validate("soru", "ham yanıt", [])
     assert res.corrected_answer is None
+
+
+def test_validate_caps_num_predict(monkeypatch):
+    """The chat call must cap num_predict so validation can't run long."""
+    sanitizer, pool, cfg = _sanitizer()
+    client = pool.get_client(cfg.sanitizer.block)
+    seen = {}
+
+    def _capture(**kwargs):
+        seen.update(kwargs)
+        return _stub_chat_response('{"passes": true, "checks": {}, "issues": []}')
+
+    monkeypatch.setattr(client, "chat", _capture)
+    sanitizer.validate("soru", "yanıt", [])
+    assert seen["options"].get("num_predict", 10**9) <= 256
 
 
 def test_format_source_summary_omits_missing_fields():

@@ -117,12 +117,18 @@ class EvidenceJudge:
         )
 
         try:
+            # NOTE: BlockClient.chat() has no `timeout` kwarg — passing it used to
+            # raise TypeError, so this LLM judge silently fell back to heuristic
+            # 'expand' on EVERY borderline case (it never actually ran). Call it
+            # like the other stages: capped output, JSON format, thinking off.
             response = client.chat(
-                messages=[{"role": "user", "content": prompt}],
                 model=model,
-                timeout=llm.timeout_seconds,
+                messages=[{"role": "user", "content": prompt}],
+                options={"temperature": 0.0, "num_predict": 200},
+                format="json",
+                think=False,
             )
-            raw = response["message"]["content"]
+            raw = response.message.content
         except Exception:
             return self._heuristic_expand_fallback()
 

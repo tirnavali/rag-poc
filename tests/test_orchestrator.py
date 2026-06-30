@@ -90,7 +90,7 @@ def _agent(
 
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None: ("thinking", "Cevap metni."),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None: ("thinking", "Cevap metni."),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
     return agent
@@ -134,6 +134,29 @@ def test_orchestrator_happy_path_returns_answer(monkeypatch):
     assert len(out.sources) >= 4
     assert out.assembly
     assert out.policy_result.allowed_collections == ["col_a", "col_b"]
+
+
+def test_orchestrator_streams_answer_tokens(monkeypatch):
+    """AnswerTool tokens are forwarded through stream_callback as they arrive,
+    and the full answer is NOT re-sent as a duplicate chunk afterwards."""
+    chunks = [{"chunk_id": f"k{i}", "document_id": f"d{i}"} for i in range(3)]
+    agent = _agent(monkeypatch, plan_collections=("col_a",),
+                   result_chunks_by_collection={"col_a": chunks})
+
+    def _streaming_generate(query, context, mufettis_mode=False, chat_history=None, stream_callback=None):
+        for tok in ("Mer", "ha", "ba"):
+            if stream_callback:
+                stream_callback({"type": "content", "content": tok})
+        return "", "Merhaba"
+    monkeypatch.setattr(agent._answer_tool, "generate", _streaming_generate)
+
+    received = []
+    out = agent.run("q", session_collections=["col_a"],
+                    stream_callback=lambda c: received.append(c))
+    deltas = [c["content"] for c in received if c.get("type") == "content"]
+    # Exactly the 3 streamed deltas, in order — no duplicate full-answer dump.
+    assert deltas == ["Mer", "ha", "ba"]
+    assert out.answer == "Merhaba"
 
 
 def test_orchestrator_conversational_bypasses_retrieval(monkeypatch):
@@ -223,7 +246,7 @@ def test_orchestrator_single_collection_failure_continues(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -254,7 +277,7 @@ def test_orchestrator_disabled_stages_absent_from_trace(monkeypatch):
     out = agent.run("q", session_collections=["col_a"])
     phases = {e.phase for e in out.trace}
     assert "bad_words_filter" not in phases  # stage-2, off
-    assert "probe" not in phases             # clarification disabled in these tests
+    assert "rabbit_holes" not in phases      # clarification disabled in these tests
     assert "clarification" not in phases
 
 
@@ -289,7 +312,7 @@ def test_orchestrator_propagates_extracted_filters_to_retrieval(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -331,7 +354,7 @@ def test_orchestrator_falls_back_to_refined_query_when_no_drafts(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -375,7 +398,7 @@ def test_orchestrator_runs_each_planner_draft_as_parallel_query(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -413,7 +436,7 @@ def test_orchestrator_caps_query_variants(monkeypatch):
         return _make_search_result([f"x-{query_text}-0", f"x-{query_text}-1"],
                                     [f"d-{query_text}-0", f"d-{query_text}-1"], collection_key)
     monkeypatch.setattr(agent._search_tool, "search", _search)
-    monkeypatch.setattr(agent._answer_tool, "generate", lambda query, context, mufettis_mode=False, chat_history=None: ("t", "ok"))
+    monkeypatch.setattr(agent._answer_tool, "generate", lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None: ("t", "ok"))
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
     agent.run("q", session_collections=["col_a"])
@@ -452,41 +475,42 @@ def _clarify_agent(monkeypatch):
         return _make_plan("col_a")
     monkeypatch.setattr(agent._planner, "plan", _plan)
     monkeypatch.setattr(agent._search_tool, "search",
-                        lambda collection_key, query_text, filters=None, top_k=5: _ambiguous_result(collection_key))
+                        lambda collection_key, query_text, filters=None, top_k=5, rerank=True: _ambiguous_result(collection_key))
     monkeypatch.setattr(agent._answer_tool, "generate",
-                        lambda query, context, mufettis_mode=False, chat_history=None: ("t", "ok"))
+                        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None: ("t", "ok"))
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
     return agent, captured
 
 
-def test_orchestrator_clarification_interactive_applies_constraints(monkeypatch):
+def test_orchestrator_ambiguous_query_emits_rabbit_holes_without_narrowing(monkeypatch):
+    """Broad/ambiguous query: NO hard date filter is applied; instead facet-grounded
+    drill-down suggestions are surfaced."""
     agent, captured = _clarify_agent(monkeypatch)
-    seen = {}
+    out = agent.run("meclis ne konuştu", session_collections=["col_a"])
+    # The query is NOT narrowed (no year filter injected into the plan).
+    assert captured["constraints"] in (None, {})
+    # Facet-grounded rabbit-hole suggestions are produced from the retrieval facets.
+    assert out.rabbit_holes
+    assert all(s.startswith("meclis ne konuştu") for s in out.rabbit_holes)
+
+
+def test_orchestrator_rabbit_holes_callback_ignored(monkeypatch):
+    """A passed clarification_callback is no longer invoked (legacy compat only)."""
+    agent, captured = _clarify_agent(monkeypatch)
+    called = {"n": 0}
 
     def callback(questions):
-        seen["axes"] = [q.axis for q in questions]
+        called["n"] += 1
         return {"year": "1997"}
 
     out = agent.run("meclis ne konuştu", session_collections=["col_a"], clarification_callback=callback)
-    assert "year" in seen["axes"]
-    assert captured["constraints"] == {"year": 1997}
-    assert out.clarification is not None
-    assert out.clarification.asked is True
-    assert out.clarification.year == 1997
+    assert called["n"] == 0
+    assert captured["constraints"] in (None, {})
+    assert out.rabbit_holes
 
 
-def test_orchestrator_clarification_auto_when_no_callback(monkeypatch):
-    agent, captured = _clarify_agent(monkeypatch)
-    # No clarification_callback → non-interactive auto-narrowing + assumption note.
-    out = agent.run("meclis ne konuştu", session_collections=["col_a"])
-    assert out.clarification is not None
-    assert out.clarification.auto_applied is True
-    assert out.clarification.note
-    assert captured["constraints"] and "year" in captured["constraints"]
-
-
-def test_orchestrator_clarification_skipped_when_unambiguous(monkeypatch):
-    """A narrow probe (single dominant year) skips clarification entirely."""
+def test_orchestrator_unambiguous_query_no_rabbit_holes(monkeypatch):
+    """A narrow retrieval (single dominant year) produces no suggestions and no narrowing."""
     agent, captured = _clarify_agent(monkeypatch)
     narrow = {
         "documents": ["b0", "b1", "b2"],
@@ -498,11 +522,10 @@ def test_orchestrator_clarification_skipped_when_unambiguous(monkeypatch):
         "distances": [0.1, 0.1, 0.1],
     }
     monkeypatch.setattr(agent._search_tool, "search",
-                        lambda collection_key, query_text, filters=None, top_k=5: narrow)
+                        lambda collection_key, query_text, filters=None, top_k=5, rerank=True: narrow)
     out = agent.run("1997 bütçe", session_collections=["col_a"])
     assert captured["constraints"] in (None, {})
-    # No clarification constraints were applied.
-    assert out.clarification is None or not (out.clarification.asked or out.clarification.auto_applied)
+    assert out.rabbit_holes == []
 
 
 def test_orchestrator_exposes_stage_reasoning_in_trace(monkeypatch):

@@ -24,8 +24,8 @@ deployment_blocks:
       planner: gemma4:e2b
       filter_extractor: gemma4:e2b
       sanitizer: qwen3.5:9b
-      judge: qwen3.5:9b
-      classifier: qwen3.5:9b
+      judge: gemma4:e2b        # judge LLM (borderline-only) — gemma4 warm ~1.5s; planner/classifier ile aynı resident model
+      classifier: gemma4:e2b   # warm ~1.2s (qwen verbose ~7.8s). planner ile aynı modeli paylaşır → classify→plan ek yükleme yok
       suggester: qwen3.5:9b
     timeout_seconds: 60
     retries: 1
@@ -156,38 +156,21 @@ agent:
       JSON çıktısı:
       {{"suggestions": ["soru1", "soru2", "soru3"]}}
 
-  # Grounded clarification (did-you-mean daraltma) — Turn-Based katman.
-  # Prob(20) → metadatadan facet → belirsizse 3 soru ile yıl/kapsam/konu daralt.
+  # Belirsiz/geniş sorgu deneyimi — ana retrieval sonuçlarından facet çıkar →
+  # belirsizse sorguyu DARALTMADAN geniş yanıtla + facet-temelli "rabbit hole"
+  # önerileri üret. (Eski davranış: en sık yılı sert tarih filtresi olarak basıyordu
+  # ve bunun için ayrı bir probe turu çalıştırıyordu — ikisi de kaldırıldı.)
   clarification:
     enabled: true
-    probe_k: 20
-    question_count: 3
-    max_turns_normal: 1
-    max_turns_deep: 2
+    suggestion_count: 3          # üretilecek facet-temelli drill-down öneri sayısı
     ambiguity:
       min_distinct_years: 3      # >= bu kadar farklı yıl → belirsiz
       dominance_ratio: 0.6       # en baskın facet oranı < bu → belirsiz
-      vague_query_clarify: true  # yıl/özne içermeyen genel "X hakkında bilgi" sorgularında da sor
+      vague_query_clarify: true  # yıl/özne içermeyen genel "X hakkında bilgi" sorgularında da öner
       # vague_markers: [...]     # (ops.) varsayılan Türkçe genel-sorgu işaretçilerini ezmek için
-    block: fast-01
-    model_key: planner
-    temperature: 0.2
-    think: false
-    prompt: |
-      Sen bir RAG arama asistanısın. Kullanıcının sorgusu geniş/belirsiz ve aşağıdaki
-      facet'ler ön-aramada (20 kayıt) bulundu. Kullanıcıyı daraltmaya yönlendiren,
-      kısa ve doğal Türkçe sorular üret. SADECE verilen facet değerlerini kullan;
-      yeni değer uydurma.
-
-      Sorgu: {query}
-      Facet'ler (deterministik çıkarıldı):
-      {facets}
-
-      JSON çıktısı:
-      {{"questions": [
-        {{"axis": "year|scope|topic", "text": "soru metni",
-          "options": ["facet değeri 1", "facet değeri 2", "facet değeri 3"]}}
-      ]}}
+    # DEPRECATED — aşağıdakiler artık kullanılmıyor: probe_k (ayrı probe turu kalktı),
+    #   question_count, max_turns_normal, max_turns_deep, block, model_key,
+    #   temperature, think, prompt. Geriye dönük güvenli; loader hâlâ okuyabilir.
 
   off_domain_response_template: |
     Bu sistem yalnızca gazete arşivi ve TBMM tutanakları sorgular için tasarlandı.

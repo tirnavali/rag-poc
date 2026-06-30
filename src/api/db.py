@@ -40,6 +40,11 @@ def init_db():
         c.execute("ALTER TABLE messages ADD COLUMN memory TEXT")
     except sqlite3.OperationalError:
         pass
+    # Safe migration to add suggestions (rabbit-hole drill-downs) column
+    try:
+        c.execute("ALTER TABLE messages ADD COLUMN suggestions TEXT")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
@@ -65,7 +70,8 @@ def add_message(
     content: str,
     sources: Optional[List[Dict]] = None,
     trace: Optional[List[Dict]] = None,
-    memory: Optional[List[Dict]] = None
+    memory: Optional[List[Dict]] = None,
+    suggestions: Optional[List[str]] = None
 ):
     conn = get_connection()
     c = conn.cursor()
@@ -80,11 +86,12 @@ def add_message(
     sources_json = json.dumps(sources) if sources else None
     trace_json = json.dumps(trace) if trace else None
     memory_json = json.dumps(memory) if memory else None
-    
+    suggestions_json = json.dumps(suggestions) if suggestions else None
+
     c.execute('''
-        INSERT INTO messages (session_id, role, content, sources, trace, memory)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (session_id, role, content, sources_json, trace_json, memory_json))
+        INSERT INTO messages (session_id, role, content, sources, trace, memory, suggestions)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (session_id, role, content, sources_json, trace_json, memory_json, suggestions_json))
     conn.commit()
     conn.close()
 
@@ -92,20 +99,21 @@ def get_messages(session_id: str) -> List[Dict[str, Any]]:
     conn = get_connection()
     c = conn.cursor()
     c.execute('''
-        SELECT role, content, sources, trace, memory, created_at 
-        FROM messages 
-        WHERE session_id = ? 
+        SELECT role, content, sources, trace, memory, suggestions, created_at
+        FROM messages
+        WHERE session_id = ?
         ORDER BY id ASC
     ''', (session_id,))
     rows = c.fetchall()
     conn.close()
-    
+
     messages = []
     for r in rows:
         msg = dict(r)
         msg['sources'] = json.loads(msg['sources']) if msg['sources'] else None
         msg['trace'] = json.loads(msg['trace']) if msg['trace'] else None
         msg['memory'] = json.loads(msg['memory']) if msg['memory'] else None
+        msg['suggestions'] = json.loads(msg['suggestions']) if msg['suggestions'] else None
         messages.append(msg)
     return messages
 
