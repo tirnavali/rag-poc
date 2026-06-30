@@ -42,8 +42,11 @@ python -m src.trainer.ingestion.ingest --request ornek_ingestion.json
 # 6. Sohbeti başlat (agent modu)
 python chat.py --agent
 
-# Alternatif: Görsel arayüz
+# Alternatif 1: Vector Explorer (Streamlit)
 streamlit run scripts/vector_explorer.py
+
+# Alternatif 2: Görsel Web Arayüzü ve API (React + FastAPI)
+./scripts/run_web.sh
 ```
 
 ### Vector Explorer ile Hızlı Test
@@ -55,6 +58,25 @@ Belgeleri indeksledikten sonra `streamlit run scripts/vector_explorer.py` ile ta
 - **Auto Filter Extractor** — yıl, yazar, dönem gibi filtreleri sorgudaki doğal dilden otomatik çıkarır (`"Deniz Baykal'ın 1996 konuşmaları"` → `year=1996, author=Deniz Baykal`)
 - **Reranker** — cross-encoder ile sonuçları yeniden sıralar; `top_k` ve `fetch_k` slider'larından ayarlanır
 - **Sorgu limitleri** — `Top K` (LLM'e gidecek sonuç sayısı) ve `Fetch K` (reranker'a beslenen aday havuzu) arayüzden değiştirilebilir
+
+### Görsel Web Arayüzü & API (FastAPI + React)
+
+FastAPI tabanlı backend RAG API'si ve React/Vite tabanlı modern görsel web arayüzü tek bir başlatma betiği ile ayağa kaldırılabilir.
+
+1. **Gerekli Ortamı Sağlayın & Servisleri Başlatın:**
+   ```bash
+   # (Gerekirse yerel Node.js yolunu PATH değişkenine ekleyin)
+   export PATH=/home/tbmmai/node-local/bin:$PATH
+   
+   # Web arayüzü ve API sunucusunu başlatın
+   ./scripts/run_web.sh
+   ```
+
+2. **Erişim Adresleri:**
+   - **Görsel Web Arayüzü (React/Vite Dev Server):** [http://localhost:3000](http://localhost:3000)
+   - **FastAPI Backend API:** [http://localhost:8000](http://localhost:8000) (API uç noktaları `/api` altındadır, örn. `/api/sessions` ve `/api/chat/stream` websocket bağlantıları).
+   
+Arayüz üzerinden Agent planlama adımlarını **Debug / Trace** sekmesinde izleyebilir, başvurulan kaynakların künyelerini **Kaynaklar** sekmesinden inceleyebilirsiniz. Cevap içindeki atıflar metin içinde özel citation badge'leri (`📌`) olarak etkileşimli bir biçimde gösterilir.
 
 ---
 

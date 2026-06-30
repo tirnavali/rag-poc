@@ -67,3 +67,10 @@ docs/superpowers/specs/2026-05-24-per-collection-retrieval-design.md
 # Scratch / ad-hoc experiments
 scratch/
 test_qwen.py
+
+# Web arayüzü (React/Vite) bağımlılık ve build çıktıları
+node_modules/
+src/ui/web_app/dist/
+
+# Log dosyaları
+*.log

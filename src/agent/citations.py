@@ -22,6 +22,7 @@ class CitationBuilder:
                 "date": c.metadata.get("date") or c.metadata.get("document_date") or str(c.metadata.get("year", "")),
                 "title": c.metadata.get("source_title") or c.metadata.get("title") or c.source_title,
                 "author": c.metadata.get("author") or c.metadata.get("speaker") or "Belirtilmemiş",
+                "text": c.text,
                 "metadata": dict(c.metadata),
             }
             for i, c in enumerate(chunks)
