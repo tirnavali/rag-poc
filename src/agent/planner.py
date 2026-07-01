@@ -35,6 +35,10 @@ Mevcut koleksiyonlar:
 Kurallar:
 1. Önce sorgunun amacını belirle: factual (basit bilgi), comparative (karşılaştırma),
    analytical (derin analiz), temporal (zaman bazlı), unknown
+1b. Sorgu tipini (query_type) belirle: fact (tekil bilgi), summary (özet),
+   comparison (karşılaştırma), reasoning (analiz), policy (mevzuat/karar),
+   comprehensive (kapsamlı/sayım: "tüm", "bütün", "hepsi", "listele", "kaç tane",
+   "hangileri", "her ..." gibi çok sayıda kayıt gerektiren toplu sorgular).
 2. Hangi koleksiyonların ilgili olduğunu belirle. Doc-type yönlendirme:
    - Gazete/basın/köşe yazısı/manşet/muhabir/gazeteci soruları → doc_type=gazete koleksiyonları
    - Meclis/oturum/birleşim/milletvekili/konuşma/tutanak soruları → doc_type=tutanak koleksiyonları
@@ -49,6 +53,7 @@ Kurallar:
 JSON çıktısı:
 {{
   "intent": "factual|comparative|analytical|temporal|unknown",
+  "query_type": "fact|summary|comparison|reasoning|policy|comprehensive",
   "resources": [
     {{
       "collection": "koleksiyon_adi",
@@ -102,7 +107,7 @@ class Planner:
     # these fields, which would otherwise raise a Pydantic ValidationError and crash
     # the whole plan into the fallback path.
     _VALID_INTENTS = {"factual", "comparative", "analytical", "temporal", "unknown"}
-    _VALID_QUERY_TYPES = {"fact", "summary", "comparison", "reasoning", "policy"}
+    _VALID_QUERY_TYPES = {"fact", "summary", "comparison", "reasoning", "policy", "comprehensive"}
 
     def __init__(
         self,

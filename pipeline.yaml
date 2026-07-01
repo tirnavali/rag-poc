@@ -318,6 +318,9 @@ allocation:
     comparison: { primary: 3, reserve: 2, fetch_k: 15 }
     reasoning:  { primary: 3, reserve: 2, fetch_k: 15 }
     policy:     { primary: 3, reserve: 3, fetch_k: 18 }
+    # Kapsamlı/sayım sorguları: tek büyük bağlam (gpu-01 num_ctx=32768'e sığar).
+    # fetch_k yüksek + max_total/max_per_document override → assembly 50 chunk'a kadar toplar.
+    comprehensive: { primary: 40, reserve: 0, fetch_k: 40, max_total: 50, max_per_document: 6 }
   max_per_document: 3    # belge başına 3 chunk (1 idi → tek belgeden de zengin bağlam)
   max_total_primary: 15  # bağlama girecek toplam chunk tavanı (12 idi)
 
@@ -336,6 +339,7 @@ judge:
     max_borderline_score_floor: 0.35
     timeout_seconds: 5
   max_expand_iterations: 1
+  comprehensive_max_rounds: 3   # kapsamlı/sayım sorgularında iteratif toplama tur tavanı
   on_low_confidence: expand
   expand:
     strategy: requery   # requery: yeni çeşitlendirilmiş retrieve / reserve: eski reserve-promote

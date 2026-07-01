@@ -165,12 +165,26 @@ class PolicyConfig:
 
 
 class _AllocationBudget:
-    """Tuple-like budget triple for one query_type."""
+    """Tuple-like budget triple for one query_type, plus optional context caps.
 
-    def __init__(self, primary: int, reserve: int, fetch_k: int) -> None:
+    ``max_total`` / ``max_per_document`` override the global assembly caps for this
+    query_type when set (None → fall back to the global value). Used so that
+    'comprehensive' queries can assemble a much larger single context.
+    """
+
+    def __init__(
+        self,
+        primary: int,
+        reserve: int,
+        fetch_k: int,
+        max_total: int | None = None,
+        max_per_document: int | None = None,
+    ) -> None:
         self.primary = primary
         self.reserve = reserve
         self.fetch_k = fetch_k
+        self.max_total = max_total
+        self.max_per_document = max_per_document
 
 
 class AllocationConfig:
@@ -193,12 +207,24 @@ class AllocationConfig:
                 primary=int(cfg.get("primary", self._defaults.primary)),
                 reserve=int(cfg.get("reserve", self._defaults.reserve)),
                 fetch_k=int(cfg.get("fetch_k", self._defaults.fetch_k)),
+                max_total=int(cfg["max_total"]) if cfg.get("max_total") is not None else None,
+                max_per_document=int(cfg["max_per_document"]) if cfg.get("max_per_document") is not None else None,
             )
         self.max_per_document = int(config.get("max_per_document", 1))
         self.max_total_primary = int(config.get("max_total_primary", 12))
 
     def budget_for(self, query_type: str) -> _AllocationBudget:
         return self._by_query_type.get(query_type, self._defaults)
+
+    def max_total_for(self, query_type: str) -> int:
+        """Per-query-type assembled-context cap, falling back to the global value."""
+        b = self._by_query_type.get(query_type)
+        return b.max_total if b is not None and b.max_total is not None else self.max_total_primary
+
+    def max_per_document_for(self, query_type: str) -> int:
+        """Per-query-type per-document cap, falling back to the global value."""
+        b = self._by_query_type.get(query_type)
+        return b.max_per_document if b is not None and b.max_per_document is not None else self.max_per_document
 
 
 class _JudgeHeuristicConfig:
@@ -227,6 +253,8 @@ class JudgeConfig:
         self.heuristic = _JudgeHeuristicConfig(config.get("heuristic", {}))
         self.llm = _JudgeLLMConfig(config.get("llm", {}))
         self.max_expand_iterations = int(config.get("max_expand_iterations", 1))
+        # Hard cap on iterative gather rounds for 'comprehensive' (enumeration) queries.
+        self.comprehensive_max_rounds = int(config.get("comprehensive_max_rounds", 3))
         self.on_low_confidence = config.get("on_low_confidence", "expand")
         # "requery" = ExpansionPlanner issues new diversified retrieval (default);
         # "reserve" = legacy reserve-chunk promotion (no new vector calls).

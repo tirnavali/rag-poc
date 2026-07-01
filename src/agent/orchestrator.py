@@ -44,6 +44,7 @@ from src.agent.tracer import PipelineTracer
 from src.common.llm_client_pool import LLMClientPool
 from src.config.collections import COLLECTIONS, get_production_collection_keys
 from src.config.pipeline_loader import PipelineConfig
+from src.config.settings import COMPREHENSIVE_KEYWORDS
 
 
 _REFUSE_MESSAGES = {
@@ -144,10 +145,16 @@ class OrchestratorAgent:
                 constraints=state.applied_constraints or None,
                 max_variants=self._config.planner.normal_max_query_variants,
             )
+            # Deterministic enumeration/exhaustive override: a keyword match promotes
+            # query_type to 'comprehensive' (the planner LLM may also emit it). This
+            # drives larger context caps + the iterative gather loop downstream.
+            if state.planner_output and self._is_comprehensive(query):
+                state.planner_output.query_type = "comprehensive"
             if ctx and state.planner_output:
                 ctx.update_details(
                     intent=state.planner_output.intent,
                     query_type=state.planner_output.query_type,
+                    comprehensive=(state.planner_output.query_type == "comprehensive"),
                     collections=[r.collection for r in state.planner_output.resources],
                     drafts={r.collection: [d.text for d in r.query_drafts]
                             for r in state.planner_output.resources},
@@ -228,17 +235,46 @@ class OrchestratorAgent:
                 if self._config.expose_thinking and state.evidence_decision.reasoning:
                     ctx.update_details(reasoning=state.evidence_decision.reasoning)
 
-        # ---- Stage 5.1: bounded re-query expansion ----
-        max_iters = self._config.judge.max_expand_iterations
-        if state.evidence_decision.action == "expand" and max_iters > 0:
+        # ---- Stage 5.1: iterative gather / re-query loop ----
+        # Comprehensive queries gather until saturation (a round adds no new chunks)
+        # or a hard ceiling (max rounds / max chunks). Other query types keep the
+        # original behavior: expand only when the judge asks, bounded by
+        # max_expand_iterations.
+        comprehensive = bool(state.planner_output and state.planner_output.query_type == "comprehensive")
+        if comprehensive:
+            max_rounds = self._config.judge.comprehensive_max_rounds
+            ceiling = self._config.allocation.max_total_for("comprehensive")
+        else:
+            max_rounds = self._config.judge.max_expand_iterations
+            ceiling = self._config.allocation.max_total_for(
+                state.planner_output.query_type if state.planner_output else "fact"
+            )
+
+        rounds = 0
+        while rounds < max_rounds:
+            need_more = comprehensive or state.evidence_decision.action == "expand"
+            if not need_more:
+                break
+            if len(state.assembled_chunks) >= ceiling:
+                stop_reason = "ceiling"
+                with tracer.phase("expansion") as ctx:
+                    if ctx:
+                        ctx.update_details(round=rounds + 1, skipped=True, stop_reason=stop_reason,
+                                           assembled_total=len(state.assembled_chunks))
+                break
+
+            added = 0
             with tracer.phase("expansion") as ctx:
                 if self._config.judge.expand_strategy == "requery":
-                    self._requery_expand(state, tracer)
+                    added = self._requery_expand(state, tracer)
                     self._assembler.run(state)
                 else:
                     self._expander.run(state)
                 if ctx:
-                    ctx.update_details(expanded=state.expanded, post_count=len(state.assembled_chunks))
+                    ctx.update_details(
+                        round=rounds + 1, comprehensive=comprehensive, added=added,
+                        expanded=state.expanded, assembled_total=len(state.assembled_chunks),
+                    )
             with tracer.phase("judge_post_expand") as ctx:
                 self._judge.run(state)
                 if ctx and state.evidence_decision:
@@ -246,6 +282,9 @@ class OrchestratorAgent:
                         judge_type=state.evidence_decision.judge_type,
                         action=state.evidence_decision.action,
                     )
+            rounds += 1
+            if self._config.judge.expand_strategy == "requery" and added == 0:
+                break  # saturation: a fresh re-query surfaced no new chunks
 
         action = state.evidence_decision.action
         if action == "clarify":
@@ -261,6 +300,7 @@ class OrchestratorAgent:
             thinking, answer = self._answer_tool.generate(
                 query=query, context=context, chat_history=chat_history,
                 stream_callback=stream_callback,
+                query_type=state.planner_output.query_type if state.planner_output else "fact",
             )
             state.final_answer = answer
             if ctx:
@@ -309,6 +349,12 @@ class OrchestratorAgent:
         )
 
     # ============================================================== clarify
+
+    @staticmethod
+    def _is_comprehensive(query: str) -> bool:
+        """Enumeration/exhaustive intent — substring match against COMPREHENSIVE_KEYWORDS."""
+        q = (query or "").lower()
+        return any(kw in q for kw in COMPREHENSIVE_KEYWORDS)
 
     def _suggest_rabbit_holes(self, state, tracer) -> None:
         """Mine facets from the main retrieval results and, for broad/ambiguous
@@ -450,12 +496,15 @@ class OrchestratorAgent:
             )
         return results
 
-    def _requery_expand(self, state: OrchestratorState, tracer: PipelineTracer) -> None:
+    def _requery_expand(self, state: OrchestratorState, tracer: PipelineTracer) -> int:
         """Bounded re-query: broaden the plan, retrieve anew, merge unique chunks.
 
         Unlike reserve-promotion this issues fresh vector searches. New chunks are
         appended to the existing primary buffers and the matching execution plan's
         budget is raised so the re-assembly step can surface them.
+
+        Returns the number of NEW (deduped) chunks added this round — 0 signals
+        saturation so the caller's gather loop can stop.
         """
         broader = self._planner.broaden(
             state.user_query,
@@ -464,7 +513,7 @@ class OrchestratorAgent:
             selected_collections=state.selected_collections or self._production,
         )
         if broader is None or not broader.resources:
-            return
+            return 0
 
         # A hallucinated collection key fails safely inside SearchTool (KeyError →
         # caught and dropped in _run_retrieval), so no catalog pre-filter is needed.
@@ -472,7 +521,7 @@ class OrchestratorAgent:
         requery_plans = self._flat_plans_for(broader, allowed)
         new_results = self._run_retrieval(requery_plans, broader.refined_query or state.user_query)
         if not new_results:
-            return
+            return 0
 
         existing_by = {p.collection_name: p for p in state.collection_plans}
         plan_by_name = {p.collection_name: p for p in requery_plans}
@@ -495,6 +544,7 @@ class OrchestratorAgent:
         if added_total > 0:
             state.expanded = True
         state.expand_iterations += 1
+        return added_total
 
     # =============================================================== helpers
 

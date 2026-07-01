@@ -19,6 +19,12 @@ class BalancedContextAssembler:
         items: list[ContextAssemblyItem] = []
         total = 0
 
+        # Per-query-type caps (comprehensive queries assemble a much larger context);
+        # fall back to the global values for every other type.
+        qt = state.planner_output.query_type if state.planner_output else "fact"
+        max_total = self._config.max_total_for(qt)
+        max_per_doc = self._config.max_per_document_for(qt)
+
         for plan in sorted(state.collection_plans, key=lambda p: p.priority):
             rr = state.retrieval_results.get(plan.collection_name)
             if not rr:
@@ -26,9 +32,9 @@ class BalancedContextAssembler:
 
             taken = 0
             for chunk in rr.chunks:
-                if total >= self._config.max_total_primary:
+                if total >= max_total:
                     break
-                if per_doc_count.get(chunk.document_id, 0) >= self._config.max_per_document:
+                if per_doc_count.get(chunk.document_id, 0) >= max_per_doc:
                     continue
                 if taken >= plan.retrieval_budget:
                     break
@@ -46,7 +52,7 @@ class BalancedContextAssembler:
                 taken += 1
                 total += 1
 
-            if total >= self._config.max_total_primary:
+            if total >= max_total:
                 break
 
         state.assembled_chunks = assembled

@@ -90,7 +90,7 @@ def _agent(
 
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None: ("thinking", "Cevap metni."),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None: ("thinking", "Cevap metni."),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
     return agent
@@ -143,7 +143,7 @@ def test_orchestrator_streams_answer_tokens(monkeypatch):
     agent = _agent(monkeypatch, plan_collections=("col_a",),
                    result_chunks_by_collection={"col_a": chunks})
 
-    def _streaming_generate(query, context, mufettis_mode=False, chat_history=None, stream_callback=None):
+    def _streaming_generate(query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None):
         for tok in ("Mer", "ha", "ba"):
             if stream_callback:
                 stream_callback({"type": "content", "content": tok})
@@ -223,6 +223,91 @@ def test_orchestrator_requery_expand_adds_new_chunks(monkeypatch):
     assert out.evidence_decision.action == "answer"  # post-expand judge is satisfied
 
 
+def test_orchestrator_comprehensive_gathers_until_saturation(monkeypatch):
+    """A comprehensive (enumeration) query keeps re-querying until a round adds no
+    new chunks — beyond the single-expand limit normal queries get."""
+    agent = _agent(monkeypatch, plan_collections=("col_a",))
+    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
+
+    calls = {"n": 0}
+
+    def _search(collection_key, query_text, filters=None, top_k=5):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            ids = ["a0", "a1", "a2", "a3", "a4"]      # initial retrieval
+        elif calls["n"] == 2:
+            ids = ["a5", "a6", "a7", "a8", "a9"]      # round 1: 5 new chunks
+        else:
+            ids = ["a5", "a6", "a7", "a8", "a9"]      # round 2: all seen → saturation
+        return _make_search_result(ids, [f"d-{i}" for i in ids], collection_key)
+    monkeypatch.setattr(agent._search_tool, "search", _search)
+
+    out = agent.run("tüm konuşmaları listele", session_collections=["col_a"])
+    assert out.plan.query_type == "comprehensive"   # keyword detection promoted it
+    assert calls["n"] == 3                           # initial + 2 re-queries, then saturate
+    assert len(out.assembly) == 10                   # a0..a9 (cap 50, not the global 15)
+    assert out.expanded is True
+
+
+def test_orchestrator_comprehensive_stops_at_max_rounds(monkeypatch):
+    """When every round keeps adding new chunks, the loop is bounded by comprehensive_max_rounds."""
+    agent = _agent(monkeypatch, plan_collections=("col_a",))
+    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
+    agent._config.judge.comprehensive_max_rounds = 2
+
+    calls = {"n": 0}
+
+    def _search(collection_key, query_text, filters=None, top_k=5):
+        calls["n"] += 1
+        base = calls["n"] * 10
+        ids = [f"a{base + j}" for j in range(3)]      # always 3 NEW chunks
+        return _make_search_result(ids, [f"d-{i}" for i in ids], collection_key)
+    monkeypatch.setattr(agent._search_tool, "search", _search)
+
+    out = agent.run("bütün teklifleri say", session_collections=["col_a"])
+    assert out.plan.query_type == "comprehensive"
+    assert calls["n"] == 3                            # initial + exactly 2 (max_rounds) re-queries
+
+
+def test_orchestrator_comprehensive_stops_at_ceiling(monkeypatch):
+    """When the assembled context already meets the per-type ceiling, no re-query runs."""
+    agent = _agent(monkeypatch, plan_collections=("col_a",))
+    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
+    # Lower the comprehensive ceiling so the initial retrieval already saturates it.
+    agent._config.allocation._by_query_type["comprehensive"].max_total = 4
+
+    calls = {"n": 0}
+
+    def _search(collection_key, query_text, filters=None, top_k=5):
+        calls["n"] += 1
+        ids = [f"a{i}" for i in range(6)]             # 6 chunks on the initial search
+        return _make_search_result(ids, [f"d-{i}" for i in ids], collection_key)
+    monkeypatch.setattr(agent._search_tool, "search", _search)
+
+    out = agent.run("hepsini listele", session_collections=["col_a"])
+    assert out.plan.query_type == "comprehensive"
+    assert len(out.assembly) == 4                     # capped at the lowered ceiling
+    assert calls["n"] == 1                            # ceiling already met → no re-query
+
+
+def test_orchestrator_non_comprehensive_does_not_loop(monkeypatch):
+    """A normal query with enough chunks answers in one shot — no gather loop."""
+    chunks = [{"chunk_id": f"k{i}", "document_id": f"d{i}"} for i in range(3)]
+    agent = _agent(monkeypatch, plan_collections=("col_a",),
+                   result_chunks_by_collection={"col_a": chunks})
+    calls = {"n": 0}
+    orig = agent._search_tool.search
+
+    def _counting(collection_key, query_text, filters=None, top_k=5):
+        calls["n"] += 1
+        return orig(collection_key, query_text, filters=filters, top_k=top_k)
+    monkeypatch.setattr(agent._search_tool, "search", _counting)
+
+    out = agent.run("susurluk nedir", session_collections=["col_a"])
+    assert out.plan.query_type == "fact"
+    assert calls["n"] == 1                            # single retrieval, no expansion rounds
+
+
 def test_orchestrator_single_collection_failure_continues(monkeypatch):
     chunks_a = [{"chunk_id": f"a{i}", "document_id": f"da{i}"} for i in range(3)]
     cfg = load_pipeline_config()
@@ -246,7 +331,7 @@ def test_orchestrator_single_collection_failure_continues(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -312,7 +397,7 @@ def test_orchestrator_propagates_extracted_filters_to_retrieval(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -354,7 +439,7 @@ def test_orchestrator_falls_back_to_refined_query_when_no_drafts(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -398,7 +483,7 @@ def test_orchestrator_runs_each_planner_draft_as_parallel_query(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -436,7 +521,7 @@ def test_orchestrator_caps_query_variants(monkeypatch):
         return _make_search_result([f"x-{query_text}-0", f"x-{query_text}-1"],
                                     [f"d-{query_text}-0", f"d-{query_text}-1"], collection_key)
     monkeypatch.setattr(agent._search_tool, "search", _search)
-    monkeypatch.setattr(agent._answer_tool, "generate", lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None: ("t", "ok"))
+    monkeypatch.setattr(agent._answer_tool, "generate", lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None: ("t", "ok"))
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
     agent.run("q", session_collections=["col_a"])
@@ -477,7 +562,7 @@ def _clarify_agent(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search",
                         lambda collection_key, query_text, filters=None, top_k=5, rerank=True: _ambiguous_result(collection_key))
     monkeypatch.setattr(agent._answer_tool, "generate",
-                        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None: ("t", "ok"))
+                        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None: ("t", "ok"))
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
     return agent, captured
 

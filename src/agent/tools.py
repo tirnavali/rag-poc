@@ -176,6 +176,27 @@ class AnswerTool:
         self._pool = client_pool
         self._config = config
 
+    # Query types that need best-effort SYNTHESIS from partial/tangential evidence
+    # rather than the strict "refuse if not a direct hit" behavior. Enumeration and
+    # summary/comparison/reasoning queries span many chunks that rarely match the
+    # question verbatim, so the strict SYS_PROMPT made the model return empty.
+    SYNTHESIS_QUERY_TYPES = {"comprehensive", "summary", "comparison", "reasoning"}
+
+    @staticmethod
+    def _select_system_prompt(mufettis_mode: bool, query_type: str | None):
+        """Pick the answering system prompt.
+
+        müfettiş → deep-research report; synthesis-needing query types → synthesis
+        (never-empty) prompt; everything else (fact/policy) → strict prompt that
+        honestly refuses when the archive has no relevant evidence.
+        """
+        from src.generator.prompts import MUFETTIS_SYS_PROMPT, SYNTHESIS_SYS_PROMPT, SYS_PROMPT
+        if mufettis_mode:
+            return MUFETTIS_SYS_PROMPT
+        if query_type in AnswerTool.SYNTHESIS_QUERY_TYPES:
+            return SYNTHESIS_SYS_PROMPT
+        return SYS_PROMPT
+
     def generate(
         self,
         query: str,
@@ -184,6 +205,7 @@ class AnswerTool:
         mufettis_mode: bool = False,
         chat_history: list | None = None,
         stream_callback: callable = None,
+        query_type: str | None = None,
     ) -> tuple[str, str]:
         """Generate answer via the answering agent LLM.
 
@@ -191,6 +213,8 @@ class AnswerTool:
             stream_callback: if given, called with ``{"type": "content"|"thinking",
                 "content": <delta>}`` for each token as it arrives, so the UI can
                 render the answer progressively instead of all at once.
+            query_type: planner query_type; selects the system prompt (synthesis vs
+                strict) so comprehensive/summary answers aren't dropped as empty.
 
         Returns:
             (thinking, content) tuple (full accumulated text).
@@ -202,10 +226,8 @@ class AnswerTool:
         client = self._pool.get_client(block_name)
         model = self._pool.get_model_for_block(block_name, model_key)
 
-        from src.generator.prompts import MUFETTIS_SYS_PROMPT, SYS_PROMPT
-
         user_msg = f"BAĞLAM:\n{context}\n\nSORU: {query}"
-        sys_prompt = MUFETTIS_SYS_PROMPT if mufettis_mode else SYS_PROMPT
+        sys_prompt = self._select_system_prompt(mufettis_mode, query_type)
 
         temperature = ans_cfg.temperature
         num_predict = min(

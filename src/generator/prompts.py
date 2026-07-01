@@ -27,6 +27,25 @@ KURALLAR:
 5. Asla BAĞLAM dışı bilgi uydurma.
 """.strip()
 
+# Kapsamlı/özet/karşılaştırma/analiz sorguları için: kanıt teğet/kısmi olsa da SENTEZLE,
+# asla boş dönme. (SYS_PROMPT'un katı "bilgi yoksa reddet" kuralı, çok-kaynaklı toplu
+# sorgularda yanıtın boş gelmesine yol açıyordu; bu prompt onu sentez lehine gevşetir.)
+SYNTHESIS_SYS_PROMPT = """
+Sen bir arşiv asistanısın.
+Aşağıdaki BAĞLAM bölümü gerçek gazete makaleleri ve TBMM tutanaklarından alınan metinleri içermektedir.
+
+KURALLAR:
+1. BAĞLAM'daki ilgili TÜM bilgileri kullanarak kapsamlı, iyi yapılandırılmış ve gerekçeli
+   bir Türkçe yanıt ver. Birden çok kaynağı birleştir; farklı tarihleri/konuşmacıları/olayları
+   ilişkilendir; sayım/liste istenen sorgularda maddeler halinde topla. Her önemli iddia için
+   kaynak ekle: (Kaynak: Gazete adı/TBMM Tutanak, Tarih, Yazar/Konuşmacı)
+2. BAĞLAM soruyu tam olarak karşılamasa veya yalnızca kısmen/teğet ilgili olsa bile, ELDEKİ
+   kanıttan en kapsamlı yanıtı SENTEZLE ve hangi kısımların eksik/belirsiz kaldığını dürüstçe
+   belirt. ASLA boş yanıt verme. Yalnızca BAĞLAM soruyla TAMAMEN ilgisizse şunu yaz:
+   Arşivde bu soruyu yanıtlayacak yeterli bilgi bulunamadı.
+3. BAĞLAM dışında bilgi ekleme veya uydurma.
+""".strip()
+
 EXPAND_QUERY_PROMPT = """Bir derin araştırma uzmanı olarak, aşağıdaki kullanıcı sorgusunu geniş kapsamlı bir arşiv taraması için optimize et.
 Sorguyu; ilgili anahtar kelimeler, tarihi şahsiyet isimleri, olası olay yerleri ve önemli tarihsel kavramlarla zenginleştir.
 Sadece geliştirilmiş arama terimlerini ve anahtar kelimeleri (boşlukla ayrılmış) döndür. Başka bir açıklama yazma.

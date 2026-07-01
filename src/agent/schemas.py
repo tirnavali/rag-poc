@@ -28,8 +28,9 @@ class SearchPlan(BaseModel):
     intent: Literal["factual", "comparative", "analytical", "temporal", "unknown"] = Field(
         ..., description="Query intent classification"
     )
-    query_type: Literal["fact", "summary", "comparison", "reasoning", "policy"] = Field(
-        "fact", description="Query type drives allocator budgets"
+    query_type: Literal["fact", "summary", "comparison", "reasoning", "policy", "comprehensive"] = Field(
+        "fact", description="Query type drives allocator budgets; 'comprehensive' = "
+        "enumeration/exhaustive queries that gather many chunks across iterative rounds",
     )
     resources: list[CollectionSearchPlan] = Field(
         ..., description="Collections to search with query drafts"

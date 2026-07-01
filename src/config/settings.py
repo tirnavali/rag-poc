@@ -354,6 +354,16 @@ PUBLICATION_KEYWORDS = [
     "muhabir", "editör", "editor", "yayın", "yayin",
     "yayınlar", "yayinlar", "dergi",
 ]
+# Enumeration/exhaustive intent → 'comprehensive' query_type: gather many chunks
+# across iterative retrieval rounds (single large context). Matched case-insensitively
+# as substrings against the raw query.
+COMPREHENSIVE_KEYWORDS = [
+    "tüm", "tum", "bütün", "butun", "hepsi", "tamamı", "tamami",
+    "listele", "liste halinde", "sırala", "sirala",
+    "kaç tane", "kac tane", "kaç adet", "kac adet", "kaç defa", "kac defa",
+    "hangileri", "hangi hangi", "her biri", "her bir",
+    "tek tek", "madde madde", "say bakalım", "hepsini",
+]
 
 # --- Default collection for RAGService ---
 # Used when RAGService() is instantiated without explicit spec.

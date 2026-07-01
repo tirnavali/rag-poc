@@ -9,6 +9,7 @@ from src.agent.schemas import (
     CollectionExecutionPlan,
     OrchestratorState,
     RetrievalOutput,
+    SearchPlan,
 )
 from src.config.pipeline_loader import AllocationConfig
 
@@ -100,6 +101,64 @@ def test_assembler_honors_max_total_primary():
     state = _state(plans, results)
     BalancedContextAssembler(_config(max_per_doc=1, max_total=3)).run(state)
     assert len(state.assembled_chunks) == 3
+
+
+def _config_with_comprehensive() -> AllocationConfig:
+    return AllocationConfig({
+        "defaults": {"primary": 2, "reserve": 2, "fetch_k": 10},
+        "by_query_type": {
+            "comprehensive": {"primary": 40, "reserve": 0, "fetch_k": 40,
+                              "max_total": 50, "max_per_document": 6},
+        },
+        "max_per_document": 3,
+        "max_total_primary": 15,
+    })
+
+
+def _plan(query_type: str) -> SearchPlan:
+    return SearchPlan(intent="unknown", query_type=query_type, resources=[], reasoning="")
+
+
+def test_assembler_comprehensive_raises_total_cap():
+    """comprehensive query_type lifts max_total from the global 15 to its per-type 50."""
+    plan = CollectionExecutionPlan(collection_name="c1", retrieval_budget=40, reserve_budget=0, fetch_k=40)
+    ro = RetrievalOutput(
+        collection_name="c1",
+        chunks=[_chunk(f"k{i}", f"d{i}", "c1") for i in range(20)],
+        fetched_count=20, returned_count=20, latency_ms=1.0,
+    )
+    state = _state([plan], {"c1": ro})
+    state.planner_output = _plan("comprehensive")
+    BalancedContextAssembler(_config_with_comprehensive()).run(state)
+    assert len(state.assembled_chunks) == 20  # all 20 (> global 15) assembled
+
+
+def test_assembler_comprehensive_raises_per_document_cap():
+    """comprehensive lifts max_per_document from the global 3 to its per-type 6."""
+    plan = CollectionExecutionPlan(collection_name="c1", retrieval_budget=40, reserve_budget=0, fetch_k=40)
+    ro = RetrievalOutput(
+        collection_name="c1",
+        chunks=[_chunk(f"k{i}", "samedoc", "c1") for i in range(10)],
+        fetched_count=10, returned_count=10, latency_ms=1.0,
+    )
+    state = _state([plan], {"c1": ro})
+    state.planner_output = _plan("comprehensive")
+    BalancedContextAssembler(_config_with_comprehensive()).run(state)
+    assert len(state.assembled_chunks) == 6  # per-type per-document cap
+
+
+def test_assembler_non_comprehensive_uses_global_caps():
+    """Other query types still get the global 15 cap even when a comprehensive entry exists."""
+    plan = CollectionExecutionPlan(collection_name="c1", retrieval_budget=40, reserve_budget=0, fetch_k=40)
+    ro = RetrievalOutput(
+        collection_name="c1",
+        chunks=[_chunk(f"k{i}", f"d{i}", "c1") for i in range(20)],
+        fetched_count=20, returned_count=20, latency_ms=1.0,
+    )
+    state = _state([plan], {"c1": ro})
+    state.planner_output = _plan("fact")
+    BalancedContextAssembler(_config_with_comprehensive()).run(state)
+    assert len(state.assembled_chunks) == 15  # global cap
 
 
 def test_assembler_priority_order():
