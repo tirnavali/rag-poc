@@ -437,7 +437,7 @@ body {
   max-width: 640px;
   gap: 10px;
   border-left: 3px solid transparent;
-  padding: 6px 0 6px 14px;
+  padding: 6px 18px 6px 14px;
   margin-left: -17px;
   border-radius: 0 8px 8px 0;
   transition: border-color 0.2s ease, background-color 0.2s ease;
