@@ -27,6 +27,10 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing RAG Service...")
     # Initialize without specific pipeline for now, can be configured via env vars if needed
     rag_service = RAGService()
+    # Preload LLM models in the background so the first user query isn't a cold-load
+    # (~11s). Runs off the event loop; serving starts immediately.
+    import threading
+    threading.Thread(target=rag_service.warmup, daemon=True).start()
     yield
     logger.info("Shutting down RAG Service...")
 

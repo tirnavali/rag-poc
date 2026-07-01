@@ -22,11 +22,16 @@ class BlockClient:
         block_name: str,
         timeout_seconds: int = 30,
         retries: int = 1,
+        keep_alive: "str | int | None" = None,
     ) -> None:
         self.host = host
         self.block_name = block_name
         self.timeout_seconds = timeout_seconds
         self.retries = retries
+        # How long Ollama keeps the model resident after a call. None → Ollama
+        # default (5m). A long value (e.g. "2h" or -1) avoids re-loading the model
+        # from disk on the first query after an idle gap (the ~11s cold-start).
+        self.keep_alive = keep_alive
         # Pass timeout through to httpx so a stuck/loading model raises instead of
         # hanging forever (ollama.Client forwards **kwargs to its httpx client).
         self._client = ollama.Client(host=host, timeout=timeout_seconds)
@@ -60,6 +65,8 @@ class BlockClient:
                     kwargs["format"] = format
                 if think is not None:
                     kwargs["think"] = think
+                if self.keep_alive is not None:
+                    kwargs["keep_alive"] = self.keep_alive
 
                 return self._client.chat(**kwargs)
             except Exception as e:
@@ -110,6 +117,7 @@ class LLMClientPool:
                 block_name=block_name,
                 timeout_seconds=block.timeout_seconds,
                 retries=block.retries,
+                keep_alive=getattr(self._config, "keep_alive", None),
             )
         return self._clients[block_name]
 

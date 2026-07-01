@@ -6,6 +6,7 @@ so the UI layer can be migrated incrementally.
 """
 from __future__ import annotations
 
+import logging
 from typing import Iterable, Optional
 
 from src.common.protocols import RetrievalResult, StreamChunk
@@ -16,6 +17,8 @@ from src.generator.ollama_generator import OllamaGenerator
 from src.retriever.context import build_context
 from src.retriever.vector_retriever import VectorRetriever
 from src.generator.filter_extractor import FilterExtractor
+
+logger = logging.getLogger(__name__)
 
 
 def _summarize_filters(criteria) -> str:
@@ -314,6 +317,48 @@ class RAGService:
         pool = LLMClientPool.from_config(config)
         self._orchestrator = OrchestratorAgent(config, pool, self.filter_extractor)
         return self._orchestrator
+
+    def warmup(self) -> None:
+        """Preload the production LLM models into Ollama so the first user query
+        isn't a cold-load (~11s). Fires a tiny chat per distinct model; combined
+        with a long ``keep_alive`` the models then stay resident. Best-effort:
+        any failure is logged and skipped (never blocks serving).
+        """
+        try:
+            orch = self._get_orchestrator()
+            cfg, pool = orch._config, orch._pool
+        except Exception as e:
+            logger.warning("Warmup skipped (orchestrator init failed): %s", e)
+            return
+
+        # (block, model_key) pairs on the production answer path.
+        stages = [
+            (cfg.classifier.block, cfg.classifier.model_key),
+            (cfg.planner.block, cfg.planner.model_key),
+            (cfg.judge.llm.block, cfg.judge.llm.model_key),
+            (cfg.sanitizer.block, cfg.sanitizer.model_key),
+            (cfg.suggester.block, cfg.suggester.model_key),
+            (cfg.answering.block, cfg.answering.model_key),
+        ]
+        seen: set[str] = set()
+        for block, model_key in stages:
+            try:
+                model = pool.get_model_for_block(block, model_key)
+            except Exception:
+                continue
+            if not model or model in seen:  # same host → dedup by model name
+                continue
+            seen.add(model)
+            try:
+                pool.get_client(block).chat(
+                    model=model,
+                    messages=[{"role": "user", "content": "ping"}],
+                    options={"num_predict": 1},
+                    think=False,
+                )
+                logger.info("Warmed up model: %s", model)
+            except Exception as e:
+                logger.warning("Warmup failed for %s: %s", model, e)
 
     def run_agent(
         self,

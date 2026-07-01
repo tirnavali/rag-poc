@@ -307,6 +307,11 @@ class PipelineConfig:
             name: DeploymentBlock(name, cfg) for name, cfg in blocks.items()
         }
 
+        # How long Ollama keeps each model resident (avoids the ~11s cold-load on
+        # the first query after an idle gap). Duration string ("2h"), seconds int,
+        # -1 = forever, 0 = unload immediately. None → Ollama default (5m).
+        self.keep_alive = config.get("keep_alive", "2h")
+
         agent_cfg = config.get("agent", {})
         # When true, each stage's LLM reasoning/output is attached to its trace
         # event details so the UI can show per-stage thinking.

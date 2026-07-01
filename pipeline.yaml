@@ -13,6 +13,10 @@
 # Fallback: Bu dosya yoksa settings.py + collections.py kullanılır.
 # =============================================================================
 
+# Modelleri Ollama VRAM'inde ne kadar resident tutalım. Uzun tutmak, idle sonrası
+# ilk sorgudaki ~11s soğuk-yükleme gecikmesini önler ("2h", -1=süresiz, 0=hemen boşalt).
+keep_alive: "2h"
+
 # ---------------------------------------------------------------------------
 # Deployment Blocks — her block, Ollama çalıştıran ayrı bir makine/servistir
 # ---------------------------------------------------------------------------
