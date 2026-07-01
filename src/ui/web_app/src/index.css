@@ -1,7 +1,7 @@
 :root {
   /* ── Warm archival "paper" palette ── */
   --paper:        #FAF9F7;  /* app background — kırık beyaz */
-  --paper-2:      #FDFDFC;  /* sidebar / secondary surfaces — saf beyaz */
+  --paper-2:      #F2ECE0;  /* sidebar / secondary surfaces — eski kırık krem tonu */
   --ink:          #1F1B16;  /* primary text + user-bubble background */
   --ink-3:        #8A8272;  /* muted / tertiary text (timestamps, labels) */
   --rule:         #D8D3C8;  /* borders / dividers */
