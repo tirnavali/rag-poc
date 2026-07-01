@@ -1,101 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
-import { 
-  Send, 
-  Plus, 
-  MessageSquare, 
-  Terminal, 
-  Layers, 
-  FileText, 
-  Compass, 
-  AlertTriangle,
-  Clock,
-  ChevronDown,
-  ChevronUp,
-  Brain
-} from 'lucide-react';
+import { buildMarkdownExport } from './utils';
+import Sidebar from './components/Sidebar';
+import ChatHeader from './components/ChatHeader';
+import MessageList from './components/MessageList';
+import RightPanelDrawer from './components/RightPanelDrawer';
+import InputBar from './components/InputBar';
 
 const API_BASE = '/api';
-const WS_BASE = `ws://${window.location.host}/api/chat/stream`;
 
-const parseMarkdown = (text) => {
-  if (!text) return '';
-  
-  // 1. Escape HTML
-  let html = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-    
-  // 2. Bold: **text**
-  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  
-  // 3. Italic: *text*
-  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  
-  // 4. Inline Citation Pills: (Kaynak: ...) or (Kaynak: ...)
-  html = html.replace(/\((Kaynak:\s*[^)]+)\)/gi, (match, p1) => {
-    return `<span class="inline-citation" title="${p1}">📌 ${p1}</span>`;
-  });
-  
-  // 5. Bullet Lists & Paragraphs
-  const lines = html.split('\n');
-  let inList = false;
-  const processedLines = [];
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = line.trim();
-    
-    if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
-      const content = trimmed.substring(2);
-      if (!inList) {
-        inList = true;
-        processedLines.push('<ul class="markdown-list">');
-      }
-      processedLines.push(`<li>${content}</li>`);
-    } else {
-      if (inList) {
-        inList = false;
-        processedLines.push('</ul>');
-      }
-      if (trimmed) {
-        processedLines.push(`<p>${line}</p>`);
-      } else {
-        processedLines.push('<br />');
-      }
-    }
-  }
-  
-  if (inList) {
-    processedLines.push('</ul>');
-  }
-  
-  return processedLines.join('\n');
-};
+const MAX_MEMORY_TURNS = 5;
 
-const formatTime = (isoOrSqlString) => {
-  if (!isoOrSqlString) return '';
-  try {
-    let date;
-    if (isoOrSqlString.includes(' ') && !isoOrSqlString.includes('T')) {
-      const parts = isoOrSqlString.split(' ');
-      const dateParts = parts[0].split('-');
-      const timeParts = parts[1].split(':');
-      date = new Date(Date.UTC(
-        parseInt(dateParts[0]),
-        parseInt(dateParts[1]) - 1,
-        parseInt(dateParts[2]),
-        parseInt(timeParts[0]),
-        parseInt(timeParts[1]),
-        parseInt(timeParts[2] || 0)
-      ));
-    } else {
-      date = new Date(isoOrSqlString);
-    }
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } catch (e) {
-    return '';
-  }
+// Mirrors the backend's own windowing logic (src/api/server.py, chat_history
+// build): last MAX_MEMORY_TURNS*2 user/assistant messages. Derives the CURRENT
+// forward-looking memory preview directly from the messages list, instead of
+// trusting a message's stored (retrospective, one-turn-stale) `memory` field.
+const buildRecentMemory = (messagesList, maxTurns = MAX_MEMORY_TURNS) => {
+  const history = (messagesList || [])
+    .filter(m => m.role === 'user' || m.role === 'assistant')
+    .slice(-(maxTurns * 2))
+    .map(m => ({ role: m.role, content: m.content }));
+  return { history, max_turns: maxTurns };
 };
 
 export default function App() {
@@ -104,23 +28,32 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [mufettisMode, setMufettisMode] = useState(false);
+  const [sessionSearchQuery, setSessionSearchQuery] = useState('');
   const [currentTab, setCurrentTab] = useState('trace'); // trace | sources | memory
   const [selectedMessageIdx, setSelectedMessageIdx] = useState(null);
-  
+  const [rightPanelOpen, setRightPanelOpen] = useState(false); // drawer defaults to closed
+  const [printTargetIdx, setPrintTargetIdx] = useState(null);
+
   // Streaming state variables
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentStatus, setCurrentStatus] = useState('');
   const [currentThinking, setCurrentThinking] = useState('');
   const [currentAnswer, setCurrentAnswer] = useState('');
-  
+
   // Traces, Sources, and Memory states
   const [currentTrace, setCurrentTrace] = useState([]);
   const [currentSources, setCurrentSources] = useState([]);
   const [currentMemory, setCurrentMemory] = useState({ history: [], max_turns: 5 });
+  // 'live': currentMemory previews what WILL be sent on the next message.
+  // 'historical': currentMemory shows what WAS actually sent for a past,
+  // user-clicked answer (audit view) — see handleMessageClick.
+  const [memoryViewMode, setMemoryViewMode] = useState('live');
   const [expandedTraceIdx, setExpandedTraceIdx] = useState({});
   const [expandedSourceIdx, setExpandedSourceIdx] = useState({});
   // Facet-grounded "rabbit hole" drill-down suggestions (clickable chips).
   const [currentSuggestions, setCurrentSuggestions] = useState([]);
+  // 'idle' | 'copied' — brief visual confirmation for the "Copy as Markdown" button.
+  const [copyStatus, setCopyStatus] = useState('idle');
 
   const messagesEndRef = useRef(null);
   const wsRef = useRef(null);
@@ -161,8 +94,8 @@ export default function App() {
       const res = await fetch(`${API_BASE}/sessions/${id}/messages`);
       const data = await res.json();
       setMessages(data);
-      
-      // Load last assistant message's trace, sources, and memory
+
+      // Load last assistant message's trace and sources
       let lastAssistantIdx = -1;
       for (let i = data.length - 1; i >= 0; i--) {
         if (data[i].role === 'assistant') {
@@ -176,16 +109,17 @@ export default function App() {
         const lastMsg = data[lastAssistantIdx];
         setCurrentTrace(lastMsg.trace || []);
         setCurrentSources(lastMsg.sources || []);
-        setCurrentMemory({
-          history: lastMsg.memory || [],
-          max_turns: 5
-        });
       } else {
         setSelectedMessageIdx(null);
         setCurrentTrace([]);
         setCurrentSources([]);
-        setCurrentMemory({ history: [], max_turns: 5 });
       }
+      // Forward-looking memory preview: derived from the conversation itself
+      // (what will be sent next), not the last message's stored (one-turn-stale)
+      // `memory` field — fixes the "memory appears empty right after the first
+      // answer" bug.
+      setCurrentMemory(buildRecentMemory(data));
+      setMemoryViewMode('live');
       setExpandedTraceIdx({});
       setExpandedSourceIdx({});
     } catch (e) {
@@ -221,8 +155,12 @@ export default function App() {
         history: assistantMsg.memory || [],
         max_turns: 5
       });
+      setMemoryViewMode('historical');
       setExpandedTraceIdx({});
       setExpandedSourceIdx({});
+      // Surface the drawer if it's closed — otherwise this click silently
+      // updates panel content the user can't see.
+      setRightPanelOpen(true);
     }
   };
 
@@ -247,6 +185,7 @@ export default function App() {
       setCurrentTrace([]);
       setCurrentSources([]);
       setCurrentMemory({ history: [], max_turns: 5 });
+      setMemoryViewMode('live');
       await fetchSessions();
     } catch (e) {
       console.error("Failed to create session", e);
@@ -254,8 +193,9 @@ export default function App() {
   };
 
   const sendMessage = (queryText) => {
-    // queryText is a string when called from a suggestion chip; when used as a
-    // button onClick handler the arg is a SyntheticEvent, so fall back to input.
+    // queryText is a string when called from a suggestion chip or the
+    // regenerate action; when used as a button onClick handler the arg is a
+    // SyntheticEvent, so fall back to input.
     const raw = typeof queryText === 'string' ? queryText : input;
     if (!raw.trim() || isGenerating || !activeSessionId) return;
 
@@ -268,7 +208,11 @@ export default function App() {
     setCurrentAnswer('');
     setCurrentTrace([]);
     setCurrentSources([]);
-    setCurrentMemory({ history: [], max_turns: 5 });
+    // Preview of what this request will actually send as chat_history (backend
+    // re-derives the same window fresh from the DB — see server.py) — computed
+    // from `messages` BEFORE the optimistic push below, so it matches exactly.
+    setCurrentMemory(buildRecentMemory(messages));
+    setMemoryViewMode('live');
     setExpandedTraceIdx({});
     setCurrentSuggestions([]);
 
@@ -290,7 +234,7 @@ export default function App() {
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      
+
       if (data.type === 'status') {
         setCurrentStatus(data.content);
       } else if (data.type === 'thinking') {
@@ -312,6 +256,7 @@ export default function App() {
         setCurrentSuggestions(data.suggestions || []);
       } else if (data.type === 'memory') {
         setCurrentMemory({ history: data.history || [], max_turns: data.max_turns || 5 });
+        setMemoryViewMode('live');
       } else if (data.type === 'error') {
         setCurrentStatus(`Hata oluştu: ${data.content}`);
       }
@@ -334,331 +279,152 @@ export default function App() {
     }));
   };
 
+  // Exports the whole observed flow (question, plan/strategy, every pipeline
+  // stage, sources, memory) as Markdown — for eyeballing the run or pasting
+  // into an LLM for further analysis. Works both for a live-just-generated
+  // answer and for a historical message the user clicked to inspect.
+  const handleCopyMarkdown = async () => {
+    let question = '';
+    let answer = '';
+
+    if (selectedMessageIdx !== null && messages[selectedMessageIdx]) {
+      answer = messages[selectedMessageIdx].content || '';
+      const prev = messages[selectedMessageIdx - 1];
+      question = (prev && prev.role === 'user') ? prev.content : '';
+    } else {
+      answer = currentAnswer || '';
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].role === 'user') { question = messages[i].content; break; }
+      }
+    }
+
+    const markdown = buildMarkdownExport({
+      question, answer,
+      trace: currentTrace,
+      sources: currentSources,
+      memory: currentMemory,
+    });
+
+    try {
+      await navigator.clipboard.writeText(markdown);
+      setCopyStatus('copied');
+      setTimeout(() => setCopyStatus('idle'), 1500);
+    } catch (e) {
+      console.error('Copy failed', e);
+    }
+  };
+
+  // Copies just this one message's answer text + its own source list — kept
+  // deliberately separate from handleCopyMarkdown's full trace/debug export
+  // above, so the two differently-scoped "Copy" buttons never get merged.
+  const handleCopyMessage = async (message) => {
+    const sourceLines = (message.sources || []).map((s, i) =>
+      `${i + 1}. ${s.source_name || 'Kaynak'}${s.date ? ' — ' + s.date : ''}`
+    );
+    const text = [message.content, ...(sourceLines.length ? ['', 'Kaynaklar:', ...sourceLines] : [])].join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      console.error('Copy failed', e);
+    }
+  };
+
+  // Resends the preceding question as a NEW turn through the normal sendMessage
+  // flow. This appends rather than replacing the old answer in place — true
+  // in-place regeneration would need a backend delete/update endpoint, which
+  // doesn't exist today. The action bar's tooltip makes this explicit.
+  const handleRegenerate = (messageIdx) => {
+    const prevUserMsg = messages[messageIdx - 1];
+    if (prevUserMsg && prevUserMsg.role === 'user') {
+      sendMessage(prevUserMsg.content);
+    }
+  };
+
+  // Client-side PDF export via the browser's native print, scoped to a single
+  // message by the .print-target rule in index.css. No backend/new dependency.
+  const handlePrintMessage = (messageIdx) => {
+    setPrintTargetIdx(messageIdx);
+    requestAnimationFrame(() => {
+      window.print();
+      setTimeout(() => setPrintTargetIdx(null), 300);
+    });
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       sendMessage();
     }
   };
 
-  // Facet-grounded "rabbit hole" drill-down chips; clicking one fires it as a query.
-  const renderSuggestions = (list) => {
-    if (!list || list.length === 0) return null;
-    return (
-      <div className="rabbit-holes">
-        <div className="rabbit-holes-label">
-          <Compass size={13} />
-          <span>İlgili olabilir — derinleşmek için:</span>
-        </div>
-        <div className="rabbit-holes-chips">
-          {list.map((s, i) => (
-            <button
-              key={i}
-              className="suggestion-chip"
-              disabled={isGenerating}
-              onClick={(e) => { e.stopPropagation(); sendMessage(s); }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const activeSessionTitle = sessions.find(s => s.id === activeSessionId)?.title || 'Sohbet';
+  const activeSession = sessions.find(s => s.id === activeSessionId);
+  const activeSessionTitle = activeSession?.title || 'Sohbet';
 
   return (
     <div className="app-container">
-      {/* Sidebar */}
-      <div className="sidebar">
-        <div className="sidebar-header">
-          <Compass size={24} />
-          <h1>TBMM Arşivi</h1>
-        </div>
-        
-        <button className="new-chat-btn" onClick={createNewSession}>
-          <Plus size={18} />
-          Yeni Sohbet
-        </button>
+      <Sidebar
+        sessions={sessions}
+        activeSessionId={activeSessionId}
+        searchQuery={sessionSearchQuery}
+        onSearchChange={setSessionSearchQuery}
+        onSelectSession={setActiveSessionId}
+        onNewSession={createNewSession}
+      />
 
-        <div className="session-list-container">
-          {sessions.map(s => (
-            <div 
-              key={s.id} 
-              className={`session-item ${s.id === activeSessionId ? 'active' : ''}`}
-              onClick={() => setActiveSessionId(s.id)}
-            >
-              <MessageSquare size={16} />
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {s.title || 'Yeni Sohbet'}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Main Workspace */}
       <div className="main-content">
-        {/* Header */}
-        <div className="chat-header">
-          <h2>{activeSessionTitle}</h2>
-          <div className="mode-toggle">
-            <label className="mufettis-switch">
-              <input 
-                type="checkbox" 
-                checked={mufettisMode} 
-                onChange={(e) => setMufettisMode(e.target.checked)}
-              />
-              Müfettiş (Derin Araştırma) Modu
-            </label>
-          </div>
-        </div>
+        <ChatHeader
+          title={activeSessionTitle}
+          sessionCreatedAt={activeSession?.created_at}
+          mufettisMode={mufettisMode}
+          onToggleMufettis={setMufettisMode}
+          rightPanelOpen={rightPanelOpen}
+          onToggleDrawer={() => setRightPanelOpen(o => !o)}
+          hasTraceData={currentTrace.length > 0 || currentSources.length > 0}
+        />
 
-        {/* Chat Body & Panels */}
         <div className="chat-body">
-          {/* Messages Area */}
-          <div className="messages-area">
-            {messages.length === 0 && !isGenerating ? (
-              <div className="empty-state">
-                <Compass size={64} />
-                <h3>RAG Arşiv Portalı</h3>
-                <p>Sorunuzu yazın. Yapay zeka arşiv asistanı belgeleri tarayıp doğrulanmış cevabı hazırlayacaktır.</p>
-              </div>
-            ) : (
-              messages.map((m, idx) => {
-                const isSelected = selectedMessageIdx === idx || 
-                                   (m.role === 'user' && selectedMessageIdx === idx + 1);
-                return (
-                  <div 
-                    key={idx} 
-                    className={`message ${m.role} ${isSelected ? 'selected-msg' : ''}`}
-                    onClick={() => handleMessageClick(idx)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div
-                      className="message-bubble"
-                      dangerouslySetInnerHTML={{ __html: parseMarkdown(m.content) }}
-                    />
-                    {m.role === 'assistant' && renderSuggestions(m.suggestions)}
-                    {m.created_at && (
-                      <span className="message-time">
-                        {formatTime(m.created_at)}
-                      </span>
-                    )}
-                  </div>
-                );
-              })
-            )}
+          <MessageList
+            messages={messages}
+            selectedMessageIdx={selectedMessageIdx}
+            isGenerating={isGenerating}
+            currentStatus={currentStatus}
+            currentThinking={currentThinking}
+            currentAnswer={currentAnswer}
+            currentSources={currentSources}
+            currentSuggestions={currentSuggestions}
+            printTargetIdx={printTargetIdx}
+            messagesEndRef={messagesEndRef}
+            onMessageClick={handleMessageClick}
+            onCopyMessage={handleCopyMessage}
+            onRegenerate={handleRegenerate}
+            onPrintMessage={handlePrintMessage}
+            onSendSuggestion={sendMessage}
+          />
 
-            {/* Live Generation Block */}
-            {isGenerating && (
-              <div className="message assistant">
-                {currentStatus && (
-                  <div className="status-indicator pulse">
-                    <Clock size={16} />
-                    {currentStatus}
-                  </div>
-                )}
-                {currentThinking && (
-                  <div className="thinking-box">
-                    <div className="thinking-header">
-                      <Terminal size={14} />
-                      <span>Agent Düşünce Süreci</span>
-                    </div>
-                    <div>{currentThinking}</div>
-                  </div>
-                )}
-                {currentAnswer && (
-                  <>
-                    <div 
-                      className="message-bubble"
-                      dangerouslySetInnerHTML={{ __html: parseMarkdown(currentAnswer) }}
-                    />
-                    <span className="message-time">
-                      {formatTime(new Date().toISOString())}
-                    </span>
-                  </>
-                )}
-                {renderSuggestions(currentSuggestions)}
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Details / Debug Trace Panel */}
-          <div className="details-panel">
-            <div className="panel-tabs">
-              <button 
-                className={`tab ${currentTab === 'memory' ? 'active' : ''}`}
-                onClick={() => setCurrentTab('memory')}
-              >
-                <Brain size={16} />
-                Memory ({currentMemory.history.length})
-              </button>
-              <button 
-                className={`tab ${currentTab === 'trace' ? 'active' : ''}`}
-                onClick={() => setCurrentTab('trace')}
-              >
-                <Terminal size={16} />
-                Debug / Trace
-              </button>
-              <button 
-                className={`tab ${currentTab === 'sources' ? 'active' : ''}`}
-                onClick={() => setCurrentTab('sources')}
-              >
-                <FileText size={16} />
-                Kaynaklar ({currentSources.length})
-              </button>
-            </div>
-
-            <div className="panel-content">
-              {currentTab === 'memory' && (
-                <div>
-                  <div className="memory-info-banner">
-                    <Brain size={14} />
-                    <span>
-                      Son <strong>{currentMemory.max_turns}</strong> tur (user + assistant) LLM'e gönderiliyor.
-                    </span>
-                  </div>
-                  {currentMemory.history.length === 0 ? (
-                    <div style={{ color: '#94a3b8', textAlign: 'center', marginTop: '60px', fontSize: '13px' }}>
-                      Henüz hafıza verisi yok — ilk mesajda geçmiş olmadığı için boş.
-                    </div>
-                  ) : (
-                    currentMemory.history.map((m, idx) => (
-                      <div key={idx} className={`memory-item memory-${m.role}`}>
-                        <div className="memory-item-header">
-                          <span className={`memory-role-badge ${m.role}`}>
-                            {m.role === 'user' ? '👤 User' : '🤖 Assistant'}
-                          </span>
-                          <span className="memory-turn-idx">#{idx + 1}</span>
-                        </div>
-                        <div className="memory-item-content">
-                          {m.content.length > 400 ? m.content.slice(0, 400) + '…' : m.content}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-
-              {currentTab === 'trace' && (
-                <div>
-                  {currentTrace.length === 0 ? (
-                    <div style={{ color: '#94a3b8', textAlign: 'center', marginTop: '60px', fontSize: '13px' }}>
-                      Henüz debug/trace adımı bulunmuyor.
-                    </div>
-                  ) : (
-                    currentTrace.map((t, idx) => (
-                      <div key={idx} className="trace-item">
-                        <div 
-                          className="trace-phase" 
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => toggleTraceExpand(idx)}
-                        >
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            {t.status === 'success' ? '✅' : '⏳'} 
-                            {t.phase.toUpperCase()}
-                          </span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span className="trace-elapsed">{t.elapsed ? t.elapsed.toFixed(2) + 's' : ''}</span>
-                            {expandedTraceIdx[idx] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                          </span>
-                        </div>
-                        {t.model && (
-                          <div className="trace-model">
-                            <Layers size={11} />
-                            Model: {t.model}
-                          </div>
-                        )}
-                        {/* Per-stage LLM reasoning/thinking — always visible (the headline of this stage) */}
-                        {t.details && (t.details.reasoning || t.details.thinking) && (
-                          <div className="trace-thinking">
-                            <Terminal size={11} />
-                            <span>{t.details.thinking || t.details.reasoning}</span>
-                          </div>
-                        )}
-                        {t.details && t.details.answer_preview && (
-                          <div className="trace-answer">{t.details.answer_preview}</div>
-                        )}
-                        {t.details && expandedTraceIdx[idx] && (
-                          <div className="trace-details" style={{ marginTop: '10px' }}>
-                            <pre>{JSON.stringify(t.details, null, 2)}</pre>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-
-              {currentTab === 'sources' && (
-                <div>
-                  {currentSources.length === 0 ? (
-                    <div style={{ color: '#94a3b8', textAlign: 'center', marginTop: '60px', fontSize: '13px' }}>
-                      Bu sorgu için başvurulmuş kaynak bulunmuyor.
-                    </div>
-                  ) : (
-                    currentSources.map((s, idx) => (
-                      <div 
-                        key={idx} 
-                        className="trace-item source-item clickable-source"
-                        onClick={() => toggleSourceExpand(idx)}
-                      >
-                        <div className="trace-phase">
-                          <span>Kaynak #{idx + 1}</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span className="trace-elapsed" style={{ background: '#e0f2fe', color: '#0369a1' }}>
-                              {s.document_type || 'Belge'}
-                            </span>
-                            {expandedSourceIdx[idx] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                          </div>
-                        </div>
-                        <div style={{ margin: '8px 0', fontSize: '13px', lineHeight: '1.4' }}>
-                          <strong>{s.source_name || 'Gazete/Tutanak'}</strong> | {s.date || 'Tarih Belirtilmemiş'}
-                        </div>
-                        {s.title && <div style={{ fontStyle: 'italic', marginBottom: '8px', color: '#475569' }}>"{s.title}"</div>}
-                        <div style={{ fontSize: '12px', color: '#64748b' }}>
-                          Yazar/Konuşmacı: {s.author || 'Belirtilmemiş'}
-                        </div>
-                        {expandedSourceIdx[idx] && (
-                          <div className="source-text-block animate-fade-in" onClick={(e) => e.stopPropagation()}>
-                            <div className="source-text-header">📚 Belge Parçası / Metin:</div>
-                            <div className="source-text-content">
-                              {s.text || "Belge metni bulunamadı."}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+          <RightPanelDrawer
+            isOpen={rightPanelOpen}
+            onClose={() => setRightPanelOpen(false)}
+            currentTab={currentTab}
+            onTabChange={setCurrentTab}
+            currentMemory={currentMemory}
+            memoryViewMode={memoryViewMode}
+            currentTrace={currentTrace}
+            expandedTraceIdx={expandedTraceIdx}
+            onToggleTraceExpand={toggleTraceExpand}
+            currentSources={currentSources}
+            expandedSourceIdx={expandedSourceIdx}
+            onToggleSourceExpand={toggleSourceExpand}
+            copyStatus={copyStatus}
+            onCopyMarkdown={handleCopyMarkdown}
+          />
         </div>
 
-        {/* Input area */}
-        <div className="input-area">
-          <div className="input-container">
-            <input 
-              type="text" 
-              placeholder="Arşivde aramak istediğiniz konuyu yazın..." 
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={isGenerating}
-            />
-            <button 
-              className="send-btn" 
-              onClick={sendMessage}
-              disabled={isGenerating || !input.trim()}
-            >
-              <Send size={18} />
-            </button>
-          </div>
-        </div>
+        <InputBar
+          value={input}
+          disabled={isGenerating}
+          onChange={setInput}
+          onKeyDown={handleKeyDown}
+          onSend={sendMessage}
+        />
       </div>
     </div>
   );
