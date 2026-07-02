@@ -1,0 +1,344 @@
+[
+  {
+    "id": "tbmm27-02-65-201",
+    "query": "Türkiye'de hâlen faaliyetine devam eden yeni vakıf sayısı kaç olarak açıklandı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-65-20190411",
+        "pages": [88, 89, 92]
+      },
+      {
+        "document_id": "tutanak-27-02-58-20190327",
+        "pages": [24]
+      }
+    ],
+    "golden_answer": "Kültür ve Turizm Bakanlığının cevabına göre Türk Medeni Kanunu hükümlerine istinaden kurulan ve halen faaliyetine devam eden 5231 yeni vakıf bulunmaktadır.",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-65-202",
+    "query": "Açık Toplum Vakfı kapanma kararını hangi gerekçeyle duyurdu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-65-20190411",
+        "pages": [88, 92]
+      },
+      {
+        "document_id": "tutanak-27-02-55-20190220",
+        "pages": [126]
+      }
+    ],
+    "golden_answer": "Açık Toplum Vakfı 26 Kasım 2018 günü yayımladığı açıklamayla, vakıf hakkında medyada yer alan asılsız iddia ve ölçüsüz spekülasyonların yoğunlaşmasının vakfın faaliyetlerini sürdürmeyi imkansız kıldığı vurgusuyla kapatılacağını kamuoyuna duyurmuştur.",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-65-203",
+    "query": "Osman Kavala'nın iddianamesi hazırlanmadan tutuklu kalmasına yönelik eleştiriler",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-65-20190411",
+        "pages": [88]
+      },
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [99]
+      },
+      {
+        "document_id": "tutanak-27-02-07-20181016",
+        "pages": [164]
+      },
+      {
+        "document_id": "tutanak-27-02-13-20181101",
+        "pages": [43]
+      },
+      {
+        "document_id": "tutanak-27-02-17-20181114",
+        "pages": [16]
+      },
+      {
+        "document_id": "tutanak-27-02-19-20181120",
+        "pages": [91, 92]
+      },
+      {
+        "document_id": "tutanak-27-02-23-20181128",
+        "pages": [143]
+      },
+      {
+        "document_id": "tutanak-27-02-105-20190718",
+        "pages": [225]
+      }
+    ],
+    "golden_answer": "Hakkındaki iddianame henüz hazırlanmamış olmasına karşın 440 gündür tutuklu bulunmaktadır.\n\nOsman Kavala'nın bir yılı aşkındır hâlâ iddianamesi hazırlanmamış.\n\nOsman Kavala 380 gündür tek başına koğuşunda, neyle suçlandığını dahi bilmiyor çünkü henüz iddianamesi hazırlanmadı.",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "medium",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-65-204",
+    "query": "Türk bankalarının teminat mektuplarının Avrupa bankalarınca kabul edilmemesi gemi ihracatını nasıl etkiledi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-65-20190411",
+        "pages": [93, 95]
+      }
+    ],
+    "golden_answer": "Sanayiciler 2018 yılı için gemi ihracatında 1.5 Milyar Dolar hedef koymuş, Türkiye bankalarının teminat mektuplarının Avrupa bankalarınca kabul edilmemesi sebebiyle gemi ihracatı 990 Milyon Dolar bandında kalmıştır; 500 Milyon Dolar değerinde ihracat kaybı yaşanmıştır.",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-02-65-205",
+    "query": "Levent Gök'ün teminat mektuplarıyla ilgili yazılı soru önergesine Ticaret Bakanı Ruhsar Pekcan nasıl karşılık verdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-65-20190411",
+        "pages": [93, 94, 95]
+      }
+    ],
+    "golden_answer": "Ticaret Bakanı Ruhsar Pekcan 7/8179 sayılı yazılı soru önergesini cevaplamak yerine, konusu itibarıyla Hazine ve Maliye Bakanlığının görev ve yetki alanına girmesi nedeniyle iade etmiştir.",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "hard",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-02-65-206",
+    "query": "TBMM Genel Kurulu 2019 Nisan ayındaki birleşimlerin çoğunda neden çalışmalarına başlayamadı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-65-20190411",
+        "pages": [2, 87]
+      },
+      {
+        "document_id": "tutanak-27-02-63-20190409",
+        "pages": [3]
+      },
+      {
+        "document_id": "tutanak-27-02-64-20190410",
+        "pages": [3, 4]
+      },
+      {
+        "document_id": "tutanak-27-02-66-20190416",
+        "pages": [2, 50]
+      },
+      {
+        "document_id": "tutanak-27-02-67-20190417",
+        "pages": [2, 4]
+      },
+      {
+        "document_id": "tutanak-27-02-68-20190418",
+        "pages": [4]
+      },
+      {
+        "document_id": "tutanak-27-02-70-20190424",
+        "pages": [3]
+      },
+      {
+        "document_id": "tutanak-27-02-71-20190425",
+        "pages": [3]
+      }
+    ],
+    "golden_answer": "Başkanlık Divanı teşekkül etmediğinden çalışmalarımıza başlayamıyoruz.",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-65-207",
+    "query": "Milli Piyango çekilişlerinde usulsüzlük yapıldığı iddialarının araştırılması için Meclis araştırması önergesini kim verdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-65-20190411",
+        "pages": [160]
+      },
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [70, 280]
+      },
+      {
+        "document_id": "tutanak-27-02-54-20190219",
+        "pages": [207]
+      },
+      {
+        "document_id": "tutanak-27-02-58-20190327",
+        "pages": [197]
+      },
+      {
+        "document_id": "tutanak-27-02-59-20190328",
+        "pages": [108]
+      },
+      {
+        "document_id": "tutanak-27-02-60-20190402",
+        "pages": [158]
+      },
+      {
+        "document_id": "tutanak-27-02-61-20190403",
+        "pages": [89]
+      },
+      {
+        "document_id": "tutanak-27-02-62-20190404",
+        "pages": [70]
+      }
+    ],
+    "golden_answer": "Zonguldak Milletvekili Deniz Yavuzyılmaz ve 32 milletvekili",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "easy",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-65-208",
+    "query": "Şanlıurfa Suruç'ta 2018 genel seçimleri öncesinde yaşanan silahlı çatışmada kaç kişi hayatını kaybetti?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-65-20190411",
+        "pages": [100]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [14, 33, 35, 36]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [16, 39]
+      },
+      {
+        "document_id": "tutanak-27-02-04-20181004",
+        "pages": [19]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [30]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [270]
+      },
+      {
+        "document_id": "tutanak-27-02-105-20190718",
+        "pages": [22]
+      }
+    ],
+    "golden_answer": "4 kişi (dört kişi) hayatını kaybetti.",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-65-209",
+    "query": "ÖSO mensuplarına Türkiye tarafından maaş ödendiği iddiaları",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-65-20190411",
+        "pages": [4]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [82, 83, 91]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [116, 117, 132]
+      },
+      {
+        "document_id": "tutanak-27-02-58-20190327",
+        "pages": [20]
+      }
+    ],
+    "golden_answer": "ÖSO mensuplarının Türk vatandaşlığına geçirilerek ölenlerin yakınlarına şehit maaşı bağlandığı iddiası ve Türkiye Cumhuriyeti tarafından ÖSO mensuplarına TL üzerinden maaş ödendiği iddiası yazılı soru önergeleriyle Meclis gündemine taşınmıştır.",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "medium",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-65-210",
+    "query": "Lapis Lazuli Güzergâh Anlaşması ne tür bir anlaşmadır?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-65-20190411",
+        "pages": [171]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [159, 163]
+      },
+      {
+        "document_id": "tutanak-27-02-22-20181127",
+        "pages": [17]
+      },
+      {
+        "document_id": "tutanak-27-02-100-20190710",
+        "pages": [166]
+      },
+      {
+        "document_id": "tutanak-27-02-101-20190711",
+        "pages": [161]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [277]
+      },
+      {
+        "document_id": "tutanak-27-02-104-20190717",
+        "pages": [219]
+      },
+      {
+        "document_id": "tutanak-27-02-105-20190718",
+        "pages": [294]
+      }
+    ],
+    "golden_answer": "Transit ve Ulaştırma İşbirliği Anlaşması'dır (Lapis Lazuli Güzergâh Anlaşması).",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "easy",
+      "cross-page",
+      "cross-document"
+    ]
+  }
+]

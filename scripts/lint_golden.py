@@ -38,7 +38,7 @@ DEFAULT_MANIFEST = ROOT / "27_donem_01_ingestion.json"
 PAGES_DIR = ROOT / "data_lake" / "pages"
 REPORTS_DIR = ROOT / "data_lake" / "reports"
 
-ID_RE = re.compile(r"^tbmm27-01-\d{2}-\d{3}$")
+ID_RE = re.compile(r"^tbmm27-\d{2}-\d{2,3}-\d{3}$")
 ESAS_RE = re.compile(r"\b\d+\s*/\s*\d+\b")            # 2/940, 6/64, 10/1959
 NUM_KEY_RE = re.compile(r"\b\d[\d./:]*\d\b|\b\d\b")   # times, years, ids, plain ints
 META_RE = re.compile(
