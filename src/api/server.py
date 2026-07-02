@@ -80,6 +80,25 @@ def get_sessions():
 def get_messages(session_id: str):
     return db.get_messages(session_id)
 
+@app.get("/api/term-candidates")
+def get_term_candidates(status: str = "pending"):
+    """'Öğrenilen Terimler' review queue — LLM-discovered vocabulary-synonym
+    hypotheses (e.g. 'kadük' -> 'hükümsüz sayılan kanun teklifleri') awaiting
+    human approve/reject. Global, not session-scoped."""
+    return db.list_term_candidates(status=status)
+
+@app.post("/api/term-candidates/{candidate_id}/approve")
+def approve_term_candidate(candidate_id: int):
+    if not db.set_term_candidate_status(candidate_id, "approved"):
+        raise HTTPException(status_code=404, detail="Term candidate not found")
+    return {"id": candidate_id, "status": "approved"}
+
+@app.post("/api/term-candidates/{candidate_id}/reject")
+def reject_term_candidate(candidate_id: int):
+    if not db.set_term_candidate_status(candidate_id, "rejected"):
+        raise HTTPException(status_code=404, detail="Term candidate not found")
+    return {"id": candidate_id, "status": "rejected"}
+
 @app.websocket("/api/chat/stream")
 async def chat_stream(websocket: WebSocket):
     await websocket.accept()
@@ -121,20 +140,29 @@ async def chat_stream(websocket: WebSocket):
         queue = asyncio.Queue()
         loop = asyncio.get_running_loop()
 
-        # Phase callback to translate events into WS status updates
+        # Phase callback to translate events into WS status updates. Keys mirror
+        # the phases OrchestratorAgent.run() actually emits (src/agent/orchestrator.py) —
+        # agent_mode is the sole entry point below, so the legacy non-agent
+        # RAGService phases (re_retrieval/generation/context_building) never fire
+        # and were removed rather than kept as dead entries.
         def on_phase(name: str, block, model, details: dict):
             phase_messages = {
                 "classification": "🧭 Niyet analizi yapılıyor...",
                 "rabbit_holes": "🐇 İlgili öneriler hazırlanıyor...",
                 "planning": "🤖 Planlama ve arama kararı alınıyor...",
+                "policy": "🛡️ Erişim politikası kontrol ediliyor...",
+                "budget": "📊 Arama bütçesi belirleniyor...",
                 "retrieval": "🔍 Arşiv taranıyor (Çeşitlendirilmiş arama)...",
-                "re_retrieval": "🔄 Yeniden arama tetiklendi (Yetersiz kaynak)...",
+                "assembly": "📚 Bağlam derleniyor...",
+                "judge": "⚖️ Kanıt yeterliliği değerlendiriliyor...",
                 "expansion": "↻ Sorgu genişletiliyor...",
+                "judge_post_expand": "⚖️ Genişletilmiş kanıt yeniden değerlendiriliyor...",
                 "answering": "✍️ Yanıt üretiliyor...",
-                "generation": "✍️ Yanıt üretiliyor...",
                 "validation": "✅ Yanıt doğrulanıyor...",
+                "citation": "🔖 Kaynaklar atıflandırılıyor...",
+                "bad_words_filter": "🚫 İçerik güvenlik kontrolü yapılıyor...",
+                "suggestion": "💡 Öneriler üretiliyor...",
                 "filter_extraction": "🧭 Arama filtreleri analiz ediliyor...",
-                "context_building": "📚 Bağlam oluşturuluyor..."
             }
             msg = phase_messages.get(name, f"İşlem yapılıyor: {name}...")
             asyncio.run_coroutine_threadsafe(

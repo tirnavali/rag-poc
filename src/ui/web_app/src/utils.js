@@ -6,7 +6,7 @@ export const PHASE_LABELS = {
   planning: 'Planlama',
   filter_extraction: 'Filtre Çıkarımı',
   policy: 'Politika Kontrolü',
-  allocation: 'Kaynak Tahsisi',
+  budget: 'Arama Bütçesi',
   retrieval: 'Arşiv Taraması',
   assembly: 'Bağlam Oluşturma',
   judge: 'Kanıt Değerlendirme',
@@ -17,6 +17,14 @@ export const PHASE_LABELS = {
   citation: 'Kaynak Atıflandırma',
   rabbit_holes: 'İlgili Öneriler',
   suggestion: 'Öneri Üretimi',
+  // Legacy phase names — no longer emitted by the current orchestrator, but old
+  // sessions have them baked into their persisted trace JSON (messages.trace).
+  // Kept so historical Debug/Trace tabs render a real label instead of falling
+  // through to phaseLabel()'s raw-uppercase fallback. See src/agent/flow_diagram.html
+  // (tracer.py module note) for why each one stopped firing.
+  allocation: 'Arama Bütçesi', // renamed to `budget`, same step
+  probe: 'Ön Tarama (kaldırıldı)', // old clarification probe pass; folded into retrieval reuse
+  clarification: 'Netleştirme (eski akış)', // old blocking Q&A flow; replaced by non-blocking rabbit_holes
 };
 export const phaseLabel = (phase) => PHASE_LABELS[phase] || (phase ? phase.toUpperCase() : '');
 
@@ -74,6 +82,54 @@ export const parseMarkdown = (text) => {
   }
 
   return processedLines.join('\n');
+};
+
+export const findMatchingSource = (citationText, sources) => {
+  if (!sources || sources.length === 0) return null;
+  const cleanCitation = citationText.replace(/^Kaynak:\s*/i, '').toLowerCase();
+  
+  let bestSource = null;
+  let bestScore = 0;
+  
+  for (let i = 0; i < sources.length; i++) {
+    const s = sources[i];
+    let score = 0;
+    
+    // Match source name
+    if (s.source_name && cleanCitation.includes(s.source_name.toLowerCase())) {
+      score += 10;
+    }
+    // Match date
+    if (s.date && cleanCitation.includes(s.date.toLowerCase())) {
+      score += 10;
+    }
+    // Match author
+    if (s.author && cleanCitation.includes(s.author.toLowerCase())) {
+      score += 10;
+    }
+    // Match document_type
+    if (s.document_type && cleanCitation.includes(s.document_type.toLowerCase())) {
+      score += 2;
+    }
+    // Match title
+    if (s.title && cleanCitation.includes(s.title.toLowerCase())) {
+      score += 5;
+    }
+
+    // Also match against index if the model somehow uses it (like "Kaynak 1" or similar)
+    const indexStr = `${i + 1}`;
+    if (cleanCitation.includes(indexStr)) {
+      score += 1;
+    }
+    
+    if (score > bestScore) {
+      bestScore = score;
+      bestSource = s;
+    }
+  }
+  
+  // If we found a source with some match score, return it; otherwise return first source as fallback
+  return bestSource || sources[0];
 };
 
 // Parses both SQLite ("YYYY-MM-DD HH:MM:SS", stored as UTC) and ISO timestamps.

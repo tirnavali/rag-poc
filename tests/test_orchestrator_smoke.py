@@ -33,4 +33,4 @@ def test_orchestrator_answers_real_question():
     assert out.policy_result is not None
     assert len(out.sources) > 0
     phases = {e.phase for e in out.trace}
-    assert {"planning", "policy", "allocation", "retrieval", "assembly", "judge"}.issubset(phases)
+    assert {"planning", "policy", "budget", "retrieval", "assembly", "judge"}.issubset(phases)

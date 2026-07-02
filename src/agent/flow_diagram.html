@@ -1,0 +1,1198 @@
+<meta charset="utf-8" />
+<title>OrchestratorAgent — Akış Şeması</title>
+<style>
+  :root{
+    --bg:        #F3F5F7;
+    --panel:     #FFFFFF;
+    --panel-2:   #EEF1F5;
+    --grid-dot:  #E1E6EC;
+    --line:      #D8DEE5;
+    --ink:       #1A212B;
+    --ink-dim:   #5C6675;
+    --signal:    #0C7C8C;
+    --gate:      #A86A08;
+    --exit:      #B23A55;
+    --loop:      #6E51C9;
+    --on:        #2F8F5B;
+    --off:       #7C8698;
+    --font-mono: ui-monospace, "Cascadia Code", "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --font-sans: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ background:var(--bg); }
+  body{ margin:0; color:var(--ink); font-family:var(--font-sans); }
+  ::selection{ background:var(--signal); color:#FFFFFF; }
+
+  a{ color:var(--signal); text-decoration:none; border-bottom:1px solid rgba(12,124,140,0.35); }
+  a:hover{ border-bottom-color:var(--signal); }
+  a:focus-visible, button:focus-visible{ outline:2px solid var(--signal); outline-offset:2px; }
+
+  .page{ max-width:1180px; margin:0 auto; padding:56px 28px 96px; }
+
+  /* ---------- masthead ---------- */
+  .eyebrow{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--signal); margin:0 0 14px;
+  }
+  h1{
+    font-family:var(--font-mono); font-weight:700; font-size:clamp(26px,4vw,38px);
+    line-height:1.15; letter-spacing:-0.01em; margin:0 0 16px; text-wrap:balance; color:var(--ink);
+  }
+  .dek{
+    font-size:16px; line-height:1.65; color:var(--ink-dim); max-width:68ch; margin:0 0 22px;
+  }
+  .dek code{ color:var(--ink); }
+  .meta{
+    display:flex; flex-wrap:wrap; gap:10px 22px; font-family:var(--font-mono); font-size:12.5px;
+    color:var(--ink-dim); padding-top:18px; border-top:1px solid var(--line); margin-bottom:36px;
+  }
+  .meta b{ color:var(--ink); font-weight:600; }
+
+  nav.toc{
+    display:flex; flex-wrap:wrap; gap:8px 18px; font-family:var(--font-mono); font-size:12.5px;
+    margin:0 0 48px;
+  }
+  nav.toc a{ color:var(--ink-dim); border-bottom:1px dashed var(--line); }
+  nav.toc a:hover{ color:var(--signal); border-bottom-color:var(--signal); }
+  nav.toc span.sep{ color:var(--line); }
+
+  code, .mono{ font-family:var(--font-mono); }
+  p code, li code, td code{
+    background:var(--panel-2); border:1px solid var(--line); border-radius:4px;
+    padding:1px 5px; font-size:0.88em; color:var(--ink);
+  }
+
+  h2{
+    font-family:var(--font-mono); font-size:20px; font-weight:700; letter-spacing:-0.01em;
+    margin:0 0 6px; color:var(--ink); scroll-margin-top:24px;
+  }
+  h2 .num{ color:var(--signal); margin-right:10px; }
+  .section-dek{ color:var(--ink-dim); font-size:15px; line-height:1.65; max-width:74ch; margin:0 0 22px; }
+  section{ margin-bottom:64px; }
+  section + section{ padding-top:4px; }
+
+  /* ---------- legend ---------- */
+  .legend{
+    display:flex; flex-wrap:wrap; gap:10px 26px; align-items:center;
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:16px 20px; margin-bottom:48px; font-size:13px; color:var(--ink-dim);
+  }
+  .legend .item{ display:flex; align-items:center; gap:8px; white-space:nowrap; }
+  .legend svg{ display:block; flex:none; }
+  .legend .rule{ width:1px; height:18px; background:var(--line); }
+
+  /* ---------- diagram sheet ---------- */
+  .sheet{
+    background:
+      radial-gradient(var(--grid-dot) 1px, transparent 1.2px) 0 0/22px 22px,
+      var(--panel);
+    border:1px solid var(--line); border-radius:12px;
+    padding:20px; margin-bottom:20px;
+  }
+  .diagram-scroll{ overflow-x:auto; overflow-y:hidden; }
+  .diagram-scroll svg{ display:block; }
+  .diagram-scroll::-webkit-scrollbar{ height:10px; }
+  .diagram-scroll::-webkit-scrollbar-track{ background:transparent; }
+  .diagram-scroll::-webkit-scrollbar-thumb{ background:var(--line); border-radius:6px; }
+
+  .scroll-hint{
+    font-family:var(--font-mono); font-size:11px; color:var(--ink-dim); text-align:right;
+    margin:8px 2px 24px; opacity:0.8;
+  }
+
+  .callouts{ display:grid; gap:12px; margin:0; padding:0; list-style:none; }
+  .callouts li{
+    position:relative; padding-left:26px; font-size:14.5px; line-height:1.6; color:var(--ink-dim);
+  }
+  .callouts li::before{
+    content:"→"; position:absolute; left:0; top:0;
+    color:var(--signal); font-family:var(--font-mono);
+  }
+  .callouts b{ color:var(--ink); font-weight:600; }
+
+  /* ---------- SVG node/edge styling ---------- */
+  .node rect{ transition:filter 120ms ease, stroke-width 120ms ease; }
+  .node:hover rect{ filter:brightness(1.18); }
+  .node:focus-visible rect{ stroke-width:3; }
+  .node{ cursor:pointer; }
+  @media (prefers-reduced-motion:reduce){ .node rect{ transition:none; } }
+
+  /* ---------- click-through detail modal ---------- */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(26,33,43,0.45);
+    display:flex; align-items:center; justify-content:center;
+    padding:24px; z-index:100;
+  }
+  .modal-backdrop[hidden]{ display:none; }
+  .modal{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    max-width:560px; width:100%; max-height:min(640px,86vh); overflow-y:auto;
+    padding:28px 28px 22px; position:relative;
+    box-shadow:0 24px 60px -12px rgba(26,33,43,0.35);
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .modal{ animation:modal-in 160ms ease; }
+  }
+  @keyframes modal-in{ from{ opacity:0; transform:translateY(6px) scale(0.98); } to{ opacity:1; transform:none; } }
+  .modal-close{
+    position:absolute; top:16px; right:16px; width:32px; height:32px;
+    border-radius:8px; border:1px solid var(--line); background:var(--panel-2);
+    color:var(--ink-dim); font-size:15px; cursor:pointer; line-height:1;
+  }
+  .modal-close:hover{ color:var(--ink); border-color:var(--ink-dim); }
+  .modal-kind{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--signal); margin:0 0 8px;
+  }
+  .modal-title{
+    font-family:var(--font-mono); font-size:19px; font-weight:700; margin:0 0 16px;
+    padding-right:36px; color:var(--ink); line-height:1.3; text-wrap:balance;
+  }
+  .modal-steps{ margin:0 0 16px; padding-left:22px; display:grid; gap:10px; }
+  .modal-steps li{ font-size:14.5px; line-height:1.6; color:var(--ink-dim); }
+  .modal-steps li::marker{ color:var(--signal); font-family:var(--font-mono); font-weight:700; }
+  .modal-src{
+    font-family:var(--font-mono); font-size:12px; color:var(--ink-dim);
+    padding-top:14px; border-top:1px solid var(--line); margin:0;
+  }
+  .modal-src b{ color:var(--ink); }
+  .click-hint{
+    display:inline-flex; align-items:center; gap:6px; font-family:var(--font-mono);
+    font-size:12px; color:var(--signal); background:rgba(12,124,140,0.08);
+    border:1px solid rgba(12,124,140,0.25); border-radius:20px; padding:4px 12px;
+    margin:0 0 16px;
+  }
+
+  .node--start rect{ fill:var(--signal); stroke:none; }
+  .node--start text{ fill:#FFFFFF; }
+  .node--proc rect{ fill:var(--panel-2); stroke:var(--line); stroke-width:1.5; }
+  .node--gate rect{ fill:var(--panel-2); stroke:var(--gate); stroke-width:1.5; stroke-dasharray:5,4; }
+  .node--exit rect{ fill:#FBEDF0; stroke:var(--exit); stroke-width:1.5; }
+  .node--loop rect{ fill:#F1ECFB; stroke:var(--loop); stroke-width:1.6; }
+  .node--on rect{ fill:#E9F6EE; stroke:var(--on); stroke-width:1.5; }
+  .node--annot rect{ fill:none; stroke:var(--ink-dim); stroke-width:1; stroke-dasharray:3,4; }
+
+  .n-title{ font-family:var(--font-mono); font-weight:700; font-size:14px; text-anchor:middle; fill:var(--ink); }
+  .node--annot .n-title{ font-weight:600; fill:var(--ink-dim); }
+  .n-sub{ font-family:var(--font-mono); font-weight:400; font-size:10.6px; text-anchor:middle; fill:var(--ink-dim); }
+  .n-icon{ font-size:12px; }
+  .icon-gate{ fill:var(--gate); }
+  .icon-exit{ fill:var(--exit); }
+  .icon-loop{ fill:var(--loop); }
+
+  .edge{ fill:none; stroke:var(--line); stroke-width:1.8; }
+  .edge-flow{ stroke:var(--signal); stroke-width:2.2; }
+  .edge-exit{ stroke:var(--exit); }
+  .edge-dash{ stroke:var(--ink-dim); stroke-dasharray:5,5; }
+  .edge-loop{ stroke:var(--loop); stroke-width:1.8; stroke-dasharray:2,4; }
+
+  .elabel{ font-family:var(--font-mono); font-size:11px; fill:var(--ink-dim); }
+  .elabel-em{ fill:var(--ink); }
+
+  /* ---------- tables ---------- */
+  .table-scroll{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:14px; min-width:640px; }
+  thead th{
+    text-align:left; font-family:var(--font-mono); font-size:11.5px; letter-spacing:0.06em;
+    text-transform:uppercase; color:var(--ink-dim); font-weight:600;
+    border-bottom:1px solid var(--line); padding:0 14px 10px;
+  }
+  tbody td{ padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:var(--ink-dim); line-height:1.55; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody td:first-child{ color:var(--ink); font-family:var(--font-mono); font-size:13px; white-space:nowrap; }
+  tbody td.stage-name{ color:var(--ink); font-family:var(--font-sans); font-weight:600; white-space:normal; }
+
+  .pill{
+    display:inline-block; font-family:var(--font-mono); font-size:11px; font-weight:700;
+    letter-spacing:0.04em; padding:2px 9px; border-radius:20px; white-space:nowrap;
+  }
+  .pill-on{ background:rgba(47,143,91,0.12); color:var(--on); border:1px solid rgba(47,143,91,0.35); }
+  .pill-off{ background:rgba(124,134,152,0.14); color:var(--ink-dim); border:1px solid var(--line); }
+
+  footer{
+    margin-top:72px; padding-top:24px; border-top:1px solid var(--line);
+    font-size:13px; color:var(--ink-dim); line-height:1.7;
+  }
+  footer code{ font-size:0.92em; }
+</style>
+
+<div class="page">
+
+  <p class="eyebrow">src/agent · pipeline şeması</p>
+  <h1>OrchestratorAgent — Akış Şeması</h1>
+  <p class="dek">
+    Tek bir agentic RAG hattının uçtan uca durum makinesi: bir kullanıcı sorgusu
+    <code>niyet analizi → planlama → arama → değerlendirme → (gerekirse toplama) → yanıt</code>
+    aşamalarından geçer. Bu sayfa <code>src/agent/README.md</code>'deki Mermaid diyagramlarının
+    grafik karşılığıdır — kod, <code>src/agent/orchestrator.py</code> okunarak doğrulanmıştır.
+  </p>
+  <div class="meta">
+    <span><b>14</b> modül</span>
+    <span><b>3</b> diyagram</span>
+    <span><b>51</b> tıklanabilir düğüm</span>
+    <span>yapılandırma: <code>pipeline.yaml</code></span>
+    <span>strateji playbook'u: <code>research_strategies.md</code></span>
+    <span>güncelleme: <b>2026-07-02</b></span>
+  </div>
+
+  <nav class="toc" aria-label="Sayfa içi gezinme">
+    <a href="#ana-akis">Ana akış</a><span class="sep">/</span>
+    <a href="#toplama-dongusu">Toplama döngüsü</a><span class="sep">/</span>
+    <a href="#ogrenilen-terimler">Öğrenilen terimler</a><span class="sep">/</span>
+    <a href="#asamalar">Aşamalar</a><span class="sep">/</span>
+    <a href="#moduller">Modüller</a>
+  </nav>
+
+  <div class="legend" role="img" aria-label="Diyagram lejantı: süreç, kapı, döngü, çıkış düğümleri ve açık/kapalı rozetleri">
+    <span class="item"><svg width="26" height="16"><rect x="1" y="1" width="24" height="14" rx="4" fill="none" stroke="var(--line)" stroke-width="1.5"/></svg> süreç</span>
+    <span class="item"><svg width="26" height="16"><rect x="1" y="1" width="24" height="14" rx="4" fill="none" stroke="var(--gate)" stroke-width="1.5" stroke-dasharray="4,3"/></svg> kapı / anahtar</span>
+    <span class="item"><svg width="26" height="16"><rect x="1" y="1" width="24" height="14" rx="4" fill="none" stroke="var(--loop)" stroke-width="1.5"/></svg> döngü</span>
+    <span class="item"><svg width="26" height="16"><rect x="1" y="1" width="24" height="14" rx="4" fill="none" stroke="var(--exit)" stroke-width="1.5"/></svg> çıkış / uç nokta</span>
+    <span class="rule"></span>
+    <span class="item"><span class="pill pill-on">AÇIK</span> varsayılan açık</span>
+    <span class="item"><span class="pill pill-off">KAPALI</span> varsayılan kapalı</span>
+    <span class="rule"></span>
+    <span class="item"><svg width="30" height="10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--signal)" stroke-width="2.2"/></svg> ana yol</span>
+    <span class="item"><svg width="30" height="10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--ink-dim)" stroke-width="1.8" stroke-dasharray="5,5"/></svg> engellemeyen / koşullu</span>
+  </div>
+
+  <!-- ================================================================ -->
+  <section id="ana-akis">
+    <h2><span class="num">01</span>Ana akış</h2>
+    <p class="section-dek">
+      <code>OrchestratorAgent.run()</code>'ın tam sırası. Düğümlerin üzerine gelince (hover)
+      kısa bir ipucu, <b>tıklayınca</b> (ya da Tab ile odaklanıp Enter'a basınca) o aşamanın
+      algoritmik olarak nasıl işlediğini anlatan bir pencere açılır.
+    </p>
+    <p class="click-hint">↳ herhangi bir kutuya tıkla</p>
+
+    <div class="sheet">
+      <div class="diagram-scroll">
+        <svg width="1120" height="1480" viewBox="0 0 1120 1480" role="img"
+             aria-label="Ana akış: kullanıcı sorgusundan AgentOutput'a kadar tüm aşamalar ve dallanmalar">
+          <defs>
+            <marker id="m-line" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--line)"/>
+            </marker>
+            <marker id="m-flow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--signal)"/>
+            </marker>
+            <marker id="m-exit" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--exit)"/>
+            </marker>
+            <marker id="m-dash" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-dim)"/>
+            </marker>
+          </defs>
+
+          <!-- edges -->
+          <g>
+            <path class="edge edge-flow" marker-end="url(#m-flow)" d="M470,74 L470,104"/>
+            <path class="edge edge-exit" marker-end="url(#m-exit)" d="M660,140 L780,140"/>
+            <path class="edge edge-flow" marker-end="url(#m-flow)" d="M470,176 L470,228"/>
+            <path class="edge" marker-end="url(#m-line)" d="M660,255 L710,255 L710,360 L780,360"/>
+            <path class="edge" marker-end="url(#m-line)" d="M660,293 L735,293 L735,544 L780,544"/>
+            <path class="edge edge-flow" marker-end="url(#m-flow)" d="M470,320 L470,352"/>
+            <path class="edge" marker-end="url(#m-line)" d="M930,390 L930,422"/>
+            <path class="edge" marker-end="url(#m-line)" d="M930,574 L930,606"/>
+            <path class="edge edge-flow" marker-end="url(#m-flow)" d="M470,444 L470,476"/>
+            <path class="edge edge-exit" marker-end="url(#m-exit)" d="M660,512 L735,512 L735,723 L780,723"/>
+            <path class="edge edge-flow" marker-end="url(#m-flow)" d="M470,548 L470,580"/>
+            <path class="edge edge-flow" marker-end="url(#m-flow)" d="M470,640 L470,672"/>
+            <path class="edge edge-dash" marker-end="url(#m-dash)" d="M660,710 L700,710 L700,818 L780,818"/>
+            <path class="edge edge-dash" marker-end="url(#m-dash)" d="M930,856 L930,880"/>
+            <path class="edge edge-flow" marker-end="url(#m-flow)" d="M470,748 L470,780"/>
+            <path class="edge edge-flow" marker-end="url(#m-flow)" d="M470,840 L470,872"/>
+            <path class="edge edge-flow" marker-end="url(#m-flow)" d="M470,964 L470,996"/>
+            <path class="edge" marker-end="url(#m-line)" d="M660,1020 L780,1020"/>
+            <path class="edge" marker-end="url(#m-line)" d="M660,1056 L730,1056 L730,1100 L780,1100"/>
+            <path class="edge edge-flow" marker-end="url(#m-flow)" d="M470,1080 L470,1140"/>
+            <path class="edge edge-flow" marker-end="url(#m-flow)" d="M470,1200 L470,1232"/>
+            <path class="edge edge-flow" marker-end="url(#m-flow)" d="M470,1292 L470,1324"/>
+            <path class="edge edge-flow" marker-end="url(#m-flow)" d="M470,1372 L470,1404"/>
+          </g>
+
+          <!-- nodes -->
+          <g>
+            <g class="node node--start" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-start">
+              <rect x="330" y="20" width="280" height="54" rx="27"/>
+              <text class="n-title" x="470" y="52">Kullanıcı sorgusu</text>
+              <title>OrchestratorAgent.run(query, ...) çağrısının girdisi.</title>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-badwords">
+              <rect x="280" y="104" width="380" height="72" rx="10"/>
+              <text class="n-title" x="470" y="132">◆ BadWordsFilter?</text>
+              <text class="n-sub" x="470" y="150">varsayılan: kapalı</text>
+              <title>agent.bad_words_filter.enabled — kapalıyken self._bad_words = None, aşama tamamen atlanır. Açıkken kelime-sınırlı + Türkçe aksan katlamalı eşleşme kontrolü yapar (LLM'siz).</title>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-badwords-exit">
+              <rect x="780" y="107" width="300" height="66" rx="10"/>
+              <text class="n-title" x="930" y="133">■ Çıkış</text>
+              <text class="n-sub" x="930" y="150">scope=bad_word</text>
+              <title>bad_words_filter.response_message döner; hiçbir LLM çağrısı yapılmaz.</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-intent">
+              <rect x="280" y="228" width="380" height="92" rx="10"/>
+              <text class="n-title" x="470" y="254">IntentAnalyzer</text>
+              <text class="n-sub" x="470" y="274">ScopeClassifier · varsayılan: açık</text>
+              <text class="n-sub" x="470" y="290">scope + selected_collections</text>
+              <title>classifier.enabled=true. Tek LLM çağrısı; scope ∈ {in_scope, off_domain, conversational}. Fail-open: hata/parse başarısızlığında in_scope'a düşer. Bilinen bir TBMM terimi (örn. "kadük") off_domain sonucunu in_scope'a zorlar. Şu an katalog yalnızca tutanak koleksiyonlarını listeliyor.</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-suggester">
+              <rect x="780" y="330" width="300" height="60" rx="10"/>
+              <text class="n-title" x="930" y="356">Suggester</text>
+              <text class="n-sub" x="930" y="373">3 alan-içi öneri (LLM)</text>
+              <title>Off-domain sorgu için 3 in-domain alternatif üretir; fail-open: hata durumunda config'teki off_domain_fallback_suggestions kullanılır.</title>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-offdomain-exit">
+              <rect x="780" y="422" width="300" height="60" rx="10"/>
+              <text class="n-title" x="930" y="448">■ Çıkış</text>
+              <text class="n-sub" x="930" y="465">scope=off_domain + rabbit_holes</text>
+              <title>AgentOutput.suggestions ve rabbit_holes aynı öneri listesini taşır — UI tek bir çip mekanizması kullanır.</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-conv">
+              <rect x="780" y="514" width="300" height="60" rx="10"/>
+              <text class="n-title" x="930" y="540">Sohbet LLM'i</text>
+              <text class="n-sub" x="930" y="557">chat_history + soru · retrieval yok</text>
+              <title>_conversational_output(): selamlaşma/teşekkür/geçmişe atıf gibi sorular hiç arşiv taraması yapmadan doğrudan yanıtlanır.</title>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-conv-exit">
+              <rect x="780" y="606" width="300" height="60" rx="10"/>
+              <text class="n-title" x="930" y="632">■ Çıkış</text>
+              <text class="n-sub" x="930" y="649">scope=conversational</text>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-planner">
+              <rect x="280" y="352" width="380" height="92" rx="10"/>
+              <text class="n-title" x="470" y="378">Planner.plan()</text>
+              <text class="n-sub" x="470" y="398">intent · query_type · strategy</text>
+              <text class="n-sub" x="470" y="414">koleksiyon başına arama taslakları</text>
+              <title>Tek LLM çağrısı; research_strategies.md kataloğundan bir strateji de seçebilir. COMPREHENSIVE_KEYWORDS eşleşirse orchestrator query_type'ı deterministik olarak 'comprehensive'e yükseltir (LLM seçimini ezer).</title>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-policy">
+              <rect x="280" y="476" width="380" height="72" rx="10"/>
+              <text class="n-title" x="470" y="504">◆ PolicyEnforcer?</text>
+              <text class="n-sub" x="470" y="522">varsayılan: kapalı</text>
+              <title>policy.enabled. Kapalıyken allowed = planner önerisi. Açıkken allowed = oturum seçimi ∩ planner önerisi (session_intersection).</title>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-policy-exit">
+              <rect x="780" y="690" width="300" height="66" rx="10"/>
+              <text class="n-title" x="930" y="716">■ Çıkış</text>
+              <text class="n-sub" x="930" y="733">refuse: allowed boş</text>
+              <title>_build_refuse_output(state, "no_allowed_collections", tracer). Bütçe aşamasındaki ikinci boş-kontrol pratikte erişilemez bir savunmadır.</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-budget">
+              <rect x="280" y="580" width="380" height="60" rx="10"/>
+              <text class="n-title" x="470" y="606">Budget</text>
+              <text class="n-sub" x="470" y="623">query_type → fetch_k (retrieval_budget)</text>
+              <title>_flat_plans_for(): AllocationPlanner (stage-2b) kaldırıldı, koşulsuz düz config okuması. Tüm sonuçlar tek bir havuza akar; primary/reserve ayrımı yok.</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-retrieve">
+              <rect x="280" y="672" width="380" height="76" rx="10"/>
+              <text class="n-title" x="470" y="696">Retrieve</text>
+              <text class="n-sub" x="470" y="714">koleksiyon × taslak paralel (ham) → RRF</text>
+              <text class="n-sub" x="470" y="729">→ birleşik havuzda tek geçiş rerank</text>
+              <title>_run_retrieval(): her (koleksiyon, taslak) çifti ayrı bir ThreadPoolExecutor görevi, ham ANN sırasıyla döner (apply_reranker=False). Taslaklar RRF ile birleşir, SONRA cross-encoder tek seferde reranklar. SearchTool.search() expand_parliamentary_synonyms() ile bilinen jargon terimlerini genişletir.</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-facet">
+              <rect x="780" y="780" width="300" height="76" rx="10"/>
+              <text class="n-title" x="930" y="804">FacetMiner + AmbiguityGate</text>
+              <text class="n-sub" x="930" y="822">aynı retrieval sonucundan facet çıkarır</text>
+              <text class="n-sub" x="930" y="837">belirsizse → rabbit_holes (öneri)</text>
+              <title>clarification.enabled. Ayrı bir probe turu YOK — Aşama 3'ün sonuçları yeniden kullanılır. Sorgu hiçbir zaman daraltılmaz; yalnızca öneri üretilir.</title>
+            </g>
+            <g class="node node--annot" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-facet-annot">
+              <rect x="780" y="880" width="300" height="56" rx="10"/>
+              <text class="n-title" x="930" y="903">AgentOutput.rabbit_holes</text>
+              <text class="n-sub" x="930" y="920">engelleyici değil, sorgu daraltılmaz</text>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-assembler">
+              <rect x="280" y="780" width="380" height="60" rx="10"/>
+              <text class="n-title" x="470" y="806">BalancedContextAssembler</text>
+              <text class="n-sub" x="470" y="823">doc-dedup · query_type limiti</text>
+              <title>Koleksiyonları öncelik sırasına göre gezer, document_id'ye göre çapraz-koleksiyon dedup uygular; max_total / max_per_document query_type'a göre değişir (comprehensive: 50 / 6).</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-judge">
+              <rect x="280" y="872" width="380" height="92" rx="10"/>
+              <text class="n-title" x="470" y="898">EvidenceJudge</text>
+              <text class="n-sub" x="470" y="918">relevance floor (min_rerank_score altını eler)</text>
+              <text class="n-sub" x="470" y="934">heuristik sayı/kapsam → sınırda ya da zayıfsa LLM</text>
+              <title>Tüm chunk'lar relevance floor altındaysa doğrudan "low_relevance_all_chunks" (expand). Sayı/kapsam yeterli görünse bile en iyi eşleşme llm_escalation_score altındaysa LLM judge'a eskalasyon.</title>
+            </g>
+
+            <g class="node node--loop" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-gather">
+              <rect x="280" y="996" width="380" height="84" rx="12"/>
+              <text class="n-title" x="470" y="1030">⟳ Toplama Döngüsü</text>
+              <text class="n-sub" x="470" y="1050">bkz. Diyagram 2</text>
+              <title>comprehensive sorgular doygunluğa/tavana kadar; diğerleri yalnızca judge "expand" derse ve max_expand_iterations sınırına kadar döner.</title>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-clarify-exit">
+              <rect x="780" y="990" width="300" height="60" rx="10"/>
+              <text class="n-title" x="930" y="1016">■ Çıkış</text>
+              <text class="n-sub" x="930" y="1033">clarify</text>
+              <title>"Sorunuzu netleştirir misiniz? Yeterli kanıt bulunamadı." — engelleyici bir soru-cevap turu DEĞİL, tek seferlik bir refuse mesajıdır.</title>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-refuse-exit">
+              <rect x="780" y="1070" width="300" height="60" rx="10"/>
+              <text class="n-title" x="930" y="1096">■ Çıkış</text>
+              <text class="n-sub" x="930" y="1113">refuse</text>
+              <title>"Yetkili kaynaklarla yanıt veremiyorum."</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-answer">
+              <rect x="280" y="1140" width="380" height="60" rx="10"/>
+              <text class="n-title" x="470" y="1166">AnswerTool</text>
+              <text class="n-sub" x="470" y="1183">strict/synthesis prompt + answer_directive</text>
+              <title>query_type ∈ SYNTHESIS_QUERY_TYPES ise SYNTHESIS_SYS_PROMPT (asla boş dönmez), değilse strict SYS_PROMPT (kanıt yoksa dürüstçe reddeder). Playbook answer_directive'i üstüne eklenir.</title>
+            </g>
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-sanitizer">
+              <rect x="280" y="1232" width="380" height="60" rx="10"/>
+              <text class="n-title" x="470" y="1258">Sanitizer</text>
+              <text class="n-sub" x="470" y="1275">advisory — yanıtı değiştirmez</text>
+              <title>SanitizerAgent.validate(): passes/checks/issues döner ama artık yanıtı yeniden üretmez; yalnızca trace'e uyarı ekler.</title>
+            </g>
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-citations">
+              <rect x="280" y="1324" width="380" height="48" rx="10"/>
+              <text class="n-title" x="470" y="1354">CitationBuilder</text>
+            </g>
+
+            <g class="node node--start" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-end">
+              <rect x="330" y="1404" width="280" height="54" rx="27"/>
+              <text class="n-title" x="470" y="1436">AgentOutput</text>
+            </g>
+          </g>
+
+          <!-- edge labels -->
+          <g>
+            <text class="elabel elabel-em" x="672" y="132">eşleşti</text>
+            <text class="elabel" x="482" y="206">kapalı / eşleşmedi</text>
+            <text class="elabel" x="668" y="248">off_domain (bilinen terim değil)</text>
+            <text class="elabel" x="668" y="286">conversational</text>
+            <text class="elabel" x="482" y="340">in_scope</text>
+            <text class="elabel elabel-em" x="668" y="504">allowed boş</text>
+            <text class="elabel" x="482" y="568">allowed dolu</text>
+            <text class="elabel" x="668" y="698">koşullu</text>
+            <text class="elabel elabel-em" x="668" y="1012">clarify</text>
+            <text class="elabel elabel-em" x="668" y="1048">refuse</text>
+            <text class="elabel" x="482" y="1114">answer (veya tavanda durdu)</text>
+          </g>
+        </svg>
+      </div>
+      <p class="scroll-hint">geniş şema — yatay/dikey kaydırılabilir</p>
+    </div>
+
+    <ul class="callouts">
+      <li><b>off_domain → in_scope zorlaması:</b> sorguda bilinen bir TBMM/yasama terimi geçiyorsa (<code>_is_known_parliamentary_term</code>, örn. "kadük") sınıflandırma in_scope'a zorlanır.</li>
+      <li><b>conversational tamamen yeni bir kısayol:</b> selamlaşma/teşekkür/"az önce ne sordum" gibi sorular retrieval hiç çalışmadan <code>chat_history</code> ile yanıtlanır.</li>
+      <li><b>Budget koşulsuzdur:</b> eski <code>AllocationPlanner</code> (<code>allocator.py</code>) kaldırıldı; tek düz havuz, primary/reserve ayrımı yok.</li>
+      <li><b>Facet mining ayrı arama yapmaz:</b> Aşama 3'ün retrieval sonuçları hem Assembler'a hem <code>FacetMiner</code>'a girdi olur; eski 20-sonuçluk probe turu kaldırıldı.</li>
+      <li><b><code>clarification_callback</code> / <code>deep_mode</code>:</b> imzada hâlâ var ama orchestrator hiçbirini okumuyor — CLI ve MCP artık aynı (engellemeyen) yolu izliyor.</li>
+      <li><b>Rerank artık taslak-başına değil, birleşme-sonrası tek geçiş:</b> her taslak kendi rerank'ını çalıştırmak yerine, RRF ile birleşen havuz cross-encoder ile TEK seferde reranklanır.</li>
+      <li><b>IntentAnalyzer'ın kataloğu şu an yalnızca tutanak:</b> gazete/önerge için henüz indekslenmiş koleksiyon yok; Planner'ın o doc_type'lara yönlendirme kuralları şimdilik fiilen tetiklenmiyor.</li>
+    </ul>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="toplama-dongusu">
+    <h2><span class="num">02</span>Toplama (genişletme) döngüsü</h2>
+    <p class="section-dek">
+      Aşama 5.1 tek seferlik "expand" değil; doygunluğa veya tavana kadar süren sınırlı bir
+      döngüdür. <code>comprehensive</code> sorgular <code>_enumerate_expand</code> (facet-parçalı +
+      derinlik-tırmanışlı), diğerleri <code>_requery_expand</code> (tek re-query) kullanır.
+    </p>
+    <p class="click-hint">↳ herhangi bir kutuya tıkla</p>
+
+    <div class="sheet">
+      <div class="diagram-scroll">
+        <svg width="1200" height="1450" viewBox="0 0 1200 1450" role="img"
+             aria-label="Toplama döngüsü: comprehensive ve sınırlı genişletme davranışları, derinlik tırmanışı, beş olası durma/tekrar nedeni">
+          <defs>
+            <marker id="m2-line" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--line)"/>
+            </marker>
+            <marker id="m2-flow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--signal)"/>
+            </marker>
+            <marker id="m2-exit" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--exit)"/>
+            </marker>
+            <marker id="m2-loop" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--loop)"/>
+            </marker>
+          </defs>
+
+          <g>
+            <path class="edge edge-flow" marker-end="url(#m2-flow)" d="M600,70 L600,110"/>
+            <path class="edge edge-flow" marker-end="url(#m2-flow)" d="M520,178 L520,218"/>
+            <path class="edge" marker-end="url(#m2-line)" d="M680,178 L680,218"/>
+            <path class="edge edge-exit" marker-end="url(#m2-exit)" d="M810,252 L900,252"/>
+            <path class="edge edge-flow" marker-end="url(#m2-flow)" d="M600,286 L600,326"/>
+            <path class="edge edge-exit" marker-end="url(#m2-exit)" d="M810,360 L900,360"/>
+            <path class="edge edge-flow" marker-end="url(#m2-flow)" d="M600,394 L600,434"/>
+            <path class="edge edge-exit" marker-end="url(#m2-exit)" d="M810,468 L900,468"/>
+            <path class="edge edge-flow" marker-end="url(#m2-flow)" d="M600,502 L600,542"/>
+            <path class="edge" marker-end="url(#m2-line)" d="M485,602 L485,642"/>
+            <path class="edge edge-flow" marker-end="url(#m2-flow)" d="M715,602 L715,642"/>
+            <path class="edge" marker-end="url(#m2-line)" d="M485,712 L485,730 L600,730 L600,742"/>
+            <path class="edge edge-flow" marker-end="url(#m2-flow)" d="M715,712 L715,730 L600,730 L600,742"/>
+            <path class="edge edge-flow" marker-end="url(#m2-flow)" d="M600,798 L600,828"/>
+            <path class="edge edge-flow" marker-end="url(#m2-flow)" d="M600,876 L600,906"/>
+            <path class="edge edge-flow" marker-end="url(#m2-flow)" d="M600,962 L600,992"/>
+            <path class="edge" marker-end="url(#m2-line)" d="M810,1010 L900,1010"/>
+            <path class="edge edge-flow" marker-end="url(#m2-flow)" d="M600,1060 L600,1090"/>
+            <path class="edge" marker-end="url(#m2-line)" d="M900,1027 L850,1027 L850,1112 L810,1112"/>
+            <path class="edge edge-flow" marker-end="url(#m2-flow)" d="M600,1134 L600,1164"/>
+            <path class="edge edge-loop" marker-end="url(#m2-loop)" d="M390,1198 L140,1198 L140,252 L390,252"/>
+            <path class="edge edge-flow" marker-end="url(#m2-flow)" d="M600,1232 L600,1262"/>
+            <path class="edge edge-exit" marker-end="url(#m2-exit)" d="M810,1290 L855,1290 L855,1297 L900,1297"/>
+            <path class="edge" marker-end="url(#m2-line)" d="M810,1315 L855,1315 L855,1377 L900,1377"/>
+            <path class="edge edge-loop" marker-end="url(#m2-loop)" d="M900,1377 L100,1377 L100,252 L390,252"/>
+          </g>
+
+          <g>
+            <g class="node node--start" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-start">
+              <rect x="480" y="20" width="240" height="50" rx="25"/>
+              <text class="n-title" x="600" y="50" style="font-size:13px">EvidenceJudge kararı</text>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-comprehensive-gate">
+              <rect x="390" y="110" width="420" height="68" rx="10"/>
+              <text class="n-title" x="600" y="150">comprehensive mi?</text>
+              <title>state.planner_output.query_type == "comprehensive" — comprehensive: max_rounds=4, ceiling=50, depth=40. diğerleri: max_rounds=1, ceiling=query_type'a göre.</title>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-round-gate">
+              <rect x="390" y="218" width="420" height="68" rx="10"/>
+              <text class="n-title" x="600" y="258">round &lt; max_rounds?</text>
+              <title>comprehensive: max_rounds=comprehensive_max_rounds (varsayılan 4). diğerleri: max_expand_iterations (varsayılan 1).</title>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-round-exit">
+              <rect x="900" y="220" width="280" height="64" rx="10"/>
+              <text class="n-title" x="1040" y="246">dur</text>
+              <text class="n-sub" x="1040" y="263">tur tavanı doldu</text>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-needmore-gate">
+              <rect x="390" y="326" width="420" height="68" rx="10"/>
+              <text class="n-title" x="600" y="356">comprehensive VEYA</text>
+              <text class="n-sub" x="600" y="374">action == "expand"?</text>
+              <title>comprehensive sorgularda need_more her turda koşulsuz true'dur — judge'ın answer/refuse/clarify demesi döngüyü erken bitirmez.</title>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-needmore-exit">
+              <rect x="900" y="328" width="280" height="64" rx="10"/>
+              <text class="n-title" x="1040" y="354">dur</text>
+              <text class="n-sub" x="1040" y="371">judge answer/refuse/clarify dedi</text>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-ceiling-gate">
+              <rect x="390" y="434" width="420" height="68" rx="10"/>
+              <text class="n-title" x="600" y="474">assembled &gt;= ceiling?</text>
+              <title>ceiling = retrieval_budget.max_total_for(query_type); comprehensive için 50.</title>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-ceiling-exit">
+              <rect x="900" y="434" width="280" height="68" rx="10"/>
+              <text class="n-title" x="1040" y="458">dur</text>
+              <text class="n-sub" x="1040" y="474">tavan doldu — mevcut action ile</text>
+              <text class="n-sub" x="1040" y="488">Aşama 6'ya devam edilir</text>
+              <title>"expand", clarify/refuse'ün aksine asla reddi tetiklemez — orchestrator elindeki bağlamla yanıtlamayı dener.</title>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-strategy-gate">
+              <rect x="390" y="542" width="420" height="60" rx="10"/>
+              <text class="n-title" x="600" y="568">comprehensive mi?</text>
+              <text class="n-sub" x="600" y="585">(genişletme fonksiyonunu seçer)</text>
+              <title>Aynı comprehensive bayrağı — burada hangi genişletme fonksiyonunun çağrılacağını belirler.</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-requery">
+              <rect x="390" y="642" width="190" height="70" rx="10"/>
+              <text class="n-title" x="485" y="668" style="font-size:12.5px">_requery_expand()</text>
+              <text class="n-sub" x="485" y="686">tek broaden() + re-query</text>
+              <title>RE_RETRIEVAL_PROMPT; query_type orijinal sorgudan deterministik olarak taşınır (LLM'in "fact"e düşürmesini önlemek için).</title>
+            </g>
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-enumerate">
+              <rect x="620" y="642" width="190" height="70" rx="10"/>
+              <text class="n-title" x="715" y="662" style="font-size:12.5px">_enumerate_expand(depth)</text>
+              <text class="n-sub" x="715" y="680">broaden() + facet-yıl</text>
+              <text class="n-sub" x="715" y="694">pasları (aynı depth)</text>
+              <title>1 filtresiz pas + en sık 4 yıldan her biri için ayrı yıl-filtreli pas (enumerate_facet_partition), hepsi aynı derinlikte.</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-merge">
+              <rect x="390" y="742" width="420" height="56" rx="10"/>
+              <text class="n-title" x="600" y="766">_merge_new_chunks</text>
+              <text class="n-sub" x="600" y="783">yalnızca YENİ chunk_id'ler eklenir</text>
+              <title>Her koleksiyon için zaten görülen chunk_id'ler elenir; yalnızca gerçekten yeni olanlar eklenir ve o koleksiyonun bütçesi artırılır.</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-assemble">
+              <rect x="390" y="828" width="420" height="48" rx="10"/>
+              <text class="n-title" x="600" y="858">Assemble</text>
+              <title>Bu turda added=0 olsa bile HER ZAMAN çalışır.</title>
+            </g>
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-judge-post">
+              <rect x="390" y="906" width="420" height="56" rx="10"/>
+              <text class="n-title" x="600" y="930">Judge</text>
+              <text class="n-sub" x="600" y="947">judge_post_expand fazı</text>
+              <title>Bu turda added=0 olsa bile HER ZAMAN çalışır; yeni action bir sonraki turun need_more kontrolünü besler.</title>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-term-gate">
+              <rect x="390" y="992" width="420" height="68" rx="10"/>
+              <text class="n-title" x="600" y="1022">terim hipotezi VE</text>
+              <text class="n-sub" x="600" y="1040">action == "answer"?</text>
+              <title>Yalnızca broaden()'ın bir terim tahmini VARSA ve o tur gerçekten answer'a çıktıysa kayıt tetiklenir.</title>
+            </g>
+            <g class="node node--loop" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-term-record">
+              <rect x="900" y="995" width="280" height="64" rx="10"/>
+              <text class="n-title" x="1040" y="1021">term_candidates kaydı</text>
+              <text class="n-sub" x="1040" y="1038">→ Diyagram 3'e bağlanır</text>
+              <title>_record_term_hypothesis(): src.api.db.upsert_term_candidate(); best-effort, hata answer akışını bozmaz.</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-round-inc">
+              <rect x="390" y="1090" width="420" height="44" rx="10"/>
+              <text class="n-title" x="600" y="1117">round += 1</text>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-added-gate">
+              <rect x="390" y="1164" width="420" height="68" rx="10"/>
+              <text class="n-title" x="600" y="1204">toplam added == 0?</text>
+              <title>Bu tur (tüm passlar dahil) hiç yeni chunk eklenmedi mi?</title>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-depth-gate">
+              <rect x="390" y="1262" width="420" height="76" rx="10"/>
+              <text class="n-title" x="600" y="1294">comprehensive VE depth</text>
+              <text class="n-sub" x="600" y="1312">tavanın (120) altında mı?</text>
+              <title>Yalnızca comprehensive sorgularda anlamlıdır — depth henüz enumerate_fetch_k_max'a ulaşmadıysa daha derine inmeye değer.</title>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-depth-exit">
+              <rect x="900" y="1265" width="280" height="64" rx="10"/>
+              <text class="n-title" x="1040" y="1291">dur</text>
+              <text class="n-sub" x="1040" y="1308">doygunluk — yeni chunk yok</text>
+            </g>
+            <g class="node node--loop" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-depth-escalate">
+              <rect x="900" y="1350" width="280" height="64" rx="10"/>
+              <text class="n-title" x="1040" y="1373" style="font-size:12.5px">depth = min(depth×2, 120)</text>
+              <text class="n-sub" x="1040" y="1390">aynı round sayacıyla tekrar dene</text>
+              <title>Derinlik iki katına çıkarılır (40→80→120), tavanı geçmez; round sayacı bir SONRAKİ artışa kadar değişmez.</title>
+            </g>
+          </g>
+
+          <g>
+            <text class="elabel elabel-em" x="490" y="212">evet</text>
+            <text class="elabel" x="650" y="212">hayır</text>
+            <text class="elabel elabel-em" x="818" y="244">hayır</text>
+            <text class="elabel" x="610" y="310">evet</text>
+            <text class="elabel elabel-em" x="818" y="352">hayır</text>
+            <text class="elabel" x="610" y="418">evet</text>
+            <text class="elabel elabel-em" x="818" y="460">evet</text>
+            <text class="elabel" x="610" y="526">hayır</text>
+            <text class="elabel" x="440" y="632">hayır</text>
+            <text class="elabel elabel-em" x="668" y="632">evet</text>
+            <text class="elabel elabel-em" x="818" y="1002">evet</text>
+            <text class="elabel" x="610" y="1078">hayır</text>
+            <text class="elabel" x="400" y="1188">hayır — added &gt; 0</text>
+            <text class="elabel" x="610" y="1250">evet — added == 0</text>
+            <text class="elabel elabel-em" x="818" y="1282">hayır</text>
+            <text class="elabel" x="818" y="1358">evet</text>
+            <text class="elabel" x="150" y="700" transform="rotate(-90 150 700)">devam turu için dön</text>
+            <text class="elabel" x="110" y="700" transform="rotate(-90 110 700)">derinlik tırmanışı için dön</text>
+          </g>
+        </svg>
+      </div>
+      <p class="scroll-hint">geniş şema — yatay/dikey kaydırılabilir</p>
+    </div>
+
+    <ul class="callouts">
+      <li><b><code>comprehensive</code> sorgularda döngü judge'ı görmezden gelir:</b> <code>need_more</code> koşulsuz true'dur; erken çıkışlar yalnızca tavan/tur sınırı ve nihai doygunluktur.</li>
+      <li><b>Assemble + Judge her turda çalışır:</b> <code>added</code> sıfır olsa bile — kontrol bunlardan SONRA gelir, yalnızca devam/tırman/dur kararını verir.</li>
+      <li><b>Facet-partitioned + derinlik tırmanışlı toplama:</b> <code>comprehensive</code> sorgular hem yıl başına ayrı pas hem boş turda 2 katına çıkan arama derinliği (40→80→120) kullanır — bu yüzden <code>comprehensive_max_rounds</code> 3'ten 4'e çıkarıldı.</li>
+      <li><b>Tavan dolunca bile yanıtlanır:</b> <code>"expand"</code> hiçbir zaman reddi tetiklemez — yalnızca <code>clarify</code>/<code>refuse</code> tetikler.</li>
+      <li><b>Tek reserve stratejisi kalmadı:</b> <code>expander.py</code>'deki reserve-promosyon kaldırıldı; genişletme iki taze-retrieve yolundan biriyle (<code>_requery_expand</code> / <code>_enumerate_expand</code>) çalışır.</li>
+    </ul>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="ogrenilen-terimler">
+    <h2><span class="num">03</span>Öğrenilen terimler — insan onaylı geri besleme</h2>
+    <p class="section-dek">
+      <code>broaden()</code> bir terim hipotezi üretip o tur gerçekten <code>answer</code>'a
+      çıkarsa, tahmin <code>term_candidates</code> tablosuna kuyruklanır — hiçbir zaman
+      otomatik uygulanmaz. Bu, istekler arasında süren tek asenkron döngüdür.
+    </p>
+    <p class="click-hint">↳ herhangi bir kutuya tıkla</p>
+
+    <div class="sheet">
+      <div class="diagram-scroll">
+        <svg width="1000" height="500" viewBox="0 0 1000 500" role="img"
+             aria-label="Öğrenilen terimler döngüsü: terim hipotezinden insan onayına ve geri beslemeye">
+          <defs>
+            <marker id="m3-line" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--line)"/>
+            </marker>
+            <marker id="m3-on" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--on)"/>
+            </marker>
+            <marker id="m3-exit" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--exit)"/>
+            </marker>
+          </defs>
+
+          <g>
+            <path class="edge" marker-end="url(#m3-line)" d="M260,210 L320,210"/>
+            <path class="edge" marker-end="url(#m3-line)" d="M580,210 L650,210"/>
+            <path class="edge" marker-end="url(#m3-line)" d="M745,250 L680,300"/>
+            <path class="edge" marker-end="url(#m3-line)" d="M815,250 L855,300"/>
+            <path class="edge edge-flow" marker-end="url(#m3-on)" d="M600,364 L550,400"/>
+            <path class="edge edge-exit" marker-end="url(#m3-exit)" d="M855,364 L855,460 L145,460 L145,250"/>
+          </g>
+
+          <g>
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d3-broaden">
+              <rect x="30" y="170" width="230" height="80" rx="10"/>
+              <text class="n-title" x="145" y="204">broaden()</text>
+              <text class="n-sub" x="145" y="222">term_hypothesis üretir</text>
+              <title>Planner.broaden() → SearchPlan.term_hypothesis: {term, official_phrase}. Yalnızca re-query sırasında, ilk plan()'da asla.</title>
+            </g>
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d3-pending">
+              <rect x="320" y="170" width="260" height="80" rx="10"/>
+              <text class="n-title" x="450" y="200">term_candidates</text>
+              <text class="n-sub" x="450" y="218">status=pending</text>
+              <text class="n-sub" x="450" y="233">(round answer'a çıkarsa)</text>
+              <title>upsert_term_candidate(term, hypothesis, source_query) — src/api/db.py. Global, oturuma özel değil.</title>
+            </g>
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="d3-review">
+              <rect x="650" y="170" width="260" height="80" rx="10"/>
+              <text class="n-title" x="780" y="200">İnsan inceleme</text>
+              <text class="n-sub" x="780" y="218">Öğrenilen Terimler paneli</text>
+              <text class="n-sub" x="780" y="233">(web arayüzü)</text>
+            </g>
+
+            <g class="node node--on" tabindex="0" role="button" aria-haspopup="dialog" data-key="d3-approved">
+              <rect x="530" y="300" width="190" height="64" rx="10"/>
+              <text class="n-title" x="625" y="326">approved</text>
+              <text class="n-sub" x="625" y="343">status=approved</text>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="d3-rejected">
+              <rect x="760" y="300" width="190" height="64" rx="10"/>
+              <text class="n-title" x="855" y="326">rejected</text>
+              <text class="n-sub" x="855" y="343">status=rejected</text>
+            </g>
+
+            <g class="node node--annot" tabindex="0" role="button" aria-haspopup="dialog" data-key="d3-synonyms">
+              <rect x="380" y="400" width="340" height="56" rx="10"/>
+              <text class="n-title" x="550" y="423">expand_parliamentary_synonyms()</text>
+              <text class="n-sub" x="550" y="440">her SearchTool.search() çağrısında</text>
+              <title>settings.PARLIAMENTARY_TERM_SYNONYMS (statik) ile birleştirilir; kod değişikliği/deploy gerekmeden her aramada uygulanır.</title>
+            </g>
+          </g>
+
+          <g>
+            <text class="elabel" x="268" y="150">round başarıyla</text>
+            <text class="elabel" x="268" y="163">answer'a çıkarsa</text>
+            <text class="elabel elabel-em" x="700" y="285">onay</text>
+            <text class="elabel elabel-em" x="822" y="285">red</text>
+            <text class="elabel" x="140" y="480">rejected_hypotheses → bir sonraki broaden() çağrısına "tekrar önerme" kısıtı</text>
+          </g>
+        </svg>
+      </div>
+      <p class="scroll-hint">geniş şema — yatay/dikey kaydırılabilir</p>
+    </div>
+
+    <ul class="callouts">
+      <li><b>Global, oturuma özel değil:</b> bir kullanıcının onayladığı terim genişletmesi herkesin aramasına yansır.</li>
+      <li><b>Fire-and-forget:</b> kayıt başarısız olsa da yanıt akışı bozulmaz (<code>_record_term_hypothesis</code> hataları yutar).</li>
+      <li><b>Reddedilenler tekrar önerilmez:</b> bir sonraki <code>broaden()</code> çağrısına negatif kısıt olarak geçirilir.</li>
+    </ul>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="asamalar">
+    <h2><span class="num">04</span>Aşamalar (on/off)</h2>
+    <p class="section-dek">
+      Stage-2 aşamaları başlangıçta kapalıdır ve <code>pipeline.yaml</code> içinde
+      stage-başına <code>enabled</code> bayrağıyla açılır. Kapalıyken orchestrator
+      makul bir fallback uygular.
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Aşama</th><th>Modül / sınıf</th><th>Başlangıç</th><th>Kapalıyken</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td class="stage-name">BadWordsFilter</td><td><code>bad_words_filter.py</code> <code>BadWordsFilter</code></td><td><span class="pill pill-off">KAPALI</span></td><td>atlanır (<code>self._bad_words = None</code>)</td></tr>
+          <tr><td>1</td><td class="stage-name">IntentAnalyzer</td><td><code>classifier.py</code> <code>ScopeClassifier</code></td><td><span class="pill pill-on">AÇIK</span></td><td>planner tüm production katalogdan serbest seçer; off_domain/conversational tespiti de devre dışı kalır</td></tr>
+          <tr><td>2</td><td class="stage-name">Planner (+ strateji çözümü)</td><td><code>planner.py</code> <code>Planner</code></td><td><span class="pill pill-on">AÇIK</span></td><td>—</td></tr>
+          <tr><td>2a</td><td class="stage-name">PolicyEnforcer</td><td><code>policy.py</code> <code>PolicyEnforcer</code></td><td><span class="pill pill-off">KAPALI</span></td><td>allowed = planner önerisi</td></tr>
+          <tr><td>2b</td><td class="stage-name">Budget</td><td><code>orchestrator._flat_plans_for</code></td><td><span class="pill pill-on">AÇIK</span> (koşulsuz)</td><td>— ayrı bir "AllocationPlanner" yok; <code>allocator.py</code> silindi</td></tr>
+          <tr><td>3</td><td class="stage-name">Retrieve</td><td><code>orchestrator._run_retrieval</code> + <code>tools.SearchTool</code></td><td><span class="pill pill-on">AÇIK</span></td><td>—</td></tr>
+          <tr><td>3.5</td><td class="stage-name">Facet + rabbit holes</td><td><code>clarifier.py</code> <code>FacetMiner</code>/<code>AmbiguityGate</code>/<code>QueryRefiner.rabbit_holes</code></td><td><span class="pill pill-on">AÇIK</span> (<code>clarification.enabled</code>)</td><td>öneri üretilmez; retrieval/yanıt etkilenmez</td></tr>
+          <tr><td>4</td><td class="stage-name">Assembler</td><td><code>assembler.py</code> <code>BalancedContextAssembler</code></td><td><span class="pill pill-on">AÇIK</span></td><td>—</td></tr>
+          <tr><td>5</td><td class="stage-name">EvidenceJudge</td><td><code>judge.py</code> <code>EvidenceJudge</code></td><td><span class="pill pill-on">AÇIK</span></td><td>—</td></tr>
+          <tr><td>5.1</td><td class="stage-name">Toplama döngüsü</td><td><code>orchestrator._requery_expand</code> + <code>Planner.broaden</code></td><td><span class="pill pill-on">AÇIK</span></td><td>— <code>expander.py</code>/reserve-stratejisi silindi; tek strateji <code>requery</code></td></tr>
+          <tr><td>6</td><td class="stage-name">Answer / Sanitizer / Citations</td><td><code>tools.py</code> / <code>sanitizer.py</code> / <code>citations.py</code></td><td><span class="pill pill-on">AÇIK</span></td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="moduller">
+    <h2><span class="num">05</span>Modüller</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Dosya</th><th>Sınıf</th><th>Sorumluluk</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>orchestrator.py</td><td>OrchestratorAgent</td><td>State machine; tüm aşamaları sıralar, fallback'leri uygular, toplama döngüsünü ve terim-öğrenme kaydını yönetir.</td></tr>
+          <tr><td>planner.py</td><td>Planner</td><td>Niyet + strateji + kısıt → SearchPlan; <code>plan()</code> (breadth tavanı, strateji seçimi) ve <code>broaden()</code> (re-query, terim hipotezi).</td></tr>
+          <tr><td>classifier.py</td><td>ScopeClassifier</td><td>IntentAnalyzer: scope (in_scope / off_domain / conversational) + tool/db seçimi; fail-open.</td></tr>
+          <tr><td>clarifier.py</td><td>FacetMiner, AmbiguityGate, QueryRefiner</td><td>Ana retrieval sonuçlarından facet çıkarma, belirsizlik kapısı, engellemeyen <code>rabbit_holes</code> önerisi. Eski engelleyici soru akışı (<code>build_questions</code>/<code>resolve</code>/<code>auto_constraints</code>) artık çağrılmıyor — geriye dönük/test amaçlı duruyor.</td></tr>
+          <tr><td>policy.py</td><td>PolicyEnforcer</td><td>Oturum ∩ planner koleksiyon gating (stage-2).</td></tr>
+          <tr><td>assembler.py</td><td>BalancedContextAssembler</td><td>Çapraz-koleksiyon doc-dedup + query_type başına max_total/max_per_document.</td></tr>
+          <tr><td>judge.py</td><td>EvidenceJudge</td><td>Hibrit heuristik+LLM kanıt yeterliliği; relevance floor; zayıf-en-iyi-eşleşme durumunda LLM'e eskalasyon; answer/expand/clarify/refuse.</td></tr>
+          <tr><td>sanitizer.py</td><td>SanitizerAgent</td><td>Yanıt doğrulama — advisory, yanıtı asla değiştirmez.</td></tr>
+          <tr><td>citations.py</td><td>CitationBuilder</td><td>Atıf listesi.</td></tr>
+          <tr><td>suggester.py</td><td>Suggester</td><td>Off-domain alternatif sorgu önerileri.</td></tr>
+          <tr><td>bad_words_filter.py</td><td>BadWordsFilter</td><td>LLM'siz yasaklı kelime kapısı.</td></tr>
+          <tr><td>tools.py</td><td>SearchTool, ContextBuilderTool, AnswerTool</td><td>Retrieval+rerank+eşanlamlı genişletme / bağlam birleştirme (<code>ContextBuilderTool</code> orchestrator tarafından kullanılmıyor — kendi testinde) / üretim sarmalayıcı (strict vs synthesis + answer_directive).</td></tr>
+          <tr><td>schemas.py</td><td>Pydantic sözleşmeleri</td><td>SearchPlan, OrchestratorState, FacetSet, TermHypothesis, EvidenceDecision, …</td></tr>
+          <tr><td>tracer.py</td><td>PipelineTracer</td><td>Aşama latency/trace olayları (UI callback); <code>print_trace()</code>'daki probe/clarification/allocation satırları artık ateşlenmeyen eski fazlara ait, zararsız kalıntı.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="section-dek" style="margin-top:18px;">
+      <b style="color:var(--ink)">Kaldırıldı:</b> <code>allocator.py</code> (AllocationPlanner, stage-2b) ve
+      <code>expander.py</code> (ExpansionPlanner / reserve-promosyon, stage-5.1) — ilgili
+      test dosyaları (<code>test_allocator.py</code>, <code>test_expander.py</code>) da kaldırıldı.
+    </p>
+  </section>
+
+  <footer>
+    Kaynak: <code>src/agent/orchestrator.py</code>, <code>planner.py</code>, <code>clarifier.py</code>,
+    <code>judge.py</code>, <code>schemas.py</code> · yapılandırma: <code>pipeline.yaml</code>,
+    <code>src/config/pipeline_loader.py</code> · strateji playbook'u: <code>research_strategies.md</code>.
+    Ayrıntılı metin açıklaması için <a href="./README.md">README.md</a>.
+  </footer>
+
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal-close" id="modalClose" aria-label="Kapat" type="button">✕</button>
+    <p class="modal-kind" id="modalKind"></p>
+    <h3 class="modal-title" id="modalTitle"></h3>
+    <ol class="modal-steps" id="modalSteps"></ol>
+    <p class="modal-src" id="modalSrc"></p>
+  </div>
+</div>
+
+<script>
+(function(){
+  var POPUPS = {
+    "d1-start": { kind:"başlangıç", title:`Kullanıcı sorgusu`, src:`orchestrator.py — run()`, steps:[
+      `Kullanıcının yazdığı serbest metin sorgu, oturumun seçtiği koleksiyonlarla birlikte OrchestratorAgent.run()'a girdi olarak verilir.`,
+      `Bu noktada henüz hiçbir arama veya LLM çağrısı yapılmamıştır — sıradaki aşama BadWordsFilter kontrolüdür.`
+    ]},
+    "d1-badwords": { kind:"kapı · varsayılan: kapalı", title:`BadWordsFilter?`, src:`bad_words_filter.py — BadWordsFilter.check()`, steps:[
+      `Ayar kapalıysa (varsayılan) bu adım tamamen atlanır, sorgu doğrudan IntentAnalyzer'a gider.`,
+      `Açıksa: sorgu önce Türkçe aksan katlamasından geçirilir (ş→s, ğ→g, ı→i, vb.) ve kelime kelime ayrılır.`,
+      `Her kelime yasaklı-kelime listesiyle birebir (kelime sınırlı) karşılaştırılır; ayrıca çok-kelimeli desenler regex ile aranır.`,
+      `Eşleşme varsa: sabit bir uyarı mesajıyla anında çıkış yapılır — hiçbir LLM çağrısı yapılmadan.`,
+      `Eşleşme yoksa: akış normal şekilde devam eder.`
+    ]},
+    "d1-badwords-exit": { kind:"çıkış", title:`Çıkış — scope=bad_word`, steps:[
+      `scope=bad_word ile AgentOutput döner; bad_words_filter.response_message sabit metni yanıt olarak kullanılır.`,
+      `Trace'e yalnızca eşleşen terimler (debug amaçlı) yazılır, kullanıcıya asla gösterilmez.`
+    ]},
+    "d1-intent": { kind:"süreç", title:`IntentAnalyzer`, src:`classifier.py — ScopeClassifier.classify()`, steps:[
+      `Sorgu, mevcut koleksiyon kataloğu tek bir sistem promptuna gömülerek TEK bir küçük-model LLM çağrısına gönderilir.`,
+      `Model üç şeyi aynı anda döndürür: scope (in_scope / off_domain / conversational), bir güven skoru, ve varsa hangi koleksiyon(lar)a bakılması gerektiği.`,
+      `scope=off_domain VE güven eşiğin üstündeyse VE sorguda bilinen bir TBMM jargon terimi (örn. "kadük") YOKSA → doğrudan off-domain çıkışına gidilir.`,
+      `scope=conversational ise → hiç arama yapılmadan sohbet LLM'ine gidilir.`,
+      `Aksi halde (in_scope) → seçilen koleksiyonlar production evrenine göre filtrelenir ve Planner'a geçilir.`,
+      `Herhangi bir hata/parse sorununda: fail-open ilkesiyle in_scope varsayılır, sistem çalışmaya devam eder.`,
+      `Şu an katalog yalnızca tutanak koleksiyonlarını listeliyor — gazete/önerge için henüz indekslenmiş bir koleksiyon yok.`
+    ]},
+    "d1-suggester": { kind:"süreç", title:`Suggester`, src:`suggester.py — Suggester.suggest()`, steps:[
+      `Off-domain sorgu bir LLM'e verilir; model kullanıcının temasıyla bağlantılı 3 alan-içi (in-domain) örnek soru üretmeye çalışır.`,
+      `Üretilenler kullanıcının orijinal sorgusuyla birebir aynıysa elenir.`,
+      `Üretim başarısız olursa veya 3'ten az öneri gelirse, config'teki sabit yedek önerilerle tamamlanır.`
+    ]},
+    "d1-offdomain-exit": { kind:"çıkış", title:`Çıkış — scope=off_domain`, steps:[
+      `scope=off_domain, suggestions ve aynı listeyi taşıyan rabbit_holes alanlarıyla döner.`,
+      `UI tarafında tek bir "öneri çipi" bileşeni hem bu hem normal rabbit-hole önerilerini gösterebilir.`
+    ]},
+    "d1-conv": { kind:"süreç", title:`Sohbet LLM'i`, src:`orchestrator.py — _conversational_output()`, steps:[
+      `Son kullanıcı sorusu + sohbet geçmişi (asistan mesajları 1500 karakterle kırpılarak) doğrudan bir LLM sohbet promptuna verilir.`,
+      `Hiçbir koleksiyon araması yapılmaz — model yalnızca konuşma bağlamına dayanarak yanıt üretir.`,
+      `Yanıt token token akıtılır; bitince scope=conversational ile döner.`
+    ]},
+    "d1-conv-exit": { kind:"çıkış", title:`Çıkış — scope=conversational`, steps:[
+      `scope=conversational ile düz metin yanıt döner; kaynak/atıf listesi boştur (retrieval hiç çalışmadı).`
+    ]},
+    "d1-planner": { kind:"süreç", title:`Planner.plan()`, src:`planner.py — Planner.plan()`, steps:[
+      `Sorgu + izin verilen koleksiyon kataloğu + araştırma stratejisi kataloğu (research_strategies.md) TEK bir LLM promptuna verilir.`,
+      `Model şunları üretir: niyet (intent), sorgu tipi (query_type), varsa uygun bir strateji adı, ilgili koleksiyonlar, ve her koleksiyon için birkaç alternatif arama cümlesi (taslak).`,
+      `LLM çıktısı toleranslı biçimde ayrıştırılır — şema dışı değerler güvenli varsayılanlara düşer, boş/geçersiz taslaklar elenir.`,
+      `Seçilen strateji varsa, o stratejinin query_type'ı ve answer_directive'i devreye alınır.`,
+      `Sorguda COMPREHENSIVE_KEYWORDS'ten biri geçiyorsa (ör. "tüm", "kaç tane"), query_type deterministik olarak comprehensive'e YÜKSELTİLİR — LLM'in seçimini ezer.`,
+      `LLM çağrısı tamamen başarısız olursa, her doküman tipi için sabit bir "fallback" plana (broadcast) düşülür.`
+    ]},
+    "d1-policy": { kind:"kapı · varsayılan: kapalı", title:`PolicyEnforcer?`, src:`policy.py — PolicyEnforcer.run()`, steps:[
+      `Kapalıyken (varsayılan): planner'ın önerdiği tüm koleksiyonlar olduğu gibi "izinli" kabul edilir.`,
+      `Açıkken: planner'ın önerdiği koleksiyonlarla oturumun başında seçilen koleksiyonların KESİŞİMİ alınır; kesişim dışında kalanlar reddedilir.`,
+      `İzinli liste boş çıkarsa akış hemen reddetme çıktısına gider.`
+    ]},
+    "d1-policy-exit": { kind:"çıkış", title:`Çıkış — refuse: allowed boş`, steps:[
+      `İzinli koleksiyon kalmadığında sabit bir "farklı koleksiyon seçin" mesajıyla reddedilir; hiçbir arama denenmez.`
+    ]},
+    "d1-budget": { kind:"süreç", title:`Budget`, src:`orchestrator.py — _flat_plans_for()`, steps:[
+      `Planner'ın belirlediği query_type, retrieval_budget tablosunda bir fetch_k (derinlik) değerine eşlenir.`,
+      `İzinli her koleksiyon için aynı fetch_k ile TEK bir yürütme planı oluşturulur — koleksiyonlar arasında öncelik/rezerv ayrımı yoktur.`,
+      `Planner'ın ürettiği filtreler (yıl, vb.) ve arama taslakları buraya taşınır.`
+    ]},
+    "d1-retrieve": { kind:"süreç", title:`Retrieve`, src:`orchestrator.py — _run_retrieval() / tools.py — SearchTool.search()`, steps:[
+      `Her (koleksiyon × arama taslağı) çifti için ayrı bir paralel görev başlatılır; her görev ham (rerank'sız) ANN sonucu döner.`,
+      `Aynı koleksiyonun farklı taslaklarından gelen sıralı listeler RRF (Reciprocal Rank Fusion) ile TEK bir sıralı listeye birleştirilir.`,
+      `Birleşmiş havuz cross-encoder rerank modeliyle TEK seferde yeniden sıralanır — taslak başına ayrı rerank YAPILMAZ, hesaplama israfını önler.`,
+      `Sonuç, o koleksiyonun bütçesi kadar kesilip döndürülür.`,
+      `Arama metni önce bilinen jargon terimleri için genişletilir (ör. "kadük" → "hükümsüz sayılan..." öneki eklenir).`
+    ]},
+    "d1-facet": { kind:"süreç · koşullu: clarification.enabled", title:`FacetMiner + AmbiguityGate`, src:`clarifier.py`, steps:[
+      `Az önceki retrieval sonuçlarının metaverisinden (yıl, konu, yazar, koleksiyon) sıklık tabloları çıkarılır — ayrı bir arama YAPILMAZ.`,
+      `Belirsizlik testi: 3'ten fazla farklı yıl varsa, ya da en baskın yıl/koleksiyon oranı düşükse, ya da sorgu genel/"hakkında bilgi" tarzıysa → sorgu "belirsiz" sayılır.`,
+      `Belirsizse: en sık geçen facet değerleri sorguya eklenerek 3 adet "derinleş" önerisi üretilir — tamamen deterministik, LLM kullanılmaz.`,
+      `Belirsiz değilse: hiçbir öneri üretilmez; ana akış hiçbir şekilde etkilenmez.`
+    ]},
+    "d1-facet-annot": { kind:"not", title:`AgentOutput.rabbit_holes`, steps:[
+      `Üretilen öneriler AgentOutput.rabbit_holes alanına yazılır; UI'da tıklanabilir çipler olarak gösterilir.`,
+      `Sorgunun kendisi ASLA daraltılmaz — kullanıcı isterse çipe tıklar, istemezse orijinal geniş yanıtı okumaya devam eder.`
+    ]},
+    "d1-assembler": { kind:"süreç", title:`BalancedContextAssembler`, src:`assembler.py — BalancedContextAssembler.run()`, steps:[
+      `Koleksiyonlar öncelik sırasına göre tek tek gezilir; her birinden chunk'lar sırayla alınır.`,
+      `Aynı belgeden en fazla kaç chunk alınacağı (max_per_document, comprehensive için 6, diğerleri için 3) ve toplamda en fazla kaç chunk'ın bağlama gireceği (max_total, comprehensive için 50, diğerleri için 15) sınırlanır — sayaç koleksiyonlar arası ORTAKTIR, yani aynı belge birden fazla koleksiyon/taslakta çıksa da toplamda sınırlı kalır.`,
+      `Sınıra ulaşan koleksiyon/belge atlanır, bir sonrakine geçilir; toplam sınıra ulaşıldığında tüm süreç durur.`,
+      `Neden var: ham retrieval havuzunu doğrudan LLM'e vermek num_ctx'i zorlar ve tek bir baskın/uzun belge context'in çoğunu kaplayıp diğer kaynakları dışarıda bırakabilir — bu adım hem bütçeyi hem kaynak çeşitliliğini garanti eder.`,
+      `Olmasaydı: EvidenceJudge ve toplama döngüsünün "ceiling" kontrolü de bu adımın çıktısı (assembled_chunks) üzerinden çalıştığı için, Judge'ın "yeterli" dediği kanıt kümesiyle LLM'in gerçekte gördüğü context ayrışırdı.`
+    ]},
+    "d1-judge": { kind:"süreç", title:`EvidenceJudge`, src:`judge.py — EvidenceJudge.run()`, steps:[
+      `Önce "relevance floor": rerank skoru çok düşük chunk'lar tamamen elenir; hepsi elenirse bu doğrudan "muhtemel terim uyuşmazlığı" (expand) sinyali sayılır.`,
+      `Kalan chunk sayısı ve kaç farklı koleksiyondan geldiği yeterliyse VE en iyi eşleşme çok zayıf değilse → doğrudan "answer" (heuristik, hızlı, LLM'siz).`,
+      `En iyi eşleşme yeterli sayıya rağmen zayıfsa, ya da chunk sayısı sınırdaysa → küçük bir LLM'e devredilir; o, context'i okuyup answer/expand/clarify/refuse kararı verir.`,
+      `Hiçbiri tutmuyorsa → heuristik olarak "expand" kararı verilir.`
+    ]},
+    "d1-gather": { kind:"döngü", title:`Toplama Döngüsü`, src:`orchestrator.py — bkz. Diyagram 2`, steps:[
+      `Judge "expand" derse (ya da sorgu comprehensive ise koşulsuz), sınırlı sayıda ek arama turu başlar.`,
+      `comprehensive sorgular için facet-yılı bazlı çok-pas + derinlik-tırmanışlı toplama; diğerleri için tek bir "genişlet ve yeniden ara" turu.`,
+      `Turun sonunda bağlam yeniden birleştirilir ve Judge tekrar çalıştırılır; yeni bir yeterlilik kararı üretilir.`,
+      `Döngü, tur tavanına, bağlam tavanına ya da hiç yeni sonuç gelmemesine (doygunluk) kadar sürer.`
+    ]},
+    "d1-clarify-exit": { kind:"çıkış", title:`Çıkış — clarify`, steps:[
+      `Judge "clarify" derse (genelde hiç sonuç bulunamadığında), kullanıcıya "sorunuzu netleştirir misiniz" mesajı döner.`,
+      `Bu ENGELLEYİCİ bir soru-cevap turu DEĞİLDİR — tek seferlik bir mesajdır, sistem yanıt beklemez.`
+    ]},
+    "d1-refuse-exit": { kind:"çıkış", title:`Çıkış — refuse`, steps:[
+      `Judge context'i "answer" için yetersiz/alakasız bulursa (LLM kararı) sabit bir "yetkili kaynaklarla yanıt veremiyorum" mesajı döner.`
+    ]},
+    "d1-answer": { kind:"süreç", title:`AnswerTool`, src:`tools.py — AnswerTool.generate()`, steps:[
+      `Assemble edilen tüm chunk'lar numaralı bloklar halinde tek bir bağlam metnine dönüştürülür.`,
+      `Sorgu tipine göre sistem promptu seçilir: "sentez" tipleri (comprehensive/summary/comparison/reasoning) için asla-boş-dönmeyen bir prompt; diğerleri için kanıt yoksa dürüstçe reddeden katı bir prompt.`,
+      `Seçili araştırma stratejisinin answer_directive'i varsa, bu ek yönerge promptun sonuna eklenir.`,
+      `LLM yanıtı token token akıtılır; hiç içerik üretilmezse standart bir "yeterli bilgi yok" mesajı devreye girer.`
+    ]},
+    "d1-sanitizer": { kind:"süreç", title:`Sanitizer`, src:`sanitizer.py — SanitizerAgent.validate()`, steps:[
+      `Üretilen yanıt, orijinal soru ve bağlamla birlikte küçük bir LLM'e "kontrolör" olarak verilir.`,
+      `Model 4 basit kontrol yapar: soruyu yanıtlıyor mu, kaynaklarla destekleniyor mu, uydurma var mı, Türkçe mi.`,
+      `Sonuç yalnızca trace'e/uyarı olarak işlenir — yanıt METNİ hiçbir zaman değiştirilmez ya da yeniden üretilmez.`
+    ]},
+    "d1-citations": { kind:"süreç", title:`CitationBuilder`, src:`citations.py — CitationBuilder.build()`, steps:[
+      `Bağlama giren her chunk, sabit bir sırada (index) atıf sözlüğüne (kaynak adı, tarih, yazar, belge tipi) dönüştürülür.`
+    ]},
+    "d1-end": { kind:"bitiş", title:`AgentOutput`, steps:[
+      `Yanıt, atıflar, trace, plan, judge kararı ve varsa rabbit-hole önerileri tek bir AgentOutput nesnesinde toplanıp çağırana döner.`
+    ]},
+
+    "d2-start": { kind:"giriş", title:`EvidenceJudge kararı`, steps:[
+      `Bu diyagram, Diyagram 1'deki "Toplama Döngüsü" kutusunun içini açar — EvidenceJudge'ın "expand" kararı VERDİĞİ (ya da sorgunun comprehensive OLDUĞU) andan başlar.`
+    ]},
+    "d2-comprehensive-gate": { kind:"kapı", title:`comprehensive mi?`, src:`orchestrator.py — run(), Aşama 5.1 başlangıcı`, steps:[
+      `comprehensive bayrağı (Planner'ın belirlediği query_type) bu turun bütçesini belirler.`,
+      `Evet ise: tur tavanı 4, bağlam tavanı 50 chunk, başlangıç derinliği (fetch_k) 40.`,
+      `Hayır ise: tur tavanı 1, bağlam tavanı sorgu tipine göre değişir (çoğunlukla 15).`
+    ]},
+    "d2-round-gate": { kind:"kapı", title:`round < max_rounds?`, steps:[
+      `Şu ana kadar kaç tur döndüğü (rounds), o sorgu tipi için izin verilen tur sayısıyla (max_rounds) karşılaştırılır.`,
+      `Tavan dolduysa döngü hemen durur — mevcut kararla Aşama 6'ya geçilir.`
+    ]},
+    "d2-round-exit": { kind:"çıkış", title:`Dur — tur tavanı`, steps:[
+      `Tur sayısı tükendi; döngü biter, ne kadar bağlam toplandıysa onunla yanıtlamaya geçilir.`
+    ]},
+    "d2-needmore-gate": { kind:"kapı", title:`comprehensive VEYA action=="expand"?`, steps:[
+      `comprehensive sorgularda bu kontrol HER ZAMAN "evet" sonucunu verir — judge'ın önceki kararı önemsizdir, doygunluğa kadar toplanmaya devam edilir.`,
+      `Diğer sorgularda yalnızca Judge'ın son kararı "expand" ise devam edilir; "answer"/"refuse"/"clarify" ise döngü hemen biter.`
+    ]},
+    "d2-needmore-exit": { kind:"çıkış", title:`Dur — judge yeterli/refuse/clarify dedi`, steps:[
+      `Judge zaten yeterli/reddetme/netleştirme kararı vermiş; ek arama gereksiz — mevcut kararla devam edilir.`
+    ]},
+    "d2-ceiling-gate": { kind:"kapı", title:`assembled >= ceiling?`, steps:[
+      `Şu ana kadar bağlama giren toplam chunk sayısı, o sorgu tipinin bağlam tavanıyla (ceiling) karşılaştırılır.`,
+      `Tavan zaten dolmuşsa yeni bir arama turunun bir faydası kalmaz.`
+    ]},
+    "d2-ceiling-exit": { kind:"çıkış", title:`Dur — bağlam tavanı doldu`, steps:[
+      `Bağlam tavanı dolu; döngü durur. Judge'ın o anki kararı hâlâ "expand" olsa bile bu asla reddetmeye çevrilmez — elde ne varsa onunla yanıtlanır.`
+    ]},
+    "d2-strategy-gate": { kind:"kapı", title:`comprehensive mi? (genişletme fonksiyonu seçimi)`, steps:[
+      `Aynı comprehensive bayrağı burada tekrar kontrol edilir — ama amaç yeni bir hesap yapmak değil, hangi genişletme FONKSİYONUNUN çağrılacağını seçmektir.`,
+      `Bu turda gerçekten yeni bir arama yapılacaksa (önceki 3 kapı da geçildiyse), comprehensive → _enumerate_expand; diğerleri → _requery_expand.`
+    ]},
+    "d2-requery": { kind:"süreç", title:`_requery_expand()`, src:`planner.py — Planner.broaden() / orchestrator.py — _requery_expand()`, steps:[
+      `Planner'ın broaden() metodu TEK çağrılır: orijinal sorgu, önceki plan, önceki turun kanıt-eksikliği nedeni ve daha önce reddedilmiş terim tahminleri LLM'e verilir.`,
+      `LLM daha geniş/alternatif arama taslakları (ve isteğe bağlı bir "terim hipotezi") üretir.`,
+      `Bu yeni taslaklarla TEK bir retrieve turu daha çalıştırılır; sonuçlar mevcut havuzla birleştirilecek şekilde döner.`
+    ]},
+    "d2-enumerate": { kind:"süreç", title:`_enumerate_expand(depth)`, src:`orchestrator.py — _enumerate_expand(), _facet_years()`, steps:[
+      `Aynı broaden() LLM çağrısı TEK yapılır (requery ile aynı).`,
+      `Ardından BİRDEN FAZLA retrieve pası çalışır: 1 filtresiz pas + retrieval sonuçlarında en sık görülen en fazla 4 yıl için birer yıl-filtreli pas (enumerate_facet_partition açıksa) — hepsi AYNI derinlikte (depth).`,
+      `Amaç: küresel olarak baskın bir yılın diğer yılları retrieval'da boğmasını önlemek — her yıl kendi payını alır.`
+    ]},
+    "d2-merge": { kind:"süreç", title:`_merge_new_chunks`, src:`orchestrator.py — _merge_new_chunks()`, steps:[
+      `Yeni gelen her chunk, chunk_id'sine göre o koleksiyonda daha önce görülüp görülmediği kontrol edilir.`,
+      `Yalnızca GERÇEKTEN yeni olan chunk'lar mevcut havuza eklenir; ilgili koleksiyonun bütçesi bu kadar artırılır.`,
+      `Bu turda eklenen toplam yeni chunk sayısı (added) daha sonraki doygunluk kararı için saklanır.`
+    ]},
+    "d2-assemble": { kind:"süreç", title:`Assemble`, steps:[
+      `Genişletilmiş havuzla BalancedContextAssembler BAŞTAN çalıştırılır — bu turda added sıfır olsa bile bu adım HER ZAMAN çalışır.`
+    ]},
+    "d2-judge-post": { kind:"süreç", title:`Judge — judge_post_expand`, steps:[
+      `EvidenceJudge yeniden çalıştırılır (bu turda added sıfır olsa bile HER ZAMAN çalışır) ve yeni bir answer/expand/clarify/refuse kararı üretir.`,
+      `Bu karar, döngünün BİR SONRAKİ turunda "daha fazla gerekli mi" kontrolünü besler.`
+    ]},
+    "d2-term-gate": { kind:"kapı", title:`terim hipotezi VE action=="answer"?`, steps:[
+      `Bu turda bir terim hipotezi üretilmiş miydi (broaden() sırasında) ve bu tur gerçekten "answer" kararına mı çıktı — ikisi de gerekli.`
+    ]},
+    "d2-term-record": { kind:"döngü · insan onaylı", title:`term_candidates kaydı`, src:`orchestrator.py — _record_term_hypothesis()`, steps:[
+      `Terim tahmini (ör. "kadük" → "hükümsüz sayılan...") term_candidates tablosuna kuyruklanır — bu tahminin gerçekten işe yaradığının kanıtıdır.`,
+      `Kayıt best-effort'tur: veritabanı hatası olsa bile yanıt akışı ASLA bozulmaz.`,
+      `Devamı için bkz. Diyagram 3 (insan onaylı geri besleme).`
+    ]},
+    "d2-round-inc": { kind:"süreç", title:`round += 1`, steps:[
+      `Tur sayacı bir artırılır — bu, terim kaydedilsin ya da edilmesin HER turda olur.`
+    ]},
+    "d2-added-gate": { kind:"kapı", title:`toplam added == 0?`, steps:[
+      `Bu tur (tüm passlar dahil) toplam kaç YENİ chunk eklendi kontrol edilir.`,
+      `Sıfırdan fazlaysa: normal şekilde bir sonraki tura geçilir (en baştaki tur-tavanı kontrolüne dönülür).`,
+      `Sıfırsa: comprehensive değilse doygunluk ilan edilir; comprehensive ise derinlik tırmanışı denenir.`
+    ]},
+    "d2-depth-gate": { kind:"kapı", title:`comprehensive VE depth tavanın altında mı?`, src:`orchestrator.py — Aşama 5.1`, steps:[
+      `Yalnızca comprehensive sorgularda anlamlıdır: mevcut arama derinliği (depth) hâlâ tavanın (enumerate_fetch_k_max, varsayılan 120) altında mı?`,
+      `Altındaysa: bu turun boş çıkması "corpus'ta başka bir şey yok" değil, "bu derinlikte başka bir şey yok" anlamına gelir — daha derine inmeye değer.`
+    ]},
+    "d2-depth-exit": { kind:"çıkış", title:`Dur — doygunluk`, steps:[
+      `En derin arama derinliğinde bile hiç yeni chunk bulunamadı (ya da sorgu zaten comprehensive değildi) — gerçek doygunluk. Döngü biter.`
+    ]},
+    "d2-depth-escalate": { kind:"döngü", title:`depth = min(depth × 2, 120)`, src:`orchestrator.py — depth = min(depth * 2, fetch_k_max)`, steps:[
+      `Arama derinliği ikiye katlanır (40→80→120), ama tavanı (120) hiç geçmez.`,
+      `AYNI tur sayacıyla (round tekrar artırılmaz) en baştaki tur-tavanı kontrolüne dönülüp bu kez daha derin bir aramayla yeniden denenir.`
+    ]},
+
+    "d3-broaden": { kind:"süreç", title:`broaden() term_hypothesis`, src:`planner.py — RE_RETRIEVAL_PROMPT, TermHypothesis şeması`, steps:[
+      `Genişletme turunda broaden() LLM'i, sorgudaki bir kelimenin arşivin resmi/hukuki diliyle uyuşmayan bir konuşma-dili terimi OLABİLECEĞİNİ fark ederse, en olası resmi karşılığı tahmin eder.`,
+      `Bu tahmin hem yeni bir arama taslağına hem de ayrı bir term_hypothesis alanına yazılır — emin değilse alan boş bırakılır, yanlış tahminin bedeli yalnızca kullanılmayan bir taslaktır.`
+    ]},
+    "d3-pending": { kind:"süreç", title:`term_candidates — status=pending`, src:`src/api/db.py — upsert_term_candidate()`, steps:[
+      `Yalnızca o turun GERÇEKTEN "answer" kararına çıkması durumunda (tahmin işe yaradıysa) hipotez term_candidates tablosuna pending durumuyla eklenir.`,
+      `Aynı (terim, tahmin) çifti daha önce de görülmüşse, sayaç artırılır — ayrı bir satır açılmaz.`
+    ]},
+    "d3-review": { kind:"süreç · insan", title:`İnsan inceleme`, steps:[
+      `Bekleyen tahminler web arayüzündeki "Öğrenilen Terimler" panelinde bir insana gösterilir.`,
+      `İnceleyen kişi her tahmini "onayla" ya da "reddet" olarak işaretler — sistem otomatik karar vermez.`
+    ]},
+    "d3-approved": { kind:"süreç", title:`approved`, steps:[
+      `Onaylanan terim, statik (settings.PARLIAMENTARY_TERM_SYNONYMS) listeyle birleştirilip bundan sonraki TÜM aramalarda otomatik uygulanır — kod değişikliği veya yeniden başlatma gerekmez.`
+    ]},
+    "d3-rejected": { kind:"çıkış", title:`rejected`, steps:[
+      `Reddedilen terim asla canlı aramaya karışmaz.`,
+      `Bir sonraki broaden() çağrısına "bunu bir daha önerme" şeklinde olumsuz bir kısıt olarak geri beslenir.`
+    ]},
+    "d3-synonyms": { kind:"süreç", title:`expand_parliamentary_synonyms()`, src:`src/common/text.py — expand_parliamentary_synonyms()`, steps:[
+      `Her SearchTool.search() çağrısında, arama metni önce bu birleşik (statik+onaylı) sözlükten geçirilir.`,
+      `Bilinen bir terim geçiyorsa, resmi karşılığı arama sorgusunun BAŞINA eklenir (sona değil — bu embedding modelinde ölçülmüş olarak daha güçlü etki yapıyor).`
+    ]}
+  };
+
+  var backdrop = document.getElementById('modalBackdrop');
+  var elKind = document.getElementById('modalKind');
+  var elTitle = document.getElementById('modalTitle');
+  var elSteps = document.getElementById('modalSteps');
+  var elSrc = document.getElementById('modalSrc');
+  var elClose = document.getElementById('modalClose');
+  var lastFocused = null;
+
+  function openPopup(key){
+    var data = POPUPS[key];
+    if(!data) return;
+    lastFocused = document.activeElement;
+    elKind.textContent = data.kind || '';
+    elTitle.textContent = data.title || '';
+    elSteps.innerHTML = '';
+    (data.steps || []).forEach(function(s){
+      var li = document.createElement('li');
+      li.textContent = s;
+      elSteps.appendChild(li);
+    });
+    if(data.src){
+      elSrc.innerHTML = '<b>Kaynak:</b> ' + data.src.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      elSrc.style.display = '';
+    } else {
+      elSrc.style.display = 'none';
+    }
+    backdrop.hidden = false;
+    elClose.focus();
+    document.addEventListener('keydown', onKeydown);
+  }
+
+  function closePopup(){
+    backdrop.hidden = true;
+    document.removeEventListener('keydown', onKeydown);
+    if(lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+  }
+
+  function onKeydown(e){
+    if(e.key === 'Escape') closePopup();
+  }
+
+  elClose.addEventListener('click', closePopup);
+  backdrop.addEventListener('click', function(e){
+    if(e.target === backdrop) closePopup();
+  });
+
+  var nodes = document.querySelectorAll('.node[data-key]');
+  for(var i = 0; i < nodes.length; i++){
+    (function(node){
+      var key = node.getAttribute('data-key');
+      node.addEventListener('click', function(){ openPopup(key); });
+      node.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' || e.key === ' '){
+          e.preventDefault();
+          openPopup(key);
+        }
+      });
+    })(nodes[i]);
+  }
+})();
+</script>

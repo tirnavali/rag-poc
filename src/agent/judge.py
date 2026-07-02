@@ -42,11 +42,27 @@ class EvidenceJudge:
         h = self._config.heuristic
 
         # Relevance floor: drop very-irrelevant chunks (near-zero rerank score)
-        # while keeping merely-informative ones. Lenient by design — if every
-        # chunk is below the floor we keep them all rather than zeroing out.
+        # while keeping merely-informative ones.
         if h.min_rerank_score > 0.0 and state.assembled_chunks:
             kept = [c for c in state.assembled_chunks if c.rerank_score >= h.min_rerank_score]
-            if kept and len(kept) < len(state.assembled_chunks):
+            if not kept:
+                # EVERY chunk is below the relevance floor — verified empirically as
+                # the signature of a vocabulary/term mismatch (structurally-similar
+                # but off-topic matches, e.g. a colloquial term the corpus phrases
+                # differently). Count/coverage-based sufficiency below can't see this
+                # at all; treat it as insufficiency explicitly rather than silently
+                # proceeding with the full (irrelevant) chunk set.
+                state.evidence_decision = EvidenceDecision(
+                    sufficient=False,
+                    confidence=0.2,
+                    action="expand",
+                    missing_aspects=["low_relevance_all_chunks"],
+                    judge_type="heuristic",
+                    reasoning=f"{len(state.assembled_chunks)} chunk bulundu ama hepsi düşük "
+                              f"alaka skorlu (<{h.min_rerank_score}) — olası terim uyuşmazlığı.",
+                )
+                return state
+            if len(kept) < len(state.assembled_chunks):
                 dropped = len(state.assembled_chunks) - len(kept)
                 state.assembled_chunks = kept
                 state.balanced_context = [
@@ -70,6 +86,17 @@ class EvidenceJudge:
 
         coverage = len({c.collection_name for c in chunks})
         if len(chunks) >= h.min_chunks and coverage >= h.min_collection_coverage:
+            llm = self._config.llm
+            max_score = max((c.rerank_score for c in chunks), default=0.0)
+            weak_match = max_score < h.llm_escalation_score
+            if weak_match and llm.enabled and self._pool is not None:
+                # Count/coverage look fine, but even the BEST match is weak — don't
+                # auto-answer blind. Escalate to the LLM judge to actually read the
+                # chunk text and decide (see llm_escalation_score for why a numeric
+                # reject threshold alone was rejected: it misfires on correct-but-
+                # abstractly-phrased queries, not just genuine topic mismatches).
+                state.evidence_decision = self._llm_judge(state)
+                return state
             state.evidence_decision = EvidenceDecision(
                 sufficient=True,
                 confidence=0.85,

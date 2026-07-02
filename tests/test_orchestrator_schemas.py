@@ -75,7 +75,7 @@ def test_chunk_required_fields():
     assert c.metadata == {}
 
 
-def test_retrieval_output_defaults_reserve_empty():
+def test_retrieval_output_defaults():
     ro = RetrievalOutput(
         collection_name="c",
         chunks=[],
@@ -83,7 +83,6 @@ def test_retrieval_output_defaults_reserve_empty():
         returned_count=0,
         latency_ms=0.0,
     )
-    assert ro.reserve_chunks == []
     assert ro.filter_applied == {}
 
 
@@ -97,7 +96,6 @@ def test_collection_execution_plan_required():
     cep = CollectionExecutionPlan(
         collection_name="c",
         retrieval_budget=2,
-        reserve_budget=2,
         fetch_k=10,
     )
     assert cep.priority == 1

@@ -11,17 +11,18 @@ export default function MessageList({
   currentSources,
   currentSuggestions,
   printTargetIdx,
-  messagesEndRef,
   onMessageClick,
   onCopyMessage,
   onRegenerate,
   onPrintMessage,
   onSendSuggestion,
+  onCitationClick,
+  messagesContainerRef,
 }) {
   const isEmpty = messages.length === 0 && !isGenerating;
 
   return (
-    <div className="messages-area">
+    <div className="messages-area" ref={messagesContainerRef}>
       {isEmpty ? (
         <div className="empty-state">
           <Compass size={64} />
@@ -31,7 +32,7 @@ export default function MessageList({
       ) : (
         messages.map((m, idx) => {
           const isSelected = selectedMessageIdx === idx ||
-            (m.role === 'user' && selectedMessageIdx === idx + 1);
+             (m.role === 'user' && selectedMessageIdx === idx + 1);
           return (
             <MessageBubble
               key={idx}
@@ -45,6 +46,7 @@ export default function MessageList({
               onRegenerate={() => onRegenerate(idx)}
               onPrintMessage={() => onPrintMessage(idx)}
               onSendSuggestion={onSendSuggestion}
+              onCitationClick={onCitationClick}
             />
           );
         })
@@ -67,10 +69,9 @@ export default function MessageList({
           isPrintTarget={false}
           onClick={undefined}
           onSendSuggestion={onSendSuggestion}
+          onCitationClick={onCitationClick}
         />
       )}
-
-      <div ref={messagesEndRef} />
     </div>
   );
 }

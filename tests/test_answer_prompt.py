@@ -2,7 +2,12 @@
 from __future__ import annotations
 
 from src.agent.tools import AnswerTool
-from src.generator.prompts import MUFETTIS_SYS_PROMPT, SYNTHESIS_SYS_PROMPT, SYS_PROMPT
+from src.generator.prompts import (
+    CONVERSATIONAL_SYS_PROMPT,
+    MUFETTIS_SYS_PROMPT,
+    SYNTHESIS_SYS_PROMPT,
+    SYS_PROMPT,
+)
 
 
 def test_select_prompt_mufettis_wins():
@@ -32,3 +37,13 @@ def test_synthesis_prompt_never_empty_rule():
     assert "ASLA boş yanıt verme" in SYNTHESIS_SYS_PROMPT
     # ...while still forbidding fabrication.
     assert "uydurma" in SYNTHESIS_SYS_PROMPT
+
+
+def test_conversational_prompt_claims_archive_access():
+    # The chit-chat path must not deny archive access when asked "who are you /
+    # what sources do you have" — it does have a real TBMM tutanak archive,
+    # confirmed by the same session's retrieval turns working correctly.
+    assert "TBMM" in CONVERSATIONAL_SYS_PROMPT
+    assert "tutanak" in CONVERSATIONAL_SYS_PROMPT
+    # Explicitly instructed not to claim it lacks archive access.
+    assert "YANLIŞ" in CONVERSATIONAL_SYS_PROMPT

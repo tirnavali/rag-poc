@@ -11,7 +11,7 @@ from src.agent.schemas import (
     RetrievalOutput,
     SearchPlan,
 )
-from src.config.pipeline_loader import AllocationConfig
+from src.config.pipeline_loader import RetrievalBudgetConfig
 
 
 def _chunk(cid: str, did: str, collection: str, score: float = 0.5) -> Chunk:
@@ -27,9 +27,9 @@ def _chunk(cid: str, did: str, collection: str, score: float = 0.5) -> Chunk:
     )
 
 
-def _config(max_per_doc: int = 1, max_total: int = 12) -> AllocationConfig:
-    return AllocationConfig({
-        "defaults": {"primary": 2, "reserve": 2, "fetch_k": 10},
+def _config(max_per_doc: int = 1, max_total: int = 12) -> RetrievalBudgetConfig:
+    return RetrievalBudgetConfig({
+        "defaults": {"fetch_k": 10},
         "max_per_document": max_per_doc,
         "max_total_primary": max_total,
     })
@@ -49,7 +49,7 @@ def _state(
 
 def test_assembler_respects_collection_budget():
     plan = CollectionExecutionPlan(
-        collection_name="c1", retrieval_budget=2, reserve_budget=2, fetch_k=10,
+        collection_name="c1", retrieval_budget=2, fetch_k=10,
     )
     ro = RetrievalOutput(
         collection_name="c1",
@@ -64,8 +64,8 @@ def test_assembler_respects_collection_budget():
 
 def test_assembler_dedups_documents_across_collections():
     plans = [
-        CollectionExecutionPlan(collection_name="c1", priority=1, retrieval_budget=2, reserve_budget=2, fetch_k=10),
-        CollectionExecutionPlan(collection_name="c2", priority=2, retrieval_budget=2, reserve_budget=2, fetch_k=10),
+        CollectionExecutionPlan(collection_name="c1", priority=1, retrieval_budget=2, fetch_k=10),
+        CollectionExecutionPlan(collection_name="c2", priority=2, retrieval_budget=2, fetch_k=10),
     ]
     results = {
         "c1": RetrievalOutput(
@@ -87,7 +87,7 @@ def test_assembler_dedups_documents_across_collections():
 
 def test_assembler_honors_max_total_primary():
     plans = [
-        CollectionExecutionPlan(collection_name=f"c{i}", priority=i, retrieval_budget=2, reserve_budget=0, fetch_k=10)
+        CollectionExecutionPlan(collection_name=f"c{i}", priority=i, retrieval_budget=2, fetch_k=10)
         for i in range(1, 4)
     ]
     results = {
@@ -103,11 +103,11 @@ def test_assembler_honors_max_total_primary():
     assert len(state.assembled_chunks) == 3
 
 
-def _config_with_comprehensive() -> AllocationConfig:
-    return AllocationConfig({
-        "defaults": {"primary": 2, "reserve": 2, "fetch_k": 10},
+def _config_with_comprehensive() -> RetrievalBudgetConfig:
+    return RetrievalBudgetConfig({
+        "defaults": {"fetch_k": 10},
         "by_query_type": {
-            "comprehensive": {"primary": 40, "reserve": 0, "fetch_k": 40,
+            "comprehensive": {"fetch_k": 40,
                               "max_total": 50, "max_per_document": 6},
         },
         "max_per_document": 3,
@@ -121,7 +121,7 @@ def _plan(query_type: str) -> SearchPlan:
 
 def test_assembler_comprehensive_raises_total_cap():
     """comprehensive query_type lifts max_total from the global 15 to its per-type 50."""
-    plan = CollectionExecutionPlan(collection_name="c1", retrieval_budget=40, reserve_budget=0, fetch_k=40)
+    plan = CollectionExecutionPlan(collection_name="c1", retrieval_budget=40, fetch_k=40)
     ro = RetrievalOutput(
         collection_name="c1",
         chunks=[_chunk(f"k{i}", f"d{i}", "c1") for i in range(20)],
@@ -135,7 +135,7 @@ def test_assembler_comprehensive_raises_total_cap():
 
 def test_assembler_comprehensive_raises_per_document_cap():
     """comprehensive lifts max_per_document from the global 3 to its per-type 6."""
-    plan = CollectionExecutionPlan(collection_name="c1", retrieval_budget=40, reserve_budget=0, fetch_k=40)
+    plan = CollectionExecutionPlan(collection_name="c1", retrieval_budget=40, fetch_k=40)
     ro = RetrievalOutput(
         collection_name="c1",
         chunks=[_chunk(f"k{i}", "samedoc", "c1") for i in range(10)],
@@ -149,7 +149,7 @@ def test_assembler_comprehensive_raises_per_document_cap():
 
 def test_assembler_non_comprehensive_uses_global_caps():
     """Other query types still get the global 15 cap even when a comprehensive entry exists."""
-    plan = CollectionExecutionPlan(collection_name="c1", retrieval_budget=40, reserve_budget=0, fetch_k=40)
+    plan = CollectionExecutionPlan(collection_name="c1", retrieval_budget=40, fetch_k=40)
     ro = RetrievalOutput(
         collection_name="c1",
         chunks=[_chunk(f"k{i}", f"d{i}", "c1") for i in range(20)],
@@ -163,8 +163,8 @@ def test_assembler_non_comprehensive_uses_global_caps():
 
 def test_assembler_priority_order():
     plans = [
-        CollectionExecutionPlan(collection_name="low", priority=2, retrieval_budget=1, reserve_budget=0, fetch_k=10),
-        CollectionExecutionPlan(collection_name="high", priority=1, retrieval_budget=1, reserve_budget=0, fetch_k=10),
+        CollectionExecutionPlan(collection_name="low", priority=2, retrieval_budget=1, fetch_k=10),
+        CollectionExecutionPlan(collection_name="high", priority=1, retrieval_budget=1, fetch_k=10),
     ]
     results = {
         "low": RetrievalOutput(collection_name="low", chunks=[_chunk("L", "dL", "low")], fetched_count=1, returned_count=1, latency_ms=0.0),

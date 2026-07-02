@@ -41,6 +41,7 @@ export default function MessageBubble({
   onRegenerate,
   onPrintMessage,
   onSendSuggestion,
+  onCitationClick,
 }) {
   if (message.role === 'user') {
     return (
@@ -91,7 +92,17 @@ export default function MessageBubble({
       )}
 
       {message.content && (
-        <div className="message-bubble" dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }} />
+        <div 
+          className="message-bubble" 
+          dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }} 
+          onClick={(e) => {
+            const citationEl = e.target.closest('.inline-citation');
+            if (citationEl && onCitationClick) {
+              e.stopPropagation();
+              onCitationClick(citationEl.innerText || citationEl.textContent, message.sources);
+            }
+          }}
+        />
       )}
 
       <SourceCardGrid sources={message.sources} />

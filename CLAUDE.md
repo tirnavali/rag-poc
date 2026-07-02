@@ -14,8 +14,7 @@ python chat.py --agent --pipeline pipeline.yaml
 # Ingest documents
 python -m src.trainer.ingestion.ingest --request manifest.json
 
-# MCP servers (run separately, each on its own port)
-python -m src.mcp.press_server       # port 8001 — gazete arşivi
+# MCP server (router_server is the only active one; press_server/server are legacy)
 python -m src.mcp.router_server      # port 8003 — çapraz arama + rapor
 
 # Tests
@@ -43,9 +42,9 @@ The system has two independent entry paths that converge at the Retriever/Genera
 
 **CLI path:** `chat.py` → `src/ui/chat.py` → `RAGService` → `VectorRetriever` + `OllamaGenerator`
 
-**MCP path:** External client (Claude Desktop, Open WebUI) → `press_server.py:8001` or `router_server.py:8003` → `VectorRetriever` / `RAGService` / `DeepPipeline`
+**MCP path:** External client (Claude Desktop, Open WebUI) → `router_server.py:8003` → `VectorRetriever` / `RAGService` / `DeepPipeline`
 
-`src/mcp/server.py` is legacy/unused.
+`src/mcp/server.py` and `src/mcp/press_server.py` are legacy/unused — press_server.py predates the models.yaml-driven collection registry (it looks up a `gazete_arsivi` collection key that was never migrated into `models.yaml`) and will be revived once a newspaper collection is ingested with its own embedding model/chunk size.
 
 ### Configuration as source of truth
 
@@ -79,7 +78,7 @@ Chunk IDs follow the format `{document_id}_{chunk_index}` — deterministic and 
 
 ### MCP factory pattern
 
-`src/mcp/_base.py` exports `create_app(mcp_server, title)` which returns a FastAPI app with SSE transport (`/sse`, `/messages`) plus a REST fallback (`/api/search`). All three active MCP servers use this factory and define their tools via `@mcp_server.list_tools()` / `@mcp_server.call_tool()`.
+`src/mcp/_base.py` exports `create_app(mcp_server, title)` which returns a FastAPI app with SSE transport (`/sse`, `/messages`) plus a REST fallback (`/api/search`). All MCP servers (active and legacy) use this factory and define their tools via `@mcp_server.list_tools()` / `@mcp_server.call_tool()`.
 
 Response format is always: prose context + `--- KAYNAKLAR (JSON) ---` footer with structured source metadata — this lets MCP clients cite reliably.
 

@@ -1,8 +1,8 @@
 """End-to-end orchestrator tests with mocked SearchTool and answering.
 
 The orchestrator is the single agent pipeline. These tests exercise the core
-flow (planning → policy → allocation → retrieve → assemble → judge → answer →
-sanitize → cite) with the stage-2 gates (bad_words/policy/allocation) and the
+flow (planning → policy → budget → retrieve → assemble → judge → answer →
+sanitize → cite) with the stage-2 gates (bad_words/policy) and the
 LLM-dependent stages (intent, clarification, judge-LLM) disabled for
 determinism. Intent and clarification have their own focused tests below.
 """
@@ -17,6 +17,7 @@ from src.agent.schemas import (
     CollectionSearchPlan,
     SearchPlan,
     SearchQueryDraft,
+    TermHypothesis,
 )
 from src.common.llm_client_pool import LLMClientPool
 from src.common.schemas import ExtractedFilterResponse, FilterCriteria
@@ -60,6 +61,7 @@ def _disable_gates(agent) -> None:
     agent._classifier = None
     agent._config.clarification.enabled = False
     agent._config.judge.llm.enabled = False
+    agent._search_tool._reranker = None  # pipeline.yaml enables it; keep unit tests offline
 
 
 def _agent(
@@ -79,7 +81,7 @@ def _agent(
         lambda q, tracer=None, **kw: _make_plan(*plan_collections),
     )
 
-    def _search(collection_key, query_text, filters=None, top_k=5):
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
         chunks = (result_chunks_by_collection or {}).get(collection_key, [])
         return _make_search_result(
             chunk_ids=[c["chunk_id"] for c in chunks],
@@ -90,7 +92,7 @@ def _agent(
 
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None: ("thinking", "Cevap metni."),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None, answer_directive=None: ("thinking", "Cevap metni."),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
     return agent
@@ -143,7 +145,7 @@ def test_orchestrator_streams_answer_tokens(monkeypatch):
     agent = _agent(monkeypatch, plan_collections=("col_a",),
                    result_chunks_by_collection={"col_a": chunks})
 
-    def _streaming_generate(query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None):
+    def _streaming_generate(query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None, answer_directive=None):
         for tok in ("Mer", "ha", "ba"):
             if stream_callback:
                 stream_callback({"type": "content", "content": tok})
@@ -178,8 +180,10 @@ def test_orchestrator_conversational_bypasses_retrieval(monkeypatch):
         return _make_search_result([], [], "col_a")
     monkeypatch.setattr(agent._search_tool, "search", _search)
 
+    captured_messages = {}
     def _fake_chat(*a, **kw):
         assert kw.get("stream") is True
+        captured_messages["messages"] = kw["messages"]
         yield SimpleNamespace(message=SimpleNamespace(content="İyiyim,", thinking=""))
         yield SimpleNamespace(message=SimpleNamespace(content=" teşekkürler!", thinking=""))
     client = MagicMock()
@@ -191,6 +195,52 @@ def test_orchestrator_conversational_bypasses_retrieval(monkeypatch):
     assert out.scope == "conversational"
     assert out.answer == "İyiyim, teşekkürler!"
     assert search_called["n"] == 0  # retrieval bypassed
+    # The chit-chat system prompt must still ground the assistant's identity in
+    # the real TBMM archive — it must not read as "no archive access at all".
+    assert captured_messages["messages"][0]["role"] == "system"
+    assert "tutanak" in captured_messages["messages"][0]["content"].lower()
+
+
+def test_orchestrator_off_domain_override_for_known_parliamentary_term(monkeypatch):
+    """A known jargon term (e.g. 'kadük') overrides a false off_domain verdict —
+    the small classifier model can mistake a jargon-definition question for a
+    generic dictionary lookup; the deterministic glossary catches that miss."""
+    from src.agent.schemas import ScopeResult
+
+    chunks = [{"chunk_id": f"a{i}", "document_id": f"da{i}"} for i in range(3)]
+    agent = _agent(monkeypatch, plan_collections=("col_a",),
+                   result_chunks_by_collection={"col_a": chunks})
+
+    classifier = MagicMock()
+    classifier.classify.return_value = ScopeResult(
+        scope="off_domain", confidence=1.0, selected_collections=[],
+        reason="genel bir sözlük tanımı gerektirmektedir",
+    )
+    agent._classifier = classifier
+
+    out = agent.run("kadük ne demek?", session_collections=["col_a"])
+
+    assert out.scope != "off_domain"
+    assert out.answer == "Cevap metni."  # normal RAG path ran, not the off-domain template
+
+
+def test_orchestrator_off_domain_without_known_term_still_blocks(monkeypatch):
+    """Regression guard: genuinely off-domain queries (no known jargon term)
+    are still blocked as before — the override doesn't loosen the gate generally."""
+    from src.agent.schemas import ScopeResult
+
+    agent = _agent(monkeypatch, plan_collections=("col_a",))
+
+    classifier = MagicMock()
+    classifier.classify.return_value = ScopeResult(
+        scope="off_domain", confidence=0.95, selected_collections=[], reason="hava durumu",
+    )
+    agent._classifier = classifier
+    monkeypatch.setattr(agent._suggester, "suggest", lambda query, tracer: ["öneri1", "öneri2", "öneri3"])
+
+    out = agent.run("hava bugün nasıl", session_collections=["col_a"])
+
+    assert out.scope == "off_domain"
 
 
 def test_orchestrator_zero_chunks_returns_clarify(monkeypatch):
@@ -211,7 +261,7 @@ def test_orchestrator_requery_expand_adds_new_chunks(monkeypatch):
 
     calls = {"n": 0}
 
-    def _search(collection_key, query_text, filters=None, top_k=5):
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
         calls["n"] += 1
         ids = ["a0"] if calls["n"] == 1 else ["a1", "a2", "a3"]
         return _make_search_result(ids, [f"d-{i}" for i in ids], collection_key)
@@ -223,30 +273,147 @@ def test_orchestrator_requery_expand_adds_new_chunks(monkeypatch):
     assert out.evidence_decision.action == "answer"  # post-expand judge is satisfied
 
 
-def test_orchestrator_comprehensive_gathers_until_saturation(monkeypatch):
-    """A comprehensive (enumeration) query keeps re-querying until a round adds no
-    new chunks — beyond the single-expand limit normal queries get."""
+def test_orchestrator_successful_term_hypothesis_upserted_for_review(monkeypatch):
+    """A re-query round that used a term hypothesis AND actually resolved
+    insufficiency (added>0, post-expand judge says 'answer') gets surfaced to
+    the term_candidates human-review queue — never auto-applied to live search."""
     agent = _agent(monkeypatch, plan_collections=("col_a",))
-    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
+    hypothesis_plan = _make_plan("col_a")
+    hypothesis_plan.term_hypothesis = TermHypothesis(term="kadük", official_phrase="hükümsüz sayılan kanun teklifleri")
+    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: hypothesis_plan)
 
     calls = {"n": 0}
 
-    def _search(collection_key, query_text, filters=None, top_k=5):
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
         calls["n"] += 1
-        if calls["n"] == 1:
-            ids = ["a0", "a1", "a2", "a3", "a4"]      # initial retrieval
-        elif calls["n"] == 2:
-            ids = ["a5", "a6", "a7", "a8", "a9"]      # round 1: 5 new chunks
-        else:
-            ids = ["a5", "a6", "a7", "a8", "a9"]      # round 2: all seen → saturation
+        ids = ["a0"] if calls["n"] == 1 else ["a1", "a2", "a3"]
+        return _make_search_result(ids, [f"d-{i}" for i in ids], collection_key)
+    monkeypatch.setattr(agent._search_tool, "search", _search)
+
+    captured = {}
+    monkeypatch.setattr(
+        "src.api.db.upsert_term_candidate",
+        lambda term, hypothesis, source_query=None, **kw: captured.update(
+            term=term, hypothesis=hypothesis, source_query=source_query
+        ),
+    )
+
+    out = agent.run("kadük ne demek listele", session_collections=["col_a"])
+
+    assert out.evidence_decision.action == "answer"
+    assert captured == {
+        "term": "kadük",
+        "hypothesis": "hükümsüz sayılan kanun teklifleri",
+        "source_query": "kadük ne demek listele",
+    }
+
+
+def test_orchestrator_term_hypothesis_not_recorded_when_round_unhelpful(monkeypatch):
+    """A term hypothesis that DIDN'T resolve anything (re-query surfaces no NEW
+    chunks, added stays 0) must not be recorded — only genuinely-successful
+    guesses reach the review queue."""
+    agent = _agent(monkeypatch, plan_collections=("col_a",))
+    hypothesis_plan = _make_plan("col_a")
+    hypothesis_plan.term_hypothesis = TermHypothesis(term="kadük", official_phrase="yanlış tahmin")
+    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: hypothesis_plan)
+
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
+        # Always the same single chunk -> initial round triggers 'expand' (1 <
+        # min_chunks), but the re-query round finds nothing NEW (already seen).
+        return _make_search_result(["a0"], ["d0"], collection_key)
+    monkeypatch.setattr(agent._search_tool, "search", _search)
+
+    upsert = MagicMock()
+    monkeypatch.setattr("src.api.db.upsert_term_candidate", upsert)
+
+    agent.run("kadük ne demek", session_collections=["col_a"])
+
+    upsert.assert_not_called()
+
+
+def test_orchestrator_requery_preserves_comprehensive_fetch_k(monkeypatch):
+    """Regression: broaden()'s LLM response has no query_type field (RE_RETRIEVAL_PROMPT's
+    JSON schema omits it), so _parse_plan defaults it to 'fact'. Without carrying the
+    original query_type forward, _flat_plans_for would starve every re-query round to
+    the much smaller 'fact' fetch_k instead of 'comprehensive', causing premature
+    saturation (few/no 'new' chunks per round) even when the corpus has plenty more."""
+    agent = _agent(monkeypatch, plan_collections=("col_a",))
+    # _make_plan defaults query_type="fact" — mirrors broaden()'s real (query_type-less
+    # JSON schema) behavior exactly.
+    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
+
+    seen_top_k = []
+
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
+        seen_top_k.append(top_k)
+        n = len(seen_top_k)
+        ids = [f"a{n}-{i}" for i in range(3)]
+        return _make_search_result(ids, [f"d{n}-{i}" for i in ids], collection_key)
+    monkeypatch.setattr(agent._search_tool, "search", _search)
+
+    agent.run("tüm kayıtları listele", session_collections=["col_a"])
+
+    comprehensive_fetch_k = agent._config.retrieval_budget.budget_for("comprehensive").fetch_k
+    fact_fetch_k = agent._config.retrieval_budget.budget_for("fact").fetch_k
+    assert comprehensive_fetch_k != fact_fetch_k  # sanity: pipeline.yaml budgets actually differ
+    assert len(seen_top_k) >= 2  # at least one initial + one re-query call happened
+    assert all(k == comprehensive_fetch_k for k in seen_top_k)  # EVERY round, not just the first
+
+
+def test_orchestrator_comprehensive_escalates_depth_then_saturates(monkeypatch):
+    """A dry round does NOT stop enumerate: it doubles fetch_k to reach the long tail
+    (ranks beyond the initial top-K) and only stops when even the deepest fetch adds
+    nothing new (or the ceiling is hit). Regression for the 'what if there are more
+    than fetch_k relevant chunks?' gap."""
+    agent = _agent(monkeypatch, plan_collections=("col_a",))
+    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
+
+    CORPUS = 100
+    seen_top_k = []
+
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
+        seen_top_k.append(top_k)
+        n = min(top_k, CORPUS)                        # deeper fetch → more of the corpus
+        ids = [f"a{i}" for i in range(n)]
         return _make_search_result(ids, [f"d-{i}" for i in ids], collection_key)
     monkeypatch.setattr(agent._search_tool, "search", _search)
 
     out = agent.run("tüm konuşmaları listele", session_collections=["col_a"])
-    assert out.plan.query_type == "comprehensive"   # keyword detection promoted it
-    assert calls["n"] == 3                           # initial + 2 re-queries, then saturate
-    assert len(out.assembly) == 10                   # a0..a9 (cap 50, not the global 15)
+    assert out.plan.query_type == "comprehensive"    # keyword detection promoted it
+    assert max(seen_top_k) > 40                       # depth escalated past the base fetch_k
+    assert len(out.assembly) == 50                    # reached the ceiling only by going deeper
     assert out.expanded is True
+
+
+def test_orchestrator_comprehensive_facet_partitions_by_year(monkeypatch):
+    """Enumerate runs one extra year-scoped pass per mined year facet, so each year's
+    own top-K surfaces instead of only the globally dominant region (strategy 3)."""
+    agent = _agent(monkeypatch, plan_collections=("col_a",))
+    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
+
+    seen_filters = []
+
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
+        seen_filters.append(filters)
+        n = len(seen_filters)
+        ids = [f"c{n}-{i}" for i in range(4)]
+        years = [2018, 2019, 2018, 2019]
+        return {
+            "documents": [f"body-{i}" for i in ids],
+            "metadatas": [
+                {"chunk_id": cid, "document_id": f"doc-{cid}", "doc_type": "gazete",
+                 "source_title": f"t-{cid}", "year": yr, "_source_collection": collection_key}
+                for cid, yr in zip(ids, years)
+            ],
+            "distances": [0.1 for _ in ids],
+        }
+    monkeypatch.setattr(agent._search_tool, "search", _search)
+
+    agent.run("tüm konuşmaları listele", session_collections=["col_a"])
+
+    # At least one re-query pass was scoped to a specific year via a Chroma filter.
+    year_filters = [f for f in seen_filters if f and "year" in str(f)]
+    assert year_filters, "facet partition should issue year-scoped searches"
 
 
 def test_orchestrator_comprehensive_stops_at_max_rounds(monkeypatch):
@@ -257,7 +424,7 @@ def test_orchestrator_comprehensive_stops_at_max_rounds(monkeypatch):
 
     calls = {"n": 0}
 
-    def _search(collection_key, query_text, filters=None, top_k=5):
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
         calls["n"] += 1
         base = calls["n"] * 10
         ids = [f"a{base + j}" for j in range(3)]      # always 3 NEW chunks
@@ -274,11 +441,11 @@ def test_orchestrator_comprehensive_stops_at_ceiling(monkeypatch):
     agent = _agent(monkeypatch, plan_collections=("col_a",))
     monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
     # Lower the comprehensive ceiling so the initial retrieval already saturates it.
-    agent._config.allocation._by_query_type["comprehensive"].max_total = 4
+    agent._config.retrieval_budget._by_query_type["comprehensive"].max_total = 4
 
     calls = {"n": 0}
 
-    def _search(collection_key, query_text, filters=None, top_k=5):
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
         calls["n"] += 1
         ids = [f"a{i}" for i in range(6)]             # 6 chunks on the initial search
         return _make_search_result(ids, [f"d-{i}" for i in ids], collection_key)
@@ -298,9 +465,9 @@ def test_orchestrator_non_comprehensive_does_not_loop(monkeypatch):
     calls = {"n": 0}
     orig = agent._search_tool.search
 
-    def _counting(collection_key, query_text, filters=None, top_k=5):
+    def _counting(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
         calls["n"] += 1
-        return orig(collection_key, query_text, filters=filters, top_k=top_k)
+        return orig(collection_key, query_text, filters=filters, top_k=top_k, apply_reranker=apply_reranker)
     monkeypatch.setattr(agent._search_tool, "search", _counting)
 
     out = agent.run("susurluk nedir", session_collections=["col_a"])
@@ -320,7 +487,7 @@ def test_orchestrator_single_collection_failure_continues(monkeypatch):
         lambda q, tracer=None, **kw: _make_plan("col_a", "col_b"),
     )
 
-    def _search(collection_key, query_text, filters=None, top_k=5):
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
         if collection_key == "col_b":
             raise RuntimeError("boom")
         return _make_search_result(
@@ -331,7 +498,7 @@ def test_orchestrator_single_collection_failure_continues(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None, answer_directive=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -349,13 +516,13 @@ def test_orchestrator_emits_phase_trace_events(monkeypatch):
     )
     out = agent.run("q", session_collections=["col_a", "col_b"])
     phases = {e.phase for e in out.trace}
-    for expected in ("planning", "policy", "allocation", "retrieval", "assembly",
+    for expected in ("planning", "policy", "budget", "retrieval", "assembly",
                      "judge", "answering", "citation"):
         assert expected in phases
 
 
 def test_orchestrator_disabled_stages_absent_from_trace(monkeypatch):
-    """bad_words/clarification stages are absent when disabled; policy/allocation still tracked."""
+    """bad_words/clarification stages are absent when disabled; policy/budget still tracked."""
     chunks = [{"chunk_id": f"k{i}", "document_id": f"d{i}"} for i in range(3)]
     agent = _agent(monkeypatch, plan_collections=("col_a",),
                    result_chunks_by_collection={"col_a": chunks})
@@ -387,7 +554,7 @@ def test_orchestrator_propagates_extracted_filters_to_retrieval(monkeypatch):
     chunks = [{"chunk_id": f"a{i}", "document_id": f"da{i}"} for i in range(3)]
     captured = {}
 
-    def _search(collection_key, query_text, filters=None, top_k=5):
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
         captured["filters"] = filters
         return _make_search_result(
             chunk_ids=[c["chunk_id"] for c in chunks],
@@ -397,7 +564,7 @@ def test_orchestrator_propagates_extracted_filters_to_retrieval(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None, answer_directive=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -419,6 +586,7 @@ def test_orchestrator_falls_back_to_refined_query_when_no_drafts(monkeypatch):
     pool = LLMClientPool.from_config(cfg)
     agent = OrchestratorAgent(cfg, pool, filter_extractor=mock_fe)
     _disable_gates(agent)
+    agent._production = ["col_a"]  # treat the mock collection as the production universe
 
     plan_no_drafts = SearchPlan(
         intent="factual",
@@ -430,16 +598,19 @@ def test_orchestrator_falls_back_to_refined_query_when_no_drafts(monkeypatch):
         agent._planner, "_generate_plan",
         lambda q, tracer, allowed_keys=None: plan_no_drafts,
     )
+    # Single-chunk retrieval trips the judge into expand; broaden must not reach a
+    # live LLM (new drafts would overwrite the refined-query capture asserted below).
+    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: None)
 
     captured = {}
 
-    def _search(collection_key, query_text, filters=None, top_k=5):
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
         captured["query_text"] = query_text
         return _make_search_result(chunk_ids=["a0"], doc_ids=["da0"], collection=collection_key)
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None, answer_directive=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -473,7 +644,7 @@ def test_orchestrator_runs_each_planner_draft_as_parallel_query(monkeypatch):
 
     seen_queries = []
 
-    def _search(collection_key, query_text, filters=None, top_k=5):
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
         seen_queries.append(query_text)
         return _make_search_result(
             chunk_ids=["shared", query_text],
@@ -483,7 +654,7 @@ def test_orchestrator_runs_each_planner_draft_as_parallel_query(monkeypatch):
     monkeypatch.setattr(agent._search_tool, "search", _search)
     monkeypatch.setattr(
         agent._answer_tool, "generate",
-        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None: ("t", "ok"),
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None, answer_directive=None: ("t", "ok"),
     )
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
@@ -492,6 +663,61 @@ def test_orchestrator_runs_each_planner_draft_as_parallel_query(monkeypatch):
     assert sorted(seen_queries) == ["draft-1", "draft-2", "draft-3"]
     chunk_ids = [s["chunk_id"] for s in out.sources]
     assert chunk_ids.count("shared") == 1
+
+
+def test_orchestrator_reranks_fused_pool_once_per_collection(monkeypatch):
+    """Reranking must happen once per collection, on the RRF-fused pool — not
+    once per draft. Per-draft reranking multiplies cross-encoder cost for no
+    benefit, since fusion discards each draft's independent rerank order
+    anyway; it also contends the shared cross-encoder model across threads."""
+    cfg = load_pipeline_config()
+    pool = LLMClientPool.from_config(cfg)
+    agent = OrchestratorAgent(cfg, pool)
+    _disable_gates(agent)
+
+    plan = SearchPlan(
+        intent="factual",
+        query_type="fact",
+        resources=[
+            CollectionSearchPlan(
+                collection="col_a",
+                query_drafts=[
+                    SearchQueryDraft(text="draft-1", top_k=5),
+                    SearchQueryDraft(text="draft-2", top_k=5),
+                    SearchQueryDraft(text="draft-3", top_k=5),
+                ],
+            )
+        ],
+        reasoning="r",
+    )
+    monkeypatch.setattr(agent._planner, "plan", lambda q, tracer=None, **kw: plan)
+
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
+        assert apply_reranker is False  # draft-level fan-out must not rerank internally
+        return _make_search_result(
+            chunk_ids=["shared", query_text],
+            doc_ids=["d-shared", f"d-{query_text}"],
+            collection=collection_key,
+        )
+    monkeypatch.setattr(agent._search_tool, "search", _search)
+
+    fake_reranker = MagicMock()
+    fake_reranker.rerank.return_value = [
+        ("shared", 0.9), ("draft-1", 0.3), ("draft-2", 0.2), ("draft-3", 0.1),
+    ]
+    agent._search_tool._reranker = fake_reranker
+
+    monkeypatch.setattr(
+        agent._answer_tool, "generate",
+        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None, answer_directive=None: ("t", "ok"),
+    )
+    monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
+
+    agent.run("q", session_collections=["col_a"])
+
+    assert fake_reranker.rerank.call_count == 1  # once per collection, not once per draft
+    scored_pairs = fake_reranker.rerank.call_args.args[1]
+    assert {cid for cid, _ in scored_pairs} == {"shared", "draft-1", "draft-2", "draft-3"}
 
 
 def test_orchestrator_caps_query_variants(monkeypatch):
@@ -515,13 +741,13 @@ def test_orchestrator_caps_query_variants(monkeypatch):
 
     seen = []
 
-    def _search(collection_key, query_text, filters=None, top_k=5):
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
         seen.append(query_text)
         # Two distinct-doc chunks so the judge is satisfied (no expand → no re-query).
         return _make_search_result([f"x-{query_text}-0", f"x-{query_text}-1"],
                                     [f"d-{query_text}-0", f"d-{query_text}-1"], collection_key)
     monkeypatch.setattr(agent._search_tool, "search", _search)
-    monkeypatch.setattr(agent._answer_tool, "generate", lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None: ("t", "ok"))
+    monkeypatch.setattr(agent._answer_tool, "generate", lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None, answer_directive=None: ("t", "ok"))
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
 
     agent.run("q", session_collections=["col_a"])
@@ -553,6 +779,7 @@ def _clarify_agent(monkeypatch):
     pool = LLMClientPool.from_config(cfg)
     agent = OrchestratorAgent(cfg, pool)
     agent._classifier = None  # skip intent LLM; clarification stays ENABLED
+    agent._search_tool._reranker = None  # pipeline.yaml enables it; keep unit tests offline
     captured = {}
 
     def _plan(q, tracer=None, **kw):
@@ -560,9 +787,9 @@ def _clarify_agent(monkeypatch):
         return _make_plan("col_a")
     monkeypatch.setattr(agent._planner, "plan", _plan)
     monkeypatch.setattr(agent._search_tool, "search",
-                        lambda collection_key, query_text, filters=None, top_k=5, rerank=True: _ambiguous_result(collection_key))
+                        lambda collection_key, query_text, filters=None, top_k=5, apply_reranker=True: _ambiguous_result(collection_key))
     monkeypatch.setattr(agent._answer_tool, "generate",
-                        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None: ("t", "ok"))
+                        lambda query, context, mufettis_mode=False, chat_history=None, stream_callback=None, query_type=None, answer_directive=None: ("t", "ok"))
     monkeypatch.setattr(agent._sanitizer, "validate", lambda *a, **kw: None)
     return agent, captured
 
@@ -607,7 +834,7 @@ def test_orchestrator_unambiguous_query_no_rabbit_holes(monkeypatch):
         "distances": [0.1, 0.1, 0.1],
     }
     monkeypatch.setattr(agent._search_tool, "search",
-                        lambda collection_key, query_text, filters=None, top_k=5, rerank=True: narrow)
+                        lambda collection_key, query_text, filters=None, top_k=5, apply_reranker=True: narrow)
     out = agent.run("1997 bütçe", session_collections=["col_a"])
     assert captured["constraints"] in (None, {})
     assert out.rabbit_holes == []
@@ -666,3 +893,92 @@ def test_fuse_draft_chunks_single_list_passthrough():
     ]
     fused = OrchestratorAgent._fuse_draft_chunks([chunks])
     assert [c.chunk_id for c in fused] == ["c0", "c1", "c2"]
+
+
+# ================================================== research strategy playbook
+
+def _capturing_generate(captured: dict):
+    def _generate(query, context, mufettis_mode=False, chat_history=None,
+                  stream_callback=None, query_type=None, answer_directive=None):
+        captured["query_type"] = query_type
+        captured["answer_directive"] = answer_directive
+        return "t", "ok"
+    return _generate
+
+
+def test_orchestrator_resolves_strategy_to_query_type_and_directive(monkeypatch):
+    """A planner-selected strategy (research_strategies.md) sets query_type and
+    threads its answer_directive through to AnswerTool.generate."""
+    plan = _make_plan("col_a")
+    plan.strategy = "summarize"
+    chunks = [{"chunk_id": f"a{i}", "document_id": f"da{i}"} for i in range(3)]
+    agent = _agent(monkeypatch, plan_collections=("col_a",),
+                   result_chunks_by_collection={"col_a": chunks})
+    monkeypatch.setattr(agent._planner, "plan", lambda q, tracer=None, **kw: plan)
+
+    captured = {}
+    monkeypatch.setattr(agent._answer_tool, "generate", _capturing_generate(captured))
+
+    out = agent.run("meclis toplantılarını özetle", session_collections=["col_a"])
+
+    assert out.plan.query_type == "summary"
+    assert out.plan.strategy == "summarize"
+    assert captured["query_type"] == "summary"
+    assert captured["answer_directive"]
+    assert "ana bulguyu" in captured["answer_directive"]
+
+
+def test_orchestrator_unknown_strategy_name_is_noop(monkeypatch):
+    """An unresolvable strategy name is fail-open: Faz A behavior (unchanged query_type,
+    no answer_directive)."""
+    plan = _make_plan("col_a")
+    plan.strategy = "does_not_exist_strategy"
+    chunks = [{"chunk_id": f"a{i}", "document_id": f"da{i}"} for i in range(3)]
+    agent = _agent(monkeypatch, plan_collections=("col_a",),
+                   result_chunks_by_collection={"col_a": chunks})
+    monkeypatch.setattr(agent._planner, "plan", lambda q, tracer=None, **kw: plan)
+
+    captured = {}
+    monkeypatch.setattr(agent._answer_tool, "generate", _capturing_generate(captured))
+
+    out = agent.run("q", session_collections=["col_a"])
+
+    assert out.plan.query_type == "fact"
+    assert captured["query_type"] == "fact"
+    assert captured["answer_directive"] is None
+
+
+def test_orchestrator_keyword_override_wins_over_llm_strategy(monkeypatch):
+    """COMPREHENSIVE_KEYWORDS always forces enumerate/comprehensive, even when the
+    planner LLM picked a different strategy."""
+    plan = _make_plan("col_a")
+    plan.strategy = "summarize"
+    chunks = [{"chunk_id": f"a{i}", "document_id": f"da{i}"} for i in range(3)]
+    agent = _agent(monkeypatch, plan_collections=("col_a",),
+                   result_chunks_by_collection={"col_a": chunks})
+    monkeypatch.setattr(agent._planner, "plan", lambda q, tracer=None, **kw: plan)
+    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
+
+    captured = {}
+    monkeypatch.setattr(agent._answer_tool, "generate", _capturing_generate(captured))
+
+    out = agent.run("tüm konuşmaları özetle", session_collections=["col_a"])
+
+    assert out.plan.query_type == "comprehensive"
+    assert out.plan.strategy == "enumerate"
+    assert captured["query_type"] == "comprehensive"
+    assert "asla boş dönme" in captured["answer_directive"]
+
+
+def test_orchestrator_trace_exposes_strategy_field(monkeypatch):
+    plan = _make_plan("col_a")
+    plan.strategy = "summarize"
+    chunks = [{"chunk_id": f"a{i}", "document_id": f"da{i}"} for i in range(3)]
+    agent = _agent(monkeypatch, plan_collections=("col_a",),
+                   result_chunks_by_collection={"col_a": chunks})
+    monkeypatch.setattr(agent._planner, "plan", lambda q, tracer=None, **kw: plan)
+
+    out = agent.run("meclis toplantılarını özetle", session_collections=["col_a"])
+
+    planning_ev = next(e for e in out.trace if e.phase == "planning")
+    assert planning_ev.details.get("strategy") == "summarize"

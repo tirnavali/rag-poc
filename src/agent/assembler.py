@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from src.agent.schemas import Chunk, ContextAssemblyItem, OrchestratorState
-from src.config.pipeline_loader import AllocationConfig
+from src.config.pipeline_loader import RetrievalBudgetConfig
 
 
 class BalancedContextAssembler:
@@ -10,7 +10,7 @@ class BalancedContextAssembler:
     across collections, honors max_per_document and max_total_primary.
     """
 
-    def __init__(self, config: AllocationConfig) -> None:
+    def __init__(self, config: RetrievalBudgetConfig) -> None:
         self._config = config
 
     def run(self, state: OrchestratorState) -> OrchestratorState:

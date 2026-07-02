@@ -9,6 +9,7 @@ Falls back to settings.py if the YAML file is not found (backwards compatibility
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 from typing import Any, Optional
 
@@ -164,56 +165,58 @@ class PolicyConfig:
         self.mode = config.get("mode", "session_intersection")
 
 
-class _AllocationBudget:
-    """Tuple-like budget triple for one query_type, plus optional context caps.
+class _QueryTypeBudget:
+    """Retrieval budget for one query_type, plus optional context caps.
 
-    ``max_total`` / ``max_per_document`` override the global assembly caps for this
-    query_type when set (None → fall back to the global value). Used so that
+    ``fetch_k`` is the per-collection retrieval depth (passed as top_k to the
+    search tool). ``max_total`` / ``max_per_document`` override the global assembly
+    caps for this query_type when set (None → fall back to the global value), so
     'comprehensive' queries can assemble a much larger single context.
     """
 
     def __init__(
         self,
-        primary: int,
-        reserve: int,
         fetch_k: int,
         max_total: int | None = None,
         max_per_document: int | None = None,
     ) -> None:
-        self.primary = primary
-        self.reserve = reserve
         self.fetch_k = fetch_k
         self.max_total = max_total
         self.max_per_document = max_per_document
 
 
-class AllocationConfig:
-    """Per-query-type retrieval budget configuration."""
+class RetrievalBudgetConfig:
+    """Per-query-type retrieval budget: fetch_k depth + assembly caps.
+
+    The orchestrator maps the planner's ``query_type`` to a fetch_k here and the
+    assembler reads the per-type / global context caps. This is a plain config
+    lookup — there is no separate allocation stage.
+    """
 
     def __init__(self, config: dict) -> None:
-        # Stage-2: off by default. When disabled the orchestrator builds a flat
-        # single-pool execution plan from `defaults.fetch_k` (no reserve split).
-        self.enabled = bool(config.get("enabled", False))
         defaults = config.get("defaults", {})
-        self._defaults = _AllocationBudget(
-            primary=int(defaults.get("primary", 2)),
-            reserve=int(defaults.get("reserve", 2)),
+        self._defaults = _QueryTypeBudget(
             fetch_k=int(defaults.get("fetch_k", 10)),
         )
         raw_by_qt = config.get("by_query_type", {})
-        self._by_query_type: dict[str, _AllocationBudget] = {}
+        self._by_query_type: dict[str, _QueryTypeBudget] = {}
         for qt, cfg in raw_by_qt.items():
-            self._by_query_type[qt] = _AllocationBudget(
-                primary=int(cfg.get("primary", self._defaults.primary)),
-                reserve=int(cfg.get("reserve", self._defaults.reserve)),
+            self._by_query_type[qt] = _QueryTypeBudget(
                 fetch_k=int(cfg.get("fetch_k", self._defaults.fetch_k)),
                 max_total=int(cfg["max_total"]) if cfg.get("max_total") is not None else None,
                 max_per_document=int(cfg["max_per_document"]) if cfg.get("max_per_document") is not None else None,
             )
         self.max_per_document = int(config.get("max_per_document", 1))
         self.max_total_primary = int(config.get("max_total_primary", 12))
+        # Enumerate/comprehensive gather tuning:
+        # - facet_partition: also run one search per mined year facet, so each year
+        #   in the corpus is covered instead of only the globally top-ranked region.
+        # - fetch_k_max: depth-escalation ceiling; a dry round doubles fetch_k up to
+        #   this before declaring saturation, reaching ranks beyond the initial top-K.
+        self.enumerate_facet_partition = bool(config.get("enumerate_facet_partition", True))
+        self.enumerate_fetch_k_max = int(config.get("enumerate_fetch_k_max", 120))
 
-    def budget_for(self, query_type: str) -> _AllocationBudget:
+    def budget_for(self, query_type: str) -> _QueryTypeBudget:
         return self._by_query_type.get(query_type, self._defaults)
 
     def max_total_for(self, query_type: str) -> int:
@@ -232,6 +235,14 @@ class _JudgeHeuristicConfig:
         self.min_chunks = int(config.get("min_chunks", 4))
         self.min_collection_coverage = int(config.get("min_collection_coverage", 2))
         self.min_rerank_score = float(config.get("min_rerank_score", 0.0))
+        # Escalation, not rejection: when count/coverage otherwise look sufficient
+        # but the BEST match is still this weak, don't auto-answer — hand off to
+        # the LLM judge to actually read the content and decide. A plain reject
+        # threshold was tested empirically against the golden Q&A fixture and
+        # rejected: correct-but-abstractly-phrased queries ("olumlu yanları",
+        # "eleştiriler") score in the same low range as genuine topic mismatches,
+        # so a numeric cutoff alone misfires on real, common queries.
+        self.llm_escalation_score = float(config.get("llm_escalation_score", 0.3))
 
 
 class _JudgeLLMConfig:
@@ -256,9 +267,6 @@ class JudgeConfig:
         # Hard cap on iterative gather rounds for 'comprehensive' (enumeration) queries.
         self.comprehensive_max_rounds = int(config.get("comprehensive_max_rounds", 3))
         self.on_low_confidence = config.get("on_low_confidence", "expand")
-        # "requery" = ExpansionPlanner issues new diversified retrieval (default);
-        # "reserve" = legacy reserve-chunk promotion (no new vector calls).
-        self.expand_strategy = config.get("expand", {}).get("strategy", "requery")
 
 
 class ClarificationConfig:
@@ -296,6 +304,92 @@ class ClarificationConfig:
         self.temperature = float(config.get("temperature", 0.2))
         self.think = config.get("think", False)
         self.prompt = config.get("prompt", "")
+
+
+class StrategyPlaybook:
+    """Parses ``research_strategies.md`` into a prompt-ready catalog + lookup map.
+
+    Format: ``## <name>`` sections, each with unindented ``key: value`` lines;
+    a value may continue onto following indented lines (see the file itself
+    for the canonical example). Recognized keys: ``triggers`` (comma-separated
+    hint keywords), ``query_type`` (drives retrieval budget + judge presets),
+    ``answer_directive`` (appended to the answering system prompt).
+
+    Fail-open: a missing/unreadable file yields an empty catalog and an empty
+    ``by_name`` map, so callers fall back to Faz A behavior (deterministic
+    COMPREHENSIVE_KEYWORDS override only, no answer_directive) without error.
+    """
+
+    _HEADER_RE = re.compile(r"^##\s+(.+?)\s*$")
+    _FIELD_RE = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*):\s*(.*)$")
+
+    def __init__(self, path: "str | Path | None" = None) -> None:
+        self._path = Path(path) if path is not None else (PROJECT_ROOT / "research_strategies.md")
+        self.by_name: dict[str, dict[str, Any]] = {}
+        self.catalog_text: str = ""
+        self._load()
+
+    def _load(self) -> None:
+        if not self._path.exists():
+            return
+        try:
+            text = self._path.read_text(encoding="utf-8")
+        except OSError:
+            return
+        self.by_name = self._parse(text)
+        self.catalog_text = self._build_catalog(self.by_name)
+
+    @classmethod
+    def _parse(cls, text: str) -> dict[str, dict[str, Any]]:
+        sections: dict[str, dict[str, Any]] = {}
+        name: str | None = None
+        fields: dict[str, str] = {}
+        current_key: str | None = None
+
+        def flush() -> None:
+            if name is not None:
+                sections[name] = cls._finalize(fields)
+
+        for raw_line in text.splitlines():
+            header = cls._HEADER_RE.match(raw_line)
+            if header:
+                flush()
+                name = header.group(1).strip()
+                fields = {}
+                current_key = None
+                continue
+            if name is None:
+                continue
+            field = cls._FIELD_RE.match(raw_line)
+            if field:
+                current_key = field.group(1).strip()
+                fields[current_key] = field.group(2).strip()
+                continue
+            if current_key is not None and raw_line.strip():
+                fields[current_key] = (fields[current_key] + " " + raw_line.strip()).strip()
+        flush()
+        return sections
+
+    @staticmethod
+    def _finalize(fields: dict[str, str]) -> dict[str, Any]:
+        triggers = [t.strip() for t in fields.get("triggers", "").split(",") if t.strip()]
+        return {
+            "query_type": fields.get("query_type", "").strip() or None,
+            "answer_directive": fields.get("answer_directive", "").strip(),
+            "triggers": triggers,
+        }
+
+    @staticmethod
+    def _build_catalog(by_name: dict[str, dict[str, Any]]) -> str:
+        lines = []
+        for name, spec in by_name.items():
+            triggers = ", ".join(spec["triggers"]) if spec["triggers"] else "(tetikleyici yok)"
+            qt = spec.get("query_type") or "fact"
+            directive = spec.get("answer_directive") or ""
+            hint = (directive[:90] + "…") if len(directive) > 90 else directive
+            suffix = f": {hint}" if hint else ""
+            lines.append(f"- {name} (query_type={qt}, tetikleyiciler: {triggers}){suffix}")
+        return "\n".join(lines)
 
 
 class PipelineConfig:
@@ -341,8 +435,9 @@ class PipelineConfig:
         # New orchestrator blocks (optional; safe defaults when missing)
         self.orchestrator = OrchestratorConfig(config.get("orchestrator", {}))
         self.policy = PolicyConfig(config.get("policy", {}))
-        self.allocation = AllocationConfig(config.get("allocation", {}))
+        self.retrieval_budget = RetrievalBudgetConfig(config.get("retrieval_budget", {}))
         self.judge = JudgeConfig(config.get("judge", {}))
+        self.strategy_playbook = StrategyPlaybook()
 
     def get_block(self, name: str) -> DeploymentBlock:
         if name not in self.blocks:
@@ -408,6 +503,14 @@ class PipelineConfig:
         """Return all registered collection keys."""
         from src.config.collections import COLLECTIONS
         return list(COLLECTIONS.keys())
+
+    def get_strategy_catalog(self) -> str:
+        """Human-readable strategy catalog for the planner prompt (empty if no playbook)."""
+        return self.strategy_playbook.catalog_text
+
+    def get_strategy(self, name: str) -> "dict[str, Any] | None":
+        """Look up a playbook strategy by name; None if undefined (fail-open)."""
+        return self.strategy_playbook.by_name.get(name)
 
 
 def load_pipeline_config(path: str | Path | None = None) -> PipelineConfig | None:

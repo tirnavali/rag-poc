@@ -14,6 +14,7 @@ from src.agent.schemas import (
     CollectionSearchPlan,
     SearchPlan,
     SearchQueryDraft,
+    TermHypothesis,
 )
 from src.agent.tracer import PipelineTracer
 from src.common.filter_translators import mask_filters
@@ -32,6 +33,10 @@ arama planı oluştur.
 Mevcut koleksiyonlar:
 {catalog}
 
+Mevcut araştırma stratejileri (uygun olanın adını "strategy" alanına yaz;
+hiçbiri uymuyorsa null bırak):
+{strategy_catalog}
+
 Kurallar:
 1. Önce sorgunun amacını belirle: factual (basit bilgi), comparative (karşılaştırma),
    analytical (derin analiz), temporal (zaman bazlı), unknown
@@ -39,6 +44,9 @@ Kurallar:
    comparison (karşılaştırma), reasoning (analiz), policy (mevzuat/karar),
    comprehensive (kapsamlı/sayım: "tüm", "bütün", "hepsi", "listele", "kaç tane",
    "hangileri", "her ..." gibi çok sayıda kayıt gerektiren toplu sorgular).
+1c. Yukarıdaki strateji listesinden sorguya en uygun olanı seç (tetikleyici
+   kelimeler ipucudur, zorunlu değildir); seçilen stratejinin query_type'ı ile
+   1b'de belirlediğin query_type tutarlı olmalı.
 2. Hangi koleksiyonların ilgili olduğunu belirle. Doc-type yönlendirme:
    - Gazete/basın/köşe yazısı/manşet/muhabir/gazeteci soruları → doc_type=gazete koleksiyonları
    - Meclis/oturum/birleşim/milletvekili/konuşma/tutanak soruları → doc_type=tutanak koleksiyonları
@@ -54,6 +62,7 @@ JSON çıktısı:
 {{
   "intent": "factual|comparative|analytical|temporal|unknown",
   "query_type": "fact|summary|comparison|reasoning|policy|comprehensive",
+  "strategy": "<strateji_adi>|null",
   "resources": [
     {{
       "collection": "koleksiyon_adi",
@@ -69,7 +78,7 @@ JSON çıktısı:
 """
 
 RE_RETRIEVAL_PROMPT = """Önceki arama yetersiz sonuç döndürdü ({result_count} sonuç).
-Filtreleri gevşeterek yeni arama sorguları üret.
+{missing_aspects_block}Filtreleri gevşeterek yeni arama sorguları üret.
 
 Mevcut koleksiyonlar:
 {catalog}
@@ -86,11 +95,20 @@ Doc-type yönlendirme (önceki plan yanlış doc_type seçmiş olabilir):
 - Kanun teklifi/önerge → doc_type=onerge
 İlgili görünen başka doc_type varsa, ona ait koleksiyon ekleyerek aramayı genişlet.
 
+TERİM HİPOTEZİ (opsiyonel ama önemli): Önceki tur "low_relevance_all_chunks" (bulunan
+sonuçların hepsi alakasız) nedeniyle başarısız olduysa, sorgudaki bir kelime arşivin resmi/
+hukuki terminolojisinden FARKLI, konuşma diline ait bir terim olabilir (örn. "kadük" arşivde
+"hükümsüz sayılan" olarak geçebilir). Böyle bir terim seziyorsan, kendi bilgine dayanarak en
+olası RESMİ/FORMEL karşılığını tahmin et; bunu hem yeni bir query_draft'a hem de aşağıdaki
+"term_hypothesis" alanına yaz. Emin değilsen alanı null bırak — yanlış bir tahmin zararsızdır
+(sadece kullanılmayan bir draft daha olur), o yüzden çekinme, en olası tahminini paylaş.
+{rejected_hypotheses_block}
 JSON çıktısı (aynı format):
 {{
   "intent": "...",
   "resources": [...],
-  "reasoning": "..."
+  "reasoning": "...",
+  "term_hypothesis": {{"term": "...", "official_phrase": "..."}} veya null
 }}
 """
 
@@ -171,15 +189,33 @@ class Planner:
         *,
         selected_collections: list[str] | None = None,
         max_variants: int | None = None,
+        result_count: int = 0,
+        missing_aspects: list[str] | None = None,
+        rejected_hypotheses: list[dict] | None = None,
     ) -> SearchPlan | None:
         """Generate a broader plan for bounded re-query expansion.
+
+        Args:
+            result_count: actual chunk count from the round being broadened —
+                the LLM used to always be told "0 sonuç" regardless of the real
+                previous outcome; this carries the truth through.
+            missing_aspects: the judge's reason codes for insufficiency (e.g.
+                'low_relevance_all_chunks') — lets the prompt reason about WHY,
+                not just broaden blindly.
+            rejected_hypotheses: prior human-rejected {term, hypothesis} guesses
+                (from the term_candidates review table) — fed back as a negative
+                constraint so the LLM doesn't re-propose a debunked guess.
 
         Returns None when the LLM fails (caller keeps the original results).
         """
         tracer = tracer or PipelineTracer()
         allowed = set(selected_collections) if selected_collections else None
 
-        plan = self._generate_broader_plan(query, previous_plan, tracer, allowed_keys=allowed)
+        plan = self._generate_broader_plan(
+            query, previous_plan, tracer, allowed_keys=allowed,
+            result_count=result_count, missing_aspects=missing_aspects,
+            rejected_hypotheses=rejected_hypotheses,
+        )
         if plan is None:
             return None
         if allowed:
@@ -205,6 +241,19 @@ class Planner:
         query_type = plan_data.get("query_type", "fact")
         if query_type not in self._VALID_QUERY_TYPES:
             query_type = "fact"
+        strategy = plan_data.get("strategy")
+        if not isinstance(strategy, str) or not strategy.strip():
+            strategy = None
+        else:
+            strategy = strategy.strip()
+
+        term_hypothesis = None
+        th = plan_data.get("term_hypothesis")
+        if isinstance(th, dict):
+            term = str(th.get("term") or "").strip()
+            official_phrase = str(th.get("official_phrase") or "").strip()
+            if term and official_phrase:
+                term_hypothesis = TermHypothesis(term=term, official_phrase=official_phrase)
 
         resources: list[CollectionSearchPlan] = []
         for r in plan_data.get("resources", []) or []:
@@ -240,8 +289,10 @@ class Planner:
         return SearchPlan(
             intent=intent,
             query_type=query_type,
+            strategy=strategy,
             resources=resources,
             reasoning=plan_data.get("reasoning", ""),
+            term_hypothesis=term_hypothesis,
         )
 
     def _call_planner_llm(self, user_msg: str, system_prompt: str) -> SearchPlan | None:
@@ -288,7 +339,8 @@ class Planner:
         LLM work and returns None on failure (the caller applies fallback logic).
         """
         catalog = self._config.get_collection_catalog(allowed_keys=allowed_keys)
-        system_prompt = PLAN_SYSTEM_PROMPT.format(catalog=catalog)
+        strategy_catalog = self._config.get_strategy_catalog() or "(tanımlı strateji yok — bu alanı null bırak)"
+        system_prompt = PLAN_SYSTEM_PROMPT.format(catalog=catalog, strategy_catalog=strategy_catalog)
         self._last_planner_error = None
         return self._call_planner_llm(f"Sorgu: {query}", system_prompt)
 
@@ -383,6 +435,9 @@ class Planner:
         previous_plan: SearchPlan,
         tracer: PipelineTracer,
         allowed_keys: set[str] | None = None,
+        result_count: int = 0,
+        missing_aspects: list[str] | None = None,
+        rejected_hypotheses: list[dict] | None = None,
     ) -> SearchPlan | None:
         """Generate a broader plan for re-query expansion.
 
@@ -390,11 +445,25 @@ class Planner:
         so re-query broadens the QUERY, not the collection set.
         """
         catalog = self._config.get_collection_catalog(allowed_keys=allowed_keys)
+        missing_aspects_block = ""
+        if missing_aspects:
+            missing_aspects_block = f"Yetersizlik nedeni: {', '.join(missing_aspects)}.\n"
+        rejected_hypotheses_block = ""
+        if rejected_hypotheses:
+            pairs = "; ".join(
+                f"'{h['term']}' ≠ '{h['hypothesis']}'" for h in rejected_hypotheses
+            )
+            rejected_hypotheses_block = (
+                f"\nDAHA ÖNCE DENENMİŞ VE YANLIŞ OLDUĞU DOĞRULANMIŞ KARŞILIKLAR "
+                f"(BUNLARI TEKRAR ÖNERME): {pairs}\n"
+            )
         system_prompt = RE_RETRIEVAL_PROMPT.format(
             catalog=catalog,
             query=query,
             previous_plan=previous_plan.model_dump_json(indent=2),
-            result_count=0,
+            result_count=result_count,
+            missing_aspects_block=missing_aspects_block,
+            rejected_hypotheses_block=rejected_hypotheses_block,
         )
         return self._call_planner_llm(f"Sorgu: {query}", system_prompt)
 

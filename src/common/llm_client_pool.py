@@ -23,11 +23,17 @@ class BlockClient:
         timeout_seconds: int = 30,
         retries: int = 1,
         keep_alive: "str | int | None" = None,
+        default_num_ctx: "int | None" = None,
     ) -> None:
         self.host = host
         self.block_name = block_name
         self.timeout_seconds = timeout_seconds
         self.retries = retries
+        # Every call must pin num_ctx explicitly: without it Ollama falls back to
+        # the model's Modelfile context (e.g. 256K), which both forces a reload
+        # (mismatch with the already-resident instance) and can OOM the runner —
+        # a 31B model at 256K × parallel slots needs far more KV cache than fits.
+        self.default_num_ctx = default_num_ctx
         # How long Ollama keeps the model resident after a call. None → Ollama
         # default (5m). A long value (e.g. "2h" or -1) avoids re-loading the model
         # from disk on the first query after an idle gap (the ~11s cold-start).
@@ -59,8 +65,11 @@ class BlockClient:
                     "messages": messages,
                     "stream": stream,
                 }
-                if options:
-                    kwargs["options"] = options
+                merged_options = dict(options or {})
+                if self.default_num_ctx is not None:
+                    merged_options.setdefault("num_ctx", self.default_num_ctx)
+                if merged_options:
+                    kwargs["options"] = merged_options
                 if format:
                     kwargs["format"] = format
                 if think is not None:
@@ -118,6 +127,7 @@ class LLMClientPool:
                 timeout_seconds=block.timeout_seconds,
                 retries=block.retries,
                 keep_alive=getattr(self._config, "keep_alive", None),
+                default_num_ctx=block.max_num_ctx,
             )
         return self._clients[block_name]
 

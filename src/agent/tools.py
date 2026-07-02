@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Optional
 
 from src.common.chroma import where_year_filter
 from src.common.dates import extract_dates
-from src.common.text import extract_relevant_windows
+from src.common.text import expand_parliamentary_synonyms, extract_relevant_windows
 from src.config import settings
 from src.config.collections import COLLECTIONS, CollectionSpec
 from src.config.document_types import format_prefix, normalize_metadata
@@ -50,12 +50,24 @@ class SearchTool:
             self._search_cache[collection_key] = (VectorSearch(spec), spec)
         return self._search_cache[collection_key]
 
+    @property
+    def reranker_enabled(self) -> bool:
+        return self._reranker is not None
+
+    def rerank(self, query: str, chunks: list[tuple[str, str]], top_n: int) -> dict[str, float]:
+        """Rerank (chunk_id, text) pairs in a single pass; returns {chunk_id: score}."""
+        if self._reranker is None or not chunks:
+            return {}
+        reranked = self._reranker.rerank(query, chunks, top_n=top_n)
+        return dict(reranked)
+
     def search(
         self,
         collection_key: str,
         query_text: str,
         filters: dict | None = None,
         top_k: int = 10,
+        apply_reranker: bool = True,
     ) -> dict:
         """Search a collection and return formatted results.
 
@@ -64,6 +76,10 @@ class SearchTool:
             query_text: search query text
             filters: optional filter dict (year, author, etc.)
             top_k: number of results
+            apply_reranker: set False to skip reranking and get raw ANN-ranked
+                candidates — use when multiple query variants for the same
+                collection will be merged before a single downstream rerank
+                pass, so the cross-encoder only scores the merged pool once.
 
         Returns:
             Dict with documents, metadatas, distances lists.
@@ -77,14 +93,21 @@ class SearchTool:
             all_years = list({int(y) for y in years} | set(year_from_exact))
             where_filter = where_year_filter(all_years)
 
+        # Colloquial parliamentary jargon (e.g. "kadük") rarely matches the corpus's
+        # own official phrasing in embedding space — expand deterministically before
+        # vector search. Date parsing above stays on the raw text; expansion only
+        # affects the search query + window-highlighting (both benefit from also
+        # matching the official term's spans within retrieved docs).
+        expanded_query = expand_parliamentary_synonyms(query_text)
+
         search, spec = self._get_search(collection_key)
 
         raw = search.search(
-            query_text,
+            expanded_query,
             top_k=top_k,
             fetch_k=max(top_k * 4, 20),
             where_filter=where_filter,
-            reranker=self._reranker,
+            reranker=self._reranker if apply_reranker else None,
         )
 
         final_docs: list[str] = []
@@ -92,7 +115,7 @@ class SearchTool:
         final_dists: list[float] = []
 
         for r in raw:
-            doc_text = extract_relevant_windows(r["doc"], query_text)
+            doc_text = extract_relevant_windows(r["doc"], expanded_query)
             meta = normalize_metadata(r["meta"])
             meta["chunk_id"] = r["id"]
             meta["_source_collection"] = collection_key
@@ -206,6 +229,7 @@ class AnswerTool:
         chat_history: list | None = None,
         stream_callback: callable = None,
         query_type: str | None = None,
+        answer_directive: str | None = None,
     ) -> tuple[str, str]:
         """Generate answer via the answering agent LLM.
 
@@ -215,6 +239,8 @@ class AnswerTool:
                 render the answer progressively instead of all at once.
             query_type: planner query_type; selects the system prompt (synthesis vs
                 strict) so comprehensive/summary answers aren't dropped as empty.
+            answer_directive: optional playbook directive (research_strategies.md)
+                appended on top of the selected system prompt; no-op when empty.
 
         Returns:
             (thinking, content) tuple (full accumulated text).
@@ -228,6 +254,8 @@ class AnswerTool:
 
         user_msg = f"BAĞLAM:\n{context}\n\nSORU: {query}"
         sys_prompt = self._select_system_prompt(mufettis_mode, query_type)
+        if answer_directive:
+            sys_prompt = f"{sys_prompt}\n\nEK YÖNERGE:\n{answer_directive}"
 
         temperature = ans_cfg.temperature
         num_predict = min(

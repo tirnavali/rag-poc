@@ -45,6 +45,24 @@ def init_db():
         c.execute("ALTER TABLE messages ADD COLUMN suggestions TEXT")
     except sqlite3.OperationalError:
         pass
+    # Global (not session-scoped) queue of LLM-discovered vocabulary-synonym
+    # hypotheses (e.g. "kadük" -> "hükümsüz sayılan kanun teklifleri") awaiting
+    # human approve/reject via the "Öğrenilen Terimler" web UI panel.
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS term_candidates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            term TEXT NOT NULL,
+            hypothesis TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            times_seen INTEGER NOT NULL DEFAULT 1,
+            last_source_query TEXT,
+            last_session_id TEXT,
+            first_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            reviewed_at TIMESTAMP,
+            UNIQUE(term, hypothesis)
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -116,6 +134,91 @@ def get_messages(session_id: str) -> List[Dict[str, Any]]:
         msg['suggestions'] = json.loads(msg['suggestions']) if msg['suggestions'] else None
         messages.append(msg)
     return messages
+
+# --------------------------------------------------------------- term_candidates
+
+def upsert_term_candidate(
+    term: str,
+    hypothesis: str,
+    source_query: Optional[str] = None,
+    source_session_id: Optional[str] = None,
+) -> None:
+    """Record a successful re-query term hypothesis for human review.
+
+    Global, not session-scoped — the same (term, hypothesis) pair discovered
+    independently by different queries/sessions increments `times_seen` rather
+    than creating duplicate rows, so a reviewer can see "this guess proved
+    itself N times" as a confidence signal (not an auto-approval).
+    """
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO term_candidates (term, hypothesis, last_source_query, last_session_id)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(term, hypothesis) DO UPDATE SET
+            times_seen = times_seen + 1,
+            last_seen_at = CURRENT_TIMESTAMP,
+            last_source_query = excluded.last_source_query,
+            last_session_id = excluded.last_session_id
+    ''', (term, hypothesis, source_query, source_session_id))
+    conn.commit()
+    conn.close()
+
+
+def list_term_candidates(status: str = "pending") -> List[Dict[str, Any]]:
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('''
+        SELECT id, term, hypothesis, status, times_seen, last_source_query,
+               last_session_id, first_seen_at, last_seen_at, reviewed_at
+        FROM term_candidates
+        WHERE status = ?
+        ORDER BY times_seen DESC, last_seen_at DESC
+    ''', (status,))
+    rows = c.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def set_term_candidate_status(candidate_id: int, status: str) -> bool:
+    """Returns False if no row with this id exists (caller can 404)."""
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute(
+        "UPDATE term_candidates SET status = ?, reviewed_at = CURRENT_TIMESTAMP WHERE id = ?",
+        (status, candidate_id),
+    )
+    updated = c.rowcount > 0
+    conn.commit()
+    conn.close()
+    return updated
+
+
+def list_approved_term_synonyms() -> Dict[str, List[str]]:
+    """Approved (term -> [hypothesis, ...]) map for live synonym expansion —
+    the counterpart to settings.PARLIAMENTARY_TERM_SYNONYMS, but DB-backed so
+    an approval takes effect without a code change/redeploy."""
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT term, hypothesis FROM term_candidates WHERE status = 'approved'")
+    rows = c.fetchall()
+    conn.close()
+    result: Dict[str, List[str]] = {}
+    for row in rows:
+        result.setdefault(row["term"], []).append(row["hypothesis"])
+    return result
+
+
+def list_rejected_term_hypotheses() -> List[Dict[str, str]]:
+    """Rejected {term, hypothesis} pairs, fed back into the re-query prompt as
+    a negative constraint so the same debunked guess isn't proposed again."""
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT term, hypothesis FROM term_candidates WHERE status = 'rejected'")
+    rows = c.fetchall()
+    conn.close()
+    return [{"term": row["term"], "hypothesis": row["hypothesis"]} for row in rows]
+
 
 # Initialize on import
 init_db()

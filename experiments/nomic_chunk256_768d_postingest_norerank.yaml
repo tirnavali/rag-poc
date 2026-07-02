@@ -1,0 +1,7 @@
+name: "Nomic·chk256 (768d) — post-ingestion re-eval, reranker OFF / saf embedding (TBMM 27/1 Golden)"
+collections:
+  - tutanaklar_nomic_chunk256_768d
+fixture: tests/fixtures/golden_tbmm27001001.json
+top_k: [10, 20, 100]
+reranker: false
+fetch_k: 100

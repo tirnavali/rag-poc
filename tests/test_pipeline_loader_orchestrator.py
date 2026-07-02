@@ -4,10 +4,10 @@ from __future__ import annotations
 import pytest
 
 from src.config.pipeline_loader import (
-    AllocationConfig,
     JudgeConfig,
     OrchestratorConfig,
     PolicyConfig,
+    RetrievalBudgetConfig,
 )
 
 
@@ -26,11 +26,11 @@ def test_policy_config_defaults():
     assert pc.mode == "session_intersection"
 
 
-def test_allocation_config_defaults_and_query_type_lookup():
-    ac = AllocationConfig({
-        "defaults": {"primary": 2, "reserve": 2, "fetch_k": 10},
+def test_retrieval_budget_config_defaults_and_query_type_lookup():
+    ac = RetrievalBudgetConfig({
+        "defaults": {"fetch_k": 10},
         "by_query_type": {
-            "comparison": {"primary": 3, "reserve": 2, "fetch_k": 12},
+            "comparison": {"fetch_k": 12},
         },
         "max_per_document": 1,
         "max_total_primary": 12,
@@ -39,10 +39,10 @@ def test_allocation_config_defaults_and_query_type_lookup():
     assert ac.max_total_primary == 12
     # explicit query_type
     b = ac.budget_for("comparison")
-    assert b.primary == 3 and b.reserve == 2 and b.fetch_k == 12
+    assert b.fetch_k == 12
     # missing query_type → defaults
     b2 = ac.budget_for("fact")
-    assert b2.primary == 2 and b2.reserve == 2 and b2.fetch_k == 10
+    assert b2.fetch_k == 10
 
 
 def test_judge_config_defaults():

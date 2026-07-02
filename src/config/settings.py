@@ -365,6 +365,27 @@ COMPREHENSIVE_KEYWORDS = [
     "tek tek", "madde madde", "say bakalım", "hepsini",
 ]
 
+# --- Parliamentary Jargon Terms (colloquial → official-synonym expansion) ---
+# Domain vocabulary the small planner/classifier LLMs sometimes miss. Example:
+# 'kadük' (bir yasama döneminde sonuçlandırılamayan teklif) rarely matches the
+# corpus's own phrasing ("hükümsüz sayılan kanun teklifleri") in embedding
+# space — verified empirically: searching "kadük tüm listeyi ver" surfaces
+# unrelated tables, while searching "hükümsüz sayılan kanun teklifleri" (same
+# filters) correctly surfaces İçtüzük MADDE 77 and the actual lapsed-bill lists.
+# PREPENDING the official synonym phrase to the search query (see
+# src.common.text.expand_parliamentary_synonyms) closes this gap deterministically
+# (no LLM dependency) — empirically, prepending clearly outperforms appending
+# (0/8 relevant hits appended vs. 4-6/8 prepended in the same period-filtered
+# search), and the full official phrase ("... kanun teklifleri") outperforms the
+# bare word ("hükümsüz sayılan" alone scored 0/8 — needs the full noun phrase).
+# The same keys double as a scope-classifier safety net
+# (OrchestratorAgent._is_known_parliamentary_term): a known term in the query
+# forces scope back to in_scope even when the classifier mistakes a jargon
+# definition question ("kadük ne demek?") for an off-domain dictionary lookup.
+PARLIAMENTARY_TERM_SYNONYMS: dict[str, list[str]] = {
+    "kadük": ["hükümsüz sayılan kanun teklifleri", "hükümsüz sayılır"],
+}
+
 # --- Default collection for RAGService ---
 # Used when RAGService() is instantiated without explicit spec.
 # Override with RAG_DEFAULT_COLLECTION env var.

@@ -1,0 +1,7 @@
+name: "Nomic·chk256 (768d) — post-ingestion re-eval (27. Dönem 2-3 eklendi)"
+collections:
+  - tutanaklar_nomic_chunk256_768d
+fixture: tests/fixtures/golden_tbmm27001001.json
+top_k: [3, 5, 10, 20]
+reranker: true
+fetch_k: 100

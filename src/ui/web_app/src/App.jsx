@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { buildMarkdownExport } from './utils';
+import { buildMarkdownExport, findMatchingSource } from './utils';
 import Sidebar from './components/Sidebar';
 import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
 import RightPanelDrawer from './components/RightPanelDrawer';
 import InputBar from './components/InputBar';
+import CitationModal from './components/CitationModal';
 
 const API_BASE = '/api';
 
@@ -55,7 +56,20 @@ export default function App() {
   // 'idle' | 'copied' — brief visual confirmation for the "Copy as Markdown" button.
   const [copyStatus, setCopyStatus] = useState('idle');
 
-  const messagesEndRef = useRef(null);
+  // Citation Modal state
+  const [citationModalOpen, setCitationModalOpen] = useState(false);
+  const [selectedCitationSource, setSelectedCitationSource] = useState(null);
+  const [selectedCitationText, setSelectedCitationText] = useState('');
+
+  // "Öğrenilen Terimler" — LLM-discovered vocabulary-synonym hypotheses (e.g.
+  // "kadük" -> "hükümsüz sayılan kanun teklifleri") awaiting human review.
+  // Global (not session-scoped) — see src/api/db.py's term_candidates table.
+  const [termCandidates, setTermCandidates] = useState([]);
+  const [termCandidatesFilter, setTermCandidatesFilter] = useState('pending');
+  const [pendingTermCount, setPendingTermCount] = useState(0);
+
+  const messagesContainerRef = useRef(null);
+  const prevMessagesLengthRef = useRef(0);
   const wsRef = useRef(null);
 
   useEffect(() => {
@@ -69,11 +83,77 @@ export default function App() {
   }, [activeSessionId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, currentThinking, currentAnswer, currentStatus]);
+    if (currentTab === 'terms') {
+      fetchTermCandidates(termCandidatesFilter);
+    }
+  }, [currentTab]);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const messagesLengthChanged = messages.length !== prevMessagesLengthRef.current;
+    prevMessagesLengthRef.current = messages.length;
+
+    if (!isGenerating || messagesLengthChanged) {
+      container.scrollTop = container.scrollHeight;
+    } else {
+      const threshold = 150;
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight <= threshold;
+      if (isNearBottom) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+  }, [messages, currentThinking, currentAnswer, currentStatus, isGenerating]);
 
   const init = async () => {
     await fetchSessions();
+    await fetchPendingTermCount();
+  };
+
+  const fetchPendingTermCount = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/term-candidates?status=pending`);
+      const data = await res.json();
+      setPendingTermCount(data.length);
+    } catch (e) {
+      console.error("Failed to load pending term count", e);
+    }
+  };
+
+  const fetchTermCandidates = async (status) => {
+    try {
+      const res = await fetch(`${API_BASE}/term-candidates?status=${status}`);
+      const data = await res.json();
+      setTermCandidates(data);
+    } catch (e) {
+      console.error("Failed to load term candidates", e);
+    }
+  };
+
+  const handleTermCandidatesFilterChange = (status) => {
+    setTermCandidatesFilter(status);
+    fetchTermCandidates(status);
+  };
+
+  const handleApproveTermCandidate = async (id) => {
+    try {
+      await fetch(`${API_BASE}/term-candidates/${id}/approve`, { method: 'POST' });
+      await fetchTermCandidates(termCandidatesFilter);
+      await fetchPendingTermCount();
+    } catch (e) {
+      console.error("Failed to approve term candidate", e);
+    }
+  };
+
+  const handleRejectTermCandidate = async (id) => {
+    try {
+      await fetch(`${API_BASE}/term-candidates/${id}/reject`, { method: 'POST' });
+      await fetchTermCandidates(termCandidatesFilter);
+      await fetchPendingTermCount();
+    } catch (e) {
+      console.error("Failed to reject term candidate", e);
+    }
   };
 
   const fetchSessions = async () => {
@@ -171,7 +251,36 @@ export default function App() {
     }));
   };
 
+  const cleanupGeneratingState = () => {
+    if (wsRef.current) {
+      wsRef.current.onopen = null;
+      wsRef.current.onmessage = null;
+      wsRef.current.onerror = null;
+      wsRef.current.onclose = null;
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    setIsGenerating(false);
+    setCurrentStatus('');
+    setCurrentThinking('');
+    setCurrentAnswer('');
+    setCurrentTrace([]);
+    setCurrentSources([]);
+    setCurrentSuggestions([]);
+  };
+
+  const handleSessionChange = (newSessionId) => {
+    if (newSessionId === activeSessionId) return;
+    if (isGenerating) {
+      cleanupGeneratingState();
+    }
+    setActiveSessionId(newSessionId);
+  };
+
   const createNewSession = async () => {
+    if (isGenerating) {
+      cleanupGeneratingState();
+    }
     try {
       const res = await fetch(`${API_BASE}/sessions`, {
         method: 'POST',
@@ -356,6 +465,15 @@ export default function App() {
     }
   };
 
+  const handleCitationClick = (citationText, sources) => {
+    const matched = findMatchingSource(citationText, sources);
+    if (matched) {
+      setSelectedCitationSource(matched);
+      setSelectedCitationText(citationText);
+      setCitationModalOpen(true);
+    }
+  };
+
   const activeSession = sessions.find(s => s.id === activeSessionId);
   const activeSessionTitle = activeSession?.title || 'Sohbet';
 
@@ -366,7 +484,7 @@ export default function App() {
         activeSessionId={activeSessionId}
         searchQuery={sessionSearchQuery}
         onSearchChange={setSessionSearchQuery}
-        onSelectSession={setActiveSessionId}
+        onSelectSession={handleSessionChange}
         onNewSession={createNewSession}
       />
 
@@ -392,12 +510,13 @@ export default function App() {
             currentSources={currentSources}
             currentSuggestions={currentSuggestions}
             printTargetIdx={printTargetIdx}
-            messagesEndRef={messagesEndRef}
             onMessageClick={handleMessageClick}
             onCopyMessage={handleCopyMessage}
             onRegenerate={handleRegenerate}
             onPrintMessage={handlePrintMessage}
             onSendSuggestion={sendMessage}
+            onCitationClick={handleCitationClick}
+            messagesContainerRef={messagesContainerRef}
           />
 
           <RightPanelDrawer
@@ -415,6 +534,12 @@ export default function App() {
             onToggleSourceExpand={toggleSourceExpand}
             copyStatus={copyStatus}
             onCopyMarkdown={handleCopyMarkdown}
+            termCandidates={termCandidates}
+            termCandidatesFilter={termCandidatesFilter}
+            onTermCandidatesFilterChange={handleTermCandidatesFilterChange}
+            pendingTermCount={pendingTermCount}
+            onApproveTermCandidate={handleApproveTermCandidate}
+            onRejectTermCandidate={handleRejectTermCandidate}
           />
         </div>
 
@@ -426,6 +551,13 @@ export default function App() {
           onSend={sendMessage}
         />
       </div>
+
+      <CitationModal
+        isOpen={citationModalOpen}
+        onClose={() => setCitationModalOpen(false)}
+        source={selectedCitationSource}
+        citationText={selectedCitationText}
+      />
     </div>
   );
 }

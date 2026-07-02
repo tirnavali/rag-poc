@@ -25,20 +25,24 @@ deployment_blocks:
     host: http://localhost:11434
     purpose: "planning,filter_extraction,sanitization,judge"
     models:
-      planner: gemma4:e2b
-      filter_extractor: gemma4:e2b
+      planner: gemma4:31b
+      filter_extractor: gemma4:31b
       sanitizer: qwen3.5:9b
-      judge: gemma4:e2b        # judge LLM (borderline-only) — gemma4 warm ~1.5s; planner/classifier ile aynı resident model
-      classifier: gemma4:e2b   # warm ~1.2s (qwen verbose ~7.8s). planner ile aynı modeli paylaşır → classify→plan ek yükleme yok
-      suggester: qwen3.5:9b
+      judge: gemma4:31b        # judge LLM (borderline-only) — gemma4 warm ~1.5s; planner/classifier ile aynı resident model
+      classifier: gemma4:31b  # warm ~1.2s (qwen verbose ~7.8s). planner ile aynı modeli paylaşır → classify→plan ek yükleme yok
+      suggester: gemma4:31b
     timeout_seconds: 60
     retries: 1
+    # gpu-01 (answer) ile AYNI değer olmalı: aynı model (gemma4:31b) tek resident
+    # instance'ı paylaşsın diye. num_ctx'siz çağrı Ollama'da Modelfile varsayılanına
+    # (256K) düşer → reload + KV cache OOM → "model failed to load" (500).
+    max_num_ctx: 32768
 
   gpu-01:
     host: http://localhost:11434
     purpose: "answering"
     models:
-      answer: gemma3:12b        # 12B Gemma; kapasite/hız dengesi (31b'den belirgin hızlı)
+      answer: gemma4:31b       # 12B Gemma; kapasite/hız dengesi (31b'den belirgin hızlı)
     timeout_seconds: 90
     max_num_ctx: 32768
     max_num_predict: 4096
@@ -47,7 +51,7 @@ deployment_blocks:
     host: http://localhost:11434
     purpose: "expert"
     models:
-      expert: qwen3.5:9b
+      expert: gemma4:31b
     timeout_seconds: 120
     max_num_ctx: 65536
     max_num_predict: 16384
@@ -90,10 +94,15 @@ agent:
       Mevcut koleksiyonlar:
       {catalog}
 
-      Sistem yalnızca şu konuları bilir:
-      - Türk gazete arşivi kupürleri (1970-2010 dönemi siyaset, ekonomi, toplum)
+      Sistem şu an canlı/indekslenmiş olarak yalnızca şu arşive erişebilir:
       - TBMM tutanakları (1980-günümüz milletvekili konuşmaları, oturumlar)
-      - TBMM önergeleri ve kanun teklifleri
+
+      Sistem mimarisi (document_types.py) gazete arşivi kupürlerini ve TBMM
+      önergeleri/kanun tekliflerini de kapsayacak şekilde tasarlanmıştır, ancak bu
+      türler için henüz indekslenmiş/kayıtlı bir koleksiyon yok — {catalog} bunu
+      yansıtır ve şu an yalnızca tutanak koleksiyonlarını listeler. Bu konular yine
+      de in_scope sayılır (aşağıya bak) çünkü tarihi/siyasi niteliktedirler, ama
+      seçilecek koleksiyon(lar) şu an için her zaman tutanak türünden olacaktır.
 
       Sınıflar (scopes):
       1. "in_scope": Koleksiyonlarda arama (retrieval) yapılmasını gerektiren tarihi ve siyasi sorular.
@@ -107,6 +116,9 @@ agent:
       - "Doğan Avcıoğlu köşe yazıları"
       - "Atatürk'ün vefatı"
       - "Susurluk skandalı"
+      - "kadük ne demek?" (TBMM/yasama usul terimi — sözlük sorusu gibi görünse de
+        bu arşivin konusu; "hükümsüz sayılan" ile eşanlamlı, İçtüzük'te tanımlıdır)
+      - "önerge nedir", "ivedilik kararı ne demek", "muhalefet şerhi nedir"
 
       Conversational örnekleri:
       - "merhaba", "selam", "nasılsın"
@@ -122,16 +134,24 @@ agent:
       - "2026 dolar kuru"
 
       ÖNEMLİ — Türk siyasi/tarihsel olaylar, kişiler, devrimler, savaşlar, darbeler,
-      bürokratlar, gazeteciler ve milletvekilleri her zaman in_scope sayılır.
+      bürokratlar, gazeteciler ve milletvekilleri her zaman in_scope sayılır. TBMM/meclis
+      usul ve yasama terimlerinin (kadük, önerge, ivedilik, muhalefet şerhi, İçtüzük,
+      tasarı, teklif, vb.) tanımını soran sorular da in_scope sayılır — bunlar genel
+      sözlük sorusu gibi görünse bile TBMM tutanaklarında geçen ve tanımlanan
+      terimlerdir, genel kültür/dictionary sorusuyla karıştırılmamalıdır.
       Eğer soru selamlaşma, teşekkür veya sohbet geçmişine atıf içeriyorsa conversational seçilmelidir.
       Yalnızca kesinlikle alan dışı ve geçmişe atıfta bulunmayan sorular off_domain'dir.
 
       Koleksiyon seçimi (tool/db seçimi - sadece in_scope için):
-      - Gazete/basın/köşe yazısı/manşet/muhabir → doc_type=gazete koleksiyonları
-      - Meclis/oturum/birleşim/milletvekili/konuşma/tutanak → doc_type=tutanak koleksiyonları
-      - Kanun teklifi/önerge/yasa taslağı → doc_type=onerge koleksiyonları
-      - Konu hangi türü ima ediyorsa o türden en az bir koleksiyon seç; emin değilsen
-        selected_collections'ı boş bırak (planner tüm katalogdan seçer). Conversational veya off_domain ise selected_collections boş bırakılmalıdır.
+      - {catalog}'da yalnızca doc_type=tutanak koleksiyonları var; katalogda karşılığı
+        olmayan bir isim (doc_type=gazete, doc_type=onerge, vb.) ÜRETME.
+      - Meclis/oturum/birleşim/milletvekili/konuşma/tutanak konulu sorular →
+        doc_type=tutanak koleksiyonları.
+      - Gazete/basın/köşe yazısı/manşet veya kanun teklifi/önerge konulu sorular da
+        in_scope'tur ama aranacak arşiv şu an yalnızca tutanaktır; bu durumda da
+        katalogdaki tutanak koleksiyonlarından seç (ya da emin değilsen
+        selected_collections'ı boş bırak, planner tüm katalogdan seçer).
+        Conversational veya off_domain ise selected_collections boş bırakılmalıdır.
 
       JSON çıktısı:
       {"scope": "in_scope" veya "off_domain" veya "conversational", "confidence": 0.0-1.0,
@@ -302,8 +322,8 @@ retrieval:
     window_max_total: 3000
 
 # ---------------------------------------------------------------------------
-# Orchestrator — yeni agentic pipeline (planner → policy → allocator →
-# retrieve → assembler → judge → expander → answer → sanitizer → citations)
+# Orchestrator — yeni agentic pipeline (planner → policy → budget →
+# retrieve → assembler → judge → re-query → answer → sanitizer → citations)
 # ---------------------------------------------------------------------------
 orchestrator:
   enabled: true        # DEPRECATED — tek yol artık OrchestratorAgent; bayrak dispatch'i kaldırıldı
@@ -313,20 +333,27 @@ policy:
   mode: session_intersection   # session-seçimi ∩ planner-önerisi
   # auth_rules: ileride eklenecek; tüm koleksiyonlar şu an public
 
-allocation:
-  enabled: false       # stage-2: kapalıyken düz fetch_k tek havuz (reserve yok)
-  defaults:    { primary: 2, reserve: 2, fetch_k: 15 }
+# Sorgu türüne göre retrieval bütçesi: query_type → koleksiyon başına fetch_k
+# (search tool'a top_k olarak geçer) + assembly tavanları. Ayrı bir allocation
+# aşaması yok; orchestrator bu tabloyu doğrudan okur.
+retrieval_budget:
+  defaults:      { fetch_k: 15 }
   by_query_type:
-    fact:       { primary: 2, reserve: 2, fetch_k: 15 }
-    summary:    { primary: 3, reserve: 2, fetch_k: 15 }
-    comparison: { primary: 3, reserve: 2, fetch_k: 15 }
-    reasoning:  { primary: 3, reserve: 2, fetch_k: 15 }
-    policy:     { primary: 3, reserve: 3, fetch_k: 18 }
+    fact:        { fetch_k: 15 }
+    summary:     { fetch_k: 15 }
+    comparison:  { fetch_k: 15 }
+    reasoning:   { fetch_k: 15 }
+    policy:      { fetch_k: 18 }
     # Kapsamlı/sayım sorguları: tek büyük bağlam (gpu-01 num_ctx=32768'e sığar).
     # fetch_k yüksek + max_total/max_per_document override → assembly 50 chunk'a kadar toplar.
-    comprehensive: { primary: 40, reserve: 0, fetch_k: 40, max_total: 50, max_per_document: 6 }
+    comprehensive: { fetch_k: 40, max_total: 50, max_per_document: 6 }
   max_per_document: 3    # belge başına 3 chunk (1 idi → tek belgeden de zengin bağlam)
   max_total_primary: 15  # bağlama girecek toplam chunk tavanı (12 idi)
+  # Kapsamlı (enumerate) toplama: yıl facet'ine göre parçalı tarama + boş turda
+  # derinlik tırmanışı. fetch_k boş turda 40→80→120 ikiye katlanır (sıralamada
+  # ilk 40'ın altındaki uzun kuyruğu yüzeye çıkarır).
+  enumerate_facet_partition: true
+  enumerate_fetch_k_max: 120
 
 judge:
   mode: hybrid
@@ -335,6 +362,13 @@ judge:
     min_chunks: 2
     min_collection_coverage: 1
     min_rerank_score: 0.02     # bu eşiğin altındaki chunk'lar answer'dan önce düşürülür
+    # Reddetme değil ESKALASYON eşiği: count/coverage yeterli görünse bile en iyi
+    # eşleşme bu kadar zayıfsa körlemesine "answer" deme — LLM judge'a devret (içeriği
+    # gerçekten okuyup karar versin). Golden Q&A fixture'ına karşı ölçüldü: sabit bir
+    # ret eşiği (örn. 0.15) doğru-ama-soyut sorularda (örn. "olumlu yanları",
+    # "eleştiriler") yanlış-pozitif üretiyor çünkü bu sorgular da aynı düşük skor
+    # aralığında — bu yüzden REDDETMEK yerine LLM'e DEVRETMEK tercih edildi.
+    llm_escalation_score: 0.3
   llm:
     enabled: true
     block: fast-01
@@ -343,7 +377,6 @@ judge:
     max_borderline_score_floor: 0.35
     timeout_seconds: 5
   max_expand_iterations: 1
-  comprehensive_max_rounds: 3   # kapsamlı/sayım sorgularında iteratif toplama tur tavanı
+  comprehensive_max_rounds: 4   # kapsamlı/sayım sorgularında iteratif toplama tur tavanı (derinlik tırmanışına yer bırakır)
   on_low_confidence: expand
-  expand:
-    strategy: requery   # requery: yeni çeşitlendirilmiş retrieve / reserve: eski reserve-promote
+  # Genişletme = yeni çeşitlendirilmiş re-query (broaden → yeniden retrieve → birleştir).
