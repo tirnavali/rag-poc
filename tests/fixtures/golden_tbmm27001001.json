@@ -2054,9 +2054,77 @@
       {
         "document_id": "tutanak-27-02-72-20190430",
         "pages": [
+          5,
           68,
           69,
-          71
+          70,
+          71,
+          138,
+          198
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          152,
+          199,
+          200,
+          231,
+          259,
+          281
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          104,
+          105,
+          106,
+          107,
+          108
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-29-20181211",
+        "pages": [
+          58,
+          87,
+          209,
+          210
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          5,
+          132,
+          299,
+          316
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-89-20190613",
+        "pages": [
+          51,
+          52,
+          55,
+          56
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          111,
+          235,
+          252
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-105-20190718",
+        "pages": [
+          57,
+          71,
+          129
         ]
       }
     ],
@@ -2067,6 +2135,7 @@
       "narrative",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2099,9 +2168,66 @@
       {
         "document_id": "tutanak-27-02-105-20190718",
         "pages": [
+          6,
+          7,
+          14,
+          146,
           203,
           204,
-          205
+          205,
+          218,
+          275
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          46,
+          51,
+          55
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-30-20181212",
+        "pages": [
+          125,
+          173,
+          204
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-22-20181127",
+        "pages": [
+          2,
+          50
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-28-20181210",
+        "pages": [
+          151,
+          155
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          219,
+          230
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-49-20190206",
+        "pages": [
+          61,
+          73
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-101-20190711",
+        "pages": [
+          95,
+          101
         ]
       }
     ],
@@ -2111,6 +2237,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2121,8 +2248,47 @@
       {
         "document_id": "tutanak-27-02-71-20190425",
         "pages": [
+          2,
           10,
           11
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          187,
+          217
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-55-20190220",
+        "pages": [
+          2,
+          24
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-56-20190221",
+        "pages": [
+          9
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-66-20190416",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [
+          130
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-96-20190702",
+        "pages": [
+          35
         ]
       }
     ],
@@ -2133,6 +2299,7 @@
       "narrative",
       "hard",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2143,8 +2310,23 @@
       {
         "document_id": "tutanak-27-02-12-20181031",
         "pages": [
+          4,
+          6,
           68,
           73
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-13-20181101",
+        "pages": [
+          7,
+          8
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-15-20181107",
+        "pages": [
+          101
         ]
       }
     ],
@@ -2154,6 +2336,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2164,8 +2347,53 @@
       {
         "document_id": "tutanak-27-02-53-20190214",
         "pages": [
+          4,
           59,
           60
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-100-20190710",
+        "pages": [
+          123,
+          150,
+          154
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-08-20180723",
+        "pages": [
+          36
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-38-20181220",
+        "pages": [
+          227
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-45-20190115",
+        "pages": [
+          42
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [
+          23
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-54-20190219",
+        "pages": [
+          13
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-58-20190327",
+        "pages": [
+          118
         ]
       }
     ],
@@ -2176,6 +2404,7 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2206,8 +2435,79 @@
       {
         "document_id": "tutanak-27-02-31-20181213",
         "pages": [
+          27,
           29,
-          170
+          85,
+          170,
+          171,
+          232,
+          236,
+          253,
+          256
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-01-20181001",
+        "pages": [
+          2,
+          4,
+          6,
+          7,
+          97,
+          102
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-41-20181226",
+        "pages": [
+          62,
+          84,
+          90,
+          110,
+          115,
+          142
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-96-20190702",
+        "pages": [
+          99,
+          114,
+          239,
+          243,
+          272
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-83-20190527",
+        "pages": [
+          5,
+          110,
+          112,
+          113
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-03-20180710",
+        "pages": [
+          2,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-32-20181214",
+        "pages": [
+          23,
+          32
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [
+          88,
+          95
         ]
       }
     ],
@@ -2218,6 +2518,7 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2230,6 +2531,12 @@
         "pages": [
           7
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          150
+        ]
       }
     ],
     "golden_answer": "",
@@ -2238,6 +2545,7 @@
       "page-level",
       "narrative",
       "hard",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2248,9 +2556,66 @@
       {
         "document_id": "tutanak-27-02-104-20190717",
         "pages": [
+          6,
+          7,
+          8,
           84,
           85,
-          89
+          86,
+          87,
+          88,
+          89,
+          229,
+          231,
+          234
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-105-20190718",
+        "pages": [
+          10,
+          11,
+          126
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          312,
+          327
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-89-20190613",
+        "pages": [
+          47,
+          48
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-96-20190702",
+        "pages": [
+          203,
+          218
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          248,
+          263
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-69-20190423",
+        "pages": [
+          18
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-70-20190424",
+        "pages": [
+          79
         ]
       }
     ],
@@ -2261,6 +2626,7 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2275,6 +2641,48 @@
           28,
           29
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          243
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-51-20190212",
+        "pages": [
+          9
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-54-20190219",
+        "pages": [
+          209
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-55-20190220",
+        "pages": [
+          99
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-58-20190327",
+        "pages": [
+          199
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-59-20190328",
+        "pages": [
+          110
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-60-20190402",
+        "pages": [
+          160
+        ]
       }
     ],
     "golden_answer": "",
@@ -2283,6 +2691,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2294,7 +2703,57 @@
         "document_id": "tutanak-27-02-46-20190116",
         "pages": [
           32,
-          33
+          33,
+          165
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-42-20190108",
+        "pages": [
+          85,
+          458,
+          547
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-36-20181218",
+        "pages": [
+          147,
+          231
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-43-20190109",
+        "pages": [
+          44,
+          49
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-66-20190416",
+        "pages": [
+          16,
+          110
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-72-20190430",
+        "pages": [
+          27,
+          195
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          45,
+          232
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-30-20181212",
+        "pages": [
+          199
         ]
       }
     ],
@@ -2304,6 +2763,7 @@
       "page-level",
       "hard",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2314,48 +2774,56 @@
       {
         "document_id": "tutanak-27-02-93-20190625",
         "pages": [
+          119,
           139
         ]
-      }
-    ],
-    "golden_answer": "",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "easy",
-      "unverified"
-    ]
-  },
-  {
-    "id": "tbmm27-02-77-301",
-    "query": "Kapadokya Alanı Hakkında Kanun Teklifi Nevşehir'in hangi ilçelerini kapsıyor?",
-    "relevant_pages": [
+      },
       {
-        "document_id": "tutanak-27-02-77-20190514",
+        "document_id": "tutanak-27-02-88-20190612",
         "pages": [
-          96
+          59,
+          91,
+          92,
+          95,
+          96,
+          98
         ]
-      }
-    ],
-    "golden_answer": "",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "narrative",
-      "medium",
-      "unverified"
-    ]
-  },
-  {
-    "id": "tbmm27-02-77-302",
-    "query": "Gazeteci yazar Yavuz Selim Demirağ'a evinin önünde yapılan saldırıda kaç saldırgan vardı?",
-    "relevant_pages": [
+      },
       {
-        "document_id": "tutanak-27-02-77-20190514",
+        "document_id": "tutanak-27-02-91-20190619",
         "pages": [
-          64,
-          66
+          56,
+          57
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          232
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          352
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-89-20190613",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-90-20190618",
+        "pages": [
+          88
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-92-20190620",
+        "pages": [
+          82
         ]
       }
     ],
@@ -2366,6 +2834,161 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
+      "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-77-301",
+    "query": "Kapadokya Alanı Hakkında Kanun Teklifi Nevşehir'in hangi ilçelerini kapsıyor?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          96,
+          110,
+          139,
+          155
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-82-20190523",
+        "pages": [
+          41,
+          91,
+          98
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-13-20181101",
+        "pages": [
+          2,
+          19,
+          20
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-14-20181106",
+        "pages": [
+          8,
+          20
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-78-20190515",
+        "pages": [
+          77,
+          79
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-79-20190516",
+        "pages": [
+          72,
+          101
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          19
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          624
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
+      "cross-document",
+      "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-77-302",
+    "query": "Gazeteci yazar Yavuz Selim Demirağ'a evinin önünde yapılan saldırıda kaç saldırgan vardı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          6,
+          64,
+          65,
+          66,
+          67,
+          68,
+          70,
+          71,
+          82,
+          88
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-78-20190515",
+        "pages": [
+          11,
+          81,
+          92
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-79-20190516",
+        "pages": [
+          39,
+          59,
+          74
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-80-20190521",
+        "pages": [
+          2,
+          42
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-85-20190529",
+        "pages": [
+          2,
+          19
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-89-20190613",
+        "pages": [
+          14,
+          24
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-81-20190522",
+        "pages": [
+          8
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-84-20190528",
+        "pages": [
+          54
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "easy",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2400,7 +3023,85 @@
         "pages": [
           50,
           51,
-          52
+          52,
+          53,
+          55,
+          57,
+          69,
+          147,
+          153,
+          157,
+          161,
+          163
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-93-20190625",
+        "pages": [
+          311,
+          350,
+          363,
+          375,
+          384,
+          412
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          62,
+          106,
+          130,
+          139,
+          141,
+          142
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-01-20181001",
+        "pages": [
+          9,
+          29,
+          36,
+          43,
+          48,
+          62
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [
+          330,
+          339,
+          342,
+          373,
+          470,
+          471
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-36-20181218",
+        "pages": [
+          5,
+          66,
+          109,
+          110
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-07-20181016",
+        "pages": [
+          24,
+          25,
+          37
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-19-20181120",
+        "pages": [
+          20,
+          21,
+          96
         ]
       }
     ],
@@ -2410,6 +3111,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2421,7 +3123,65 @@
         "document_id": "tutanak-27-02-93-20190625",
         "pages": [
           141,
-          176
+          168,
+          176,
+          177,
+          230,
+          242
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-52-20190213",
+        "pages": [
+          5,
+          15,
+          83,
+          84,
+          119
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-33-20181215",
+        "pages": [
+          155,
+          161,
+          205,
+          266
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          27,
+          237
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-21-20181122",
+        "pages": [
+          17,
+          37
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-36-20181218",
+        "pages": [
+          28,
+          96
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-42-20190108",
+        "pages": [
+          46,
+          167
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-56-20190221",
+        "pages": [
+          3,
+          26
         ]
       }
     ],
@@ -2431,6 +3191,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2441,8 +3202,78 @@
       {
         "document_id": "tutanak-27-02-24-20181129",
         "pages": [
+          2,
+          3,
+          4,
+          10,
           25,
-          34
+          29,
+          30,
+          34,
+          35,
+          60,
+          76,
+          77
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-23-20181128",
+        "pages": [
+          4,
+          7,
+          30,
+          34,
+          37,
+          39
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-33-20181215",
+        "pages": [
+          99,
+          167,
+          211,
+          218,
+          220,
+          262
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-49-20190206",
+        "pages": [
+          39,
+          40,
+          41,
+          43
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          9,
+          221,
+          224
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-25-20181204",
+        "pages": [
+          10,
+          11
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-27-20181206",
+        "pages": [
+          25,
+          39
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-81-20190522",
+        "pages": [
+          16,
+          17
         ]
       }
     ],
@@ -2453,6 +3284,7 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2463,8 +3295,59 @@
       {
         "document_id": "tutanak-27-02-24-20181129",
         "pages": [
+          5,
           36,
-          37
+          37,
+          44,
+          46
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-25-20181204",
+        "pages": [
+          11,
+          17,
+          183
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          95,
+          124,
+          214
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          24,
+          169
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-54-20190219",
+        "pages": [
+          123,
+          184
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          411
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-07-20181016",
+        "pages": [
+          82
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-14-20181106",
+        "pages": [
+          35
         ]
       }
     ],
@@ -2474,6 +3357,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2484,7 +3368,83 @@
       {
         "document_id": "tutanak-27-02-56-20190221",
         "pages": [
-          15
+          1,
+          2,
+          3,
+          4,
+          6,
+          15,
+          16,
+          17,
+          18,
+          27,
+          35,
+          38
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          2,
+          3,
+          5,
+          6,
+          8,
+          10
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-02-20180709",
+        "pages": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          7
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-80-20190521",
+        "pages": [
+          5,
+          6,
+          55,
+          70,
+          71
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-57-20190224",
+        "pages": [
+          3,
+          4,
+          5,
+          7
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-03-20180710",
+        "pages": [
+          1,
+          3,
+          4,
+          6
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-04-20180712",
+        "pages": [
+          3,
+          6,
+          19
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-28-20181210",
+        "pages": [
+          74,
+          115
         ]
       }
     ],
@@ -2494,6 +3454,8 @@
       "page-level",
       "narrative",
       "medium",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2504,8 +3466,77 @@
       {
         "document_id": "tutanak-27-02-103-20190716",
         "pages": [
-          131,
-          144
+          6,
+          24,
+          73,
+          79,
+          80,
+          87,
+          95,
+          102,
+          106,
+          108,
+          114,
+          131
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-104-20190717",
+        "pages": [
+          14,
+          109,
+          118,
+          119,
+          120,
+          127
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          2,
+          50,
+          93,
+          94
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-99-20190709",
+        "pages": [
+          4,
+          66,
+          129,
+          130
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-105-20190718",
+        "pages": [
+          109,
+          169,
+          202,
+          256
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-100-20190710",
+        "pages": [
+          9,
+          38,
+          152
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-37-20181219",
+        "pages": [
+          186,
+          207
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-93-20190625",
+        "pages": [
+          39
         ]
       }
     ],
@@ -2515,6 +3546,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2526,7 +3558,81 @@
         "document_id": "tutanak-27-02-88-20190612",
         "pages": [
           59,
-          97
+          60,
+          91,
+          92,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          103
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          136,
+          137,
+          140,
+          154,
+          155,
+          339
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-92-20190620",
+        "pages": [
+          69,
+          71,
+          74,
+          82,
+          89,
+          90
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-90-20190618",
+        "pages": [
+          77,
+          88,
+          92,
+          102,
+          108,
+          120
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-91-20190619",
+        "pages": [
+          56,
+          57,
+          83,
+          86
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-93-20190625",
+        "pages": [
+          4,
+          119,
+          135,
+          138
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          36,
+          131
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          184,
+          232
         ]
       }
     ],
@@ -2537,6 +3643,7 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2547,7 +3654,65 @@
       {
         "document_id": "tutanak-27-02-73-20190502",
         "pages": [
-          15
+          13,
+          14,
+          15,
+          16
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-29-20181211",
+        "pages": [
+          41,
+          42,
+          65,
+          115
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [
+          72,
+          116,
+          117,
+          129
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-08-20180723",
+        "pages": [
+          142,
+          143,
+          192
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-31-20181213",
+        "pages": [
+          43,
+          87,
+          88
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          31,
+          138
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-85-20190529",
+        "pages": [
+          44,
+          45
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-54-20190219",
+        "pages": [
+          234,
+          238
         ]
       }
     ],
@@ -2557,6 +3722,8 @@
       "page-level",
       "narrative",
       "hard",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2567,7 +3734,26 @@
       {
         "document_id": "tutanak-27-02-52-20190213",
         "pages": [
+          2,
+          9,
+          10,
           24
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-51-20190212",
+        "pages": [
+          4,
+          26,
+          39,
+          41,
+          42
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-53-20190214",
+        "pages": [
+          7
         ]
       }
     ],
@@ -2577,6 +3763,8 @@
       "page-level",
       "narrative",
       "medium",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2587,8 +3775,89 @@
       {
         "document_id": "tutanak-27-02-32-20181214",
         "pages": [
+          39,
+          41,
+          90,
+          91,
+          93,
+          142,
           221,
-          222
+          222,
+          223,
+          239,
+          240
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-99-20190709",
+        "pages": [
+          11,
+          72,
+          189,
+          190,
+          200,
+          206
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-100-20190710",
+        "pages": [
+          6,
+          80,
+          86,
+          88,
+          94,
+          118
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-101-20190711",
+        "pages": [
+          11,
+          17,
+          57,
+          63,
+          70,
+          87
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-01-20181001",
+        "pages": [
+          2,
+          5,
+          7,
+          113,
+          223,
+          224
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [
+          9,
+          32,
+          33,
+          162,
+          163
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-81-20190522",
+        "pages": [
+          16,
+          64,
+          76,
+          81,
+          135
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-82-20190523",
+        "pages": [
+          114,
+          121,
+          122
         ]
       }
     ],
@@ -2599,6 +3868,7 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2631,7 +3901,29 @@
       {
         "document_id": "tutanak-27-02-74-20190507",
         "pages": [
-          43
+          43,
+          46,
+          57,
+          67
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-75-20190508",
+        "pages": [
+          48,
+          56
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-91-20190619",
+        "pages": [
+          61
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-95-20190627",
+        "pages": [
+          105
         ]
       }
     ],
@@ -2641,6 +3933,8 @@
       "page-level",
       "narrative",
       "easy",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2651,9 +3945,76 @@
       {
         "document_id": "tutanak-27-02-15-20181107",
         "pages": [
+          1,
           17,
           18,
           21
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-22-20181127",
+        "pages": [
+          1,
+          3,
+          7,
+          8,
+          41,
+          42
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-23-20181128",
+        "pages": [
+          2,
+          9,
+          10,
+          30,
+          67,
+          73
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-19-20181120",
+        "pages": [
+          2,
+          5,
+          44,
+          45,
+          72,
+          73
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-21-20181122",
+        "pages": [
+          1,
+          2,
+          3,
+          14,
+          19,
+          25
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-38-20181220",
+        "pages": [
+          76,
+          79,
+          231
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-20-20181121",
+        "pages": [
+          10,
+          13
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-34-20181216",
+        "pages": [
+          57,
+          216
         ]
       }
     ],
@@ -2663,6 +4024,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2674,7 +4036,51 @@
         "document_id": "tutanak-27-02-29-20181211",
         "pages": [
           98,
-          99
+          99,
+          234
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-38-20181220",
+        "pages": [
+          22,
+          23
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-19-20181120",
+        "pages": [
+          67
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-31-20181213",
+        "pages": [
+          113
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-37-20181219",
+        "pages": [
+          164
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-45-20190115",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [
+          23
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-33-20181215",
+        "pages": [
+          112
         ]
       }
     ],
@@ -2684,6 +4090,7 @@
       "page-level",
       "hard",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2694,7 +4101,32 @@
       {
         "document_id": "tutanak-27-02-79-20190516",
         "pages": [
+          75,
+          76,
+          84,
           91
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          104,
+          140,
+          149
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-78-20190515",
+        "pages": [
+          75,
+          77,
+          91
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-81-20190522",
+        "pages": [
+          57
         ]
       }
     ],
@@ -2704,6 +4136,8 @@
       "page-level",
       "narrative",
       "medium",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2714,7 +4148,81 @@
       {
         "document_id": "tutanak-27-02-89-20190613",
         "pages": [
-          62
+          25,
+          62,
+          63,
+          67
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          138,
+          140,
+          141,
+          144,
+          145,
+          152
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-90-20190618",
+        "pages": [
+          71,
+          78,
+          79,
+          92,
+          93,
+          101
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-92-20190620",
+        "pages": [
+          71,
+          72,
+          73,
+          79,
+          81,
+          84
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          131,
+          134,
+          135,
+          138,
+          139,
+          154
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-88-20190612",
+        "pages": [
+          61,
+          62,
+          63,
+          64,
+          65,
+          84
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-91-20190619",
+        "pages": [
+          52,
+          55,
+          57,
+          86,
+          88
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          326
         ]
       }
     ],
@@ -2724,6 +4232,8 @@
       "page-level",
       "narrative",
       "medium",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2737,6 +4247,61 @@
           200,
           215
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-21-20181122",
+        "pages": [
+          43,
+          44,
+          45,
+          59
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-54-20190219",
+        "pages": [
+          32,
+          33,
+          64,
+          75
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          378,
+          380,
+          421
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-20-20181121",
+        "pages": [
+          51,
+          95,
+          134
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [
+          61,
+          62,
+          75
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-25-20181204",
+        "pages": [
+          45,
+          47
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          65
+        ]
       }
     ],
     "golden_answer": "",
@@ -2746,6 +4311,7 @@
       "narrative",
       "hard",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2756,8 +4322,71 @@
       {
         "document_id": "tutanak-27-02-33-20181215",
         "pages": [
+          166,
+          167,
+          169,
+          215,
           216,
-          261
+          217,
+          218,
+          219,
+          261,
+          280,
+          281
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-01-20181001",
+        "pages": [
+          357,
+          358,
+          363,
+          372,
+          375
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          164,
+          180,
+          455,
+          468
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          32,
+          154
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          48,
+          107
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-38-20181220",
+        "pages": [
+          34,
+          174
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-61-20190403",
+        "pages": [
+          7,
+          11
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-97-20190703",
+        "pages": [
+          191,
+          206
         ]
       }
     ],
@@ -2768,6 +4397,7 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2778,9 +4408,61 @@
       {
         "document_id": "tutanak-27-02-30-20181212",
         "pages": [
+          61,
+          71,
+          75,
           103,
           104,
           156
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-49-20190206",
+        "pages": [
+          63,
+          88,
+          91,
+          94
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-53-20190214",
+        "pages": [
+          100,
+          112
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-18-20181115",
+        "pages": [
+          109,
+          111
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-47-20190117",
+        "pages": [
+          197,
+          198
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          122,
+          338
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-52-20190213",
+        "pages": [
+          114
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          206
         ]
       }
     ],
@@ -2790,6 +4472,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2800,8 +4483,73 @@
       {
         "document_id": "tutanak-27-02-85-20190529",
         "pages": [
+          2,
+          3,
+          19,
           20,
+          26,
           27
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          6,
+          64,
+          65,
+          66,
+          67,
+          68
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-83-20190527",
+        "pages": [
+          3,
+          4,
+          76,
+          77,
+          83,
+          85
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-84-20190528",
+        "pages": [
+          10,
+          11,
+          54,
+          59
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-78-20190515",
+        "pages": [
+          11,
+          81,
+          92
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-79-20190516",
+        "pages": [
+          39,
+          59,
+          74
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-86-20190530",
+        "pages": [
+          9,
+          10
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-80-20190521",
+        "pages": [
+          2,
+          42
         ]
       }
     ],
@@ -2811,6 +4559,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2824,6 +4573,12 @@
           61,
           62
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-42-20190108",
+        "pages": [
+          124
+        ]
       }
     ],
     "golden_answer": "",
@@ -2833,6 +4588,7 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2843,8 +4599,56 @@
       {
         "document_id": "tutanak-27-02-101-20190711",
         "pages": [
+          5,
+          6,
+          91,
+          92,
+          94,
+          97,
+          98,
           106,
-          107
+          107,
+          112,
+          161,
+          166
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-99-20190709",
+        "pages": [
+          19,
+          231
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-102-20190715",
+        "pages": [
+          5,
+          6
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-81-20190522",
+        "pages": [
+          14
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          14
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-93-20190625",
+        "pages": [
+          115
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-100-20190710",
+        "pages": [
+          166
         ]
       }
     ],
@@ -2855,6 +4659,7 @@
       "narrative",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2865,8 +4670,75 @@
       {
         "document_id": "tutanak-27-02-100-20190710",
         "pages": [
-          134,
-          135
+          5,
+          75,
+          78,
+          89,
+          102,
+          103,
+          126,
+          129,
+          130,
+          131,
+          132,
+          134
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-99-20190709",
+        "pages": [
+          206,
+          207,
+          238,
+          239,
+          242,
+          243
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-81-20190522",
+        "pages": [
+          65,
+          68,
+          117,
+          120,
+          121,
+          122
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-101-20190711",
+        "pages": [
+          10,
+          59,
+          68,
+          70,
+          78,
+          83
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-80-20190521",
+        "pages": [
+          70
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-105-20190718",
+        "pages": [
+          87
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-32-20181214",
+        "pages": [
+          92
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          68
         ]
       }
     ],
@@ -2877,6 +4749,7 @@
       "narrative",
       "hard",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2909,7 +4782,44 @@
         "document_id": "tutanak-27-02-83-20190527",
         "pages": [
           88,
-          89
+          89,
+          93,
+          94
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-01-20181001",
+        "pages": [
+          334,
+          336,
+          339,
+          341
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          646,
+          650,
+          735
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-55-20190220",
+        "pages": [
+          69
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-79-20190516",
+        "pages": [
+          127
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-99-20190709",
+        "pages": [
+          163
         ]
       }
     ],
@@ -2919,6 +4829,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2929,7 +4840,67 @@
       {
         "document_id": "tutanak-27-02-35-20181217",
         "pages": [
-          208
+          17,
+          18,
+          28,
+          30,
+          61,
+          62,
+          101,
+          113,
+          160,
+          195,
+          196,
+          207
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-03-20180710",
+        "pages": [
+          2,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-25-20181204",
+        "pages": [
+          9,
+          127,
+          128
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-04-20180712",
+        "pages": [
+          3,
+          4
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-36-20181218",
+        "pages": [
+          13,
+          14
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          80
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-23-20181128",
+        "pages": [
+          63
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-24-20181129",
+        "pages": [
+          27
         ]
       }
     ],
@@ -2939,6 +4910,8 @@
       "page-level",
       "narrative",
       "medium",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2949,7 +4922,68 @@
       {
         "document_id": "tutanak-27-02-78-20190515",
         "pages": [
-          77
+          75,
+          77,
+          88,
+          91
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          97,
+          98,
+          104,
+          110,
+          136,
+          139
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-79-20190516",
+        "pages": [
+          74,
+          75,
+          76,
+          84,
+          91,
+          99
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-96-20190702",
+        "pages": [
+          160,
+          206,
+          249
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-19-20181120",
+        "pages": [
+          14,
+          245
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-41-20181226",
+        "pages": [
+          114,
+          245
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-42-20190108",
+        "pages": [
+          164,
+          264
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-51-20190212",
+        "pages": [
+          51,
+          89
         ]
       }
     ],
@@ -2959,6 +4993,8 @@
       "page-level",
       "narrative",
       "easy",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2969,7 +5005,37 @@
       {
         "document_id": "tutanak-27-02-48-20190205",
         "pages": [
-          99
+          6,
+          7,
+          79,
+          80,
+          99,
+          100,
+          103,
+          105,
+          124,
+          125,
+          128,
+          129
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-49-20190206",
+        "pages": [
+          8,
+          86
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-07-20181016",
+        "pages": [
+          148
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          231
         ]
       }
     ],
@@ -2979,6 +5045,8 @@
       "page-level",
       "narrative",
       "medium",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -2989,7 +5057,71 @@
       {
         "document_id": "tutanak-27-02-98-20190704",
         "pages": [
-          29
+          1,
+          3,
+          4,
+          8,
+          29,
+          30,
+          31,
+          35,
+          36,
+          37,
+          39,
+          52
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-96-20190702",
+        "pages": [
+          3,
+          4,
+          42,
+          46,
+          47,
+          48
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-97-20190703",
+        "pages": [
+          13,
+          25,
+          79,
+          141
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-99-20190709",
+        "pages": [
+          12,
+          13,
+          14,
+          192
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          170
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          52
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-34-20181216",
+        "pages": [
+          85
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-38-20181220",
+        "pages": [
+          154
         ]
       }
     ],
@@ -2999,6 +5131,8 @@
       "page-level",
       "narrative",
       "easy",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3009,7 +5143,77 @@
       {
         "document_id": "tutanak-27-02-37-20181219",
         "pages": [
-          88
+          4,
+          9,
+          88,
+          89
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-38-20181220",
+        "pages": [
+          6,
+          10,
+          139,
+          159,
+          169,
+          177
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-54-20190219",
+        "pages": [
+          17,
+          51,
+          108,
+          237,
+          253,
+          254
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-31-20181213",
+        "pages": [
+          118,
+          133,
+          183,
+          184,
+          188
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-39-20181221",
+        "pages": [
+          8,
+          111,
+          112,
+          117
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-47-20190117",
+        "pages": [
+          56,
+          57,
+          58,
+          217
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-97-20190703",
+        "pages": [
+          30,
+          31,
+          33,
+          34
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-25-20181204",
+        "pages": [
+          66,
+          67,
+          84
         ]
       }
     ],
@@ -3019,6 +5223,8 @@
       "page-level",
       "narrative",
       "medium",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3029,8 +5235,81 @@
       {
         "document_id": "tutanak-27-02-48-20190205",
         "pages": [
+          7,
+          8,
+          71,
+          78,
+          80,
+          139,
           140,
-          141
+          141,
+          142,
+          143,
+          147,
+          150
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-14-20181106",
+        "pages": [
+          5,
+          82,
+          89,
+          90,
+          97,
+          138
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-42-20190108",
+        "pages": [
+          29,
+          49,
+          246,
+          261,
+          284
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-09-20181023",
+        "pages": [
+          3,
+          18,
+          52,
+          147
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-15-20181107",
+        "pages": [
+          10,
+          16,
+          31,
+          143
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-25-20181204",
+        "pages": [
+          57,
+          156,
+          171
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-40-20181225",
+        "pages": [
+          35,
+          203,
+          218
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-17-20181114",
+        "pages": [
+          59,
+          165,
+          166
         ]
       }
     ],
@@ -3040,6 +5319,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3050,8 +5330,58 @@
       {
         "document_id": "tutanak-27-02-94-20190626",
         "pages": [
+          9,
           48,
-          49
+          49,
+          53
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-89-20190613",
+        "pages": [
+          5,
+          33,
+          34
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-96-20190702",
+        "pages": [
+          23,
+          104
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          272,
+          334
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-105-20190718",
+        "pages": [
+          56,
+          57
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-104-20190717",
+        "pages": [
+          132,
+          188
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-90-20190618",
+        "pages": [
+          11
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-95-20190627",
+        "pages": [
+          10
         ]
       }
     ],
@@ -3061,6 +5391,7 @@
       "page-level",
       "hard",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3073,7 +5404,58 @@
         "pages": [
           98,
           99,
-          100
+          100,
+          101,
+          102
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          173,
+          177,
+          186,
+          212
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          7,
+          86
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-13-20181101",
+        "pages": [
+          10,
+          34
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-20-20181121",
+        "pages": [
+          3,
+          49
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-21-20181122",
+        "pages": [
+          7,
+          34
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          177
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-07-20181016",
+        "pages": [
+          106
         ]
       }
     ],
@@ -3083,6 +5465,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3093,8 +5476,75 @@
       {
         "document_id": "tutanak-27-02-19-20181120",
         "pages": [
+          2,
+          5,
+          44,
+          45,
           72,
+          73,
           76
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-22-20181127",
+        "pages": [
+          1,
+          3,
+          7,
+          8,
+          41,
+          42
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-23-20181128",
+        "pages": [
+          2,
+          9,
+          10,
+          30,
+          67,
+          73
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-21-20181122",
+        "pages": [
+          1,
+          2,
+          3,
+          14,
+          19,
+          25
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-38-20181220",
+        "pages": [
+          76,
+          79,
+          231
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-15-20181107",
+        "pages": [
+          1,
+          17
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-20-20181121",
+        "pages": [
+          10,
+          13
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-34-20181216",
+        "pages": [
+          57,
+          216
         ]
       }
     ],
@@ -3104,6 +5554,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3114,8 +5565,81 @@
       {
         "document_id": "tutanak-27-02-60-20190402",
         "pages": [
+          2,
+          3,
+          4,
+          12,
+          38,
+          40,
           48,
-          50
+          50,
+          75,
+          76,
+          87,
+          88
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-33-20181215",
+        "pages": [
+          133,
+          137,
+          187,
+          190,
+          191,
+          217
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-81-20190522",
+        "pages": [
+          7,
+          22,
+          101,
+          102,
+          104,
+          105
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-41-20181226",
+        "pages": [
+          138,
+          147,
+          150,
+          281
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-30-20181212",
+        "pages": [
+          57,
+          62,
+          90
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-58-20190327",
+        "pages": [
+          58,
+          92,
+          129
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-96-20190702",
+        "pages": [
+          3,
+          42,
+          43
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [
+          68,
+          69,
+          79
         ]
       }
     ],
@@ -3126,6 +5650,7 @@
       "narrative",
       "hard",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3138,6 +5663,55 @@
         "pages": [
           23
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-47-20190117",
+        "pages": [
+          3,
+          4,
+          40,
+          45,
+          46
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-85-20190529",
+        "pages": [
+          1,
+          8,
+          14,
+          15
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-86-20190530",
+        "pages": [
+          9
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [
+          12
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-58-20190327",
+        "pages": [
+          129
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-65-20190411",
+        "pages": [
+          85
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-82-20190523",
+        "pages": [
+          117
+        ]
       }
     ],
     "golden_answer": "",
@@ -3146,6 +5720,8 @@
       "page-level",
       "narrative",
       "easy",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3156,9 +5732,80 @@
       {
         "document_id": "tutanak-27-02-84-20190528",
         "pages": [
+          7,
+          43,
           44,
           45,
-          46
+          46,
+          50,
+          51
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-81-20190522",
+        "pages": [
+          3,
+          5,
+          9,
+          27,
+          68,
+          69
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-105-20190718",
+        "pages": [
+          21,
+          23,
+          24,
+          32,
+          54,
+          76
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-82-20190523",
+        "pages": [
+          9,
+          11,
+          90,
+          95,
+          128
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-95-20190627",
+        "pages": [
+          5,
+          30,
+          31,
+          50,
+          62
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-80-20190521",
+        "pages": [
+          4,
+          38,
+          50,
+          51
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-86-20190530",
+        "pages": [
+          3,
+          26,
+          27
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-94-20190626",
+        "pages": [
+          34,
+          103,
+          105
         ]
       }
     ],
@@ -3168,6 +5815,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3178,8 +5826,82 @@
       {
         "document_id": "tutanak-27-02-92-20190620",
         "pages": [
+          69,
+          71,
+          74,
+          75,
+          83,
+          85,
           87,
-          88
+          88,
+          89,
+          90,
+          92,
+          98
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          136,
+          137,
+          140,
+          145,
+          152,
+          154
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-88-20190612",
+        "pages": [
+          59,
+          60,
+          71,
+          87,
+          88,
+          89
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-90-20190618",
+        "pages": [
+          77,
+          88,
+          92,
+          93,
+          95,
+          102
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-93-20190625",
+        "pages": [
+          4,
+          119,
+          135,
+          138
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-91-20190619",
+        "pages": [
+          77,
+          83,
+          86
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          36,
+          131
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          184,
+          232
         ]
       }
     ],
@@ -3190,6 +5912,7 @@
       "narrative",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3222,7 +5945,79 @@
       {
         "document_id": "tutanak-27-02-21-20181122",
         "pages": [
-          60
+          59,
+          60,
+          61
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-20-20181121",
+        "pages": [
+          158,
+          160,
+          161,
+          167,
+          186,
+          187
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-56-20190221",
+        "pages": [
+          49,
+          59,
+          63,
+          75,
+          94,
+          168
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-22-20181127",
+        "pages": [
+          87,
+          97,
+          98,
+          101,
+          102,
+          106
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-31-20181213",
+        "pages": [
+          28,
+          30,
+          85,
+          232,
+          233
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          117,
+          122,
+          128,
+          135
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          70,
+          91,
+          111,
+          137
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-88-20190612",
+        "pages": [
+          2,
+          4,
+          18,
+          31
         ]
       }
     ],
@@ -3232,6 +6027,8 @@
       "page-level",
       "narrative",
       "easy",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3242,8 +6039,70 @@
       {
         "document_id": "tutanak-27-02-63-20190409",
         "pages": [
+          1,
+          2,
+          6,
+          7,
+          8,
+          18,
           19,
+          28,
           29
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-31-20181213",
+        "pages": [
+          19,
+          268,
+          269,
+          270,
+          271
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-29-20181211",
+        "pages": [
+          135,
+          154,
+          248
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-42-20190108",
+        "pages": [
+          7,
+          189,
+          191
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-58-20190327",
+        "pages": [
+          19,
+          26,
+          59
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          297,
+          299
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          178,
+          179
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-15-20181107",
+        "pages": [
+          117,
+          118
         ]
       }
     ],
@@ -3254,6 +6113,7 @@
       "narrative",
       "hard",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3265,7 +6125,75 @@
         "document_id": "tutanak-27-02-90-20190618",
         "pages": [
           64,
-          77
+          77,
+          88,
+          92,
+          102,
+          108,
+          120
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          136,
+          137,
+          140,
+          154,
+          155,
+          339
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-88-20190612",
+        "pages": [
+          59,
+          60,
+          96,
+          97,
+          100,
+          103
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-92-20190620",
+        "pages": [
+          69,
+          71,
+          74,
+          89,
+          90,
+          98
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-93-20190625",
+        "pages": [
+          4,
+          119,
+          135,
+          138
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          36,
+          131
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          184,
+          232
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-89-20190613",
+        "pages": [
+          25,
+          64
         ]
       }
     ],
@@ -3276,6 +6204,7 @@
       "narrative",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3287,7 +6216,22 @@
         "document_id": "tutanak-27-02-90-20190618",
         "pages": [
           39,
-          40
+          40,
+          41
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          50,
+          140
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          59,
+          71
         ]
       }
     ],
@@ -3297,6 +6241,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3329,8 +6274,64 @@
       {
         "document_id": "tutanak-27-02-20-20181121",
         "pages": [
+          3,
+          4,
+          5,
+          47,
           48,
-          71
+          50,
+          51,
+          71,
+          143,
+          158
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-21-20181122",
+        "pages": [
+          3,
+          7,
+          8,
+          25,
+          26,
+          41
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-25-20181204",
+        "pages": [
+          38,
+          52
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          352
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-22-20181127",
+        "pages": [
+          8
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-30-20181212",
+        "pages": [
+          177
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-52-20190213",
+        "pages": [
+          113
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-93-20190625",
+        "pages": [
+          56
         ]
       }
     ],
@@ -3341,6 +6342,7 @@
       "narrative",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3351,8 +6353,83 @@
       {
         "document_id": "tutanak-27-02-20-20181121",
         "pages": [
-          195,
+          24,
+          158,
+          159,
+          160,
+          161,
+          166,
+          167,
+          169,
+          186,
+          187,
+          188,
+          189
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-22-20181127",
+        "pages": [
+          87,
+          88,
+          97,
+          98,
+          101,
+          102
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-31-20181213",
+        "pages": [
+          28,
+          30,
+          85,
+          232,
+          233,
+          253
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-56-20190221",
+        "pages": [
+          49,
+          75,
+          175,
+          193,
+          213,
           223
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-88-20190612",
+        "pages": [
+          2,
+          4,
+          18,
+          31
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-21-20181122",
+        "pages": [
+          59,
+          60,
+          61
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-24-20181129",
+        "pages": [
+          98,
+          118,
+          119
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-14-20181106",
+        "pages": [
+          8,
+          18
         ]
       }
     ],
@@ -3363,6 +6440,7 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3414,9 +6492,69 @@
       {
         "document_id": "tutanak-27-02-43-20190109",
         "pages": [
+          3,
           21,
           22,
-          23
+          23,
+          25,
+          26,
+          81
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-56-20190221",
+        "pages": [
+          47,
+          130,
+          202,
+          219
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-31-20181213",
+        "pages": [
+          48,
+          137,
+          193,
+          197
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-36-20181218",
+        "pages": [
+          137,
+          150,
+          160
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-27-20181206",
+        "pages": [
+          49,
+          50,
+          52
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-101-20190711",
+        "pages": [
+          109,
+          185,
+          186
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          153,
+          154
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-23-20181128",
+        "pages": [
+          2,
+          31
         ]
       }
     ],
@@ -3426,6 +6564,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3436,7 +6575,66 @@
       {
         "document_id": "tutanak-27-02-18-20181115",
         "pages": [
-          13
+          1,
+          11,
+          12,
+          13,
+          14
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          116,
+          135,
+          167,
+          187,
+          217
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-40-20181225",
+        "pages": [
+          93,
+          97,
+          129
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-92-20190620",
+        "pages": [
+          46,
+          52,
+          59
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-97-20190703",
+        "pages": [
+          1,
+          23,
+          28
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          6,
+          96
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-38-20181220",
+        "pages": [
+          229,
+          344
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-100-20190710",
+        "pages": [
+          39,
+          43
         ]
       }
     ],
@@ -3446,6 +6644,8 @@
       "page-level",
       "narrative",
       "hard",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3456,7 +6656,57 @@
       {
         "document_id": "tutanak-27-02-57-20190224",
         "pages": [
+          13,
+          14,
+          15,
+          16,
+          17,
           18
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-04-20180712",
+        "pages": [
+          13,
+          14,
+          15,
+          17,
+          18
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-09-20181023",
+        "pages": [
+          99,
+          100,
+          101
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          77,
+          78
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-10-20181024",
+        "pages": [
+          62,
+          63
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-101-20190711",
+        "pages": [
+          52,
+          53
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          31
         ]
       }
     ],
@@ -3466,6 +6716,8 @@
       "page-level",
       "narrative",
       "easy",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3476,8 +6728,28 @@
       {
         "document_id": "tutanak-27-02-51-20190212",
         "pages": [
+          5,
           42,
+          43,
+          44,
+          47,
+          48,
+          49,
+          54,
+          55,
           91
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-52-20190213",
+        "pages": [
+          10
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-56-20190221",
+        "pages": [
+          72
         ]
       }
     ],
@@ -3488,6 +6760,7 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3498,8 +6771,28 @@
       {
         "document_id": "tutanak-27-02-51-20190212",
         "pages": [
+          5,
           42,
-          43
+          43,
+          44,
+          47,
+          48,
+          49,
+          54,
+          55,
+          91
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-52-20190213",
+        "pages": [
+          10
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-56-20190221",
+        "pages": [
+          72
         ]
       }
     ],
@@ -3509,6 +6802,7 @@
       "page-level",
       "hard",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3519,7 +6813,57 @@
       {
         "document_id": "tutanak-27-02-36-20181218",
         "pages": [
-          76
+          41,
+          74,
+          76,
+          77
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-39-20181221",
+        "pages": [
+          45,
+          51,
+          80,
+          126
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-28-20181210",
+        "pages": [
+          24,
+          25
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          75,
+          378
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-29-20181211",
+        "pages": [
+          75
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-33-20181215",
+        "pages": [
+          159
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-34-20181216",
+        "pages": [
+          128
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-38-20181220",
+        "pages": [
+          48
         ]
       }
     ],
@@ -3529,6 +6873,8 @@
       "page-level",
       "narrative",
       "medium",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3539,8 +6885,71 @@
       {
         "document_id": "tutanak-27-02-26-20181205",
         "pages": [
+          1,
+          2,
+          3,
+          4,
+          6,
+          30,
           31,
-          34
+          32,
+          33,
+          34,
+          35,
+          36
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-27-20181206",
+        "pages": [
+          5,
+          9,
+          10,
+          11,
+          38
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-55-20190220",
+        "pages": [
+          91,
+          106,
+          109,
+          110
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          133,
+          262
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-19-20181120",
+        "pages": [
+          72,
+          112
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-74-20190507",
+        "pages": [
+          40,
+          41
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-54-20190219",
+        "pages": [
+          74,
+          75
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-22-20181127",
+        "pages": [
+          66
         ]
       }
     ],
@@ -3550,6 +6959,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3560,8 +6970,78 @@
       {
         "document_id": "tutanak-27-02-23-20181128",
         "pages": [
+          4,
+          7,
           30,
-          34
+          34,
+          37,
+          39,
+          43,
+          44,
+          58,
+          82,
+          85,
+          87
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-24-20181129",
+        "pages": [
+          2,
+          3,
+          4,
+          10,
+          25,
+          29
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-33-20181215",
+        "pages": [
+          167,
+          211,
+          218,
+          220,
+          262,
+          279
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-49-20190206",
+        "pages": [
+          39,
+          40,
+          41,
+          43
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          9,
+          221,
+          224
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-25-20181204",
+        "pages": [
+          10,
+          11
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-27-20181206",
+        "pages": [
+          25,
+          39
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-81-20190522",
+        "pages": [
+          16,
+          17
         ]
       }
     ],
@@ -3572,6 +7052,7 @@
       "narrative",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3582,8 +7063,76 @@
       {
         "document_id": "tutanak-27-02-41-20181226",
         "pages": [
+          5,
+          6,
+          9,
+          34,
+          55,
+          142,
+          148,
           150,
-          174
+          171,
+          172,
+          174,
+          176
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-40-20181225",
+        "pages": [
+          2,
+          3,
+          58,
+          61,
+          62,
+          106
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-42-20190108",
+        "pages": [
+          12,
+          69,
+          143,
+          158,
+          168,
+          172
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-84-20190528",
+        "pages": [
+          76,
+          80,
+          107
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-47-20190117",
+        "pages": [
+          78,
+          144
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          162,
+          214
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-19-20181120",
+        "pages": [
+          65,
+          69
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-25-20181204",
+        "pages": [
+          17,
+          183
         ]
       }
     ],
@@ -3594,6 +7143,7 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3604,8 +7154,73 @@
       {
         "document_id": "tutanak-27-02-22-20181127",
         "pages": [
+          87,
+          88,
+          97,
+          98,
+          101,
+          102,
           106,
-          148
+          139,
+          144,
+          148,
+          149,
+          150
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-20-20181121",
+        "pages": [
+          24,
+          159,
+          160,
+          166,
+          167,
+          169
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-56-20190221",
+        "pages": [
+          49,
+          75,
+          175,
+          193,
+          213,
+          223
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-31-20181213",
+        "pages": [
+          233,
+          253,
+          254
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-95-20190627",
+        "pages": [
+          29,
+          30
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-14-20181106",
+        "pages": [
+          18
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-23-20181128",
+        "pages": [
+          71
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-43-20190109",
+        "pages": [
+          24
         ]
       }
     ],
@@ -3616,6 +7231,7 @@
       "narrative",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3628,6 +7244,58 @@
         "pages": [
           2
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-72-20190430",
+        "pages": [
+          2,
+          3,
+          6,
+          46,
+          47,
+          48
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-69-20190423",
+        "pages": [
+          2,
+          22,
+          23,
+          33
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-73-20190502",
+        "pages": [
+          2,
+          4
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-79-20190516",
+        "pages": [
+          59,
+          99
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-34-20181216",
+        "pages": [
+          71
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-75-20190508",
+        "pages": [
+          59
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          65
+        ]
       }
     ],
     "golden_answer": "",
@@ -3636,6 +7304,8 @@
       "page-level",
       "narrative",
       "medium",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3646,8 +7316,64 @@
       {
         "document_id": "tutanak-27-02-41-20181226",
         "pages": [
+          4,
+          5,
           88,
-          128
+          93,
+          94,
+          102,
+          111,
+          113,
+          128,
+          130,
+          139,
+          148
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-42-20190108",
+        "pages": [
+          11,
+          12,
+          133
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-58-20190327",
+        "pages": [
+          45,
+          109
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-65-20190411",
+        "pages": [
+          6,
+          32
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-15-20181107",
+        "pages": [
+          84
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-31-20181213",
+        "pages": [
+          237
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-37-20181219",
+        "pages": [
+          187
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-47-20190117",
+        "pages": [
+          58
         ]
       }
     ],
@@ -3658,6 +7384,7 @@
       "narrative",
       "hard",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3670,7 +7397,17 @@
         "pages": [
           26,
           27,
-          30
+          30,
+          48,
+          56
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-74-20190507",
+        "pages": [
+          46,
+          57,
+          67
         ]
       }
     ],
@@ -3680,6 +7417,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3690,8 +7428,75 @@
       {
         "document_id": "tutanak-27-02-97-20190703",
         "pages": [
+          7,
+          12,
+          13,
+          14,
+          25,
+          62,
+          78,
           109,
+          116,
           148
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-96-20190702",
+        "pages": [
+          2,
+          3,
+          4,
+          10,
+          30,
+          34
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          60,
+          69,
+          361,
+          415
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-98-20190704",
+        "pages": [
+          13,
+          30,
+          35,
+          52
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-99-20190709",
+        "pages": [
+          4,
+          7,
+          129,
+          141
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-01-20181001",
+        "pages": [
+          13,
+          24
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-93-20190625",
+        "pages": [
+          318,
+          340
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-95-20190627",
+        "pages": [
+          2,
+          42
         ]
       }
     ],
@@ -3701,6 +7506,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3711,8 +7517,69 @@
       {
         "document_id": "tutanak-27-02-40-20181225",
         "pages": [
+          2,
+          3,
+          58,
           61,
-          62
+          62,
+          106,
+          107,
+          109
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-41-20181226",
+        "pages": [
+          5,
+          6,
+          9,
+          34,
+          55,
+          142
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-42-20190108",
+        "pages": [
+          12,
+          69,
+          143,
+          158,
+          168,
+          172
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-84-20190528",
+        "pages": [
+          76,
+          80,
+          107
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-47-20190117",
+        "pages": [
+          78,
+          144
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-43-20190109",
+        "pages": [
+          135
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-45-20190115",
+        "pages": [
+          179
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-49-20190206",
+        "pages": [
+          15
         ]
       }
     ],
@@ -3723,6 +7590,7 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3733,8 +7601,66 @@
       {
         "document_id": "tutanak-27-02-69-20190423",
         "pages": [
+          2,
           22,
-          23
+          23,
+          33
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-72-20190430",
+        "pages": [
+          2,
+          3,
+          6,
+          46,
+          47,
+          48
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          58,
+          59,
+          65,
+          67
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          57,
+          62,
+          63
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-73-20190502",
+        "pages": [
+          2,
+          4
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-79-20190516",
+        "pages": [
+          59,
+          99
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-96-20190702",
+        "pages": [
+          35,
+          205
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-97-20190703",
+        "pages": [
+          57,
+          105
         ]
       }
     ],
@@ -3745,6 +7671,7 @@
       "narrative",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3755,7 +7682,77 @@
       {
         "document_id": "tutanak-27-02-68-20190418",
         "pages": [
+          2,
           7
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          150,
+          169,
+          170,
+          171,
+          173,
+          174
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          12,
+          84,
+          244,
+          311,
+          312,
+          313
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-29-20181211",
+        "pages": [
+          15,
+          34,
+          128,
+          129,
+          130,
+          131
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-72-20190430",
+        "pages": [
+          35,
+          103,
+          115,
+          116,
+          210,
+          211
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-93-20190625",
+        "pages": [
+          16,
+          62,
+          99,
+          520
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-30-20181212",
+        "pages": [
+          17,
+          18,
+          141
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-69-20190423",
+        "pages": [
+          13,
+          17,
+          18
         ]
       }
     ],
@@ -3765,6 +7762,8 @@
       "page-level",
       "narrative",
       "hard",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3777,6 +7776,32 @@
         "pages": [
           44
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-92-20190620",
+        "pages": [
+          3,
+          43,
+          44
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-93-20190625",
+        "pages": [
+          10
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-49-20190206",
+        "pages": [
+          65
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          94
+        ]
       }
     ],
     "golden_answer": "",
@@ -3785,6 +7810,8 @@
       "page-level",
       "narrative",
       "medium",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3795,8 +7822,65 @@
       {
         "document_id": "tutanak-27-02-99-20190709",
         "pages": [
+          4,
+          129,
           130,
           139
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          24,
+          73,
+          77,
+          79,
+          80,
+          95
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-104-20190717",
+        "pages": [
+          109,
+          119,
+          120,
+          127,
+          147
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-105-20190718",
+        "pages": [
+          109,
+          169,
+          202
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          2,
+          50
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-100-20190710",
+        "pages": [
+          9,
+          38
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          75
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-41-20181226",
+        "pages": [
+          43
         ]
       }
     ],
@@ -3806,6 +7890,7 @@
       "page-level",
       "hard",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3816,8 +7901,87 @@
       {
         "document_id": "tutanak-27-02-99-20190709",
         "pages": [
+          153,
           154,
-          155
+          155,
+          156,
+          158,
+          160,
+          161,
+          162,
+          165,
+          166,
+          197,
+          198
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          5,
+          6,
+          9,
+          10,
+          11,
+          15
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-16-20181113",
+        "pages": [
+          40,
+          129,
+          130,
+          131,
+          132,
+          133
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-98-20190704",
+        "pages": [
+          86,
+          88,
+          98,
+          99,
+          100,
+          101
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          76,
+          143,
+          218,
+          233,
+          252
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          31,
+          685,
+          705,
+          758
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-100-20190710",
+        "pages": [
+          35,
+          44,
+          45,
+          83
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-33-20181215",
+        "pages": [
+          75,
+          101,
+          267
         ]
       }
     ],
@@ -3827,6 +7991,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3837,7 +8002,61 @@
       {
         "document_id": "tutanak-27-02-96-20190702",
         "pages": [
-          30
+          30,
+          203,
+          218
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-104-20190717",
+        "pages": [
+          6,
+          7,
+          8,
+          84,
+          85,
+          86
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-105-20190718",
+        "pages": [
+          10,
+          11,
+          126
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          312,
+          327
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-89-20190613",
+        "pages": [
+          47,
+          48
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          248,
+          263
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-69-20190423",
+        "pages": [
+          18
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-70-20190424",
+        "pages": [
+          79
         ]
       }
     ],
@@ -3847,6 +8066,8 @@
       "page-level",
       "narrative",
       "medium",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3879,8 +8100,66 @@
       {
         "document_id": "tutanak-27-02-82-20190523",
         "pages": [
+          3,
+          4,
+          5,
           43,
-          44
+          44,
+          45,
+          46,
+          69,
+          72,
+          77,
+          79,
+          91
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-54-20190219",
+        "pages": [
+          122,
+          227,
+          228,
+          231
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-83-20190527",
+        "pages": [
+          7,
+          9,
+          81
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-74-20190507",
+        "pages": [
+          43,
+          51
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-16-20181113",
+        "pages": [
+          111
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-29-20181211",
+        "pages": [
+          117
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-47-20190117",
+        "pages": [
+          347
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-55-20190220",
+        "pages": [
+          131
         ]
       }
     ],
@@ -3890,6 +8169,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3900,7 +8180,22 @@
       {
         "document_id": "tutanak-27-02-34-20181216",
         "pages": [
-          206
+          61,
+          139,
+          206,
+          215
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-18-20181115",
+        "pages": [
+          90
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [
+          427
         ]
       }
     ],
@@ -3910,6 +8205,8 @@
       "page-level",
       "narrative",
       "medium",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3923,6 +8220,47 @@
           83,
           90
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          340,
+          359,
+          361,
+          368,
+          373,
+          374
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-88-20190612",
+        "pages": [
+          61,
+          69,
+          95,
+          96,
+          99,
+          101
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          232,
+          257
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-13-20181101",
+        "pages": [
+          14
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-38-20181220",
+        "pages": [
+          267
+        ]
       }
     ],
     "golden_answer": "",
@@ -3932,6 +8270,7 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3943,7 +8282,79 @@
         "document_id": "tutanak-27-02-87-20190611",
         "pages": [
           135,
-          147
+          136,
+          137,
+          140,
+          147,
+          154,
+          155,
+          339,
+          350,
+          353,
+          364
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-88-20190612",
+        "pages": [
+          59,
+          60,
+          96,
+          97,
+          100,
+          103
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-90-20190618",
+        "pages": [
+          77,
+          88,
+          92,
+          102,
+          108,
+          120
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-92-20190620",
+        "pages": [
+          69,
+          71,
+          74,
+          89,
+          90,
+          98
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-93-20190625",
+        "pages": [
+          4,
+          119,
+          135,
+          138
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          36,
+          131
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          184,
+          232
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-89-20190613",
+        "pages": [
+          25,
+          64
         ]
       }
     ],
@@ -3954,6 +8365,7 @@
       "narrative",
       "easy",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -3965,8 +8377,81 @@
         "document_id": "tutanak-27-02-87-20190611",
         "pages": [
           140,
+          144,
           145,
-          149
+          149,
+          339,
+          340,
+          346,
+          353,
+          363,
+          364,
+          365,
+          366
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-90-20190618",
+        "pages": [
+          71,
+          78,
+          79,
+          92,
+          93,
+          101
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-92-20190620",
+        "pages": [
+          71,
+          72,
+          73,
+          79,
+          81,
+          84
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-88-20190612",
+        "pages": [
+          62,
+          63,
+          64,
+          65,
+          84
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-89-20190613",
+        "pages": [
+          25,
+          62,
+          63,
+          67
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-91-20190619",
+        "pages": [
+          55,
+          57,
+          86,
+          88
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          131,
+          135,
+          154
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          326
         ]
       }
     ],
@@ -3976,6 +8461,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -4006,7 +8492,61 @@
       {
         "document_id": "tutanak-27-02-25-20181204",
         "pages": [
+          3,
           44
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-32-20181214",
+        "pages": [
+          90,
+          142,
+          167,
+          223,
+          236
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-82-20190523",
+        "pages": [
+          39,
+          120,
+          121
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-100-20190710",
+        "pages": [
+          88,
+          133,
+          149
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-26-20181205",
+        "pages": [
+          10,
+          101
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-40-20181225",
+        "pages": [
+          54,
+          62
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          105,
+          113
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-74-20190507",
+        "pages": [
+          20
         ]
       }
     ],
@@ -4016,6 +8556,8 @@
       "page-level",
       "narrative",
       "medium",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -4026,8 +8568,70 @@
       {
         "document_id": "tutanak-27-02-13-20181101",
         "pages": [
+          4,
+          25,
           31,
-          38
+          36,
+          38,
+          41,
+          46,
+          49,
+          50,
+          54,
+          57,
+          59
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-19-20181120",
+        "pages": [
+          91,
+          189,
+          190,
+          192,
+          193,
+          194
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          287,
+          288,
+          290,
+          291,
+          299
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-14-20181106",
+        "pages": [
+          9,
+          10
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-36-20181218",
+        "pages": [
+          47
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-23-20181128",
+        "pages": [
+          143
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-29-20181211",
+        "pages": [
+          86
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-37-20181219",
+        "pages": [
+          71
         ]
       }
     ],
@@ -4037,6 +8641,7 @@
       "page-level",
       "medium",
       "cross-page",
+      "cross-document",
       "unverified"
     ]
   },
@@ -4047,7 +8652,59 @@
       {
         "document_id": "tutanak-27-02-64-20190410",
         "pages": [
+          6,
           8
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-43-20190109",
+        "pages": [
+          8,
+          169,
+          170,
+          172,
+          173
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-01-20181001",
+        "pages": [
+          6,
+          274,
+          276
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-10-20180725",
+        "pages": [
+          35,
+          193
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          70,
+          71
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-104-20190717",
+        "pages": [
+          13,
+          141
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-34-20181216",
+        "pages": [
+          109
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          484
         ]
       }
     ],
@@ -4057,6 +8714,8 @@
       "page-level",
       "narrative",
       "hard",
+      "cross-page",
+      "cross-document",
       "unverified"
     ]
   }
