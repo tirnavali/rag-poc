@@ -24,19 +24,31 @@ from src.common.schemas import ExtractedFilterResponse, FilterCriteria
 from src.config.pipeline_loader import load_pipeline_config
 
 
-def _make_plan(*collections: str) -> SearchPlan:
+def _make_plan(*collections: str, draft_text: str = "q") -> SearchPlan:
     return SearchPlan(
         intent="factual",
         query_type="fact",
         resources=[
             CollectionSearchPlan(
                 collection=c,
-                query_drafts=[SearchQueryDraft(text="q", top_k=5)],
+                query_drafts=[SearchQueryDraft(text=draft_text, top_k=5)],
             )
             for c in collections
         ],
         reasoning="r",
     )
+
+
+def _fresh_broaden(*collections: str):
+    """A broaden() mock that emits a NEW draft text per call — mirrors the real
+    broaden, which is fed the tried-query list and produces unseen phrasings.
+    (An identical draft would be hard-pruned by the tried-search ledger.)"""
+    calls = {"n": 0}
+
+    def _broaden(*a, **kw):
+        calls["n"] += 1
+        return _make_plan(*collections, draft_text=f"q-broaden-{calls['n']}")
+    return _broaden
 
 
 def _make_search_result(chunk_ids, doc_ids, collection: str) -> dict:
@@ -256,8 +268,8 @@ def test_orchestrator_zero_chunks_returns_clarify(monkeypatch):
 def test_orchestrator_requery_expand_adds_new_chunks(monkeypatch):
     """Judge 'expand' triggers a bounded re-query that brings NEW chunks (not reserves)."""
     agent = _agent(monkeypatch, plan_collections=("col_a",))
-    # Broaden returns a fresh plan; the search returns a new chunk set on re-query.
-    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
+    # Broaden returns a fresh plan (new draft text); the search returns a new chunk set on re-query.
+    monkeypatch.setattr(agent._planner, "broaden", _fresh_broaden("col_a"))
 
     calls = {"n": 0}
 
@@ -278,7 +290,7 @@ def test_orchestrator_successful_term_hypothesis_upserted_for_review(monkeypatch
     insufficiency (added>0, post-expand judge says 'answer') gets surfaced to
     the term_candidates human-review queue — never auto-applied to live search."""
     agent = _agent(monkeypatch, plan_collections=("col_a",))
-    hypothesis_plan = _make_plan("col_a")
+    hypothesis_plan = _make_plan("col_a", draft_text="hükümsüz sayılan kanun teklifleri")
     hypothesis_plan.term_hypothesis = TermHypothesis(term="kadük", official_phrase="hükümsüz sayılan kanun teklifleri")
     monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: hypothesis_plan)
 
@@ -338,9 +350,9 @@ def test_orchestrator_requery_preserves_comprehensive_fetch_k(monkeypatch):
     the much smaller 'fact' fetch_k instead of 'comprehensive', causing premature
     saturation (few/no 'new' chunks per round) even when the corpus has plenty more."""
     agent = _agent(monkeypatch, plan_collections=("col_a",))
-    # _make_plan defaults query_type="fact" — mirrors broaden()'s real (query_type-less
-    # JSON schema) behavior exactly.
-    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
+    # _fresh_broaden emits query_type="fact" plans — mirrors broaden()'s real
+    # (query_type-less JSON schema) behavior exactly.
+    monkeypatch.setattr(agent._planner, "broaden", _fresh_broaden("col_a"))
 
     seen_top_k = []
 
@@ -366,7 +378,9 @@ def test_orchestrator_comprehensive_escalates_depth_then_saturates(monkeypatch):
     nothing new (or the ceiling is hit). Regression for the 'what if there are more
     than fetch_k relevant chunks?' gap."""
     agent = _agent(monkeypatch, plan_collections=("col_a",))
-    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
+    # max_total capping is the assembler's job; the temporary passthrough doesn't cap.
+    monkeypatch.setattr("src.agent.orchestrator._ASSEMBLER_ENABLED", True)
+    monkeypatch.setattr(agent._planner, "broaden", _fresh_broaden("col_a"))
 
     CORPUS = 100
     seen_top_k = []
@@ -419,7 +433,7 @@ def test_orchestrator_comprehensive_facet_partitions_by_year(monkeypatch):
 def test_orchestrator_comprehensive_stops_at_max_rounds(monkeypatch):
     """When every round keeps adding new chunks, the loop is bounded by comprehensive_max_rounds."""
     agent = _agent(monkeypatch, plan_collections=("col_a",))
-    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
+    monkeypatch.setattr(agent._planner, "broaden", _fresh_broaden("col_a"))
     agent._config.judge.comprehensive_max_rounds = 2
 
     calls = {"n": 0}
@@ -439,7 +453,9 @@ def test_orchestrator_comprehensive_stops_at_max_rounds(monkeypatch):
 def test_orchestrator_comprehensive_stops_at_ceiling(monkeypatch):
     """When the assembled context already meets the per-type ceiling, no re-query runs."""
     agent = _agent(monkeypatch, plan_collections=("col_a",))
-    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
+    # max_total capping is the assembler's job; the temporary passthrough doesn't cap.
+    monkeypatch.setattr("src.agent.orchestrator._ASSEMBLER_ENABLED", True)
+    monkeypatch.setattr(agent._planner, "broaden", _fresh_broaden("col_a"))
     # Lower the comprehensive ceiling so the initial retrieval already saturates it.
     agent._config.retrieval_budget._by_query_type["comprehensive"].max_total = 4
 
@@ -455,6 +471,54 @@ def test_orchestrator_comprehensive_stops_at_ceiling(monkeypatch):
     assert out.plan.query_type == "comprehensive"
     assert len(out.assembly) == 4                     # capped at the lowered ceiling
     assert calls["n"] == 1                            # ceiling already met → no re-query
+
+
+def test_orchestrator_expansion_never_repeats_identical_search(monkeypatch):
+    """Regression for the repeat-search loop: broaden() at temperature 0 kept
+    regenerating the same drafts, and every gather round re-issued the identical
+    (query × filter × depth) vector search — deterministic ANN, guaranteed 0 new
+    chunks, full retrieval latency burned. The tried-search ledger must prune
+    exact repeats; only a DEEPER re-run of the same query is allowed."""
+    agent = _agent(monkeypatch, plan_collections=("col_a",))
+    # Worst case: broaden returns the same draft as the initial plan, every round.
+    monkeypatch.setattr(agent._planner, "broaden", lambda *a, **kw: _make_plan("col_a"))
+
+    issued = []
+
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
+        issued.append((query_text, str(filters), top_k))
+        ids = [f"a{i}" for i in range(3)]                # always the same 3 chunks
+        return _make_search_result(ids, [f"d-{i}" for i in ids], collection_key)
+    monkeypatch.setattr(agent._search_tool, "search", _search)
+
+    agent.run("tüm konuşmaları listele", session_collections=["col_a"])
+
+    assert len(issued) == len(set(issued)), f"identical search re-issued: {issued}"
+    assert len({k for _, _, k in issued}) == len(issued)  # re-runs only ever go deeper
+
+
+def test_orchestrator_depth_escalation_skips_broaden_llm(monkeypatch):
+    """A dry round escalates depth to re-run the SAME drafts deeper — paying a
+    broaden-LLM round-trip for that is pure waste (it would regenerate the same
+    plan). The previous round's plan must be reused without calling broaden()."""
+    agent = _agent(monkeypatch, plan_collections=("col_a",))
+    broaden_calls = {"n": 0}
+
+    def _broaden(*a, **kw):
+        broaden_calls["n"] += 1
+        return _make_plan("col_a")
+    monkeypatch.setattr(agent._planner, "broaden", _broaden)
+
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
+        ids = [f"a{i}" for i in range(3)]                # saturated corpus: never anything new
+        return _make_search_result(ids, [f"d-{i}" for i in ids], collection_key)
+    monkeypatch.setattr(agent._search_tool, "search", _search)
+
+    agent.run("tüm konuşmaları listele", session_collections=["col_a"])
+
+    # Round 1 broadens once; every depth-escalation round after a dry round
+    # reuses that plan instead of calling the LLM again.
+    assert broaden_calls["n"] == 1
 
 
 def test_orchestrator_non_comprehensive_does_not_loop(monkeypatch):

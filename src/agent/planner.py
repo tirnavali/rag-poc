@@ -88,6 +88,7 @@ Orijinal sorgu: {query}
 
 Daha geniş tarih aralığı, yazar filtresi kaldır, alternatif kelimeler kullan.
 top_k değerini artır.
+{tried_queries_block}
 
 Doc-type yönlendirme (önceki plan yanlış doc_type seçmiş olabilir):
 - Gazete/basın/köşe yazısı/muhabir → doc_type=gazete koleksiyonları
@@ -192,6 +193,7 @@ class Planner:
         result_count: int = 0,
         missing_aspects: list[str] | None = None,
         rejected_hypotheses: list[dict] | None = None,
+        tried_queries: list[str] | None = None,
     ) -> SearchPlan | None:
         """Generate a broader plan for bounded re-query expansion.
 
@@ -205,6 +207,11 @@ class Planner:
             rejected_hypotheses: prior human-rejected {term, hypothesis} guesses
                 (from the term_candidates review table) — fed back as a negative
                 constraint so the LLM doesn't re-propose a debunked guess.
+            tried_queries: query texts already searched in earlier rounds — fed
+                back as a negative constraint; at temperature 0 the LLM would
+                otherwise regenerate the same drafts every round (the orchestrator
+                also hard-prunes exact repeats via its tried-search ledger, so a
+                repeated draft is doubly wasted).
 
         Returns None when the LLM fails (caller keeps the original results).
         """
@@ -214,7 +221,7 @@ class Planner:
         plan = self._generate_broader_plan(
             query, previous_plan, tracer, allowed_keys=allowed,
             result_count=result_count, missing_aspects=missing_aspects,
-            rejected_hypotheses=rejected_hypotheses,
+            rejected_hypotheses=rejected_hypotheses, tried_queries=tried_queries,
         )
         if plan is None:
             return None
@@ -438,6 +445,7 @@ class Planner:
         result_count: int = 0,
         missing_aspects: list[str] | None = None,
         rejected_hypotheses: list[dict] | None = None,
+        tried_queries: list[str] | None = None,
     ) -> SearchPlan | None:
         """Generate a broader plan for re-query expansion.
 
@@ -457,6 +465,14 @@ class Planner:
                 f"\nDAHA ÖNCE DENENMİŞ VE YANLIŞ OLDUĞU DOĞRULANMIŞ KARŞILIKLAR "
                 f"(BUNLARI TEKRAR ÖNERME): {pairs}\n"
             )
+        tried_queries_block = ""
+        if tried_queries:
+            lines = "\n".join(f"- {q}" for q in tried_queries)
+            tried_queries_block = (
+                "\nDAHA ÖNCE ARANMIŞ SORGULAR (bunları ve çok benzer varyasyonlarını "
+                "TEKRAR ÜRETME — aynı arama aynı sonucu döndürür; belirgin FARKLI "
+                f"kelimeler, eş anlamlılar ve yeni açılar dene):\n{lines}\n"
+            )
         system_prompt = RE_RETRIEVAL_PROMPT.format(
             catalog=catalog,
             query=query,
@@ -464,6 +480,7 @@ class Planner:
             result_count=result_count,
             missing_aspects_block=missing_aspects_block,
             rejected_hypotheses_block=rejected_hypotheses_block,
+            tried_queries_block=tried_queries_block,
         )
         return self._call_planner_llm(f"Sorgu: {query}", system_prompt)
 

@@ -79,8 +79,9 @@ def test_broaden_injects_rejected_hypotheses_as_negative_constraint():
 
 
 def test_broaden_no_context_omits_optional_blocks():
-    """No missing_aspects/rejected_hypotheses given -> prompt stays clean, no
-    empty artifacts like 'Yetersizlik nedeni: .' or stray negative-constraint text."""
+    """No missing_aspects/rejected_hypotheses/tried_queries given -> prompt stays
+    clean, no empty artifacts like 'Yetersizlik nedeni: .' or stray negative-
+    constraint text."""
     planner = _planner()
     client = _mock_client({"intent": "unknown", "resources": [], "reasoning": "r"})
     planner._pool.get_client = MagicMock(return_value=client)
@@ -90,6 +91,26 @@ def test_broaden_no_context_omits_optional_blocks():
     sys_prompt = client.chat.call_args.kwargs["messages"][0]["content"]
     assert "Yetersizlik nedeni" not in sys_prompt
     assert "TEKRAR ÖNERME" not in sys_prompt
+    assert "DAHA ÖNCE ARANMIŞ SORGULAR" not in sys_prompt
+
+
+def test_broaden_injects_tried_queries_as_negative_constraint():
+    """Regression: at temperature 0 broaden() regenerated the SAME drafts every
+    gather round (the repeat-search loop). The already-searched query texts must
+    reach the prompt as a don't-repeat block."""
+    planner = _planner()
+    client = _mock_client({"intent": "unknown", "resources": [], "reasoning": "r"})
+    planner._pool.get_client = MagicMock(return_value=client)
+
+    planner.broaden(
+        "kadük tüm listeyi ver", _previous_plan(),
+        tried_queries=["sağlık personeli özlük hakları", "çalışma şartları iyileştirme"],
+    )
+
+    sys_prompt = client.chat.call_args.kwargs["messages"][0]["content"]
+    assert "DAHA ÖNCE ARANMIŞ SORGULAR" in sys_prompt
+    assert "- sağlık personeli özlük hakları" in sys_prompt
+    assert "- çalışma şartları iyileştirme" in sys_prompt
 
 
 def test_broaden_parses_term_hypothesis_from_response():

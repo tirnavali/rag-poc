@@ -13,6 +13,7 @@ query_type to a per-collection fetch_k — a plain config lookup, always on.
 """
 from __future__ import annotations
 
+import json
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
@@ -68,10 +69,12 @@ _REFUSE_MESSAGES = {
 
 
 class _RequeryResult(NamedTuple):
-    """Outcome of one _requery_expand() round."""
+    """Outcome of one _requery_expand() / _enumerate_expand() round."""
     added: int
     draft_texts: dict[str, list[str]]
     term_hypothesis: Optional[TermHypothesis]
+    plan: Optional[SearchPlan] = None
+    pruned: int = 0
 
 
 def _collect_first_filters(plan: SearchPlan) -> dict[str, dict]:
@@ -275,7 +278,11 @@ class OrchestratorAgent:
 
         # ---- Stage 3: retrieval (parallel fan-out + RRF + rerank) ----
         with tracer.phase("retrieval") as ctx:
-            state.retrieval_results = self._run_retrieval(state.collection_plans, self._fallback_query(state))
+            fallback = self._fallback_query(state)
+            # Register the initial searches in the tried-ledger so expansion
+            # rounds never re-run an identical (query × filter × depth) search.
+            state.collection_plans, _ = self._dedupe_and_register(state, state.collection_plans, fallback)
+            state.retrieval_results = self._run_retrieval(state.collection_plans, fallback)
             if ctx:
                 ctx.update_details(per_collection={
                     name: {"fetched": ro.fetched_count, "returned": ro.returned_count, "latency_ms": ro.latency_ms}
@@ -334,6 +341,10 @@ class OrchestratorAgent:
             fetch_k_max = self._config.retrieval_budget.enumerate_fetch_k_max
 
         rounds = 0
+        # A dry round escalates depth and re-runs the SAME drafts deeper — the
+        # previous round's plan is reused verbatim so no broaden-LLM call is paid
+        # for a pure depth escalation.
+        reuse_plan: Optional[SearchPlan] = None
         while rounds < max_rounds:
             need_more = comprehensive or state.evidence_decision.action == "expand"
             if not need_more:
@@ -348,15 +359,17 @@ class OrchestratorAgent:
 
             added = 0
             term_hypothesis = None
+            broaden_reused = reuse_plan is not None
             with tracer.phase("expansion") as ctx:
                 if comprehensive:
                     # Enumerate: facet-partitioned + depth-escalating gather so the
                     # long tail (ranks beyond the top-K, under-covered years) actually
                     # surfaces instead of stalling on the same neighborhood.
-                    result = self._enumerate_expand(state, tracer, fetch_k=depth)
+                    result = self._enumerate_expand(state, tracer, fetch_k=depth, base_plan=reuse_plan)
                 else:
                     # Plain re-query: broaden the query, retrieve anew, merge unique.
                     result = self._requery_expand(state, tracer)
+                reuse_plan = None
                 added, term_hypothesis = result.added, result.term_hypothesis
                 self._run_assembler(state)
                 if ctx:
@@ -365,6 +378,8 @@ class OrchestratorAgent:
                         depth=depth, expanded=state.expanded,
                         assembled_total=len(state.assembled_chunks),
                         drafts=result.draft_texts,
+                        pruned_duplicates=result.pruned,
+                        broaden_reused=broaden_reused,
                         term_hypothesis=term_hypothesis.model_dump() if term_hypothesis else None,
                     )
             with tracer.phase("judge_post_expand") as ctx:
@@ -386,6 +401,7 @@ class OrchestratorAgent:
                 # stop only once even the deepest fetch surfaces nothing new.
                 if comprehensive and depth is not None and depth < fetch_k_max:
                     depth = min(depth * 2, fetch_k_max)
+                    reuse_plan = result.plan
                     continue
                 break  # saturation (or non-comprehensive single expand)
 
@@ -594,6 +610,66 @@ class OrchestratorAgent:
         refined = state.planner_output.refined_query if state.planner_output else None
         return refined or state.user_query
 
+    # ==================================================== tried-search ledger
+
+    @staticmethod
+    def _search_key(collection: str, query_text: str, filters: Optional[dict]) -> str:
+        """Canonical ledger key for one executed search (filters order-insensitive)."""
+        return json.dumps([collection, query_text, filters or {}], sort_keys=True, ensure_ascii=False)
+
+    @staticmethod
+    def _tried_query_texts(state: OrchestratorState, limit: int = 20) -> list[str]:
+        """Unique query texts already searched, in first-tried order (most recent
+        ``limit`` kept) — fed to broaden() so the LLM stops regenerating them."""
+        texts: list[str] = []
+        seen: set[str] = set()
+        for key in state.tried_searches:
+            try:
+                _, text, _ = json.loads(key)
+            except (ValueError, TypeError):
+                continue
+            if text not in seen:
+                seen.add(text)
+                texts.append(text)
+        return texts[-limit:]
+
+    def _dedupe_and_register(
+        self,
+        state: OrchestratorState,
+        plans: list[CollectionExecutionPlan],
+        fallback_query: str,
+    ) -> tuple[list[CollectionExecutionPlan], int]:
+        """Prune drafts already searched at this-or-greater depth; register the rest.
+
+        ANN search is deterministic, so re-running an identical (collection ×
+        query × filter) at the same or shallower fetch_k cannot surface anything
+        new — it only burns retrieval latency (the observed repeat-search loop).
+        A plan whose every draft is pruned is dropped entirely; the same draft
+        becomes eligible again at a deeper fetch_k (depth escalation).
+
+        Returns (kept_plans, pruned_draft_count). Kept plans have their effective
+        drafts materialized (the raw-query fallback becomes explicit), so what is
+        registered here is exactly what _run_retrieval will execute.
+        """
+        kept_plans: list[CollectionExecutionPlan] = []
+        pruned = 0
+        for plan in plans:
+            if not plan.enabled:
+                continue
+            kept: list[str] = []
+            for text in plan.query_drafts or [fallback_query]:
+                key = self._search_key(plan.collection_name, text, plan.filters)
+                if state.tried_searches.get(key, 0) >= plan.fetch_k:
+                    pruned += 1
+                    continue
+                kept.append(text)
+                state.tried_searches[key] = max(state.tried_searches.get(key, 0), plan.fetch_k)
+            if not kept:
+                continue
+            plan.query_drafts = kept
+            kept_plans.append(plan)
+        return kept_plans, pruned
+
     # ============================================================ retrieval
 
     def _run_retrieval(self, plans: list[CollectionExecutionPlan], fallback_query: str) -> dict[str, RetrievalOutput]:
@@ -712,6 +788,7 @@ class OrchestratorAgent:
             result_count=len(state.assembled_chunks),
             missing_aspects=missing_aspects,
             rejected_hypotheses=term_db.list_rejected_term_hypotheses(),
+            tried_queries=self._tried_query_texts(state),
         )
         if broader is None or not broader.resources:
             return _RequeryResult(added=0, draft_texts={}, term_hypothesis=None)
@@ -727,17 +804,22 @@ class OrchestratorAgent:
         # A hallucinated collection key fails safely inside SearchTool (KeyError →
         # caught and dropped in _run_retrieval), so no catalog pre-filter is needed.
         allowed = [r.collection for r in broader.resources]
+        requery_query = broader.refined_query or state.user_query
         requery_plans = self._flat_plans_for(broader, allowed)
+        requery_plans, pruned = self._dedupe_and_register(state, requery_plans, requery_query)
         draft_texts = {p.collection_name: list(p.query_drafts) for p in requery_plans}
-        new_results = self._run_retrieval(requery_plans, broader.refined_query or state.user_query)
+        new_results = self._run_retrieval(requery_plans, requery_query) if requery_plans else {}
         if not new_results:
-            return _RequeryResult(added=0, draft_texts=draft_texts, term_hypothesis=broader.term_hypothesis)
+            state.expand_iterations += 1
+            return _RequeryResult(added=0, draft_texts=draft_texts,
+                                  term_hypothesis=broader.term_hypothesis, plan=broader, pruned=pruned)
 
         added_total = self._merge_new_chunks(state, new_results, requery_plans)
         if added_total > 0:
             state.expanded = True
         state.expand_iterations += 1
-        return _RequeryResult(added=added_total, draft_texts=draft_texts, term_hypothesis=broader.term_hypothesis)
+        return _RequeryResult(added=added_total, draft_texts=draft_texts,
+                              term_hypothesis=broader.term_hypothesis, plan=broader, pruned=pruned)
 
     def _merge_new_chunks(
         self,
@@ -788,7 +870,13 @@ class OrchestratorAgent:
                 years.append(int(token))
         return years
 
-    def _enumerate_expand(self, state: OrchestratorState, tracer: PipelineTracer, fetch_k: int) -> "_RequeryResult":
+    def _enumerate_expand(
+        self,
+        state: OrchestratorState,
+        tracer: PipelineTracer,
+        fetch_k: int,
+        base_plan: Optional[SearchPlan] = None,
+    ) -> "_RequeryResult":
         """Exhaustive gather for comprehensive/enumerate queries.
 
         Two levers the plain re-query lacks:
@@ -798,34 +886,44 @@ class OrchestratorAgent:
              so each year's own top-K surfaces instead of only the globally
              dominant region. Requires `enumerate_facet_partition`.
 
-        Chunks from every pass are deduped into the live pool via _merge_new_chunks.
+        ``base_plan`` short-circuits the broaden-LLM call: a depth-escalation round
+        re-runs the previous round's drafts deeper, so the caller passes that plan
+        back in instead of paying an LLM round-trip that would (deterministically,
+        temperature 0) regenerate the same drafts.
+
+        Already-tried (query × filter × depth) searches are pruned via the
+        tried-ledger; chunks from every remaining pass are deduped into the live
+        pool via _merge_new_chunks.
         """
         from src.api import db as term_db
 
-        missing_aspects = state.evidence_decision.missing_aspects if state.evidence_decision else None
-        broader = self._planner.broaden(
-            state.user_query,
-            state.planner_output,
-            tracer,
-            selected_collections=state.selected_collections or self._production,
-            result_count=len(state.assembled_chunks),
-            missing_aspects=missing_aspects,
-            rejected_hypotheses=term_db.list_rejected_term_hypotheses(),
-        )
-        if broader is not None and broader.resources:
-            # Carry the original query_type so _flat_plans_for keeps the comprehensive
-            # depth (see the regression note in _requery_expand).
-            broader.query_type = state.planner_output.query_type if state.planner_output else broader.query_type
-            base_plan = broader
-            term_hypothesis = broader.term_hypothesis
-        else:
-            base_plan = state.planner_output
-            term_hypothesis = None
+        if base_plan is None:
+            missing_aspects = state.evidence_decision.missing_aspects if state.evidence_decision else None
+            broader = self._planner.broaden(
+                state.user_query,
+                state.planner_output,
+                tracer,
+                selected_collections=state.selected_collections or self._production,
+                result_count=len(state.assembled_chunks),
+                missing_aspects=missing_aspects,
+                rejected_hypotheses=term_db.list_rejected_term_hypotheses(),
+                tried_queries=self._tried_query_texts(state),
+            )
+            if broader is not None and broader.resources:
+                # Carry the original query_type so _flat_plans_for keeps the comprehensive
+                # depth (see the regression note in _requery_expand).
+                broader.query_type = state.planner_output.query_type if state.planner_output else broader.query_type
+                base_plan = broader
+            else:
+                base_plan = state.planner_output
+        # Initial plans never carry one; a reused broaden plan keeps its hypothesis
+        # alive so a deeper round that finally succeeds can still record it.
+        term_hypothesis = base_plan.term_hypothesis if base_plan else None
 
         allowed = ([r.collection for r in base_plan.resources] if base_plan else None) \
             or [p.collection_name for p in state.collection_plans]
         if not allowed:
-            return _RequeryResult(added=0, draft_texts={}, term_hypothesis=term_hypothesis)
+            return _RequeryResult(added=0, draft_texts={}, term_hypothesis=term_hypothesis, plan=base_plan)
 
         # Pass 1 = unfiltered (deeper global reach); passes 2..N = one per mined year.
         filter_variants: list[Optional[dict]] = [None]
@@ -837,9 +935,14 @@ class OrchestratorAgent:
 
         query_text = (base_plan.refined_query if base_plan else None) or state.user_query
         added_total = 0
+        pruned_total = 0
         draft_texts: dict[str, list[str]] = {}
         for variant in filter_variants:
             plans = self._flat_plans_for(base_plan, allowed, fetch_k=fetch_k, override_filter=variant)
+            plans, pruned = self._dedupe_and_register(state, plans, query_text)
+            pruned_total += pruned
+            if not plans:
+                continue
             results = self._run_retrieval(plans, query_text)
             if not results:
                 continue
@@ -853,7 +956,8 @@ class OrchestratorAgent:
         if added_total > 0:
             state.expanded = True
         state.expand_iterations += 1
-        return _RequeryResult(added=added_total, draft_texts=draft_texts, term_hypothesis=term_hypothesis)
+        return _RequeryResult(added=added_total, draft_texts=draft_texts,
+                              term_hypothesis=term_hypothesis, plan=base_plan, pruned=pruned_total)
 
     # =============================================================== helpers
 

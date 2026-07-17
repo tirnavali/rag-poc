@@ -285,6 +285,13 @@ class OrchestratorState(BaseModel):
     evidence_decision: Optional[EvidenceDecision] = Field(None, description="Latest EvidenceJudge decision")
     expanded: bool = Field(False, description="True when a re-query expansion added chunks")
     expand_iterations: int = Field(0, description="How many bounded re-query expansions have run")
+    tried_searches: dict[str, int] = Field(
+        default_factory=dict,
+        description="Ledger of already-executed searches: JSON key "
+        "[collection, query_text, filters] → deepest fetch_k tried. Expansion "
+        "rounds prune drafts already searched at this-or-greater depth (ANN is "
+        "deterministic, so re-running them cannot add chunks).",
+    )
     facets: Optional[FacetSet] = Field(None, description="Facets mined from the probe retrieval")
     rabbit_holes: list[str] = Field(default_factory=list, description="Facet-grounded drill-down suggestions for broad/ambiguous queries")
     clarification: Optional[ClarificationResult] = Field(None, description="Clarification stage outcome")
