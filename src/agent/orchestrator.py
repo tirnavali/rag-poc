@@ -19,6 +19,8 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from typing import NamedTuple, Optional
 
+from langchain_core.runnables import RunnableConfig
+
 from src.agent.assembler import BalancedContextAssembler
 from src.agent.bad_words_filter import BadWordsFilter
 from src.agent.citations import CitationBuilder
@@ -39,6 +41,14 @@ from src.agent.schemas import (
     RetrievalOutput,
     SearchPlan,
     TermHypothesis,
+)
+from src.agent.graph import (
+    GraphState,
+    RunContext,
+    build_orchestrator_graph,
+    initial_graph_state,
+    recursion_limit_for,
+    run_ctx,
 )
 from src.agent.suggester import Suggester
 from src.agent.tools import AnswerTool, SearchTool
@@ -155,6 +165,9 @@ class OrchestratorAgent:
         self._refiner = QueryRefiner(client_pool, config)
         # The live retrieval universe — agent only ever sees production collections.
         self._production = get_production_collection_keys()
+        # Graf bir kez derlenir (checkpointer yok); koşu başına her şey
+        # GraphState kanalları + RunContext ile taşınır → yeniden girilebilir.
+        self._graph = build_orchestrator_graph(self)
 
     # ====================================================================== run
 
@@ -168,45 +181,91 @@ class OrchestratorAgent:
         on_phase: Optional[callable] = None,
         on_phase_end: Optional[callable] = None,
         chat_history: Optional[list] = None,
+        callbacks: Optional[list] = None,
     ) -> AgentOutput:
+        """Pipeline'ı LangGraph grafı üzerinden çalıştırır.
+
+        ``callbacks``: opsiyonel LangChain callback listesi (ör. Langfuse
+        CallbackHandler) — graf config'iyle her node'a ve node içindeki her
+        ChatOllama çağrısına yayılır. ``clarification_callback`` ve
+        ``deep_mode`` köhnedir (kabul edilir, yok sayılır — flow_diagram.html).
+        """
         state = OrchestratorState(request_id=str(uuid.uuid4()), user_query=query)
         tracer = PipelineTracer(on_phase=on_phase, on_phase_end=on_phase_end)
-        session_collections = session_collections or []
+        ctx = RunContext(
+            tracer=tracer,
+            query=query,
+            session_collections=session_collections or [],
+            stream_callback=stream_callback,
+            chat_history=chat_history,
+        )
+        result = self._graph.invoke(
+            initial_graph_state(state),
+            config={
+                "configurable": {"run_ctx": ctx},
+                "callbacks": callbacks or None,
+                "recursion_limit": recursion_limit_for(self._config),
+            },
+        )
+        return result["output"]
 
-        # ---- Stage 0: bad-words gate (stage-2; off by default) ----
-        if self._bad_words is not None:
-            bw = self._bad_words.check(query)
-            with tracer.phase("bad_words_filter", details={"matched": bw.matched, "matched_terms": bw.matched_terms}):
-                pass
-            if bw.matched:
-                return AgentOutput(
-                    answer=self._config.bad_words_filter.response_message,
-                    scope="bad_word",
-                    trace=tracer.events,
-                )
+    # ================================================================= node'lar
+    # Her node, eski run()'daki aşamanın birebir taşınmış gövdesidir; tracer faz
+    # isimleri ve details alanları değişmedi (web trace sekmesi + smoke testi
+    # sözleşmesi). Bileşen kontrolleri (classifier/bad_words None, clarification
+    # enabled) çalışma ANINDA yapılır — testler construction sonrası mutasyon yapar.
 
-        # ---- Stage 1: intent (scope + tool/db selection) ----
-        if self._classifier is not None:
-            scope_result = self._classifier.classify(query, tracer)
-            if (
-                scope_result.scope == "off_domain"
-                and scope_result.confidence >= self._config.classifier.confidence_threshold
-                and not self._is_known_parliamentary_term(query)
-            ):
-                return self._off_domain_output(query, tracer)
-            if scope_result.scope == "conversational":
-                return self._conversational_output(query, chat_history, tracer, stream_callback)
-            # Validate intent's collection picks against the production universe.
-            prod = set(self._production)
-            state.selected_collections = [
-                c for c in scope_result.selected_collections if c in COLLECTIONS and c in prod
-            ]
+    def _node_bad_words(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Stage 0: bad-words gate (stage-2; off by default)."""
+        ctx = run_ctx(config)
+        if self._bad_words is None:
+            return {}
+        bw = self._bad_words.check(ctx.query)
+        with ctx.tracer.phase("bad_words_filter", details={"matched": bw.matched, "matched_terms": bw.matched_terms}):
+            pass
+        if bw.matched:
+            return {"output": AgentOutput(
+                answer=self._config.bad_words_filter.response_message,
+                scope="bad_word",
+                trace=ctx.tracer.events,
+            )}
+        return {}
 
-        # ---- Stage 2: planning (intent + constraints → diversified plan) ----
-        with tracer.phase("planning") as ctx:
+    def _node_classification(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Stage 1: intent (scope + tool/db selection)."""
+        ctx = run_ctx(config)
+        state = gs["s"]
+        if self._classifier is None:
+            return {"scope_result": None}
+        scope_result = self._classifier.classify(ctx.query, ctx.tracer)
+        # Validate intent's collection picks against the production universe.
+        # (Erken çıkış yolları — off_domain/conversational — bu alanı okumaz;
+        # yönlendirme kararını route_after_classification verir.)
+        prod = set(self._production)
+        state.selected_collections = [
+            c for c in scope_result.selected_collections if c in COLLECTIONS and c in prod
+        ]
+        return {"scope_result": scope_result}
+
+    def _node_off_domain(self, gs: GraphState, config: RunnableConfig) -> dict:
+        ctx = run_ctx(config)
+        return {"output": self._off_domain_output(ctx.query, ctx.tracer)}
+
+    def _node_conversational(self, gs: GraphState, config: RunnableConfig) -> dict:
+        ctx = run_ctx(config)
+        return {"output": self._conversational_output(
+            ctx.query, ctx.chat_history, ctx.tracer, ctx.stream_callback
+        )}
+
+    def _node_planning(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Stage 2: planning (intent + constraints → diversified plan)."""
+        ctx = run_ctx(config)
+        state = gs["s"]
+        query = ctx.query
+        with ctx.tracer.phase("planning") as tctx:
             state.planner_output = self._planner.plan(
                 query,
-                tracer,
+                ctx.tracer,
                 # Restrict the planner's catalog + routing to the production universe.
                 selected_collections=state.selected_collections or self._production,
                 constraints=state.applied_constraints or None,
@@ -231,8 +290,8 @@ class OrchestratorAgent:
                 enumerate_strategy = self._config.get_strategy("enumerate")
                 if enumerate_strategy:
                     state.answer_directive = enumerate_strategy.get("answer_directive") or None
-            if ctx and state.planner_output:
-                ctx.update_details(
+            if tctx and state.planner_output:
+                tctx.update_details(
                     intent=state.planner_output.intent,
                     query_type=state.planner_output.query_type,
                     strategy=state.planner_output.strategy,
@@ -242,31 +301,39 @@ class OrchestratorAgent:
                             for r in state.planner_output.resources},
                 )
                 if self._config.expose_thinking and state.planner_output.reasoning:
-                    ctx.update_details(reasoning=state.planner_output.reasoning)
+                    tctx.update_details(reasoning=state.planner_output.reasoning)
+        return {}
 
-        # ---- Stage 2a: policy (stage-2; off → allow planner suggestions) ----
-        with tracer.phase("policy") as ctx:
+    def _node_policy(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Stage 2a: policy (stage-2; off → allow planner suggestions)."""
+        ctx = run_ctx(config)
+        state = gs["s"]
+        with ctx.tracer.phase("policy") as tctx:
             if self._config.policy.enabled:
-                self._policy.run(state, session_collections)
+                self._policy.run(state, ctx.session_collections)
             else:
                 suggested = [r.collection for r in state.planner_output.resources] if state.planner_output else []
                 state.policy_result = PolicyResult(allowed_collections=suggested, denied_collections=[])
-            if ctx and state.policy_result:
-                ctx.update_details(
+            if tctx and state.policy_result:
+                tctx.update_details(
                     enabled=self._config.policy.enabled,
                     allowed=state.policy_result.allowed_collections,
                     denied=state.policy_result.denied_collections,
                 )
         if not state.policy_result.allowed_collections:
-            return self._build_refuse_output(state, "no_allowed_collections", tracer)
+            return {"refuse_reason": "no_allowed_collections"}
+        return {}
 
-        # ---- Stage 2b: budget (query_type → per-collection fetch_k) ----
-        with tracer.phase("budget") as ctx:
+    def _node_budget(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Stage 2b: budget (query_type → per-collection fetch_k)."""
+        ctx = run_ctx(config)
+        state = gs["s"]
+        with ctx.tracer.phase("budget") as tctx:
             state.collection_plans = self._flat_plans_for(
                 state.planner_output, state.policy_result.allowed_collections
             )
-            if ctx:
-                ctx.update_details(
+            if tctx:
+                tctx.update_details(
                     plans=[
                         {"collection": p.collection_name,
                          "retrieval_budget": p.retrieval_budget, "fetch_k": p.fetch_k}
@@ -274,64 +341,74 @@ class OrchestratorAgent:
                     ],
                 )
         if not state.collection_plans:
-            return self._build_refuse_output(state, "no_allowed_collections", tracer)
+            return {"refuse_reason": "no_allowed_collections"}
+        return {}
 
-        # ---- Stage 3: retrieval (parallel fan-out + RRF + rerank) ----
-        with tracer.phase("retrieval") as ctx:
+    def _node_retrieval(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Stage 3: retrieval (parallel fan-out + RRF + rerank)."""
+        ctx = run_ctx(config)
+        state = gs["s"]
+        with ctx.tracer.phase("retrieval") as tctx:
             fallback = self._fallback_query(state)
             # Register the initial searches in the tried-ledger so expansion
             # rounds never re-run an identical (query × filter × depth) search.
             state.collection_plans, _ = self._dedupe_and_register(state, state.collection_plans, fallback)
             state.retrieval_results = self._run_retrieval(state.collection_plans, fallback)
-            if ctx:
-                ctx.update_details(per_collection={
+            if tctx:
+                tctx.update_details(per_collection={
                     name: {"fetched": ro.fetched_count, "returned": ro.returned_count, "latency_ms": ro.latency_ms}
                     for name, ro in state.retrieval_results.items()
                 })
+        return {}
 
-        # ---- Stage 3.5: facet mining + rabbit-hole suggestions ----
-        # Reuses the retrieval we just ran (no extra probe pass): mine facets from
-        # the hits and, for broad/ambiguous queries, offer drill-down suggestions.
+    def _node_rabbit_holes(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Stage 3.5: facet mining + rabbit-hole suggestions.
+
+        Reuses the retrieval we just ran (no extra probe pass): mine facets from
+        the hits and, for broad/ambiguous queries, offer drill-down suggestions.
+        """
+        ctx = run_ctx(config)
+        state = gs["s"]
         if self._config.clarification.enabled:
-            self._suggest_rabbit_holes(state, tracer)
+            self._suggest_rabbit_holes(state, ctx.tracer)
+        return {}
 
-        # ---- Stage 4: assembly ----
-        with tracer.phase("assembly") as ctx:
+    def _node_assembly(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Stage 4: assembly."""
+        ctx = run_ctx(config)
+        state = gs["s"]
+        with ctx.tracer.phase("assembly") as tctx:
             self._run_assembler(state)
-            if ctx:
-                ctx.update_details(
+            if tctx:
+                tctx.update_details(
                     primary_count=len(state.assembled_chunks),
                     collection_coverage=len({c.collection_name for c in state.assembled_chunks}),
                 )
+        return {}
 
-        # ---- Stage 5: judge ----
-        with tracer.phase("judge") as ctx:
+    def _node_judge(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Stage 5: judge + genişletme döngüsü parametrelerinin kurulumu."""
+        ctx = run_ctx(config)
+        state = gs["s"]
+        with ctx.tracer.phase("judge") as tctx:
             self._judge.run(state)
-            if ctx and state.evidence_decision:
-                ctx.update_details(
+            if tctx and state.evidence_decision:
+                tctx.update_details(
                     judge_type=state.evidence_decision.judge_type,
                     action=state.evidence_decision.action,
                     confidence=state.evidence_decision.confidence,
                     missing_aspects=state.evidence_decision.missing_aspects,
                 )
                 if self._config.expose_thinking and state.evidence_decision.reasoning:
-                    ctx.update_details(reasoning=state.evidence_decision.reasoning)
+                    tctx.update_details(reasoning=state.evidence_decision.reasoning)
 
-        # ---- Stage 5.1: iterative gather / re-query loop ----
+        # Genişletme döngüsü parametrelerinin kurulumu (eski while-öncesi lokaller).
         # Comprehensive queries gather until saturation (a round adds no new chunks)
         # or a hard ceiling (max rounds / max chunks). Other query types keep the
         # original behavior: expand only when the judge asks, bounded by
-        # max_expand_iterations.
+        # max_expand_iterations. Döngünün kendisi graf çevrimidir:
+        # judge → expansion → judge_post_expand → expansion …
         comprehensive = bool(state.planner_output and state.planner_output.query_type == "comprehensive")
-        if comprehensive:
-            max_rounds = self._config.judge.comprehensive_max_rounds
-            ceiling = self._config.retrieval_budget.max_total_for("comprehensive")
-        else:
-            max_rounds = self._config.judge.max_expand_iterations
-            ceiling = self._config.retrieval_budget.max_total_for(
-                state.planner_output.query_type if state.planner_output else "fact"
-            )
-
         # Comprehensive gather starts at the query_type depth and escalates it on a
         # dry round (strategy 1); non-comprehensive expansion keeps a single depth.
         depth: Optional[int] = None
@@ -339,126 +416,174 @@ class OrchestratorAgent:
         if comprehensive:
             depth = self._config.retrieval_budget.budget_for("comprehensive").fetch_k
             fetch_k_max = self._config.retrieval_budget.enumerate_fetch_k_max
+        return {
+            "comprehensive": comprehensive,
+            "depth": depth,
+            "fetch_k_max": fetch_k_max,
+            "rounds": 0,
+            "reuse_plan": None,
+            "loop_stop": False,
+            "escalated": False,
+        }
 
-        rounds = 0
+    def _ceiling_for(self, gs: GraphState) -> int:
+        """Toplam chunk tavanı — route/node anında config'den okunur."""
+        if gs.get("comprehensive"):
+            return self._config.retrieval_budget.max_total_for("comprehensive")
+        state = gs["s"]
+        return self._config.retrieval_budget.max_total_for(
+            state.planner_output.query_type if state.planner_output else "fact"
+        )
+
+    def _node_expansion(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Stage 5.1 (çevrim gövdesi 1/2): bir genişletme turu."""
+        ctx = run_ctx(config)
+        state = gs["s"]
+        rounds = gs["rounds"]
+        depth = gs["depth"]
         # A dry round escalates depth and re-runs the SAME drafts deeper — the
         # previous round's plan is reused verbatim so no broaden-LLM call is paid
         # for a pure depth escalation.
-        reuse_plan: Optional[SearchPlan] = None
-        while rounds < max_rounds:
-            need_more = comprehensive or state.evidence_decision.action == "expand"
-            if not need_more:
-                break
-            if len(state.assembled_chunks) >= ceiling:
-                stop_reason = "ceiling"
-                with tracer.phase("expansion") as ctx:
-                    if ctx:
-                        ctx.update_details(round=rounds + 1, skipped=True, stop_reason=stop_reason,
-                                           assembled_total=len(state.assembled_chunks))
-                break
+        reuse_plan = gs["reuse_plan"]
+        comprehensive = gs["comprehensive"]
 
-            added = 0
-            term_hypothesis = None
-            broaden_reused = reuse_plan is not None
-            with tracer.phase("expansion") as ctx:
-                if comprehensive:
-                    # Enumerate: facet-partitioned + depth-escalating gather so the
-                    # long tail (ranks beyond the top-K, under-covered years) actually
-                    # surfaces instead of stalling on the same neighborhood.
-                    result = self._enumerate_expand(state, tracer, fetch_k=depth, base_plan=reuse_plan)
-                else:
-                    # Plain re-query: broaden the query, retrieve anew, merge unique.
-                    result = self._requery_expand(state, tracer)
-                reuse_plan = None
-                added, term_hypothesis = result.added, result.term_hypothesis
-                self._run_assembler(state)
-                if ctx:
-                    ctx.update_details(
-                        round=rounds + 1, comprehensive=comprehensive, added=added,
-                        depth=depth, expanded=state.expanded,
-                        assembled_total=len(state.assembled_chunks),
-                        drafts=result.draft_texts,
-                        pruned_duplicates=result.pruned,
-                        broaden_reused=broaden_reused,
-                        term_hypothesis=term_hypothesis.model_dump() if term_hypothesis else None,
-                    )
-            with tracer.phase("judge_post_expand") as ctx:
-                self._judge.run(state)
-                if ctx and state.evidence_decision:
-                    ctx.update_details(
-                        judge_type=state.evidence_decision.judge_type,
-                        action=state.evidence_decision.action,
-                    )
-                # A term hypothesis that actually resolved insufficiency is a
-                # candidate for the "Öğrenilen Terimler" human-review queue —
-                # never auto-applied, just surfaced for approve/reject.
-                if term_hypothesis and added > 0 and state.evidence_decision.action == "answer":
-                    self._record_term_hypothesis(term_hypothesis, state)
-            rounds += 1
-            if added == 0:
-                # A dry round exhausts the CURRENT depth's neighborhood, not the
-                # corpus. Reach deeper (double fetch_k) before declaring saturation;
-                # stop only once even the deepest fetch surfaces nothing new.
-                if comprehensive and depth is not None and depth < fetch_k_max:
-                    depth = min(depth * 2, fetch_k_max)
-                    reuse_plan = result.plan
-                    continue
-                break  # saturation (or non-comprehensive single expand)
+        if len(state.assembled_chunks) >= self._ceiling_for(gs):
+            stop_reason = "ceiling"
+            with ctx.tracer.phase("expansion") as tctx:
+                if tctx:
+                    tctx.update_details(round=rounds + 1, skipped=True, stop_reason=stop_reason,
+                                        assembled_total=len(state.assembled_chunks))
+            return {"loop_stop": True}
 
-        action = state.evidence_decision.action
-        if action == "clarify":
-            return self._build_refuse_output(state, "clarify", tracer)
-        if action == "refuse":
-            return self._build_refuse_output(state, "judge_refuse", tracer)
+        broaden_reused = reuse_plan is not None
+        with ctx.tracer.phase("expansion") as tctx:
+            if comprehensive:
+                # Enumerate: facet-partitioned + depth-escalating gather so the
+                # long tail (ranks beyond the top-K, under-covered years) actually
+                # surfaces instead of stalling on the same neighborhood.
+                result = self._enumerate_expand(state, ctx.tracer, fetch_k=depth, base_plan=reuse_plan)
+            else:
+                # Plain re-query: broaden the query, retrieve anew, merge unique.
+                result = self._requery_expand(state, ctx.tracer)
+            added, term_hypothesis = result.added, result.term_hypothesis
+            self._run_assembler(state)
+            if tctx:
+                tctx.update_details(
+                    round=rounds + 1, comprehensive=comprehensive, added=added,
+                    depth=depth, expanded=state.expanded,
+                    assembled_total=len(state.assembled_chunks),
+                    drafts=result.draft_texts,
+                    pruned_duplicates=result.pruned,
+                    broaden_reused=broaden_reused,
+                    term_hypothesis=term_hypothesis.model_dump() if term_hypothesis else None,
+                )
+        return {"last_result": result, "reuse_plan": None, "loop_stop": False}
 
-        # ---- Stage 6: answer → sanitize → cite ----
-        with tracer.phase("answering") as ctx:
+    def _node_judge_post_expand(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Stage 5.1 (çevrim gövdesi 2/2): tur sonu yeniden yargılama."""
+        ctx = run_ctx(config)
+        state = gs["s"]
+        result = gs["last_result"]
+        with ctx.tracer.phase("judge_post_expand") as tctx:
+            self._judge.run(state)
+            if tctx and state.evidence_decision:
+                tctx.update_details(
+                    judge_type=state.evidence_decision.judge_type,
+                    action=state.evidence_decision.action,
+                )
+            # A term hypothesis that actually resolved insufficiency is a
+            # candidate for the "Öğrenilen Terimler" human-review queue —
+            # never auto-applied, just surfaced for approve/reject.
+            term_hypothesis = result.term_hypothesis if result else None
+            if term_hypothesis and result.added > 0 and state.evidence_decision.action == "answer":
+                self._record_term_hypothesis(term_hypothesis, state)
+
+        update: dict = {"rounds": gs["rounds"] + 1, "escalated": False}
+        if result and result.added == 0:
+            # A dry round exhausts the CURRENT depth's neighborhood, not the
+            # corpus. Reach deeper (double fetch_k) before declaring saturation;
+            # stop only once even the deepest fetch surfaces nothing new.
+            depth = gs["depth"]
+            fetch_k_max = gs["fetch_k_max"]
+            if gs["comprehensive"] and depth is not None and depth < fetch_k_max:
+                update.update({
+                    "depth": min(depth * 2, fetch_k_max),
+                    "reuse_plan": result.plan,
+                    "escalated": True,
+                })
+        return update
+
+    def _node_refuse(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Refuse/clarify çıkışı — gerekçe policy/budget kanalından ya da judge kararından."""
+        ctx = run_ctx(config)
+        state = gs["s"]
+        reason = gs.get("refuse_reason")
+        if not reason:
+            action = state.evidence_decision.action if state.evidence_decision else "refuse"
+            reason = "clarify" if action == "clarify" else "judge_refuse"
+        return {"output": self._build_refuse_output(state, reason, ctx.tracer)}
+
+    def _node_answering(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Stage 6a: answer (token'lar stream_callback ile canlı akar)."""
+        ctx = run_ctx(config)
+        state = gs["s"]
+        with ctx.tracer.phase("answering") as tctx:
             context = self._build_context(state)
             # Forward tokens to the UI as they arrive (real streaming) instead of
             # dumping the whole answer in one chunk after ~full generation latency.
             thinking, answer = self._answer_tool.generate(
-                query=query, context=context, chat_history=chat_history,
-                stream_callback=stream_callback,
+                query=ctx.query, context=context, chat_history=ctx.chat_history,
+                stream_callback=ctx.stream_callback,
                 query_type=state.planner_output.query_type if state.planner_output else "fact",
                 answer_directive=state.answer_directive,
             )
             state.final_answer = answer
-            if ctx:
-                ctx.update_details(answer_chars=len(answer), context_chars=len(context))
+            if tctx:
+                tctx.update_details(answer_chars=len(answer), context_chars=len(context))
                 if self._config.expose_thinking:
                     if thinking:
-                        ctx.update_details(thinking=thinking)
-                    ctx.update_details(answer_preview=answer[:600])
+                        tctx.update_details(thinking=thinking)
+                    tctx.update_details(answer_preview=answer[:600])
+        return {"thinking": thinking, "context": context}
 
-        with tracer.phase("validation") as ctx:
+    def _node_validation(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Stage 6b: sanitize (advisory — cevabı asla değiştirmez)."""
+        ctx = run_ctx(config)
+        state = gs["s"]
+        with ctx.tracer.phase("validation") as tctx:
             validation = self._sanitizer.validate(
-                query=query,
-                answer=answer,
+                query=ctx.query,
+                answer=state.final_answer,
                 sources=[c.metadata for c in state.assembled_chunks],
-                context=context,
+                context=gs["context"],
             )
             # Non-destructive: validation is an advisory quality signal only. The
             # validator returns just a decision JSON (passes/checks/issues) — it no
             # longer regenerates the answer, which used to dominate latency. We
             # surface passes/issues in the trace but never alter the answer.
-            if ctx and validation:
-                ctx.update_details(passes=getattr(validation, "passes", True))
+            if tctx and validation:
+                tctx.update_details(passes=getattr(validation, "passes", True))
                 if self._config.expose_thinking:
                     issues = getattr(validation, "issues", None)
                     if issues:
-                        ctx.update_details(issues=issues)
+                        tctx.update_details(issues=issues)
+        return {"validation": validation}
 
-        with tracer.phase("citation") as ctx:
+    def _node_citation(self, gs: GraphState, config: RunnableConfig) -> dict:
+        """Stage 6c: cite + nihai AgentOutput."""
+        ctx = run_ctx(config)
+        state = gs["s"]
+        with ctx.tracer.phase("citation") as tctx:
             state.citations = CitationBuilder.build(state.assembled_chunks)
-            if ctx:
-                ctx.update_details(citation_count=len(state.citations))
+            if tctx:
+                tctx.update_details(citation_count=len(state.citations))
 
-        return AgentOutput(
+        return {"output": AgentOutput(
             answer=state.final_answer,
-            thinking=thinking,
+            thinking=gs["thinking"],
             plan=state.planner_output,
-            validation=validation,
-            trace=tracer.events,
+            validation=gs["validation"],
+            trace=ctx.tracer.events,
             sources=state.citations,
             policy_result=state.policy_result,
             evidence_decision=state.evidence_decision,
@@ -466,7 +591,7 @@ class OrchestratorAgent:
             expanded=state.expanded,
             clarification=state.clarification,
             rabbit_holes=state.rabbit_holes,
-        )
+        )}
 
     # ============================================================== clarify
 
