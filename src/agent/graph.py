@@ -133,8 +133,12 @@ def _final_route(decision: Optional[EvidenceDecision]) -> str:
     return "answering"
 
 
-def build_orchestrator_graph(agent: "OrchestratorAgent") -> "CompiledStateGraph":
-    """Grafı derler. Router'lar agent üstüne closure'dır; config route anında okunur."""
+def build_routers(agent: "OrchestratorAgent") -> dict:
+    """Koşullu kenar router'ları — agent üstüne closure (test edilebilir fabrika).
+
+    Config route ANINDA okunur: testlerin construction sonrası
+    ``judge.comprehensive_max_rounds`` benzeri mutasyonları etkili kalır.
+    """
 
     def _max_rounds(gs: GraphState) -> int:
         if gs.get("comprehensive"):
@@ -193,7 +197,20 @@ def build_orchestrator_graph(agent: "OrchestratorAgent") -> "CompiledStateGraph"
             return "expansion"
         return _final_route(gs["s"].evidence_decision)
 
-    # --------------------------------------------------------------- topoloji
+    return {
+        "bad_words": route_after_bad_words,
+        "classification": route_after_classification,
+        "policy": route_after_policy,
+        "budget": route_after_budget,
+        "judge": route_after_judge,
+        "expansion": route_after_expansion,
+        "judge_post_expand": route_after_judge_post_expand,
+    }
+
+
+def build_orchestrator_graph(agent: "OrchestratorAgent") -> "CompiledStateGraph":
+    """Grafı derler; koşullu kenarlar build_routers(agent) fabrikasından gelir."""
+    routers = build_routers(agent)
 
     g = StateGraph(GraphState)
     g.add_node("bad_words", agent._node_bad_words)
@@ -215,29 +232,29 @@ def build_orchestrator_graph(agent: "OrchestratorAgent") -> "CompiledStateGraph"
     g.add_node("citation", agent._node_citation)
 
     g.add_edge(START, "bad_words")
-    g.add_conditional_edges("bad_words", route_after_bad_words, ["classification", END])
+    g.add_conditional_edges("bad_words", routers["bad_words"], ["classification", END])
     g.add_conditional_edges(
         "classification",
-        route_after_classification,
+        routers["classification"],
         ["off_domain", "conversational", "planning"],
     )
     g.add_edge("off_domain", END)
     g.add_edge("conversational", END)
     g.add_edge("planning", "policy")
-    g.add_conditional_edges("policy", route_after_policy, ["refuse", "budget"])
-    g.add_conditional_edges("budget", route_after_budget, ["refuse", "retrieval"])
+    g.add_conditional_edges("policy", routers["policy"], ["refuse", "budget"])
+    g.add_conditional_edges("budget", routers["budget"], ["refuse", "retrieval"])
     g.add_edge("retrieval", "rabbit_holes")
     g.add_edge("rabbit_holes", "assembly")
     g.add_edge("assembly", "judge")
     g.add_conditional_edges(
-        "judge", route_after_judge, ["expansion", "refuse", "answering"]
+        "judge", routers["judge"], ["expansion", "refuse", "answering"]
     )
     g.add_conditional_edges(
-        "expansion", route_after_expansion, ["judge_post_expand", "refuse", "answering"]
+        "expansion", routers["expansion"], ["judge_post_expand", "refuse", "answering"]
     )
     g.add_conditional_edges(
         "judge_post_expand",
-        route_after_judge_post_expand,
+        routers["judge_post_expand"],
         ["expansion", "refuse", "answering"],
     )
     g.add_edge("answering", "validation")
