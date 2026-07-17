@@ -1,20 +1,52 @@
 """Centralized LLM client pool for multi-block deployment.
 
-Manages Ollama clients per deployment block with retry, timeout,
-and health-check support. Replaces direct ollama.Client(host=...) calls.
+Manages chat clients per deployment block with retry, timeout, and
+health-check support. The transport is langchain-ollama's ``ChatOllama``
+(a LangChain Runnable — callbacks passed via ``config`` or the ambient
+LangGraph config context reach every call), but the public surface is the
+raw-ollama-era ``chat()`` contract: components keep reading
+``res.message.content`` / ``chunk.message.thinking``.
 """
 from __future__ import annotations
 
 import time
-from typing import Any, Optional
+from typing import Any, Iterator, Optional
 
 import ollama
+from langchain_core.messages import BaseMessage
+from langchain_core.runnables import RunnableConfig
+from langchain_ollama import ChatOllama
 
 from src.config.pipeline_loader import PipelineConfig
 
 
+class _MessageShim:
+    """Duck-types the raw ollama response message (``.content``/``.thinking``)."""
+
+    __slots__ = ("content", "thinking")
+
+    def __init__(self, content: str = "", thinking: str = "") -> None:
+        self.content = content
+        self.thinking = thinking
+
+
+class _ChatResponseShim:
+    """Duck-types ``ollama.ChatResponse`` just enough for the agent components."""
+
+    __slots__ = ("message",)
+
+    def __init__(self, message: _MessageShim) -> None:
+        self.message = message
+
+    @classmethod
+    def from_ai_message(cls, msg: BaseMessage) -> "_ChatResponseShim":
+        content = msg.content if isinstance(msg.content, str) else str(msg.content)
+        thinking = msg.additional_kwargs.get("reasoning_content") or ""
+        return cls(_MessageShim(content=content, thinking=thinking))
+
+
 class BlockClient:
-    """Ollama client wrapper for a single deployment block with retry/timeout."""
+    """Chat client wrapper for a single deployment block with retry/timeout."""
 
     def __init__(
         self,
@@ -38,15 +70,30 @@ class BlockClient:
         # default (5m). A long value (e.g. "2h" or -1) avoids re-loading the model
         # from disk on the first query after an idle gap (the ~11s cold-start).
         self.keep_alive = keep_alive
-        # Pass timeout through to httpx so a stuck/loading model raises instead of
-        # hanging forever (ollama.Client forwards **kwargs to its httpx client).
+        # Raw client kept only for health_check(); chat traffic goes through
+        # ChatOllama so LangChain callbacks (Langfuse) see every generation.
         self._client = ollama.Client(host=host, timeout=timeout_seconds)
+        self._chat_models: dict[str, ChatOllama] = {}
         self._healthy = True
         self._last_error: str | None = None
 
     @property
     def is_healthy(self) -> bool:
         return self._healthy
+
+    def _chat_model(self, model: str) -> ChatOllama:
+        if model not in self._chat_models:
+            kwargs: dict[str, Any] = {
+                "model": model,
+                "base_url": self.host,
+                # Forwarded to httpx so a stuck/loading model raises instead of
+                # hanging forever.
+                "client_kwargs": {"timeout": self.timeout_seconds},
+            }
+            if self.keep_alive is not None:
+                kwargs["keep_alive"] = self.keep_alive
+            self._chat_models[model] = ChatOllama(**kwargs)
+        return self._chat_models[model]
 
     def chat(
         self,
@@ -56,28 +103,37 @@ class BlockClient:
         format: str | None = None,
         stream: bool = False,
         think: bool | None = None,
+        config: Optional[RunnableConfig] = None,
     ) -> Any:
-        """Call chat with retry logic."""
+        """Call chat with retry logic.
+
+        ``config`` is an optional LangChain RunnableConfig (callbacks etc.);
+        when omitted, calls made inside a LangGraph node still inherit the
+        graph's config from the ambient context.
+        """
+        merged_options = dict(options or {})
+        if self.default_num_ctx is not None:
+            merged_options.setdefault("num_ctx", self.default_num_ctx)
+
+        # Invoke-time kwargs: `options` fully replaces ChatOllama's constructor
+        # defaults and `reasoning` maps to Ollama's `think` (None → omitted),
+        # so this is byte-equivalent to the raw ollama.Client call it replaced.
+        call_kwargs: dict[str, Any] = {}
+        if merged_options:
+            call_kwargs["options"] = merged_options
+        if format:
+            call_kwargs["format"] = format
+        if think is not None:
+            call_kwargs["reasoning"] = think
+
+        chat_model = self._chat_model(model)
+        if stream:
+            return self._stream(chat_model, messages, call_kwargs, config)
+
         for attempt in range(1, self.retries + 1):
             try:
-                kwargs: dict[str, Any] = {
-                    "model": model,
-                    "messages": messages,
-                    "stream": stream,
-                }
-                merged_options = dict(options or {})
-                if self.default_num_ctx is not None:
-                    merged_options.setdefault("num_ctx", self.default_num_ctx)
-                if merged_options:
-                    kwargs["options"] = merged_options
-                if format:
-                    kwargs["format"] = format
-                if think is not None:
-                    kwargs["think"] = think
-                if self.keep_alive is not None:
-                    kwargs["keep_alive"] = self.keep_alive
-
-                return self._client.chat(**kwargs)
+                ai_msg = chat_model.invoke(messages, config=config, **call_kwargs)
+                return _ChatResponseShim.from_ai_message(ai_msg)
             except Exception as e:
                 self._healthy = False
                 self._last_error = str(e)
@@ -85,6 +141,22 @@ class BlockClient:
                     time.sleep(0.5 * attempt)
                     continue
                 raise
+
+    def _stream(
+        self,
+        chat_model: ChatOllama,
+        messages: list[dict],
+        call_kwargs: dict[str, Any],
+        config: Optional[RunnableConfig],
+    ) -> Iterator[_ChatResponseShim]:
+        """Yield shimmed chunks; thinking deltas arrive via reasoning_content."""
+        try:
+            for chunk in chat_model.stream(messages, config=config, **call_kwargs):
+                yield _ChatResponseShim.from_ai_message(chunk)
+        except Exception as e:
+            self._healthy = False
+            self._last_error = str(e)
+            raise
 
     def health_check(self) -> bool:
         """Quick health check by listing models."""
@@ -104,7 +176,7 @@ class BlockClient:
 
 
 class LLMClientPool:
-    """Pool of Ollama clients, one per deployment block.
+    """Pool of chat clients, one per deployment block.
 
     Clients are lazily initialized on first access.
     """
