@@ -1,8 +1,12 @@
 chromadb==0.6.3
 easyocr>=1.7.2
-langchain==0.3.14
-langchain-ollama==0.2.2
-langchain-text-splitters>=0.3.0
+langchain==0.3.30
+langchain-core==0.3.86
+langchain-ollama==0.3.10
+langchain-text-splitters==0.3.11
+langgraph==0.6.11
+ollama==0.6.2
+langfuse>=4.14,<5
 pandas==2.2.3
 tqdm==4.67.1
 mcp==1.2.0
