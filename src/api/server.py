@@ -33,6 +33,9 @@ async def lifespan(app: FastAPI):
     threading.Thread(target=rag_service.warmup, daemon=True).start()
     yield
     logger.info("Shutting down RAG Service...")
+    # Tamponlanmış Langfuse span'lerini kapanışta flush et (etkin değilse no-op).
+    from src.common.observability import shutdown_langfuse
+    shutdown_langfuse()
 
 from fastapi.staticfiles import StaticFiles
 
@@ -230,6 +233,7 @@ async def chat_stream(websocket: WebSocket):
                         deep_mode=mufettis_mode,
                         on_phase_end=on_phase_end,
                         chat_history=chat_history,
+                        session_id=session_id,
                     )
 
                     answer_text = output.answer

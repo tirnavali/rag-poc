@@ -16,6 +16,10 @@ minutes.db
 Dockerfile*
 docker-compose*
 open-webui-data/
+# Langfuse deployment: compose dosyası repo'da kalmalı (üstteki docker-compose*
+# deseni her derinlikte eşleştiği için negasyon zorunlu); .env gizli kalır.
+!deploy/langfuse/docker-compose.yml
+deploy/langfuse/.env
 
 # Tutanak
 tutanak/**/*

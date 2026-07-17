@@ -150,6 +150,13 @@ LLM_NUM_PREDICT_MUFETTIS = 16384
 
 DEBUG_RAG = os.environ.get("DEBUG_RAG", "0") == "1"
 
+# --- Langfuse Gözlemlenebilirlik (yerel, self-hosted) ---
+# Kill switch: 0 → SDK nesnesi hiç yaratılmaz, sıfır yük. Anahtarlar
+# (LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY) .env'den os.environ'a yüklenir
+# ve SDK tarafından doğrudan okunur — burada ayrıca tutulmaz.
+LANGFUSE_ENABLED = os.environ.get("LANGFUSE_ENABLED", "0") == "1"
+LANGFUSE_BASE_URL = os.environ.get("LANGFUSE_BASE_URL", "http://localhost:3100")
+
 # --- Onerge (Kanun Teklifi) Configuration ---
 ONERGE_CHROMA = DATA_LAKE / "onerge_vectors"
 ONERGE_COLLECTION = "tbmm_onerge"

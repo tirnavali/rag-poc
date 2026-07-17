@@ -1,0 +1,17 @@
+<!-- ClickHouse'u paylaşımlı sunucuya sığdıran bellek tavanları.
+     Varsayılanlar adanmış bir kutu varsayar (ör. mark_cache 5 GiB). -->
+<clickhouse>
+    <max_server_memory_usage>1288490188</max_server_memory_usage> <!-- 1.2 GiB sert tavan -->
+    <mark_cache_size>268435456</mark_cache_size>                  <!-- 256 MiB -->
+    <index_mark_cache_size>67108864</index_mark_cache_size>       <!-- 64 MiB -->
+    <uncompressed_cache_size>134217728</uncompressed_cache_size>  <!-- 128 MiB -->
+    <!-- background_pool_size düşürülemiyor: default
+         number_of_free_entries_in_pool_to_execute_mutation=20 sanity check'i
+         pool_size×2 >= 20 ister; asıl RAM tasarrufu zaten cache/tavanlarda. -->
+    <profiles>
+        <default>
+            <max_threads>4</max_threads>
+            <max_memory_usage>1073741824</max_memory_usage>       <!-- sorgu başına 1 GiB -->
+        </default>
+    </profiles>
+</clickhouse>

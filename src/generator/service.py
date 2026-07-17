@@ -370,6 +370,7 @@ class RAGService:
         deep_mode: bool = False,
         on_phase_end=None,
         chat_history: Optional[list] = None,
+        session_id: Optional[str] = None,
     ):
         """Run the unified OrchestratorAgent pipeline.
 
@@ -384,14 +385,14 @@ class RAGService:
                 for the grounded clarification stage. None → non-interactive
                 (auto-applies the strongest facet). MCP/batch leave this None.
             deep_mode: müfettiş/deep research — allows more clarification turns.
+            session_id: chat session id — Langfuse trace gruplaması için
+                (None → CLI/batch çağrısı).
 
         Returns:
             AgentOutput with answer, thinking, trace, plan, validation, sources.
         """
         orchestrator = self._get_orchestrator()
-        return orchestrator.run(
-            query,
-            session_collections or [],
+        run_kwargs = dict(
             stream_callback=stream_callback,
             clarification_callback=clarification_callback,
             deep_mode=deep_mode,
@@ -399,3 +400,33 @@ class RAGService:
             on_phase_end=on_phase_end,
             chat_history=chat_history,
         )
+
+        from src.common.observability import get_langchain_handler, get_langfuse
+
+        lf = get_langfuse()
+        if lf is None:
+            return orchestrator.run(query, session_collections or [], **run_kwargs)
+
+        # Kök span burada (executor thread'inde) açılır → OTel thread-local
+        # bağlamı doğru; alt span'ler/generation'lar bunun altına yuvalanır.
+        # Handler graf config'ine girer: her LangGraph node'u bir span, her
+        # ChatOllama çağrısı token sayımlı bir generation olur.
+        from langfuse import propagate_attributes
+
+        handler = get_langchain_handler()
+        run_kwargs["callbacks"] = [handler] if handler else None
+
+        with lf.start_as_current_observation(as_type="span", name="rag_query") as root:
+            with propagate_attributes(
+                session_id=session_id or "cli",
+                user_id="web" if session_id else "cli",
+                tags=["mufettis" if deep_mode else "standard"],
+            ):
+                root.update(input=query)
+                output = orchestrator.run(query, session_collections or [], **run_kwargs)
+                # Metadata değerleri v4'te str olmalı (≤200 kr) — sayıları stringle.
+                root.update(
+                    output=(output.answer or "")[:4000],
+                    metadata={"source_count": str(len(output.sources or []))},
+                )
+        return output
