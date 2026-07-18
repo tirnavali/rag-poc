@@ -110,6 +110,17 @@ class BlockClient:
         ``config`` is an optional LangChain RunnableConfig (callbacks etc.);
         when omitted, calls made inside a LangGraph node still inherit the
         graph's config from the ambient context.
+
+        Raw-ollama'dan bilinen iki davranış farkı:
+        - ``think=None`` (reasoning gönderilmez) iken langchain-ollama,
+          modelin kendiliğinden ürettiği thinking'i İSTEMCİ tarafında düşürür
+          (``reasoning`` truthy olmadan reasoning_content doldurulmaz).
+          Thinking isteyen çağrı ``think=True``, istemeyen ``think=False``
+          geçmeli — None'a güvenme.
+        - Non-stream ``invoke`` içeride stream'leyip biriktirir: httpx read
+          timeout artık toplam üretimi değil, ilk-token/chunk-arası boşlukları
+          sınırlar (takılı model yine yakalanır; yavaş damlayan üretim
+          num_predict ile sınırlıdır).
         """
         merged_options = dict(options or {})
         if self.default_num_ctx is not None:

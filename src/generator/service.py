@@ -417,8 +417,11 @@ class RAGService:
         run_kwargs["callbacks"] = [handler] if handler else None
 
         with lf.start_as_current_observation(as_type="span", name="rag_query") as root:
+            # session_id yoksa (CLI/MCP/batch) sahte kalıcı bir session'a
+            # toplamak yerine session'sız bırak — sınırsız büyüyen tek
+            # "cli" session'ı ve web/MCP karışması önlenir.
             with propagate_attributes(
-                session_id=session_id or "cli",
+                session_id=session_id,
                 user_id="web" if session_id else "cli",
                 tags=["mufettis" if deep_mode else "standard"],
             ):

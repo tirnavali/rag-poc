@@ -7,11 +7,7 @@
     <uncompressed_cache_size>134217728</uncompressed_cache_size>  <!-- 128 MiB -->
     <!-- background_pool_size düşürülemiyor: default
          number_of_free_entries_in_pool_to_execute_mutation=20 sanity check'i
-         pool_size×2 >= 20 ister; asıl RAM tasarrufu zaten cache/tavanlarda. -->
-    <profiles>
-        <default>
-            <max_threads>4</max_threads>
-            <max_memory_usage>1073741824</max_memory_usage>       <!-- sorgu başına 1 GiB -->
-        </default>
-    </profiles>
+         pool_size×2 >= 20 ister; asıl RAM tasarrufu zaten cache/tavanlarda.
+         Sorgu-başına limitler (profiles) config.d'de YOK SAYILIR — onlar
+         users.d'ye mount edilen low-mem-users.xml'de. -->
 </clickhouse>

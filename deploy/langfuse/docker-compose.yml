@@ -117,6 +117,7 @@ services:
       - clickhouse_data:/var/lib/clickhouse
       - clickhouse_logs:/var/log/clickhouse-server
       - ./clickhouse/low-mem.xml:/etc/clickhouse-server/config.d/low-mem.xml:ro
+      - ./clickhouse/low-mem-users.xml:/etc/clickhouse-server/users.d/low-mem.xml:ro
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1
       interval: 10s

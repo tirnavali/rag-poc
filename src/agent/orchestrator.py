@@ -1191,6 +1191,10 @@ class OrchestratorAgent:
                     "num_predict": min(ans_cfg.num_predict, self._config.get_block(block_name).max_num_predict),
                 },
                 stream=True,
+                # think açıkça geçilmeli: langchain-ollama, reasoning truthy
+                # değilken sunucudan gelen thinking deltalarını sessizce düşürür
+                # (raw istemci koşulsuz geçiriyordu). AnswerTool ile aynı kural.
+                think=ans_cfg.think if ans_cfg.think is not None else False,
             )
 
             thinking = ""

@@ -16,12 +16,16 @@ from src.config import settings
 _logger = logging.getLogger(__name__)
 
 _client: Any = None
+_shutdown = False
 
 
 def get_langfuse() -> Optional[Any]:
     """Singleton Langfuse istemcisi; kapalıyken veya SDK yokken None."""
     global _client
-    if not settings.LANGFUSE_ENABLED:
+    if not settings.LANGFUSE_ENABLED or _shutdown:
+        # shutdown sonrası yeniden init etme: SDK'nın instance cache'i
+        # yarı-kapatılmış (thread'leri ölü, atexit'i sökülmüş) yöneticiyi
+        # geri verir — geç gelen istek izsiz kalsın, bozuk istemci almasın.
         return None
     if _client is None:
         try:
@@ -56,7 +60,8 @@ def shutdown_langfuse() -> None:
 
     (CLI çıkışını SDK'nın kendi atexit kancası kapatır.)
     """
-    global _client
+    global _client, _shutdown
+    _shutdown = True
     if _client is not None:
         try:
             _client.shutdown()

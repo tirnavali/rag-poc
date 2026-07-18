@@ -235,6 +235,23 @@ def test_callbacks_propagate_to_graph_nodes(monkeypatch):
     assert "answering" in collector.chain_names
 
 
+def test_conversational_passes_explicit_think(monkeypatch):
+    """Regresyon: langchain-ollama, reasoning truthy değilken sunucu thinking'ini
+    istemci tarafında düşürür — conversational yol think'i açıkça geçmeli
+    (None'a bırakılırsa thinking-default modellerde trace paneli boş kalır)."""
+    agent = _agent(monkeypatch)
+    client = MagicMock()
+    client.chat.return_value = iter([])
+    agent._pool.get_client = MagicMock(return_value=client)
+
+    from src.agent.tracer import PipelineTracer
+
+    out = agent._conversational_output("merhaba", None, PipelineTracer(), None)
+    assert out.scope == "conversational"
+    kwargs = client.chat.call_args.kwargs
+    assert kwargs.get("think") is not None  # açık True/False, asla None değil
+
+
 def test_run_without_callbacks_still_works(monkeypatch):
     agent = _agent(monkeypatch)
     out = agent.run("1990 yılında neler oldu?", [])

@@ -1,0 +1,10 @@
+<!-- Sorgu-başına limitler: profiles yalnız users config'inde etkili olur
+     (config.d'ye konursa ClickHouse sessizce yok sayar — yaşandı). -->
+<clickhouse>
+    <profiles>
+        <default>
+            <max_threads>4</max_threads>
+            <max_memory_usage>1073741824</max_memory_usage> <!-- sorgu başına 1 GiB -->
+        </default>
+    </profiles>
+</clickhouse>
