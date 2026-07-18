@@ -51,6 +51,8 @@ class FilterCriteria(RAGBaseModel):
     source_name: Optional[str] = Field(None, description="Yayın kaynağı adı (örn. 'Hürriyet', 'TBMM Tutanakları', 'Sabah')")
     period: Optional[int] = Field(None, description="TBMM yasama dönemi (örn. 20)")
     session: Optional[int] = Field(None, description="TBMM birleşim numarası (örn. 7)")
+    sira_sayisi: Optional[int] = Field(None, description="TBMM kanun teklifi/tasarısı sıra sayısı (metadata omurgası; reflect Hop-2'nin kesin ChromaDB filtresi — kanun adı geçmese bile roll-call/görüşme/rapor bölgesini getirir)")
+    esas_no: Optional[str] = Field(None, description="TBMM esas numarası (örn. '2/773'); sıra sayısı ile birlikte kanun kimliği. Kesin eşleşme filtresi.")
     document_type: Optional[Literal["tutanak", "press_clip", "pdf_report", "kanun_teklifi"]] = Field(
         None, description="Belgenin türü"
     )

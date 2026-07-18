@@ -150,6 +150,15 @@ class ChromaFilterTranslator(BaseFilterTranslator):
         if filters.session is not None:
             conditions.append({"session": {"$eq": filters.session}})
 
+        # Metadata omurgası: sıra sayısı (int) kesin eşleşme — reflect Hop-2'nin
+        # "numara→işlemler" hop'unu kanun adı geçmese bile roll-call/görüşme bölgesine
+        # götürür. esas_no (str) tamamlayıcı kimlik.
+        if filters.sira_sayisi is not None:
+            conditions.append({"sira_sayisi": {"$eq": filters.sira_sayisi}})
+
+        if filters.esas_no is not None:
+            conditions.append({"esas_no": {"$eq": filters.esas_no}})
+
         if filters.document_type is not None:
             conditions.append({"document_type": {"$eq": filters.document_type}})
 

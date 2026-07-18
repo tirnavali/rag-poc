@@ -93,10 +93,12 @@ FILTER_APPLICABILITY: dict[DocumentType, set[str] | None] = {
     DocumentType.TUTANAK: {
         "year", "year_lte", "year_gte",
         "author", "period", "session", "document_type",
+        "sira_sayisi", "esas_no",  # metadata omurgası (reflect Hop-2 kesin filtresi)
     },
     DocumentType.ONERGE: {
         "year", "year_lte", "year_gte",
         "author", "period", "session", "document_type",
+        "sira_sayisi", "esas_no",
     },
     DocumentType.CUSTOM: None,
 }
