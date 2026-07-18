@@ -311,13 +311,27 @@ class StrategyPlaybook:
 
     Format: ``## <name>`` sections, each with unindented ``key: value`` lines;
     a value may continue onto following indented lines (see the file itself
-    for the canonical example). Recognized keys: ``triggers`` (comma-separated
-    hint keywords), ``query_type`` (drives retrieval budget + judge presets),
-    ``answer_directive`` (appended to the answering system prompt).
+    for the canonical example). Recognized keys:
+      * ``triggers`` — comma-separated hint keywords.
+      * ``query_type`` — drives retrieval budget + judge presets.
+      * ``answer_directive`` — appended to the answering system prompt.
+      * ``mode`` — ``static`` (default) or ``adaptive``; ``adaptive`` marks a
+        multi-hop strategy whose ``procedure`` a reflect step consumes.
+      * ``max_rounds`` — int cap on expansion rounds for this strategy (None = default).
+      * ``anchor`` / ``target`` — the entity resolved first / the answer shape sought.
+      * ``aliases`` — ``;``-separated ``term -> official_phrase`` pairs mapping a
+        colloquial query word to its archive phrasing (term-hypothesis seed).
+      * ``procedure`` — free-text multi-hop recipe (read by the reflect step).
+
+    The first three keys are consumed today (catalog + query_type +
+    answer_directive); the rest are parsed and exposed via ``get_strategy()`` for
+    the adaptive reflect step, and are inert no-ops until it is wired in.
 
     Fail-open: a missing/unreadable file yields an empty catalog and an empty
     ``by_name`` map, so callers fall back to Faz A behavior (deterministic
     COMPREHENSIVE_KEYWORDS override only, no answer_directive) without error.
+    Malformed optional fields (bad int, alias with no ``->``) are dropped, never
+    raised, so one typo can't sink the whole playbook load.
     """
 
     _HEADER_RE = re.compile(r"^##\s+(.+?)\s*$")
@@ -373,11 +387,51 @@ class StrategyPlaybook:
     @staticmethod
     def _finalize(fields: dict[str, str]) -> dict[str, Any]:
         triggers = [t.strip() for t in fields.get("triggers", "").split(",") if t.strip()]
+        mode = fields.get("mode", "").strip().lower() or "static"
+        if mode not in ("static", "adaptive"):
+            mode = "static"
         return {
             "query_type": fields.get("query_type", "").strip() or None,
             "answer_directive": fields.get("answer_directive", "").strip(),
             "triggers": triggers,
+            "mode": mode,
+            "max_rounds": StrategyPlaybook._parse_int(fields.get("max_rounds", "")),
+            "anchor": fields.get("anchor", "").strip() or None,
+            "target": fields.get("target", "").strip() or None,
+            "aliases": StrategyPlaybook._parse_aliases(fields.get("aliases", "")),
+            "procedure": fields.get("procedure", "").strip(),
         }
+
+    @staticmethod
+    def _parse_int(raw: str) -> "int | None":
+        raw = raw.strip()
+        if not raw:
+            return None
+        try:
+            return int(raw)
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _parse_aliases(raw: str) -> "list[dict[str, str]]":
+        """Parse ``;``-separated ``term -> official_phrase`` pairs (fail-open).
+
+        Each pair seeds a colloquial→archive term mapping (e.g.
+        ``genel gerekçe -> sıra sayısı raporu``). Entries lacking ``->`` or a
+        non-empty side are skipped rather than raising, so a stray separator can't
+        break the playbook load. Multiple aliases MUST be ``;``-separated: the
+        parser collapses a multi-line value onto one space-joined line, so newline
+        separation would be ambiguous.
+        """
+        aliases: list[dict[str, str]] = []
+        for chunk in raw.split(";"):
+            if "->" not in chunk:
+                continue
+            term, _, phrase = chunk.partition("->")
+            term, phrase = term.strip(), phrase.strip()
+            if term and phrase:
+                aliases.append({"term": term, "official_phrase": phrase})
+        return aliases
 
     @staticmethod
     def _build_catalog(by_name: dict[str, dict[str, Any]]) -> str:
