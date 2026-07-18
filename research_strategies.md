@@ -59,23 +59,73 @@ query_type: reasoning
 mode: adaptive
 max_rounds: 4
 anchor: esas_no
-target: oy_dokumu
+target: kabul_kaydi
 aliases: genel gerekçe -> sıra sayısı raporu
-answer_directive: Oy sayılarını (kabul/ret/çekimser) esas no ve kanun adıyla
-  ilişkilendirerek ver; kaynak birleşim tutanağındaki oylama bölümü olmalı,
-  sıra sayısı raporu değil. Soru bir maddeye ilişkinse o maddenin, kanunun
-  tümüne ilişkinse kanunun kabul kaydını göster.
+answer_directive: İKİ OLASILIĞI AYIR. (1) Açık oylama yapıldıysa "<kanun adı> açık
+  oylama sonucunu duyuruyorum: Kullanılan oy / Kabul / Ret / Çekimser" duyurusundaki
+  SAYILARI ver. (2) İşaretle (el kaldırarak) geçtiyse kayıt "Kabul edenler… Etmeyenler…
+  kabul edilmiştir" olur ve SAYI İÇERMEZ — bu durumda "işaretle kabul edildi; tutanakta
+  sayısal döküm yok" de, ASLA sayı uydurma. Duyuru/kayıt SORULAN kanunu adıyla anmalı;
+  aynı oturumdaki BAŞKA kanunun oylamasını bu kanuna ATFETME. Soru maddeye ilişkinse o
+  maddenin, tümüne ilişkinse kanunun kabul kaydını göster.
 procedure:
-  Hop 1 — ÇIPA (esas no'yu ARAMA, ÇIKAR): Kanun adı + rapor bağlamını semantik
-  ara ("<kanun adı> sıra sayısı genel gerekçe esas no"). Dönen chunk METNİNDEN
-  esas no'yu ({tür}/{no}, tür 1=tasarı 2=teklif) okuyarak çıkar; ham id'yi
-  ("1/234") sorgu terimi yapma — embedding kesin id'de zayıf, id'yi metinden türet.
-  Hop 2 — DOĞRULA/AYRIŞTIR (sıra sayısı raporu): Esas no + kanun adının aynı
-  chunk'ta birlikte geçtiğini gör; rapor bölümü ikisini + maddeleri taşır.
-  Aynı esas no birden çok yıla aitse önce KANUN ADI benzerliği, eşitlikte
-  TARİH/DÖNEM ile seç.
-  Hop 3 — HEDEF (oylama sonucu): Doğrulanan esas no'yu + kanun adını taşıyarak
-  birleşimdeki "açık oylama sonucu" bölümünü ara; önceki sorguları tekrar etme.
-  DURMA: Kanunun kabulü sorulduysa "kanunun tümü … kabul edilmiştir" + oy dökümü;
-  belirli madde sorulduysa "<n>. madde … kabul edilmiştir" + o maddenin oyu.
-  Kayıt esas no ile ilişkilendirilince dur, yoksa max_rounds'a kadar genişlet.
+  Hop 1 — ÇIPA: Kanun adı + rapor bağlamını semantik ara; dönen chunk metninden esas no'yu
+  ({tür}/{no}, tür 1=tasarı 2=teklif) okuyarak çıkar (ham id'yi sorgu yapma).
+  Hop 2 — DOĞRULA: Esas no + kanun adının aynı chunk'ta geçtiğini gör; aynı esas no birden
+  çok yıla aitse önce KANUN ADI benzerliği, eşitlikte tarih/dönem ile seç.
+  Hop 3 — SONUÇ: Kanunun tümünün oylandığı yeri bul. ÖNCE açık-oylama duyurusunu ara
+  ("<kanun adı> açık oylama sonucunu duyuruyorum … Kullanılan oy / Kabul / Ret"); yoksa
+  işaretle kaydını ("teklifin/kanunun tümünü oylarınıza sunuyorum: Kabul edenler… kabul
+  edilmiştir"). Bulduğun kaydın SORULAN kanuna ait olduğunu adıyla doğrula.
+  DURMA: (a) sorulan kanunla adı EŞLEŞEN açık-oylama sayıları bulundu → sayıları ver, dur;
+  VEYA (b) o kanunun işaretle kabul kaydı bulundu → "sayısal döküm yok, işaretle kabul" de,
+  dur. Sayı yoksa var sanıp boşuna genişletme — çoğu kanun işaretle geçer; sayısal oy yalnızca
+  açık-oylamaya tâbi (İçtüzük md.91 temel kanun vb.) kanunlarda bulunur.
+
+## kanun_gorusmeleri
+triggers: üzerinde görüşmeler, tüm görüşmeler, ne konuşuldu, kanun üzerine görüş, madde hakkında, maddeye muhalefet, eleştiri, ne dedi
+query_type: comprehensive
+mode: adaptive
+max_rounds: 4
+anchor: esas_no + sıra_sayısı
+target: gorus_kumesi
+answer_directive: Görüşleri duruşa göre kümele (lehte / aleyhte / grup grup); grup adına ve
+  şahsı adına konuşmaları, önerge gerekçelerini, muhalefet şerhini dahil et; konuşmacı ve
+  grubunu belirt. Kaynak birleşim tutanağındaki görüşme (konuşma) bölümü olmalı — sıra
+  sayısı raporundaki YAZILI gerekçe değil (o kanun_rapor_bolumu'nun işi).
+procedure:
+  KAPSAM: Soru "tüm görüşmeler / kanun üzerine" ise TÜM-KANUN; belirli "X. madde" ise MADDE
+  kapsamı seç.
+  Hop 1 — ÇIPA: Kanun adından esas no + sıra sayısını çöz (rapor/gündem chunk'ı ad+numarayı
+  birlikte taşır). Madde kapsamıysa madde_no'yu da sorudan oku.
+  Hop 2 — LOKALİZE: Görüşme aralığını bul. İşlemler kanunu çoğu kez ADIYLA DEĞİL "N sıra
+  sayılı" numarasıyla anar → aralığı sıra sayısı/esas no ile daralt (metadata omurgası
+  gelince sıra_sayısı FİLTRESİ kesin sonuç verir; şimdilik numara+konu semantik araması).
+  Sınır işaretleri: TÜM-KANUN'da "N sıra sayılı … görüşmelerine başlıyoruz" → nihai oylama;
+  MADDE'de "X. maddeyi okutuyorum" → "X. madde kabul edilmiştir".
+  Hop 3 — TOPLA: Aralıktaki tüm görüşleri topla; duruşa göre kümele.
+  DURMA: Görüşme aralığı tükenene kadar topla; önceki sorguları tekrar etme, farklı grup/
+  duruş açılarıyla genişlet.
+
+## kanun_rapor_bolumu
+triggers: genel gerekçe, madde gerekçesi, gerekçesi nedir, muhalefet şerhi, karşı oy yazısı, komisyon raporu, sıra sayısı raporu
+query_type: summary
+mode: adaptive
+max_rounds: 3
+anchor: esas_no + sıra_sayısı
+target: rapor_bolumu
+aliases: genel gerekçe -> sıra sayısı raporu genel gerekçe bölümü
+answer_directive: İstenen RAPOR bölümünü ver — bu SÖZLÜ görüş DEĞİL, sıra sayısı raporundaki
+  YAZILI metindir. Bölümü ayırt et: genel gerekçe (kanunun bütününün gerekçesi), madde
+  gerekçesi (ilgili maddenin taslak gerekçesi), muhalefet şerhi (karşı görüş yazısı). Bölümün
+  SORULAN kanuna ait olduğunu esas no/sıra sayısı ile doğrula; başka kanunun gerekçesini atfetme.
+procedure:
+  Hop 1 — ÇIPA: Kanun adından esas no + sıra sayısını çöz. Sorudan hangi BÖLÜM istendiğini
+  belirle (genel_gerekce | madde_gerekce[+madde_no] | muhalefet_serhi).
+  Hop 2 — RAPORU BUL: O kanunun sıra sayısı raporunu bul; rapor da kanunu numarasıyla anar
+  (metadata omurgası gelince sıra_sayısı filtresi kesin). Bölümler kendi başlıklarıyla geçer:
+  "GENEL GEREKÇE", "MADDE <n>-", "MUHALEFET ŞERHİ".
+  Hop 3 — BÖLÜMÜ ÇIKAR: İstenen başlığın altındaki metni getir; madde gerekçesiyse "MADDE <n>"
+  başlığının gerekçe paragrafını.
+  DURMA: İstenen bölüm sorulan kanun için bulununca dur. NOT: "madde gerekçesi" (yazılı rapor)
+  ≠ "madde hakkındaki görüşler" (sözlü) → görüş isteniyorsa kanun_gorusmeleri stratejisi.
