@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
-from src.common.chroma import where_year_filter
+from src.common.chroma import get_by_ids, where_year_filter
 from src.common.dates import extract_dates
 from src.common.text import expand_parliamentary_synonyms, extract_relevant_windows
 from src.config import settings
@@ -133,6 +133,57 @@ class SearchTool:
             "documents": final_docs,
             "metadatas": final_metas,
             "distances": final_dists,
+        }
+
+    def fetch_neighbors(
+        self,
+        collection_key: str,
+        document_id: str,
+        anchor_index: int,
+        radius: int,
+        max_total: Optional[int] = None,
+    ) -> dict:
+        """Fetch a document-internal chunk-order window [anchor-radius, anchor+radius]
+        (excluding the anchor itself) by id-construction — NO ANN / embedding.
+
+        Chunk ids are ``{document_id}_{i}`` with ``i`` the 0-based reading order
+        (pipeline.py), so neighbors are just the anchor's index ± radius. Ids past the
+        document end are silently dropped by Chroma's get(). Returns the
+        ``{documents, metadatas, distances}`` shape that ``_dict_to_chunks`` consumes;
+        distances are 0.0 (these are deterministic fetches, not ranked hits). metadatas
+        are REQUIRED — the consumer reads chunk_id/document_id/doc_type from them.
+        """
+        lo = max(0, anchor_index - radius)
+        hi = anchor_index + radius
+        ids = [f"{document_id}_{i}" for i in range(lo, hi + 1) if i != anchor_index]
+        if max_total is not None and len(ids) > max_total:
+            # Keep the ids closest to the anchor (both directions) within budget.
+            ids.sort(key=lambda cid: abs(int(cid.rsplit("_", 1)[1]) - anchor_index))
+            ids = ids[:max_total]
+        if not ids:
+            return {"documents": [], "metadatas": [], "distances": []}
+
+        search, spec = self._get_search(collection_key)
+        res = get_by_ids(search.collection, ids, include=("documents", "metadatas"))
+
+        docs = res.get("documents") or []
+        metas = res.get("metadatas") or []
+        got_ids = res.get("ids") or []
+        final_docs: list[str] = []
+        final_metas: list[dict] = []
+        for cid, doc_text, raw_meta in zip(got_ids, docs, metas):
+            # Mirror search()'s formatting but WITHOUT extract_relevant_windows — we want
+            # the neighbor's full body, not a query-highlighted window.
+            meta = normalize_metadata(raw_meta or {})
+            meta["chunk_id"] = cid
+            meta["_source_collection"] = collection_key
+            prefix = format_prefix(meta, spec.doc_type)
+            final_docs.append(prefix + (doc_text or ""))
+            final_metas.append(meta)
+        return {
+            "documents": final_docs,
+            "metadatas": final_metas,
+            "distances": [0.0] * len(final_docs),
         }
 
 

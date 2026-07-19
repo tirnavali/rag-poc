@@ -20,6 +20,13 @@ Alanlar:
 - `max_rounds`: bu stratejiye özel genişletme turu tavanı (tam sayı).
 - `anchor`: önce çözülecek kesin kimlik/varlık (ör. `esas_no`).
 - `target`: aranan nihai cevabın tanınır şekli (ör. `oy_dokumu`).
+- `exclude_seen_chunks`: `true` ise reflect hop'u, o ana dek havuza girmiş TAM chunk
+  id'lerini o turun sıralanmış aday kümesinden düşürür (post-rank; ChromaDB `where`
+  DEĞİL — chunk id metadata'da indekslenmez), böylece fetch_k yalnızca YENİ chunk'larla
+  dolar. Kasıtlı olarak birleşim (`session`) düzeyinde DEĞİL: bir birleşimin bazı
+  chunk'ları görüldü diye tüm birleşimi dışlamak, o oturumda henüz ulaşılmamış hedefi
+  (ör. kimliksiz açık-oylama döküm tablosu) kalıcı olarak karartabilir. Bkz.
+  `orchestrator._seen_chunk_ids` / `_run_retrieval(exclude_ids=…)`.
 - `aliases`: `;` ile ayrılmış `halk_dili -> arşiv_terimi` çiftleri; sorgu hangi
   kelimeyle gelirse gelsin doğru arşiv terimine köprü kurar (term-hypothesis tohumu).
 - `procedure`: serbest metin çok-adımlı reçete (reflect adımı okur).
@@ -60,6 +67,8 @@ mode: adaptive
 max_rounds: 4
 anchor: esas_no
 target: kabul_kaydi
+exclude_seen_chunks: true
+window_expand: true
 aliases: genel gerekçe -> sıra sayısı raporu
 answer_directive: İKİ OLASILIĞI AYIR. (1) Açık oylama yapıldıysa "<kanun adı> açık
   oylama sonucunu duyuruyorum: Kullanılan oy / Kabul / Ret / Çekimser" duyurusundaki
@@ -70,7 +79,9 @@ answer_directive: İKİ OLASILIĞI AYIR. (1) Açık oylama yapıldıysa "<kanun 
   maddenin, tümüne ilişkinse kanunun kabul kaydını göster.
 procedure:
   Hop 1 — ÇIPA: Kanun adı + rapor bağlamını semantik ara; dönen chunk metninden esas no'yu
-  ({tür}/{no}, tür 1=tasarı 2=teklif) okuyarak çıkar (ham id'yi sorgu yapma).
+  ({tür}/{no}, tür 1=tasarı 2=teklif) okuyarak çıkar (ham id'yi sorgu yapma). Esas no metinde
+  "Kanun Teklifi (2/773)" / "Kanun Tasarısı (1/N)" ya da yalnızca "(2/773)" biçiminde parantez
+  içinde de anılabilir — bu biçimleri de esas no olarak tanı.
   Hop 2 — DOĞRULA: Esas no + kanun adının aynı chunk'ta geçtiğini gör; aynı esas no birden
   çok yıla aitse önce KANUN ADI benzerliği, eşitlikte tarih/dönem ile seç.
   Hop 3 — SONUÇ: Kanunun tümünün oylandığı yeri bul. ÖNCE açık-oylama duyurusunu ara
@@ -97,7 +108,9 @@ procedure:
   KAPSAM: Soru "tüm görüşmeler / kanun üzerine" ise TÜM-KANUN; belirli "X. madde" ise MADDE
   kapsamı seç.
   Hop 1 — ÇIPA: Kanun adından esas no + sıra sayısını çöz (rapor/gündem chunk'ı ad+numarayı
-  birlikte taşır). Madde kapsamıysa madde_no'yu da sorudan oku.
+  birlikte taşır). Madde kapsamıysa madde_no'yu da sorudan oku. Esas no metinde "Kanun Teklifi
+  (2/773)" / "Kanun Tasarısı (1/N)" ya da yalnızca "(2/773)" biçiminde parantez içinde de
+  anılabilir — bu biçimleri de esas no olarak tanı.
   Hop 2 — LOKALİZE: Görüşme aralığını bul. İşlemler kanunu çoğu kez ADIYLA DEĞİL "N sıra
   sayılı" numarasıyla anar → aralığı sıra sayısı/esas no ile daralt (metadata omurgası
   gelince sıra_sayısı FİLTRESİ kesin sonuç verir; şimdilik numara+konu semantik araması).
@@ -121,7 +134,9 @@ answer_directive: İstenen RAPOR bölümünü ver — bu SÖZLÜ görüş DEĞİ
   SORULAN kanuna ait olduğunu esas no/sıra sayısı ile doğrula; başka kanunun gerekçesini atfetme.
 procedure:
   Hop 1 — ÇIPA: Kanun adından esas no + sıra sayısını çöz. Sorudan hangi BÖLÜM istendiğini
-  belirle (genel_gerekce | madde_gerekce[+madde_no] | muhalefet_serhi).
+  belirle (genel_gerekce | madde_gerekce[+madde_no] | muhalefet_serhi). Esas no metinde "Kanun
+  Teklifi (2/773)" / "Kanun Tasarısı (1/N)" ya da yalnızca "(2/773)" biçiminde parantez içinde
+  de anılabilir — bu biçimleri de esas no olarak tanı.
   Hop 2 — RAPORU BUL: O kanunun sıra sayısı raporunu bul; rapor da kanunu numarasıyla anar
   (metadata omurgası gelince sıra_sayısı filtresi kesin). Bölümler kendi başlıklarıyla geçer:
   "GENEL GEREKÇE", "MADDE <n>-", "MUHALEFET ŞERHİ".

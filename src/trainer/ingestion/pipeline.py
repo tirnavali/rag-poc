@@ -160,6 +160,7 @@ class IngestionPipeline:
             tokenizer_name=spec.embed_model if spec.supports_late_chunking else None,
             max_chunk_tokens=spec.max_chunk_tokens,
             min_chunk_tokens=spec.min_chunk_tokens,
+            chunk_overlap_tokens=spec.chunk_overlap_tokens,
         )
         self.manifest = manifest or DocumentManifest()
 
@@ -232,6 +233,10 @@ class IngestionPipeline:
             **doc.to_dict(),
             "max_chunk_tokens": doc.max_chunk_tokens or self.spec.max_chunk_tokens,
             "min_chunk_tokens": doc.min_chunk_tokens or self.spec.min_chunk_tokens,
+            # `is not None`: belge düzeyinde açık 0, spec'teki overlap'i kapatabilmeli.
+            "chunk_overlap_tokens": doc.chunk_overlap_tokens
+            if doc.chunk_overlap_tokens is not None
+            else self.spec.chunk_overlap_tokens,
             "tokenizer_name": doc.tokenizer_name
             or (self.spec.embed_model if self.spec.supports_late_chunking else None),
         })
@@ -372,7 +377,7 @@ class IngestionPipeline:
 
         # Sanitize metadatas for ChromaDB (str, int, float, bool only)
         metadatas = []
-        for c in chunks:
+        for i, c in enumerate(chunks):
             clean_meta = {}
             for k, v in c["metadata"].items():
                 if v is None:
@@ -385,6 +390,10 @@ class IngestionPipeline:
                     clean_meta[k] = json.dumps(v, ensure_ascii=False)
                 else:
                     clean_meta[k] = str(v)
+            # Metadata omurgası — chunk okuma-sırası. `i` yukarıdaki chunk_ids ile AYNI
+            # `chunks` sırasından gelir → chunk_index == id son eki (yapısal garanti). int
+            # korunur (yukarıdaki dal). Reflect window-expand + reading-order bunu kullanır.
+            clean_meta["chunk_index"] = i
             metadatas.append(clean_meta)
 
         # ── 4. Embed ────────────────────────────────────────────────

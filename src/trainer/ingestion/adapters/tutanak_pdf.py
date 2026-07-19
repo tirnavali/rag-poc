@@ -18,6 +18,7 @@ from typing import Optional
 from src.common.parsing.docling_manager import DoclingManager
 from src.config import settings
 from src.trainer.ingestion.adapters.base import DocumentAdapter, DocumentInput
+from src.trainer.ingestion.law_region_tagger import tag_law_regions
 from src.trainer.ingestion.downloader import resolve_source
 
 
@@ -44,6 +45,7 @@ class TutanakPdfAdapter(DocumentAdapter):
                 tokenizer_name=doc.tokenizer_name,
                 max_chunk_tokens=doc.max_chunk_tokens or 512,
                 min_chunk_tokens=doc.min_chunk_tokens or 384,
+                chunk_overlap_tokens=doc.chunk_overlap_tokens or 0,
             )
             setattr(self, cache_attr, mgr)
         return mgr
@@ -105,6 +107,16 @@ class TutanakPdfAdapter(DocumentAdapter):
                 "span": chunk.get("span"),
                 "metadata": meta,
             })
+
+        # Metadata omurgası: kanun bölgelerini deterministik etiketle (paylaşılan çekirdek —
+        # backfill de aynı fonksiyonu çağırır) → sira_sayisi/esas_no/kanun_adi her chunk'a
+        # native biner, gelecek ingest'ler omurgayı taşır. None değerler eklenmez (pipeline
+        # metadata sanitizasyonu None'ı zaten düşürür; sira_sayisi int olarak korunur).
+        region_tags = tag_law_regions([c["text"] for c in chunks])
+        for c, tag in zip(chunks, region_tags):
+            for key, val in tag.items():
+                if val is not None:
+                    c["metadata"][key] = val
 
         return full_text, chunks
 

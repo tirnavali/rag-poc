@@ -75,3 +75,20 @@ def where_year_filter(years: list[int], field: str = "year") -> Optional[dict]:
         return None
     conds = [{field: {"$eq": y}} for y in years]
     return conds[0] if len(conds) == 1 else {"$or": conds}
+
+
+def get_by_ids(
+    collection,
+    ids: list[str],
+    include: tuple[str, ...] = ("documents", "metadatas"),
+) -> dict:
+    """Fetch chunks by exact id (no ANN / no embedding). Ids absent from the collection
+    are silently omitted by Chroma. Returns the FLAT get() shape
+    ``{"ids": [...], "documents": [...], "metadatas": [...]}`` — note this differs from
+    query()'s nested ``[[...]]`` and does NOT preserve input-id order.
+
+    Confines the ``collection.get`` call to this module per the DB-swap contract.
+    """
+    if not ids:
+        return {"ids": [], "documents": [], "metadatas": []}
+    return collection.get(ids=list(ids), include=list(include))

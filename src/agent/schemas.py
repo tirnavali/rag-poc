@@ -68,6 +68,31 @@ class SearchPlan(BaseModel):
     )
 
 
+class ReflectionOutput(BaseModel):
+    """One round's output of the adaptive reflect/re-plan node.
+
+    Produced by ``Planner.reflect()`` when an ``mode: adaptive`` research strategy
+    (research_strategies.md) is executing a multi-hop procedure. Each round the
+    reflect LLM reads the procedure recipe + a compact evidence summary + the
+    entities extracted so far, then decides whether the procedure is DONE and, if
+    not, emits the next hop's search (``next_plan``) plus any newly-resolved
+    anchors. ``done`` (or an empty/absent ``next_plan``) terminates the reflect
+    self-loop; ``strategy.max_rounds`` is the hard ceiling regardless.
+    """
+    done: bool = Field(False, description="True when the procedure's STOP condition is met → go answer")
+    done_reason: Optional[str] = Field(None, description="Short explanation of why the loop stops")
+    hop_cursor: int = Field(0, description="Which procedure hop we advanced to this round")
+    extracted_anchors: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Entities read from evidence text this round (esas_no, "
+        "sira_sayisi, madde_no, granularity, …); merged across rounds by the node",
+    )
+    next_plan: Optional[SearchPlan] = Field(
+        None, description="The next hop's search plan; None/empty when done"
+    )
+    reasoning: str = Field("", description="Reflect LLM's rationale for the round")
+
+
 class ValidationResult(BaseModel):
     """Output validation result from the Sanitizer Agent."""
     passes: bool = Field(..., description="Whether the answer passes all checks")
@@ -302,6 +327,18 @@ class OrchestratorState(BaseModel):
         None,
         description="Resolved research_strategies.md answer_directive for the "
         "selected strategy; appended to the answering system prompt when set",
+    )
+    extracted_anchors: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Entities resolved across adaptive reflect rounds (esas_no, "
+        "sira_sayisi, madde_no, granularity, …); injected into the answering "
+        "context so the answer LLM can verify a record belongs to the asked law.",
+    )
+    hop_cursor: int = Field(0, description="Current procedure hop index for the adaptive reflect node")
+    window_anchor_keys: list[str] = Field(
+        default_factory=list,
+        description="Doc-keys (collection\\x1fdoc_prefix) whose chunk-order window was "
+        "expanded this run — repeat-guard for window-expand + answer-time reading-order scope.",
     )
     final_answer: str = Field("", description="Generated answer text")
     citations: list[dict[str, Any]] = Field(default_factory=list, description="Citation dicts produced by CitationBuilder")

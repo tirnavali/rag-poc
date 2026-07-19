@@ -1,5 +1,7 @@
-"""Backfill: mevcut tutanak korpusuna metadata omurgasını (``sira_sayisi`` +
-``esas_no`` + ``kanun_adi``) YENİDEN-EMBED ETMEDEN ekle.
+"""Backfill: mevcut tutanak korpusuna metadata omurgasını YENİDEN-EMBED ETMEDEN ekle:
+(1) ``chunk_index`` (evrensel okuma sırası, TÜM chunk'lara, id son ekinden) — reflect
+window-expand + reading-order kullanır; (2) kanun etiketleri (``sira_sayisi`` + ``esas_no``
++ ``kanun_adi``, yalnız kanun bölgelerine).
 
 ``collection.update(ids, metadatas)`` yalnızca metadata'ya dokunur (embeddings /
 documents verilmez) → on binlerce chunk'ı yeniden embed etmeden etiketleriz. Ingest
@@ -76,6 +78,7 @@ def backfill(collection_key: str, *, dry_run: bool, only_document: str | None) -
     total_docs = len(doc_ids)
     docs_with_labels = 0
     labeled_chunks = 0
+    indexed_chunks = 0   # chunk_index (okuma sırası) yazılan chunk sayısı (~tümü)
     total_chunks = 0
     esas_dist: Counter = Counter()
     region_count = 0  # distinct sira_sayisi bölgeleri (belge×sıra sayısı)
@@ -102,35 +105,46 @@ def backfill(collection_key: str, *, dry_run: bool, only_document: str | None) -
         upd_ids: list[str] = []
         upd_metas: list[dict] = []
         doc_siras: set[int] = set()
+        doc_labeled = 0
         for cid, old, tag in zip(ids, metas, tags):
-            add = {k: _sanitize(v) for k, v in tag.items() if v is not None}
+            add: dict = {}
+            idx = _order_key(cid)
+            if idx >= 0:
+                add["chunk_index"] = idx  # evrensel okuma sırası (id son ekinden; int)
+            law_add = {k: _sanitize(v) for k, v in tag.items() if v is not None}
+            add.update(law_add)
             if not add:
-                continue
+                continue  # yalnız bozuk-id + etiketsiz (nadir) → güncelleme yok
             merged = {**old, **add}
             upd_ids.append(cid)
             upd_metas.append(merged)
+            if law_add:
+                doc_labeled += 1
             if tag.get("sira_sayisi") is not None:
                 doc_siras.add(tag["sira_sayisi"])
             if tag.get("esas_no"):
                 esas_dist[tag["esas_no"]] += 1
 
-        if upd_ids:
+        indexed_chunks += len(upd_ids)
+        labeled_chunks += doc_labeled
+        if doc_labeled:
             docs_with_labels += 1
-            labeled_chunks += len(upd_ids)
             region_count += len(doc_siras)
-            if not dry_run:
-                col.update(ids=upd_ids, metadatas=upd_metas)
         else:
-            unmatched_docs.append(did)
+            unmatched_docs.append(did)  # kanun etiketi yok (chunk_index yine yazıldı)
+        if upd_ids and not dry_run:
+            col.update(ids=upd_ids, metadatas=upd_metas)
 
         if only_document:
             _print_document_detail(did, ids, texts, tags)
 
     # ── Kapsam özeti ────────────────────────────────────────────────
     pct = (100.0 * labeled_chunks / total_chunks) if total_chunks else 0.0
+    ipct = (100.0 * indexed_chunks / total_chunks) if total_chunks else 0.0
     print("\n[backfill] ÖZET")
-    print(f"  belge: {docs_with_labels}/{total_docs} etiketli bölge içeriyor")
-    print(f"  chunk: {labeled_chunks}/{total_chunks} etiketlendi (%{pct:.1f})")
+    print(f"  chunk_index yazıldı: {indexed_chunks}/{total_chunks} (%{ipct:.1f}) — evrensel okuma sırası")
+    print(f"  belge: {docs_with_labels}/{total_docs} kanun etiketli bölge içeriyor")
+    print(f"  kanun chunk: {labeled_chunks}/{total_chunks} etiketlendi (%{pct:.1f})")
     print(f"  bölge (belge×sıra sayısı): {region_count}")
     print(f"  esas_no dağılımı (en sık 10): {dict(esas_dist.most_common(10))}")
     if unmatched_docs:

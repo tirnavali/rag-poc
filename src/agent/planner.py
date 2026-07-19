@@ -12,6 +12,7 @@ import logging
 
 from src.agent.schemas import (
     CollectionSearchPlan,
+    ReflectionOutput,
     SearchPlan,
     SearchQueryDraft,
     TermHypothesis,
@@ -110,6 +111,60 @@ JSON çıktısı (aynı format):
   "resources": [...],
   "reasoning": "...",
   "term_hypothesis": {{"term": "...", "official_phrase": "..."}} veya null
+}}
+"""
+
+
+REFLECT_PROMPT = """Sen çok-adımlı (multi-hop) bir TBMM arşiv araştırmasını yürüten bir ajan-planlayıcısın.
+Aşağıdaki PROSEDÜRÜ hop hop uygula. Her turda: (1) şimdiye dek toplanan KANITTAN varlıkları
+çıkar, (2) prosedürün DURMA koşulu sağlandıysa dur, (3) sağlanmadıysa BİR SONRAKİ hop için
+arama sorguları üret.
+
+PROSEDÜR (hop reçetesi):
+{procedure}
+
+NİHAİ HEDEF (cevabın alacağı biçim / answer_directive):
+{answer_directive}
+
+ÇIPA (önce çözülecek kimlik): {anchor}
+HEDEF (aranan nihai kaydın biçimi): {target}
+{aliases_block}ŞİMDİYE DEK ÇIKARILAN VARLIKLAR (extracted_anchors): {extracted_anchors}
+HOP İMLECİ (kaçıncı hoptayız): {hop_cursor}
+
+TOPLANAN KANIT (kompakt özet — chunk'ların tamamı değil):
+{evidence_block}
+
+Mevcut koleksiyonlar:
+{catalog}
+{tried_queries_block}
+KURALLAR (TBMM domain — kritik):
+- Esas no biçimi {{tür}}/{{no}} (1=tasarı, 2=teklif); metinde "Kanun Teklifi (2/773)" /
+  "Kanun Tasarısı (1/N)" ya da yalnızca "(2/773)" biçiminde parantez içinde de geçebilir.
+  Esas no'yu / sıra sayısını KANITIN METNİNDEN oku; ham id'yi ("2/773") sorgu olarak ARAMA
+  (embedding kesin id'de zayıftır).
+- Bir sonraki hop bir NUMARAYLA (sıra sayısı / esas no) daraltıyorsa, numarayı SORGU METNİNE
+  göm ("5 sıra sayılı … açık oylama sonucu"); metadata filtresine güvenme (sıra_sayısı omurgası
+  henüz yok, LLM filtreleri yok sayılır).
+- Bir kaydı (tablo/oylama/gerekçe) kullanmadan önce SORULAN kanuna ait olduğunu adı ve/veya
+  esas no'su ile DOĞRULA. Aynı oturumda birden çok kanun işlenir — başka kanunun kaydını bu
+  kanuna ATFETME.
+- Oy sorusu ise İKİ OLASILIK: (a) açık oylama → Kabul/Ret/Çekimser SAYILARI aranır; (b) işaretle
+  (el kaldırarak) → SAYI YOKTUR. Sayı yoksa var sanıp boşuna genişletme.
+
+DURMA: Prosedürün DURMA koşulu sağlandıysa "done": true ver ve "resources"ı boş bırak. Aksi
+halde "done": false ver ve SADECE bir sonraki hop için "resources" üret (önceki sorguları
+tekrar etme, belirgin FARKLI ve numarayı içeren sorgular kur).
+
+JSON çıktısı:
+{{
+  "done": true|false,
+  "done_reason": "..." veya null,
+  "hop_cursor": <bir sonraki hop numarası, int>,
+  "extracted_anchors": {{"esas_no": "...", "sira_sayisi": ..., "madde_no": ..., "granularite": "..."}},
+  "resources": [
+    {{"collection": "<koleksiyon adı>", "query_drafts": [{{"text": "<sonraki hop sorgusu>", "top_k": 10}}]}}
+  ],
+  "reasoning": "..."
 }}
 """
 
@@ -231,6 +286,52 @@ class Planner:
         cap = max_variants if max_variants is not None else self._config.planner.normal_max_query_variants
         self._cap_variants(plan, cap)
         return plan
+
+    def reflect(
+        self,
+        query: str,
+        previous_plan: SearchPlan,
+        tracer: "PipelineTracer | None" = None,
+        *,
+        procedure: str,
+        answer_directive: str = "",
+        anchor: str | None = None,
+        target: str | None = None,
+        aliases: list[dict] | None = None,
+        extracted_anchors: dict | None = None,
+        hop_cursor: int = 0,
+        evidence_summary: str = "",
+        tried_queries: list[str] | None = None,
+    ) -> ReflectionOutput | None:
+        """One round of adaptive multi-hop reflection / re-planning.
+
+        Feeds the reflect LLM the strategy ``procedure`` recipe, the ``answer_directive``
+        (final-answer shape), the entities resolved so far (``extracted_anchors``), the
+        hop cursor, a compact evidence summary, and the queries already tried, then asks
+        for the NEXT hop's search plan plus whether the procedure is DONE.
+
+        Deliberately leaner than ``broaden()``: no FilterExtractor pass (the domain rule
+        requires anchor numbers to ride in the query TEXT, not a filter, since the
+        sira_sayisi metadata backbone does not exist yet and ``_parse_plan`` drops LLM
+        filters anyway) and no variant cap (the reflect LLM emits one focused hop).
+
+        Returns None when the LLM fails, so the caller can fail-open to ``broaden()``.
+        """
+        tracer = tracer or PipelineTracer()
+        system_prompt = self._build_reflect_prompt(
+            query,
+            previous_plan,
+            procedure=procedure,
+            answer_directive=answer_directive,
+            anchor=anchor,
+            target=target,
+            aliases=aliases,
+            extracted_anchors=extracted_anchors,
+            hop_cursor=hop_cursor,
+            evidence_summary=evidence_summary,
+            tried_queries=tried_queries,
+        )
+        return self._call_reflect_llm(f"Sorgu: {query}", system_prompt)
 
     # --------------------------------------------------------- plan generation
 
@@ -483,6 +584,125 @@ class Planner:
             tried_queries_block=tried_queries_block,
         )
         return self._call_planner_llm(f"Sorgu: {query}", system_prompt)
+
+    # ------------------------------------------------------------- reflection
+
+    def _build_reflect_prompt(
+        self,
+        query: str,
+        previous_plan: SearchPlan,
+        *,
+        procedure: str,
+        answer_directive: str,
+        anchor: str | None,
+        target: str | None,
+        aliases: list[dict] | None,
+        extracted_anchors: dict | None,
+        hop_cursor: int,
+        evidence_summary: str,
+        tried_queries: list[str] | None,
+    ) -> str:
+        """Assemble the REFLECT_PROMPT for one adaptive hop."""
+        allowed = {r.collection for r in previous_plan.resources} if previous_plan and previous_plan.resources else None
+        catalog = self._config.get_collection_catalog(allowed_keys=allowed)
+
+        aliases_block = ""
+        if aliases:
+            pairs = "\n".join(
+                f"- '{a['term']}' → '{a['official_phrase']}'"
+                for a in aliases
+                if isinstance(a, dict) and a.get("term") and a.get("official_phrase")
+            )
+            if pairs:
+                aliases_block = (
+                    "ALIAS KÖPRÜLERİ (halk dili → arşivin resmi ifadesi; sorgularda RESMİ "
+                    f"ifadeyi kullan):\n{pairs}\n"
+                )
+
+        tried_queries_block = ""
+        if tried_queries:
+            lines = "\n".join(f"- {q}" for q in tried_queries)
+            tried_queries_block = (
+                "\nDAHA ÖNCE ARANMIŞ SORGULAR (bunları ve çok benzer varyasyonlarını TEKRAR "
+                f"ÜRETME — aynı arama aynı sonucu döndürür):\n{lines}\n"
+            )
+
+        return REFLECT_PROMPT.format(
+            procedure=procedure or "(prosedür tanımsız)",
+            answer_directive=answer_directive or "(yok)",
+            anchor=anchor or "(belirtilmemiş)",
+            target=target or "(belirtilmemiş)",
+            aliases_block=aliases_block,
+            extracted_anchors=json.dumps(extracted_anchors or {}, ensure_ascii=False),
+            hop_cursor=hop_cursor,
+            evidence_block=evidence_summary or "(henüz kanıt yok)",
+            catalog=catalog,
+            tried_queries_block=tried_queries_block,
+        )
+
+    def _call_reflect_llm(self, user_msg: str, system_prompt: str) -> ReflectionOutput | None:
+        """Call the reflect LLM (planner block) and parse into a ReflectionOutput.
+
+        Returns None on any failure so the caller can fail-open to broaden().
+        """
+        planner_cfg = self._config.planner
+        block_name = planner_cfg.block
+        model_key = planner_cfg.model_key
+        client = self._pool.get_client(block_name)
+        model = self._pool.get_model_for_block(block_name, model_key)
+        try:
+            think_val = planner_cfg.think if planner_cfg.think is not None else False
+            res = client.chat(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_msg},
+                ],
+                options={"temperature": 0.0, "num_predict": self._config.get_block(block_name).max_num_predict},
+                format="json",
+                think=think_val,
+            )
+            return self._parse_reflection(json.loads(extract_json_from_text(res.message.content)))
+        except Exception as e:
+            self._last_planner_error = f"{type(e).__name__}: {e}"
+            logger.warning("Reflect LLM call failed: %s", self._last_planner_error)
+            return None
+
+    def _parse_reflection(self, data: dict) -> ReflectionOutput:
+        """Build a ReflectionOutput from a parsed JSON dict, tolerant of schema slips.
+
+        The ``resources`` portion is parsed by the existing ``_parse_plan`` into a
+        ``next_plan`` (so drafts/filters get the same coercion + filter-dropping as any
+        plan); ``next_plan`` is None when no usable resources were emitted (done / stop).
+        ``query_type`` on the next_plan defaults to "fact" here — the orchestrator carries
+        the in-flight query_type forward before retrieval (mirrors the broaden path).
+        """
+        done = bool(data.get("done", False))
+        done_reason = data.get("done_reason")
+        if done_reason is not None and not isinstance(done_reason, str):
+            done_reason = None
+        hop_cursor = data.get("hop_cursor", 0)
+        if not isinstance(hop_cursor, int):
+            try:
+                hop_cursor = int(hop_cursor)
+            except (TypeError, ValueError):
+                hop_cursor = 0
+        anchors = data.get("extracted_anchors")
+        if not isinstance(anchors, dict):
+            anchors = {}
+
+        next_plan: SearchPlan | None = self._parse_plan(data)
+        if not next_plan.resources:
+            next_plan = None
+
+        return ReflectionOutput(
+            done=done,
+            done_reason=done_reason,
+            hop_cursor=hop_cursor,
+            extracted_anchors=anchors,
+            next_plan=next_plan,
+            reasoning=str(data.get("reasoning") or ""),
+        )
 
     # --------------------------------------------------------------- shaping
 

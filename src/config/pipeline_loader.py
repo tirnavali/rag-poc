@@ -269,6 +269,54 @@ class JudgeConfig:
         self.on_low_confidence = config.get("on_low_confidence", "expand")
 
 
+class _WindowExpandConfig:
+    """Reflect window-expand (pencere-genişletme) knobs.
+
+    After an adaptive hop retrieves, the top-scored chunk (anchor) has its
+    document-internal chunk-order neighbors fetched (ANN-free) and spliced into the
+    pool, so an identity-less region (e.g. a roll-call vote table) adjacent to a
+    self-identifying anchor comes along in reading order. Default OFF; effective only
+    when a strategy also opts in (``window_expand: true``). Names avoid RetrievalConfig's
+    char-based ``window_size``/``window_max_total``.
+    """
+
+    def __init__(self, config: dict) -> None:
+        self.enabled = bool(config.get("enabled", False))
+        self.neighbor_radius = int(config.get("neighbor_radius", 2))
+        self.max_neighbors_per_hop = int(config.get("max_neighbors_per_hop", 8))
+        self.anchor_count = int(config.get("anchor_count", 1))
+
+
+class ReflectConfig:
+    """Adaptive reflect/re-plan node configuration.
+
+    Governs the ``mode: adaptive`` multi-hop path (research_strategies.md). The
+    reflect node runs a strategy-specific self-loop that executes the procedure
+    recipe round by round; ``enabled`` is a dedicated kill-switch INDEPENDENT of
+    the generic judge/expansion knobs (a query resolving to an adaptive strategy
+    only reflects when this is True). The reflect LLM reuses the planner block, so
+    no separate deployment block is needed. ``default_max_rounds`` is the fallback
+    ceiling for an adaptive strategy that omits its own ``max_rounds`` (never the
+    neutralized judge knobs). The evidence-* caps bound the deterministic compact
+    evidence summary handed to the reflect LLM each round.
+    """
+
+    def __init__(self, config: dict) -> None:
+        self.enabled = bool(config.get("enabled", True))
+        self.default_max_rounds = int(config.get("default_max_rounds", 4))
+        self.evidence_max_chunks = int(config.get("evidence_max_chunks", 10))
+        self.evidence_char_cap_per_chunk = int(config.get("evidence_char_cap_per_chunk", 600))
+        self.evidence_total_char_cap = int(config.get("evidence_total_char_cap", 6000))
+        # Reflect SELF-loop'un hacim güvenlik tavanı — generic çevrimin query_type
+        # tavanı DEĞİL. Kritik: reasoning/summary adaptive stratejilerde tek-atım ilk
+        # retrieval zaten max_total_primary'yi (15) doldurur; o tavan kullanılırsa
+        # reflect 1. turda "ceiling" ile durur ve HİÇ hop atmaz. Reflect'in gerçek
+        # bağı max_rounds + done; bu yalnızca bağlam taşmasını önleyen üst sınır
+        # (comprehensive'in kanıtlı-güvenli 50 chunk bağıyla hizalı).
+        self.max_total_chunks = int(config.get("max_total_chunks", 50))
+        self.window_expand = _WindowExpandConfig(config.get("window_expand", {}))
+
+
 class ClarificationConfig:
     """Grounded clarification (did-you-mean) stage configuration.
 
@@ -319,6 +367,10 @@ class StrategyPlaybook:
         multi-hop strategy whose ``procedure`` a reflect step consumes.
       * ``max_rounds`` — int cap on expansion rounds for this strategy (None = default).
       * ``anchor`` / ``target`` — the entity resolved first / the answer shape sought.
+      * ``exclude_seen_chunks`` — ``true`` makes each reflect hop hold the exact chunk
+        ids already surfaced this run out of its ranked pool, so fetch_k fills with novel
+        chunks (see ``OrchestratorAgent._seen_chunk_ids`` / ``_run_retrieval``). Chunk-id,
+        not a metadata ``$nin`` — never blacks out a whole sitting.
       * ``aliases`` — ``;``-separated ``term -> official_phrase`` pairs mapping a
         colloquial query word to its archive phrasing (term-hypothesis seed).
       * ``procedure`` — free-text multi-hop recipe (read by the reflect step).
@@ -398,6 +450,8 @@ class StrategyPlaybook:
             "max_rounds": StrategyPlaybook._parse_int(fields.get("max_rounds", "")),
             "anchor": fields.get("anchor", "").strip() or None,
             "target": fields.get("target", "").strip() or None,
+            "exclude_seen_chunks": StrategyPlaybook._parse_bool(fields.get("exclude_seen_chunks", "")),
+            "window_expand": StrategyPlaybook._parse_bool(fields.get("window_expand", "")),
             "aliases": StrategyPlaybook._parse_aliases(fields.get("aliases", "")),
             "procedure": fields.get("procedure", "").strip(),
         }
@@ -411,6 +465,11 @@ class StrategyPlaybook:
             return int(raw)
         except ValueError:
             return None
+
+    @staticmethod
+    def _parse_bool(raw: str) -> bool:
+        """Truthy playbook flag (fail-safe: anything unrecognized is False)."""
+        return raw.strip().lower() in ("1", "true", "yes", "evet", "on")
 
     @staticmethod
     def _parse_aliases(raw: str) -> "list[dict[str, str]]":
@@ -474,6 +533,7 @@ class PipelineConfig:
             agent_cfg.get("off_domain_fallback_suggestions", [])
         )
         self.planner = PlannerConfig(agent_cfg.get("planner", {}))
+        self.reflect = ReflectConfig(agent_cfg.get("reflect", {}))
         self.clarification = ClarificationConfig(agent_cfg.get("clarification", {}))
         self.answering = AgentConfig(agent_cfg.get("answering", {}))
         self.sanitizer = AgentConfig(agent_cfg.get("sanitizer", {}))

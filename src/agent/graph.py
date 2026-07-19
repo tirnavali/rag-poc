@@ -56,6 +56,7 @@ GRAPH_NODES = [
     "judge",
     "expansion",
     "judge_post_expand",
+    "reflect",
     "refuse",
     "answering",
     "validation",
@@ -95,6 +96,7 @@ class GraphState(TypedDict, total=False):
     last_result: Optional[Any]
     loop_stop: bool  # expansion node'unda ceiling'e takıldı → döngüden çık
     escalated: bool  # kuru turda derinlik ikiye katlandı → devam
+    reflect_done: bool  # adaptive reflect self-loop'unun DURMA sinyali → answering'e çık
     # --- cevap yolu taşıyıcıları (bugünkü run() lokalleri) ---
     thinking: str
     context: str
@@ -115,6 +117,7 @@ def initial_graph_state(state: OrchestratorState) -> GraphState:
         "last_result": None,
         "loop_stop": False,
         "escalated": False,
+        "reflect_done": False,
         "thinking": "",
         "context": "",
         "validation": None,
@@ -140,7 +143,31 @@ def build_routers(agent: "OrchestratorAgent") -> dict:
     ``judge.comprehensive_max_rounds`` benzeri mutasyonları etkili kalır.
     """
 
+    def _adaptive_strategy(gs: GraphState):
+        """Çözülen adaptive strateji dict'ini (SALT-OKUNUR) döndür, yoksa None.
+
+        ``reflect.enabled`` ile kapılanır — kill-switch reflect yolunu gerçekten
+        bastırsın (yoksa dead-flag olur). Paylaşılan dict ASLA mutasyona uğratılmaz.
+        """
+        if not agent._config.reflect.enabled:
+            return None
+        po = gs["s"].planner_output
+        if not (po and po.strategy):
+            return None
+        s = agent._config.get_strategy(po.strategy)
+        if s and s.get("mode") == "adaptive" and s.get("procedure"):
+            return s
+        return None
+
+    def _is_adaptive(gs: GraphState) -> bool:
+        return _adaptive_strategy(gs) is not None
+
     def _max_rounds(gs: GraphState) -> int:
+        s = _adaptive_strategy(gs)
+        if s is not None:
+            # LOKAL fallback — paylaşılan dict'i mutasyona uğratma; n0'a çekilmiş
+            # judge knob'larına DEĞİL, reflect.default_max_rounds'a düş.
+            return s.get("max_rounds") or agent._config.reflect.default_max_rounds
         if gs.get("comprehensive"):
             return agent._config.judge.comprehensive_max_rounds
         return agent._config.judge.max_expand_iterations
@@ -175,10 +202,18 @@ def build_routers(agent: "OrchestratorAgent") -> dict:
         return "refuse" if gs.get("refuse_reason") else "retrieval"
 
     def route_after_judge(gs: GraphState) -> str:
+        decision = gs["s"].evidence_decision
+        # clarify/refuse her şeyden önce gelir (adaptive dahil).
+        if decision and decision.action in ("clarify", "refuse"):
+            return _final_route(decision)
+        # Adaptive strateji → generic broaden yerine reflect self-loop'u; judge
+        # aksiyonundan bağımsız (prosedür tek-tur "yeterli" yargısını tanımaz).
+        if _is_adaptive(gs) and gs.get("rounds", 0) < _max_rounds(gs):
+            return "reflect"
         # Eski `while rounds < max_rounds: need_more ... break` girişi.
         if _need_more(gs) and gs.get("rounds", 0) < _max_rounds(gs):
             return "expansion"
-        return _final_route(gs["s"].evidence_decision)
+        return _final_route(decision)
 
     def route_after_expansion(gs: GraphState) -> str:
         # Ceiling'e takılan tur judge_post_expand'i atlayıp döngüden çıkar
@@ -197,6 +232,16 @@ def build_routers(agent: "OrchestratorAgent") -> dict:
             return "expansion"
         return _final_route(gs["s"].evidence_decision)
 
+    def route_after_reflect(gs: GraphState) -> str:
+        # Prosedür DURMA sinyali (done) ya da ceiling → answering (clarify/refuse'a saygı).
+        if gs.get("reflect_done") or gs.get("loop_stop"):
+            return _final_route(gs["s"].evidence_decision)
+        # Henüz done değil ve tur kaldı → bir sonraki hop.
+        if gs.get("rounds", 0) < _max_rounds(gs):
+            return "reflect"
+        # max_rounds tükendi → eldeki çok-hop kanıtıyla cevapla.
+        return "answering"
+
     return {
         "bad_words": route_after_bad_words,
         "classification": route_after_classification,
@@ -205,6 +250,7 @@ def build_routers(agent: "OrchestratorAgent") -> dict:
         "judge": route_after_judge,
         "expansion": route_after_expansion,
         "judge_post_expand": route_after_judge_post_expand,
+        "reflect": route_after_reflect,
     }
 
 
@@ -226,6 +272,7 @@ def build_orchestrator_graph(agent: "OrchestratorAgent") -> "CompiledStateGraph"
     g.add_node("judge", agent._node_judge)
     g.add_node("expansion", agent._node_expansion)
     g.add_node("judge_post_expand", agent._node_judge_post_expand)
+    g.add_node("reflect", agent._node_reflect)
     g.add_node("refuse", agent._node_refuse)
     g.add_node("answering", agent._node_answering)
     g.add_node("validation", agent._node_validation)
@@ -247,7 +294,7 @@ def build_orchestrator_graph(agent: "OrchestratorAgent") -> "CompiledStateGraph"
     g.add_edge("rabbit_holes", "assembly")
     g.add_edge("assembly", "judge")
     g.add_conditional_edges(
-        "judge", routers["judge"], ["expansion", "refuse", "answering"]
+        "judge", routers["judge"], ["reflect", "expansion", "refuse", "answering"]
     )
     g.add_conditional_edges(
         "expansion", routers["expansion"], ["judge_post_expand", "refuse", "answering"]
@@ -256,6 +303,11 @@ def build_orchestrator_graph(agent: "OrchestratorAgent") -> "CompiledStateGraph"
         "judge_post_expand",
         routers["judge_post_expand"],
         ["expansion", "refuse", "answering"],
+    )
+    # Adaptive multi-hop reflect self-loop (reflect → reflect) — bağımsız çevrim;
+    # DURMA'da (reflect_done/ceiling/max_rounds) answering'e/refuse'a çıkar.
+    g.add_conditional_edges(
+        "reflect", routers["reflect"], ["reflect", "answering", "refuse"]
     )
     g.add_edge("answering", "validation")
     g.add_edge("validation", "citation")
@@ -266,9 +318,26 @@ def build_orchestrator_graph(agent: "OrchestratorAgent") -> "CompiledStateGraph"
 
 
 def recursion_limit_for(config: Any) -> int:
-    """Doğrusal ~14 node + tur başına 2 node; >2× pay bırakır (default 25 dar)."""
+    """Doğrusal ~14 node + tur başına 2 node; >2× pay bırakır (default 25 dar).
+
+    Adaptive reflect self-loop turları ``strategy.max_rounds``'tan gelir (judge
+    knob'larından değil) — POC'ta judge knob'ları 0'a çekilse bile reflect döner,
+    o yüzden en büyük strateji ``max_rounds``'unu + reflect fallback tavanını da
+    hesaba kat.
+    """
+    adaptive_max = 0
+    try:
+        adaptive_max = max(
+            (s.get("max_rounds") or 0)
+            for s in config.strategy_playbook.by_name.values()
+        )
+    except (AttributeError, ValueError):
+        adaptive_max = 0
+    reflect_default = getattr(getattr(config, "reflect", None), "default_max_rounds", 0)
     max_rounds = max(
         config.judge.comprehensive_max_rounds,
         config.judge.max_expand_iterations,
+        adaptive_max,
+        reflect_default,
     )
     return 32 + 4 * max_rounds

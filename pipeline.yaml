@@ -273,6 +273,27 @@ agent:
           filters: null
           top_k: 10
 
+  # Reflect / re-plan — mode: adaptive stratejiler (research_strategies.md) için
+  # çok-hop (multi-hop) prosedür yürütücü. enabled: judge nötrlemesinden BAĞIMSIZ
+  # ayrı kill-switch (adaptive sorgular yalnızca burası açıkken reflect kullanır).
+  # Reflect LLM planner block'unu kullanır (ayrı blok yok).
+  reflect:
+    enabled: true
+    default_max_rounds: 4       # strateji kendi max_rounds'unu vermezse tavan
+    max_total_chunks: 50        # reflect hacim güvenlik tavanı (query_type tavanı DEĞİL);
+                                # düşük tutulursa ilk retrieval doldurur → hop atılmaz
+    evidence_max_chunks: 10     # reflect LLM'e verilen kompakt kanıt: en çok N chunk
+    evidence_char_cap_per_chunk: 600
+    evidence_total_char_cap: 6000
+    # Pencere-genişletme: reflect hop'unda çıpanın belge-içi okuma-sırası komşularını
+    # (ANN-siz id-get) pool'a katar → kimliksiz roll-call'ı self-identifying duyurunun
+    # yanına getirir. Global kill-switch; ek olarak strateji `window_expand: true` demeli.
+    window_expand:
+      enabled: false            # açmak için true + stratejide window_expand: true
+      neighbor_radius: 2        # çıpa etrafında ±k chunk
+      max_neighbors_per_hop: 8  # hop başına toplam komşu tavanı (tüm çıpalar)
+      anchor_count: 1           # kaç üst çıpa genişletilir
+
   # Answering Agent — retrieve edilen context'ten nihai yanıtı üretir
   answering:
     block: gpu-01
@@ -361,7 +382,7 @@ judge:
     # Gevşek: bilgilendirici veri kalsın, yalnızca çok alakasız chunk elensin.
     min_chunks: 2
     min_collection_coverage: 1
-    min_rerank_score: 0.02     # bu eşiğin altındaki chunk'lar answer'dan önce düşürülür
+    min_rerank_score: 0.0      # [POC nötrle] relevance-floor kapalı — ham chunk seti korunur (eski: 0.02)
     # Reddetme değil ESKALASYON eşiği: count/coverage yeterli görünse bile en iyi
     # eşleşme bu kadar zayıfsa körlemesine "answer" deme — LLM judge'a devret (içeriği
     # gerçekten okuyup karar versin). Golden Q&A fixture'ına karşı ölçüldü: sabit bir
@@ -370,13 +391,13 @@ judge:
     # aralığında — bu yüzden REDDETMEK yerine LLM'e DEVRETMEK tercih edildi.
     llm_escalation_score: 0.3
   llm:
-    enabled: true
+    enabled: false           # [POC nötrle] içerik-okuma eskalasyonu kapalı (eski: true)
     block: fast-01
     model_key: judge
     borderline_band: [1, 2]
     max_borderline_score_floor: 0.35
     timeout_seconds: 5
-  max_expand_iterations: 1
-  comprehensive_max_rounds: 4   # kapsamlı/sayım sorgularında iteratif toplama tur tavanı (derinlik tırmanışına yer bırakır)
+  max_expand_iterations: 0      # [POC nötrle] genişletme döngüsü kapalı — tek-atım retrieval (eski: 1)
+  comprehensive_max_rounds: 0   # [POC nötrle] genişletme döngüsü kapalı (eski: 4)
   on_low_confidence: expand
   # Genişletme = yeni çeşitlendirilmiş re-query (broaden → yeniden retrieve → birleştir).
