@@ -177,9 +177,13 @@ def test_reflect_advances_hops_extracts_anchors_and_merges(monkeypatch):
     out = agent.run("Karayolları Trafik Kanunu kaç oyla kabul edildi", session_collections=[COL])
 
     assert reflect.state["n"] == 3                       # 2 retrieving rounds + 1 done round
-    # anchors accumulate across rounds and are handed to the NEXT reflect call
-    assert reflect.state["args"][1]["extracted_anchors"] == {"esas_no": "2/773"}
-    assert reflect.state["args"][2]["extracted_anchors"] == {"esas_no": "2/773", "sira_sayisi": 5}
+    # anchors accumulate across rounds and are handed to the NEXT reflect call.
+    # section_type=oylama planlamada strateji tarafından tohumlanır (kanun_kabul_oylama pini)
+    # → her turdan itibaren extracted_anchors'ta bulunur (yapışkan).
+    assert reflect.state["args"][1]["extracted_anchors"] == {
+        "esas_no": "2/773", "section_type": "oylama"}
+    assert reflect.state["args"][2]["extracted_anchors"] == {
+        "esas_no": "2/773", "sira_sayisi": 5, "section_type": "oylama"}
     # initial (2) + hop-1 (2) + hop-2 (2) = 6 chunks reached the answer (assembler refreshed)
     assert len(out.sources) == 6
     # verification identity injected into the answering context
@@ -199,7 +203,20 @@ def test_reflect_stops_on_done(monkeypatch):
 
 def test_reflect_stops_at_max_rounds(monkeypatch):
     # Never signals done → bounded by strategy.max_rounds (kanun_kabul_oylama = 4).
-    reflect = _scripted([_reflection(done=False, next_draft="hop", hop=1)])
+    # next_draft varies per round (hop-1..hop-4): a single repeated draft text would
+    # collide with the dedup ledger's (collection, text, filters) key from round 2
+    # onward (same fetch_k every round here) and _dedupe_and_register would prune it,
+    # stopping the loop via drafts_exhausted_by_dedup before max_rounds is ever reached
+    # — that's a different termination path (see
+    # test_reflect_stops_when_dedup_exhausts_all_drafts), not the ceiling this test
+    # targets. Distinct draft text per round keeps every round's search un-pruned so
+    # only the max_rounds ceiling is exercised.
+    reflect = _scripted([
+        _reflection(done=False, next_draft="hop-1", hop=1),
+        _reflection(done=False, next_draft="hop-2", hop=1),
+        _reflection(done=False, next_draft="hop-3", hop=1),
+        _reflection(done=False, next_draft="hop-4", hop=1),
+    ])
     agent = _agent(monkeypatch, plan=_plan("kanun_kabul_oylama"), reflect=reflect,
                    search=_counting_search(2))
     out = agent.run("bir kanun kaç oyla", session_collections=[COL])
@@ -253,12 +270,75 @@ def test_reflect_added_zero_but_not_done_continues(monkeypatch):
     # Search always returns the same ids → every reflect hop merges 0 new chunks. The
     # generic loop would stop on added==0; the reflect self-loop must NOT — it runs to
     # max_rounds because the procedure (not saturation) decides termination.
-    reflect = _scripted([_reflection(done=False, next_draft="hop", hop=1)])
+    # NOTE: next_draft varies per round (hop-1..hop-4) rather than reusing one fixed
+    # string. A single repeated draft text would collide with the dedup ledger's
+    # (collection, text, filters) key from round 1 onward — _dedupe_and_register would
+    # prune it starting round 2 (same key already registered at >= fetch_k), making
+    # draft_texts come back empty and (correctly, post-fix) stop the loop early. That
+    # would be testing dedup-exhaustion (see test_reflect_stops_when_dedup_exhausts_all_
+    # drafts), not this test's actual target: a REAL search that executes every round
+    # but never contributes new content. Distinct draft text per round keeps each
+    # round's search un-pruned so only the added==0 signal is exercised in isolation.
+    reflect = _scripted([
+        _reflection(done=False, next_draft="hop-1", hop=1),
+        _reflection(done=False, next_draft="hop-2", hop=1),
+        _reflection(done=False, next_draft="hop-3", hop=1),
+        _reflection(done=False, next_draft="hop-4", hop=1),
+    ])
     agent = _agent(monkeypatch, plan=_plan("kanun_kabul_oylama"), reflect=reflect,
                    search=_fixed_search)
     out = agent.run("bir kanun kaç oyla", session_collections=[COL])
     strat_max = agent._config.get_strategy("kanun_kabul_oylama")["max_rounds"]
     assert reflect.state["n"] == strat_max
+    assert out.answer == "Cevap metni."
+
+
+def test_reflect_stops_when_next_plan_has_no_query_drafts(monkeypatch):
+    # Defense-in-depth (not the live-run bug's actual mechanism — see
+    # test_reflect_stops_when_dedup_exhausts_all_drafts for that): even though
+    # Planner._parse_plan should already filter out resources with empty query_drafts
+    # before next_plan is built, this guards the stop-check in case that invariant is
+    # ever relaxed elsewhere. Constructs a next_plan with an empty query_drafts list via
+    # direct Pydantic construction, bypassing the real parser (which would never produce
+    # this shape in practice).
+    empty_next_plan = SearchPlan(
+        intent="factual", query_type="fact",
+        resources=[CollectionSearchPlan(collection=COL, query_drafts=[])],
+        reasoning="stuck",
+    )
+    stuck_reflection = ReflectionOutput(
+        done=False, done_reason=None, hop_cursor=3,
+        extracted_anchors={}, next_plan=empty_next_plan,
+    )
+    reflect = _scripted([stuck_reflection])
+    agent = _agent(monkeypatch, plan=_plan("kanun_kabul_oylama"), reflect=reflect)
+    out = agent.run("bir kanun kaç oyla", session_collections=[COL])
+    assert reflect.state["n"] == 1                       # stopped after round 1, no wasted round
+    assert out.answer == "Cevap metni."
+
+
+def test_reflect_stops_when_dedup_exhausts_all_drafts(monkeypatch):
+    # Regression (the live-run bug's ACTUAL mechanism): reflect() keeps emitting a
+    # well-formed next_plan with real draft text every round (so the raw-drafts stop
+    # check above never fires), but the reflect-LLM regenerates the EXACT SAME query
+    # text ("X") it already searched in a prior round. _dedupe_and_register (line
+    # ~926) prunes any draft whose (collection, text, filters) key was already searched
+    # at this-or-greater fetch_k — and drops the whole resource once every draft is
+    # pruned. Here round 1 registers ("tutanaklar_ctx1024", "X", {}) in
+    # state.tried_searches; round 2's reflect() reuses "X" for the same collection, at
+    # the same fetch_k (plan.query_type is pinned from state.planner_output and never
+    # changes round-to-round for this strategy/query), so it collides and gets pruned —
+    # _reflect_retrieve returns draft_texts={} for round 2 even though
+    # reflection.next_plan itself was perfectly well-formed. The loop must recognize
+    # "nothing was actually searched this round" and stop immediately instead of
+    # burning a 3rd reflect()-LLM round-trip.
+    reflect = _scripted([_reflection(done=False, next_draft="X", hop=1)])  # same draft every call
+    agent = _agent(monkeypatch, plan=_plan("kanun_kabul_oylama"), reflect=reflect,
+                   search=_counting_search(2))
+    out = agent.run("bir kanun kaç oyla", session_collections=[COL])
+    strat_max = agent._config.get_strategy("kanun_kabul_oylama")["max_rounds"]
+    assert reflect.state["n"] == 2                       # round 1 (executes) + round 2 (pruned→stop)
+    assert reflect.state["n"] < strat_max                 # did NOT waste rounds to the ceiling
     assert out.answer == "Cevap metni."
 
 
@@ -418,6 +498,48 @@ def test_seen_chunk_ids_collects_across_collections(monkeypatch):
     assert agent._seen_chunk_ids(OrchestratorState(request_id="t2", user_query="q")) == set()
 
 
+def _evidence_state(n: int, target_at: int, target_text: str) -> "OrchestratorState":
+    """State with n rerank-ordered chunks; the target record sits at rank `target_at`."""
+    from src.agent.schemas import Chunk, OrchestratorState
+
+    state = OrchestratorState(request_id="t", user_query="q")
+    state.assembled_chunks = [
+        Chunk(chunk_id=f"c{i}", document_id=f"d{i}", collection_name=COL, doc_type="tutanak",
+              source_title=f"t{i}", text=target_text if i == target_at else f"rapor metni {i}",
+              score=1.0, metadata={})
+        for i in range(n)
+    ]
+    return state
+
+
+def test_compact_evidence_prioritizes_target_pattern_chunks(monkeypatch):
+    """The vote announcement ranks BELOW evidence_max_chunks → a plain rerank-ordered
+    window never shows it to the reflect LLM (DURMA can't fire, loop dies via dedup
+    fallback). Priority patterns must pull it to the front of the window."""
+    agent = _agent(monkeypatch, plan=_plan("kanun_kabul_oylama"), reflect=MagicMock())
+    cap = agent._config.reflect.evidence_max_chunks
+    target = "AÇIK OYLAMA SONUCUNU DUYURUYORUM: Kullanılan oy: 247 Kabul: 218"
+    state = _evidence_state(cap + 2, target_at=cap + 1, target_text=target)
+    strategy = {"evidence_priority_patterns": ["oylama sonucunu duyuruyorum"]}
+
+    without = agent._compact_evidence(state)
+    with_patterns = agent._compact_evidence(state, strategy)
+
+    assert "247" not in without                       # buried below the window cap
+    assert with_patterns.index("247") < with_patterns.index("rapor metni 0")  # front of window
+    # assembled pool order itself is untouched (answer context stays rerank-ordered)
+    assert state.assembled_chunks[cap + 1].text == target
+
+
+def test_compact_evidence_no_patterns_is_noop(monkeypatch):
+    agent = _agent(monkeypatch, plan=_plan("kanun_kabul_oylama"), reflect=MagicMock())
+    state = _evidence_state(3, target_at=1, target_text="oylama sonucunu duyuruyorum 247")
+
+    assert agent._compact_evidence(state) == agent._compact_evidence(state, None)
+    assert agent._compact_evidence(state) == agent._compact_evidence(
+        state, {"evidence_priority_patterns": []})
+
+
 # --------------------------------------------------------------- planner tests
 
 def _mock_client(response_dict: dict) -> MagicMock:
@@ -522,8 +644,12 @@ def test_reflect_injects_sira_sayisi_filter_from_anchor(monkeypatch):
                    search=_capturing_search)
     out = agent.run("Kalkınma Bankası kaç oyla kabul edildi", session_collections=[COL])
 
-    # Çıpa çözüldükten sonraki retrieval kesin sıra sayısı filtresini taşır.
-    assert {"sira_sayisi": {"$eq": 5}} in seen_filters
+    # Çıpa çözüldükten sonraki retrieval kesin {sira_sayisi ∧ section_type} filtresini taşır.
+    # kanun_kabul_oylama stratejisi section_type=oylama pinler → sira çözülünce ikisi $and'lenir
+    # (cerrahi: yalnız o kanunun oy-döküm bölgesi).
+    assert {
+        "$and": [{"sira_sayisi": {"$eq": 5}}, {"section_type": {"$eq": "oylama"}}]
+    } in seen_filters
     # Trace bayrağı: filtreli reflect turunda True.
     def _phase(ev):
         return ev.get("phase") if isinstance(ev, dict) else getattr(ev, "phase", None)
@@ -565,3 +691,77 @@ def test_reflect_no_sira_filter_without_anchor(monkeypatch):
     agent.run("Kalkınma Bankası kaç oyla", session_collections=[COL])
 
     assert all(f != {"sira_sayisi": {"$eq": 5}} for f in seen_filters)
+
+
+def _filter_capture():
+    """Filtreleri yakalayan arama mock'u (comprehensive dalı testleri için taze id'ler)."""
+    seen = []
+
+    def _search(collection_key, query_text, filters=None, top_k=5, apply_reranker=True):
+        seen.append(filters)
+        n = len(seen)
+        ids = [f"c{n * 100 + i}" for i in range(2)]
+        return {
+            "documents": [f"body-{cid}" for cid in ids],
+            "metadatas": [
+                {"chunk_id": cid, "document_id": f"d{cid}", "doc_type": "tutanak",
+                 "source_title": f"t-{cid}", "_source_collection": collection_key}
+                for cid in ids
+            ],
+            "distances": [0.1, 0.1],
+        }
+    _search.seen = seen
+    return _search
+
+
+def test_comprehensive_branch_applies_anchor_filter(monkeypatch):
+    """kanun_gorusmeleri (comprehensive) yolu da kesin {sira_sayisi ∧ section_type} filtresini
+    uygular — asıl bypass düzeltmesi. Strateji section_type=kanun_gorusmeleri pinler; reflect
+    sıra sayısını çözünce _enumerate_expand _anchor_where_for'u onurlandırır."""
+    search = _filter_capture()
+    reflect = _scripted([
+        _reflection(done=False, anchors={"sira_sayisi": 5, "esas_no": "2/773"},
+                    hop=1, next_draft="hop-1"),
+        _reflection(done=True, hop=2, next_draft=None, reason="found"),
+    ])
+    agent = _agent(monkeypatch, plan=_plan("kanun_gorusmeleri"), reflect=reflect, search=search)
+    agent.run("Kalkınma Bankası görüşmelerinde kim karşı çıktı", session_collections=[COL])
+
+    assert {
+        "$and": [{"sira_sayisi": {"$eq": 5}}, {"section_type": {"$eq": "kanun_gorusmeleri"}}]
+    } in search.seen
+
+
+def test_sticky_section_pin_survives_reflect_override(monkeypatch):
+    """Reflect yanlışlıkla farklı bir section_type (oylama) emit etse bile, stratejinin
+    pinlediği (kanun_gorusmeleri) yapışkan pin ile korunur — deterministik tohum otoriter."""
+    search = _filter_capture()
+    reflect = _scripted([
+        _reflection(done=False, anchors={"sira_sayisi": 5, "section_type": "oylama"},
+                    hop=1, next_draft="hop-1"),
+        _reflection(done=True, hop=2, next_draft=None, reason="found"),
+    ])
+    agent = _agent(monkeypatch, plan=_plan("kanun_gorusmeleri"), reflect=reflect, search=search)
+    agent.run("Kalkınma Bankası görüşmeleri", session_collections=[COL])
+
+    composed = [f for f in search.seen if isinstance(f, dict) and "$and" in f]
+    assert composed, "kompozisyon filtresi bekleniyordu"
+    for f in composed:
+        assert {"section_type": {"$eq": "kanun_gorusmeleri"}} in f["$and"]
+        assert {"section_type": {"$eq": "oylama"}} not in f["$and"]
+
+
+def test_comprehensive_no_section_only_filter_before_sira(monkeypatch):
+    """kanun_gorusmeleri'nde section_type seed'lidir ama reflect sıra sayısını ÇÖZMEZSE
+    (yalnız esas_no), section-only over-broad filtre KURULMAZ — _anchor_where_for section'ı
+    sira'ya kapılar → gather semantik + yıl-facet'te kalır (mevcut davranış)."""
+    search = _filter_capture()
+    reflect = _scripted([
+        _reflection(done=False, anchors={"esas_no": "2/773"}, hop=1, next_draft="hop-1"),
+        _reflection(done=True, hop=2, next_draft=None, reason="found"),
+    ])
+    agent = _agent(monkeypatch, plan=_plan("kanun_gorusmeleri"), reflect=reflect, search=search)
+    agent.run("Kalkınma Bankası görüşmeleri", session_collections=[COL])
+
+    # Hiçbir aramaya section_type sızmamalı (ne tek başına ne $and içinde).
+    assert all("section_type" not in json.dumps(f or {}) for f in search.seen)

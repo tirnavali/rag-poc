@@ -66,6 +66,33 @@ def get_doc_type_spec(dt: DocumentType) -> DocumentTypeSpec:
     return DOCUMENT_TYPES[dt]
 
 
+# Kanonik tutanak bölüm (section) taksonomisi — TEK doğruluk kaynağı.
+# `law_region_tagger.tag_sections` chunk'lara `section_type` scalar'ı olarak bu
+# değerlerden birini koyar; ChromaDB yalnız scalar exact-match desteklediği için
+# çok-seviyeli ham başlık dizisi yerine bu düz enum filtrelenir. Faz 2'de
+# `FilterCriteria.section_type` Literal'ı + orchestrator anchor guard'ı da bunu
+# import eder → enum drift'i (aynı listenin dört yerde elle kopyalanması) engellenir.
+# `diger` = tanınan ama sınıflanamayan başlık; None (etiketsiz) ondan ayrıdır.
+SECTION_TYPES: tuple[str, ...] = (
+    "icindekiler",
+    "gecen_tutanak",
+    "gelen_kagit",
+    "yazili_soru",
+    "sozlu_soru",
+    "gundem_disi",
+    "secim",
+    "genel_gorusme",
+    "meclis_arastirmasi",
+    "tezkere",
+    "oneriler",
+    "yemin",
+    "oylama",
+    "kanun_gorusmeleri",
+    "kanun_raporu",
+    "diger",
+)
+
+
 # Which FilterCriteria fields are meaningful for each document type's indexed
 # metadata. Kept separate from DocumentTypeSpec.filter_fields (which drives
 # display and is intentionally minimal) to avoid side effects, and expanded to
@@ -94,11 +121,13 @@ FILTER_APPLICABILITY: dict[DocumentType, set[str] | None] = {
         "year", "year_lte", "year_gte",
         "author", "period", "session", "document_type",
         "sira_sayisi", "esas_no",  # metadata omurgası (reflect Hop-2 kesin filtresi)
+        "section_type",            # bölüm omurgası (tag_sections; kesin where filtresi)
     },
     DocumentType.ONERGE: {
         "year", "year_lte", "year_gte",
         "author", "period", "session", "document_type",
         "sira_sayisi", "esas_no",
+        "section_type",
     },
     DocumentType.CUSTOM: None,
 }

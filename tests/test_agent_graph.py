@@ -136,6 +136,10 @@ def test_graph_cycle_edges_exist(monkeypatch):
 
 def test_route_after_judge_truth_table(monkeypatch):
     agent = _agent(monkeypatch)
+    # Pin the judge round knobs so this LOGIC test is independent of pipeline.yaml's
+    # POC neutralization (which sets both to 0 to force single-shot retrieval).
+    agent._config.judge.comprehensive_max_rounds = 4
+    agent._config.judge.max_expand_iterations = 1
     route = build_routers(agent)["judge"]
     max_it = agent._config.judge.max_expand_iterations
 
@@ -159,6 +163,9 @@ def test_route_after_expansion_ceiling_skips_judge(monkeypatch):
 
 def test_route_after_judge_post_expand_truth_table(monkeypatch):
     agent = _agent(monkeypatch)
+    # Pin round knobs (independent of pipeline.yaml's POC neutralization, see above).
+    agent._config.judge.comprehensive_max_rounds = 4
+    agent._config.judge.max_expand_iterations = 1
     route = build_routers(agent)["judge_post_expand"]
     comp_max = agent._config.judge.comprehensive_max_rounds
 
@@ -179,6 +186,63 @@ def test_route_after_judge_post_expand_truth_table(monkeypatch):
     assert route(_gs(agent, action="answer", added=3, rounds=1)) == "answering"
 
 
+def _adaptive_gs(agent, *, strategy="kanun_kabul_oylama", action="answer",
+                 rounds=0, reflect_done=False, loop_stop=False):
+    """Sentetik GraphState — planner_output.strategy adaptive stratejiye kurulu."""
+    gs = _gs(agent, action=action, rounds=rounds, loop_stop=loop_stop)
+    plan = _make_plan("gazete_arsivi")
+    plan.strategy = strategy
+    gs["s"].planner_output = plan
+    gs["reflect_done"] = reflect_done
+    return gs
+
+
+def test_reflect_self_loop_edges_exist(monkeypatch):
+    agent = _agent(monkeypatch)
+    edges = {(e.source, e.target) for e in agent._graph.get_graph().edges}
+    for pair in [
+        ("judge", "reflect"), ("reflect", "reflect"),
+        ("reflect", "answering"), ("reflect", "refuse"),
+    ]:
+        assert pair in edges, f"eksik reflect kenarı: {pair}"
+
+
+def test_route_after_judge_routes_adaptive_to_reflect(monkeypatch):
+    agent = _agent(monkeypatch)
+    route = build_routers(agent)["judge"]
+    # Adaptive strateji: judge "answer" dese bile prosedür için reflect'e gider.
+    assert route(_adaptive_gs(agent, action="answer", rounds=0)) == "reflect"
+    # clarify/refuse adaptive'i de kısa-devre yapar.
+    assert route(_adaptive_gs(agent, action="clarify")) == "refuse"
+    assert route(_adaptive_gs(agent, action="refuse")) == "refuse"
+    # strategy.max_rounds (kanun_kabul_oylama=4) tükenince reflect'e gitmez.
+    strat = agent._config.get_strategy("kanun_kabul_oylama")
+    assert route(_adaptive_gs(agent, action="answer", rounds=strat["max_rounds"])) == "answering"
+
+
+def test_route_after_judge_kill_switch_suppresses_reflect(monkeypatch):
+    agent = _agent(monkeypatch)
+    agent._config.reflect.enabled = False
+    route = build_routers(agent)["judge"]
+    # Kill-switch kapalıyken adaptive sorgu reflect'e girmez (generic yola düşer).
+    assert route(_adaptive_gs(agent, action="answer", rounds=0)) == "answering"
+
+
+def test_route_after_reflect_truth_table(monkeypatch):
+    agent = _agent(monkeypatch)
+    route = build_routers(agent)["reflect"]
+    strat_max = agent._config.get_strategy("kanun_kabul_oylama")["max_rounds"]
+    # done → answering (clarify'a saygı → refuse).
+    assert route(_adaptive_gs(agent, reflect_done=True, action="answer")) == "answering"
+    assert route(_adaptive_gs(agent, reflect_done=True, action="clarify")) == "refuse"
+    # ceiling (loop_stop) → answering.
+    assert route(_adaptive_gs(agent, loop_stop=True, action="answer")) == "answering"
+    # done değil + tur kaldı → reflect (self-loop).
+    assert route(_adaptive_gs(agent, reflect_done=False, rounds=1)) == "reflect"
+    # done değil ama max_rounds tükendi → answering.
+    assert route(_adaptive_gs(agent, reflect_done=False, rounds=strat_max)) == "answering"
+
+
 def test_routers_read_config_at_route_time(monkeypatch):
     """Construction sonrası config mutasyonu router kararına yansımalı."""
     agent = _agent(monkeypatch)
@@ -195,12 +259,18 @@ def test_routers_read_config_at_route_time(monkeypatch):
 def test_recursion_limit_formula(monkeypatch):
     agent = _agent(monkeypatch)
     cfg = agent._config
+    # Adaptive reflect turları strategy.max_rounds'tan (+ reflect.default_max_rounds)
+    # gelir — judge knob'ları POC'ta 0 olsa bile paya dahil edilmeli.
+    adaptive_max = max(
+        (s.get("max_rounds") or 0) for s in cfg.strategy_playbook.by_name.values()
+    )
     expected = 32 + 4 * max(
-        cfg.judge.comprehensive_max_rounds, cfg.judge.max_expand_iterations
+        cfg.judge.comprehensive_max_rounds, cfg.judge.max_expand_iterations,
+        adaptive_max, cfg.reflect.default_max_rounds,
     )
     assert recursion_limit_for(cfg) == expected
-    # Doğrusal yol (~14 node) + tur başına 2 node için gerçekten yeterli pay:
-    assert expected >= 14 + 2 * cfg.judge.comprehensive_max_rounds
+    # Doğrusal yol (~14 node) + reflect self-loop turları için gerçekten yeterli pay:
+    assert expected >= 14 + 2 * cfg.reflect.default_max_rounds
 
 
 # --------------------------------------------------------- callback yayılımı

@@ -159,6 +159,12 @@ class ChromaFilterTranslator(BaseFilterTranslator):
         if filters.esas_no is not None:
             conditions.append({"esas_no": {"$eq": filters.esas_no}})
 
+        # Bölüm omurgası: section_type (str) kesin eşleşme — belge içi bir bölüme
+        # (kanun_gorusmeleri/oylama/yazili_soru…) deterministik yönlendirir. sira_sayisi
+        # ile $and'lenir → "N kanununun oylaması" gibi bileşik hedef.
+        if filters.section_type is not None:
+            conditions.append({"section_type": {"$eq": filters.section_type}})
+
         if filters.document_type is not None:
             conditions.append({"document_type": {"$eq": filters.document_type}})
 

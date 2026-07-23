@@ -222,23 +222,29 @@
   <p class="eyebrow">src/agent · pipeline şeması</p>
   <h1>OrchestratorAgent — Akış Şeması</h1>
   <p class="dek">
-    Tek bir agentic RAG hattının uçtan uca durum makinesi: bir kullanıcı sorgusu
-    <code>niyet analizi → planlama → arama → değerlendirme → (gerekirse toplama) → yanıt</code>
-    aşamalarından geçer. Bu sayfa <code>src/agent/README.md</code>'deki Mermaid diyagramlarının
-    grafik karşılığıdır — kod, <code>src/agent/orchestrator.py</code> okunarak doğrulanmıştır.
+    Tek bir agentic RAG hattının uçtan uca durum makinesi — artık bir
+    <code>LangGraph StateGraph</code> (<code>graph.py</code>) olarak derlenir: bir kullanıcı sorgusu
+    <code>niyet analizi → planlama → arama → değerlendirme → (gerekirse toplama/reflect) → yanıt</code>
+    aşamalarından geçer. <code>research_strategies.md</code>'deki <code>mode: adaptive</code> stratejiler
+    (kanun_kabul_oylama, kanun_gorusmeleri, kanun_rapor_bolumu) çok-hop bir <b>reflect self-loop</b>'u
+    tetikler (Diyagram 03). Bu sayfa <code>src/agent/README.md</code>'deki Mermaid diyagramlarının
+    grafik karşılığıdır — kod, <code>orchestrator.py</code> + <code>graph.py</code> + <code>planner.py</code>
+    okunarak doğrulanmıştır.
   </p>
   <div class="meta">
-    <span><b>14</b> modül</span>
-    <span><b>3</b> diyagram</span>
-    <span><b>51</b> tıklanabilir düğüm</span>
+    <span><b>15</b> modül</span>
+    <span><b>4</b> diyagram</span>
+    <span><b>71</b> tıklanabilir düğüm</span>
     <span>yapılandırma: <code>pipeline.yaml</code></span>
-    <span>strateji playbook'u: <code>research_strategies.md</code></span>
-    <span>güncelleme: <b>2026-07-02</b></span>
+    <span>strateji playbook'u: <code>research_strategies.md</code> (8 strateji)</span>
+    <span>güncelleme: <b>2026-07-20</b></span>
   </div>
 
   <nav class="toc" aria-label="Sayfa içi gezinme">
     <a href="#ana-akis">Ana akış</a><span class="sep">/</span>
     <a href="#toplama-dongusu">Toplama döngüsü</a><span class="sep">/</span>
+    <a href="#reflect-dongusu">Reflect döngüsü</a><span class="sep">/</span>
+    <a href="#strateji-playbooku">Strateji playbook'u</a><span class="sep">/</span>
     <a href="#ogrenilen-terimler">Öğrenilen terimler</a><span class="sep">/</span>
     <a href="#asamalar">Aşamalar</a><span class="sep">/</span>
     <a href="#moduller">Modüller</a>
@@ -372,7 +378,7 @@
               <text class="n-title" x="470" y="378">Planner.plan()</text>
               <text class="n-sub" x="470" y="398">intent · query_type · strategy</text>
               <text class="n-sub" x="470" y="414">koleksiyon başına arama taslakları</text>
-              <title>Tek LLM çağrısı; research_strategies.md kataloğundan bir strateji de seçebilir. COMPREHENSIVE_KEYWORDS eşleşirse orchestrator query_type'ı deterministik olarak 'comprehensive'e yükseltir (LLM seçimini ezer).</title>
+              <title>Tek LLM çağrısı; research_strategies.md kataloğundan bir strateji de seçebilir. COMPREHENSIVE_KEYWORDS eşleşirse orchestrator query_type'ı deterministik olarak 'comprehensive'e yükseltir (LLM seçimini ezer). chat_history son kullanıcı+asistan turunu "yalnız BAĞLAM" ipucu olarak enjekte eder — "bu konuda", "peki ya" gibi atıfları arama taslaklarında somutlaştırır, koleksiyon seçimini DEĞİŞTİRMEZ.</title>
             </g>
 
             <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-policy">
@@ -419,23 +425,24 @@
             <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-assembler">
               <rect x="280" y="780" width="380" height="60" rx="10"/>
               <text class="n-title" x="470" y="806">BalancedContextAssembler</text>
-              <text class="n-sub" x="470" y="823">doc-dedup · query_type limiti</text>
-              <title>Koleksiyonları öncelik sırasına göre gezer, document_id'ye göre çapraz-koleksiyon dedup uygular; max_total / max_per_document query_type'a göre değişir (comprehensive: 50 / 6).</title>
+              <text class="n-sub" x="470" y="823">⚠ GEÇİCİ DEVRE DIŞI → passthrough (dedup/limit yok)</text>
+              <title>_ASSEMBLER_ENABLED=False (orchestrator.py modül başı) — gerçek BalancedContextAssembler (doc-dedup, max_total/max_per_document) yerine _assemble_passthrough çalışıyor: her koleksiyonun retrieval sonucu öncelik sırasıyla ham akar. Kod silinmedi, tek satır bayrakla geri açılır.</title>
             </g>
 
             <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-judge">
               <rect x="280" y="872" width="380" height="92" rx="10"/>
               <text class="n-title" x="470" y="898">EvidenceJudge</text>
-              <text class="n-sub" x="470" y="918">relevance floor (min_rerank_score altını eler)</text>
-              <text class="n-sub" x="470" y="934">heuristik sayı/kapsam → sınırda ya da zayıfsa LLM</text>
-              <title>Tüm chunk'lar relevance floor altındaysa doğrudan "low_relevance_all_chunks" (expand). Sayı/kapsam yeterli görünse bile en iyi eşleşme llm_escalation_score altındaysa LLM judge'a eskalasyon.</title>
+              <text class="n-sub" x="470" y="918">Çok zayıf sonuçlar önce elenir (puan &lt; 0.02)</text>
+              <text class="n-sub" x="470" y="934">Sınırdaysa küçük bir yapay zekâya sorulur</text>
+              <title>Önce en zayıf sonuçlar elenir (rerank puanı 0.02'nin altı); hepsi elenirse "yetersiz, daha fazla ara" kararı çıkar. Kalanlar yeterli ve eşleşme güçlüyse direkt "yanıtla" kararı verilir. Eşleşme zayıfsa küçük bir yapay zekâ modeli metni okuyup kararı kendisi verir. (21 Temmuz'da test için kısa süre kapatılan bu adım tekrar açıldı.)</title>
             </g>
 
             <g class="node node--loop" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-gather">
               <rect x="280" y="996" width="380" height="84" rx="12"/>
-              <text class="n-title" x="470" y="1030">⟳ Toplama Döngüsü</text>
-              <text class="n-sub" x="470" y="1050">bkz. Diyagram 2</text>
-              <title>comprehensive sorgular doygunluğa/tavana kadar; diğerleri yalnızca judge "expand" derse ve max_expand_iterations sınırına kadar döner.</title>
+              <text class="n-title" x="470" y="1026">⟳ Toplama / Reflect Döngüsü</text>
+              <text class="n-sub" x="470" y="1044">adaptive strateji → Diyagram 03 (reflect self-loop)</text>
+              <text class="n-sub" x="470" y="1060">diğer → Diyagram 02 (max 1 tur; comprehensive 4 tur)</text>
+              <title>mode: adaptive bir strateji seçiliyse (kanun_kabul_oylama/kanun_gorusmeleri/kanun_rapor_bolumu) + reflect.enabled=true → reflect self-loop (Diyagram 03). Aksi halde eski _requery_expand/_enumerate_expand döngüsü (Diyagram 02) çalışır: judge.max_expand_iterations=1 (fact/summary/vb.) ya da judge.comprehensive_max_rounds=4 (comprehensive) tur tavanı ile.</title>
             </g>
             <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="d1-clarify-exit">
               <rect x="780" y="990" width="300" height="60" rx="10"/>
@@ -500,16 +507,23 @@
       <li><b><code>clarification_callback</code> / <code>deep_mode</code>:</b> imzada hâlâ var ama orchestrator hiçbirini okumuyor — CLI ve MCP artık aynı (engellemeyen) yolu izliyor.</li>
       <li><b>Rerank artık taslak-başına değil, birleşme-sonrası tek geçiş:</b> her taslak kendi rerank'ını çalıştırmak yerine, RRF ile birleşen havuz cross-encoder ile TEK seferde reranklanır.</li>
       <li><b>IntentAnalyzer'ın kataloğu şu an yalnızca tutanak:</b> gazete/önerge için henüz indekslenmiş koleksiyon yok; Planner'ın o doc_type'lara yönlendirme kuralları şimdilik fiilen tetiklenmiyor.</li>
+      <li><b>⚠ Assembler geçici devre dışı:</b> <code>_ASSEMBLER_ENABLED=False</code> — gerçek dedup/limit mantığı yerine ham passthrough çalışıyor (bkz. o düğüm).</li>
+      <li><b>Judge relevance floor + LLM eskalasyonu AÇIK:</b> <code>min_rerank_score=0.02</code> + <code>judge.llm.enabled=true</code> → çok zayıf chunk'lar elenir, en iyi eşleşme yine de zayıfsa (&lt;0.3) küçük bir LLM okuyup answer/expand/clarify/refuse kararı verir.</li>
+      <li><b>Adaptive strateji → reflect, diğerleri → genel döngü:</b> <code>mode: adaptive</code> (research_strategies.md) seçilmişse Toplama Döngüsü Diyagram 03'e (reflect self-loop) dallanır; diğer sorgularda Diyagram 02'nin genel döngüsü çalışır (<code>max_expand_iterations=1</code>, comprehensive için <code>comprehensive_max_rounds=4</code>).</li>
     </ul>
   </section>
 
   <!-- ================================================================ -->
   <section id="toplama-dongusu">
-    <h2><span class="num">02</span>Toplama (genişletme) döngüsü</h2>
+    <h2><span class="num">02</span>Toplama (genişletme) döngüsü — genel yol</h2>
     <p class="section-dek">
       Aşama 5.1 tek seferlik "expand" değil; doygunluğa veya tavana kadar süren sınırlı bir
       döngüdür. <code>comprehensive</code> sorgular <code>_enumerate_expand</code> (facet-parçalı +
       derinlik-tırmanışlı), diğerleri <code>_requery_expand</code> (tek re-query) kullanır.
+      Şu anki <code>pipeline.yaml</code>: <code>judge.max_expand_iterations=1</code> (fact/summary/
+      reasoning/policy — bir tur genişletme), <code>judge.comprehensive_max_rounds=4</code>
+      (comprehensive — doygunluğa kadar). <code>mode: adaptive</code> stratejiler bu döngüyü hiç
+      kullanmaz — kendi bağımsız self-loop'u için bkz. <a href="#reflect-dongusu">Diyagram 03</a>.
     </p>
     <p class="click-hint">↳ herhangi bir kutuya tıkla</p>
 
@@ -569,13 +583,13 @@
             <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-comprehensive-gate">
               <rect x="390" y="110" width="420" height="68" rx="10"/>
               <text class="n-title" x="600" y="150">comprehensive mi?</text>
-              <title>state.planner_output.query_type == "comprehensive" — comprehensive: max_rounds=4, ceiling=50, depth=40. diğerleri: max_rounds=1, ceiling=query_type'a göre.</title>
+              <title>state.planner_output.query_type == "comprehensive" — ceiling=50, başlangıç depth=40. max_rounds ise: comprehensive → judge.comprehensive_max_rounds=4; diğerleri → judge.max_expand_iterations=1.</title>
             </g>
 
             <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-round-gate">
               <rect x="390" y="218" width="420" height="68" rx="10"/>
               <text class="n-title" x="600" y="258">round &lt; max_rounds?</text>
-              <title>comprehensive: max_rounds=comprehensive_max_rounds (varsayılan 4). diğerleri: max_expand_iterations (varsayılan 1).</title>
+              <title>comprehensive: max_rounds=comprehensive_max_rounds (şu anki pipeline.yaml: 4). diğerleri: max_expand_iterations (şu anki pipeline.yaml: 1).</title>
             </g>
             <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="d2-round-exit">
               <rect x="900" y="220" width="280" height="64" rx="10"/>
@@ -722,16 +736,334 @@
       <li><b>Facet-partitioned + derinlik tırmanışlı toplama:</b> <code>comprehensive</code> sorgular hem yıl başına ayrı pas hem boş turda 2 katına çıkan arama derinliği (40→80→120) kullanır — bu yüzden <code>comprehensive_max_rounds</code> 3'ten 4'e çıkarıldı.</li>
       <li><b>Tavan dolunca bile yanıtlanır:</b> <code>"expand"</code> hiçbir zaman reddi tetiklemez — yalnızca <code>clarify</code>/<code>refuse</code> tetikler.</li>
       <li><b>Tek reserve stratejisi kalmadı:</b> <code>expander.py</code>'deki reserve-promosyon kaldırıldı; genişletme iki taze-retrieve yolundan biriyle (<code>_requery_expand</code> / <code>_enumerate_expand</code>) çalışır.</li>
+      <li><b>Tur tavanları aktif:</b> <code>pipeline.yaml</code> → <code>judge.max_expand_iterations=1</code>, <code>judge.comprehensive_max_rounds=4</code> — <code>expansion</code>/<code>judge_post_expand</code> graf node'ları normal çalışır (2026-07-19/20 civarı kısa bir süre <code>0</code>'a çekilmiş bir POC-nötrlemesi vardı, 2026-07-21'de geri alındı).</li>
+      <li><b>Reflect bu döngüden bağımsız:</b> <code>mode: adaptive</code> stratejiler bu genel döngüyü hiç kullanmaz; kendi <code>max_rounds</code>'u (strateji özel değer, yoksa <code>reflect.default_max_rounds=4</code>) ve ayrı bir kill-switch'i (<code>reflect.enabled</code>) vardır — bkz. <a href="#reflect-dongusu">Diyagram 03</a>.</li>
     </ul>
   </section>
 
   <!-- ================================================================ -->
+  <section id="reflect-dongusu">
+    <h2><span class="num">03</span>Adaptive Reflect (çok-hop) döngüsü</h2>
+    <p class="section-dek">
+      <code>research_strategies.md</code>'deki <code>mode: adaptive</code> stratejiler
+      (<code>kanun_kabul_oylama</code>, <code>kanun_gorusmeleri</code>, <code>kanun_rapor_bolumu</code>)
+      Judge'ın answer/expand kararından BAĞIMSIZ, kendi prosedürünü hop hop yürüten ayrı bir
+      self-loop'a girer — <code>orchestrator._node_reflect</code> + <code>Planner.reflect()</code>.
+      Toplama Döngüsü'nün (Diyagram 02) genel yolundan tamamen ayrı bir çevrimdir; ayrı bir
+      kill-switch'i (<code>reflect.enabled</code>) ve ayrı bir tur tavanı
+      (<code>strategy.max_rounds</code> ya da <code>reflect.default_max_rounds=4</code>) vardır.
+      Test kapsamı: <code>tests/test_agent_reflect.py</code> (28 test).
+    </p>
+    <p class="click-hint">↳ herhangi bir kutuya tıkla</p>
+
+    <div class="sheet">
+      <div class="diagram-scroll">
+        <svg width="1200" height="1300" viewBox="0 0 1200 1300" role="img"
+             aria-label="Adaptive reflect döngüsü: fail-open katmanları, LLM reflect çağrısı, anchor birleştirme, kesin metadata filtresi ve hop-bazlı yeniden arama">
+          <defs>
+            <marker id="mr-line" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--line)"/>
+            </marker>
+            <marker id="mr-flow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--signal)"/>
+            </marker>
+            <marker id="mr-exit" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--exit)"/>
+            </marker>
+            <marker id="mr-loop" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--loop)"/>
+            </marker>
+          </defs>
+
+          <!-- edges -->
+          <g>
+            <path class="edge edge-flow" marker-end="url(#mr-flow)" d="M600,70 L600,100"/>
+            <path class="edge edge-exit" marker-end="url(#mr-exit)" d="M810,134 L900,134"/>
+            <path class="edge edge-flow" marker-end="url(#mr-flow)" d="M600,168 L600,198"/>
+            <path class="edge edge-exit" marker-end="url(#mr-exit)" d="M810,232 L900,232"/>
+            <path class="edge edge-flow" marker-end="url(#mr-flow)" d="M600,266 L600,296"/>
+            <path class="edge" marker-end="url(#mr-line)" d="M810,444 L900,444"/>
+            <path class="edge" marker-end="url(#mr-line)" d="M1040,472 L1040,478"/>
+            <path class="edge edge-flow" marker-end="url(#mr-flow)" d="M600,380 L600,410"/>
+            <path class="edge edge-flow" marker-end="url(#mr-flow)" d="M600,478 L600,508"/>
+            <path class="edge edge-exit" marker-end="url(#mr-exit)" d="M810,650 L900,650"/>
+            <path class="edge edge-flow" marker-end="url(#mr-flow)" d="M600,584 L600,616"/>
+            <path class="edge edge-flow" marker-end="url(#mr-flow)" d="M600,684 L600,714"/>
+            <path class="edge" marker-end="url(#mr-line)" d="M510,774 L485,804"/>
+            <path class="edge" marker-end="url(#mr-line)" d="M690,774 L715,804"/>
+            <path class="edge" marker-end="url(#mr-line)" d="M485,888 L485,903 L560,918"/>
+            <path class="edge" marker-end="url(#mr-line)" d="M715,888 L715,903 L640,918"/>
+            <path class="edge edge-flow" marker-end="url(#mr-flow)" d="M600,994 L600,1024"/>
+            <path class="edge edge-flow" marker-end="url(#mr-flow)" d="M600,1080 L600,1110"/>
+            <path class="edge edge-flow" marker-end="url(#mr-flow)" d="M600,1154 L600,1184"/>
+            <path class="edge edge-exit" marker-end="url(#mr-exit)" d="M810,1218 L900,1218"/>
+            <path class="edge edge-loop" marker-end="url(#mr-loop)" d="M390,1218 L120,1218 L120,338 L390,338"/>
+          </g>
+
+          <!-- nodes -->
+          <g>
+            <g class="node node--start" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-entry">
+              <rect x="480" y="20" width="240" height="50" rx="25"/>
+              <text class="n-title" x="600" y="50" style="font-size:13px">Judge → reflect</text>
+              <title>route_after_judge: seçilen strateji mode=adaptive VE reflect.enabled VE rounds&lt;max_rounds ise buraya girilir — judge'ın answer/expand kararından bağımsız (yalnız clarify/refuse önce gelir).</title>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-notadaptive-gate">
+              <rect x="390" y="100" width="420" height="68" rx="10"/>
+              <text class="n-title" x="600" y="126">◆ Adaptive strateji mi?</text>
+              <text class="n-sub" x="600" y="144">procedure var mı? (fail-open A savunması)</text>
+              <title>_node_reflect'in İLK kontrolü: router zaten _is_adaptive ile buraya girmiş olsa da node kendi içinde tekrar doğrular ("not strategy or mode!=adaptive or no procedure"). Teoride hep evet olmalı; savunma amaçlı ikinci katman.</title>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-exit-notadaptive">
+              <rect x="900" y="102" width="280" height="64" rx="10"/>
+              <text class="n-title" x="1040" y="128">dur</text>
+              <text class="n-sub" x="1040" y="146">fail-open A — _requery_expand() tek tur</text>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-ceiling-gate">
+              <rect x="390" y="198" width="420" height="68" rx="10"/>
+              <text class="n-title" x="600" y="224">◆ Hacim tavanı doldu mu?</text>
+              <text class="n-sub" x="600" y="242">assembled &gt;= reflect.max_total_chunks (50)</text>
+              <title>Generic döngünün query_type tavanı DEĞİL — reasoning/summary gibi adaptive stratejilerde tek-atım ilk retrieval zaten max_total_primary'yi (15) doldurabilir; o tavan kullanılsaydı reflect hiç hop atmadan dururdu.</title>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-exit-ceiling">
+              <rect x="900" y="200" width="280" height="64" rx="10"/>
+              <text class="n-title" x="1040" y="226">dur</text>
+              <text class="n-sub" x="1040" y="244">hacim tavanı — LLM'e hiç gidilmedi</text>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-llm">
+              <rect x="390" y="296" width="420" height="84" rx="10"/>
+              <text class="n-title" x="600" y="322">Planner.reflect()</text>
+              <text class="n-sub" x="600" y="340">procedure+answer_directive+anchor+target+aliases</text>
+              <text class="n-sub" x="600" y="356">+extracted_anchors+hop_cursor+evidence+tried_queries</text>
+              <title>REFLECT_PROMPT: strateji prosedürünü + kompakt kanıt özetini (_compact_evidence, strateji evidence_priority_patterns varsa hedef kaydı pencerenin BAŞINA taşır) + o ana dek çözülen çıpaları + denenmiş sorguları LLM'e verir; bir sonraki hop'un SearchPlan'ını + done/extracted_anchors'ı ister. Planner block'unu paylaşır (fast-01/qwen3.5:9b — ayrı deployment yok).</title>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-none-gate">
+              <rect x="390" y="410" width="420" height="68" rx="10"/>
+              <text class="n-title" x="600" y="436">◆ reflection is None?</text>
+              <text class="n-sub" x="600" y="454">LLM hata/parse başarısız (fail-open B)</text>
+              <title>_call_reflect_llm herhangi bir hata/parse sorununda None döner (planner.py). _node_reflect bunu yakalayıp aynı fail-open yoluna düşer.</title>
+            </g>
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-failopen-b">
+              <rect x="900" y="412" width="280" height="60" rx="10"/>
+              <text class="n-title" x="1040" y="436" style="font-size:12.5px">_requery_expand()</text>
+              <text class="n-sub" x="1040" y="453">tek broaden fallback</text>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-exit-failopen-b">
+              <rect x="900" y="478" width="280" height="50" rx="10"/>
+              <text class="n-title" x="1040" y="502">dur</text>
+              <text class="n-sub" x="1040" y="518">reflect_done=True</text>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-merge">
+              <rect x="390" y="508" width="420" height="76" rx="10"/>
+              <text class="n-title" x="600" y="532">Anchor Birleştir</text>
+              <text class="n-sub" x="600" y="550">yeni (non-null) alan kazanır + hop_cursor ilerlet</text>
+              <text class="n-sub" x="600" y="565">yapışkan section_type pin (strateji EZer)</text>
+              <title>merged = eski extracted_anchors + reflection'ın yeni (non-null) alanları. strategy.section_type set'liyse, reflect-LLM'in emit ettiği section_type'ı görmezden gelip stratejinin pinlediği değeri yazar (deterministik tohum otoriter).</title>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-done-gate">
+              <rect x="390" y="616" width="420" height="68" rx="10"/>
+              <text class="n-title" x="600" y="642">◆ Prosedür DURDU mu?</text>
+              <text class="n-sub" x="600" y="660">done VEYA next_plan boş/kaynaksız VEYA drafts'sız</text>
+              <title>reflection.done VEYA next_plan None VEYA next_plan.resources boş VEYA resources'un HİÇBİRİNDE query_drafts yoksa (orchestrator.py:641-646) → aranacak bir şey kalmadı, eldeki kanıtla cevapla. Son alt-koşul (query_drafts) savunma-derinliğidir: gerçek Planner.reflect() çıktısında Planner._parse_plan boş-draft'lı resource'ları üst akışta zaten eler, yani bu dal production'da fiilen erişilemez (bkz. test_reflect_stops_when_next_plan_has_no_query_drafts — next_plan'ı doğrudan Pydantic ile kurup gerçek parser'ı bypass eder). added==0 ile KARIŞTIRILMAZ: gerçek (dolu) drafts'lı bir tur 0 yeni chunk bulsa da devam eder (bkz. test_reflect_added_zero_but_not_done_continues). Canlı round-3→4 sıkışmasının GERÇEK durağı burada değil — dedup SONRASI kontrol, bkz. dr-mergechunks düğümü / orchestrator.py:672-677.</title>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-exit-done">
+              <rect x="900" y="616" width="280" height="68" rx="10"/>
+              <text class="n-title" x="1040" y="642">dur</text>
+              <text class="n-sub" x="1040" y="658">reflect_done=True</text>
+              <text class="n-sub" x="1040" y="672">mevcut kanıtla cevapla</text>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-comp-gate">
+              <rect x="390" y="714" width="420" height="60" rx="10"/>
+              <text class="n-title" x="600" y="738">◆ Hop comprehensive mi?</text>
+              <text class="n-sub" x="600" y="755">_reflect_retrieve() dallanması (next_plan.query_type)</text>
+              <title>kanun_gorusmeleri gibi comprehensive+adaptive stratejiler burada _enumerate_expand'e delege eder (facet-partition+derinlik tırmanışı korunur); kanun_kabul_oylama/kanun_rapor_bolumu (reasoning/summary) düz yola gider.</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-enumerate">
+              <rect x="390" y="804" width="190" height="84" rx="10"/>
+              <text class="n-title" x="485" y="828" style="font-size:12px">_enumerate_expand</text>
+              <text class="n-sub" x="485" y="846">(base_plan=next_plan)</text>
+              <text class="n-sub" x="485" y="861">facet-yıl+derinlik tırmanışı</text>
+              <title>Reflect hop'u broaden-LLM çağrısı olmadan base_plan olarak enumerate'e girer; _anchor_where_for'un kesin filtresi burada da uygulanır (bkz. dr-plain).</title>
+            </g>
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-plain">
+              <rect x="620" y="804" width="190" height="84" rx="10"/>
+              <text class="n-title" x="715" y="824" style="font-size:12px">_anchor_where_for</text>
+              <text class="n-sub" x="715" y="841">+ exclude_ids</text>
+              <text class="n-sub" x="715" y="856">+ _run_retrieval</text>
+              <title>_anchor_where_for(): sira_sayisi çözüldüyse (+section_type varsa $and) kesin where-filtresi kurar; strateji exclude_seen_chunks=true ise _seen_chunk_ids bu hop'un havuzundan çıkarılır (post-rank, ChromaDB $nin DEĞİL).</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-window">
+              <rect x="390" y="918" width="420" height="76" rx="10"/>
+              <text class="n-title" x="600" y="942">_expand_windows()</text>
+              <text class="n-sub" x="600" y="960">çıpa komşularını splice eder (pencere-genişletme)</text>
+              <text class="n-sub" x="600" y="975">koşul: strateji.window_expand ∧ global enabled</text>
+              <title>En yüksek rerank_score'lu chunk'ı (bu hop'un çıpası) alır, chunk_id'den doküman-içi okuma sırasını çözer, ±neighbor_radius komşuyu fetch_neighbors() ile (ANN'siz id-get) pool'a ekler. Global reflect.window_expand.enabled=true (2026-07-21'de açıldı) VE stratejinin kendi window_expand:true bayrağı (şu an yalnız kanun_kabul_oylama) gerekir — ikisi de sağlandığında çalışır.</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-mergechunks">
+              <rect x="390" y="1024" width="420" height="56" rx="10"/>
+              <text class="n-title" x="600" y="1048">_merge_new_chunks + Reassemble</text>
+              <text class="n-sub" x="600" y="1065">chunk_id dedup · assembler geçici passthrough</text>
+              <title>Yeni chunk'lar chunk_id'ye göre deduplenip havuza eklenir; _run_assembler çağrılır (şu an _assemble_passthrough — bkz. Diyagram 01). Hemen ardından GERÇEK durma mekanizması devreye girer: result.draft_texts boş dönerse (orchestrator.py:672-677) reflect_done=True ile durulur — next_plan'ın ham taslakları dolu olsa da _dedupe_and_register (state.tried_searches defteri) HER birini önceki bir turda aynı (koleksiyon, sorgu metni, filtre) ile zaten arandığı için elemiş olabilir; bu turda hiçbir arama fiilen çalışmamış demektir. Canlı kanun_kabul_oylama izinde round 3→4 tekrarı TAM OLARAK buydu.</title>
+            </g>
+
+            <g class="node node--proc" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-round-inc">
+              <rect x="390" y="1110" width="420" height="44" rx="10"/>
+              <text class="n-title" x="600" y="1137">rounds += 1</text>
+            </g>
+
+            <g class="node node--gate" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-loop-gate">
+              <rect x="390" y="1184" width="420" height="68" rx="12"/>
+              <text class="n-title" x="600" y="1210">◆ Tur kaldı mı?</text>
+              <text class="n-sub" x="600" y="1228">rounds &lt; strateji.max_rounds (yoksa reflect.default=4)</text>
+              <title>route_after_reflect: reflect_done/loop_stop yoksa ve tur kaldıysa "reflect" node'una (kendine) döner — kanun_kabul_oylama/kanun_gorusmeleri max_rounds=4, kanun_rapor_bolumu=3 tanımlar.</title>
+            </g>
+            <g class="node node--exit" tabindex="0" role="button" aria-haspopup="dialog" data-key="dr-exit-maxrounds">
+              <rect x="900" y="1184" width="280" height="68" rx="10"/>
+              <text class="n-title" x="1040" y="1210">dur</text>
+              <text class="n-sub" x="1040" y="1226">max_rounds tükendi</text>
+              <text class="n-sub" x="1040" y="1240">çok-hop kanıtıyla cevapla</text>
+            </g>
+          </g>
+
+          <!-- edge labels -->
+          <g>
+            <text class="elabel elabel-em" x="822" y="129">hayır</text>
+            <text class="elabel" x="482" y="188">evet</text>
+            <text class="elabel elabel-em" x="822" y="227">evet</text>
+            <text class="elabel" x="482" y="286">hayır</text>
+            <text class="elabel elabel-em" x="822" y="439">evet</text>
+            <text class="elabel" x="482" y="400">hayır</text>
+            <text class="elabel elabel-em" x="822" y="645">evet</text>
+            <text class="elabel" x="482" y="606">hayır</text>
+            <text class="elabel elabel-em" x="440" y="792">evet</text>
+            <text class="elabel" x="700" y="792">hayır</text>
+            <text class="elabel elabel-em" x="822" y="1213">hayır</text>
+            <text class="elabel" x="150" y="760" transform="rotate(-90 150 760)">evet — bir sonraki hop (reflect'e dön)</text>
+          </g>
+        </svg>
+      </div>
+      <p class="scroll-hint">geniş şema — yatay/dikey kaydırılabilir</p>
+    </div>
+
+    <ul class="callouts">
+      <li><b>Judge'tan bağımsız giriş:</b> adaptive strateji seçiliyse <code>route_after_judge</code> judge'ın answer/expand kararına BAKMADAN reflect'e girer (yalnız clarify/refuse önce gelir) — prosedür kendi tek-tur yeterlilik yargısını tanımaz.</li>
+      <li><b>İki katmanlı fail-open:</b> (A) strateji/procedure yoksa, (B) reflect LLM'i None dönerse → ikisi de aynı <code>_requery_expand()</code> tek-tur yoluna düşer ve <code>reflect_done=True</code> ile çıkar; hiçbir hata cevap akışını kilitlemez (dış try/except sarmalayıcı da ayrıca <code>state.errors</code>'a "reflect_failed:…" ekler).</li>
+      <li><b>Yapışkan section_type pin:</b> reflect-LLM yanlışlıkla farklı bir section_type üretse bile, stratejinin pinlediği değer EZER — deterministik tohum otoriter (bkz. <code>test_sticky_section_pin_survives_reflect_override</code>).</li>
+      <li><b>Metadata omurgası (kesin filtre):</b> sıra sayısı çözülünce (+section_type varsa) <code>_anchor_where_for</code> sonraki HER hop'u <code>{sira_sayisi ∧ section_type}</code> kesin where-filtresine bağlar — kanun adı hiç geçmese bile kimliksiz roll-call/görüşme/rapor bölgesine ulaşır. section_type TEK BAŞINA (sıra sayısı çözülmeden) asla uygulanmaz — over-broad olurdu.</li>
+      <li><b>exclude_seen_chunks dikey ekseni:</b> <code>_anchor_where_for</code> hangi bölgeyi ARAR'ı belirler; <code>exclude_seen_chunks</code> (chunk-id, ChromaDB <code>$nin</code> DEĞİL) o havuzdan neyin ELENECEĞİni belirler — ikisi birbirinden bağımsız, birlikte çalışır.</li>
+      <li><b>⚠ Öğrenilen Terimler'e bağlanmıyor:</b> bu döngü hiçbir dalında <code>_record_term_hypothesis</code> çağırmaz (yalnız eski <code>_node_judge_post_expand</code> çağırır — bkz. <a href="#ogrenilen-terimler">Diyagram 05</a>) — reflect'in kendi <code>broaden()</code> fallback'ları (fail-open A/B) bile bu kaydı tetiklemez. Bkz. Diyagram 05'teki dormancy notu.</li>
+      <li><b>recursion_limit dinamik hesaplanır:</b> <code>graph.py — recursion_limit_for()</code> tüm stratejilerin en büyük <code>max_rounds</code>'unu, <code>judge.max_expand_iterations</code>/<code>comprehensive_max_rounds</code>'u ve <code>reflect.default_max_rounds</code>'u hesaba katıp en büyüğünü alır — reflect turları için her zaman yeterli pay ayrılır.</li>
+      <li><b>Drafts-tükendi durağı (round tasarrufu) — iki katman, ikincisi GERÇEK mekanizma:</b> (1) <code>next_plan.resources</code> dolu ama içindeki HER <code>CollectionSearchPlan.query_drafts</code> boşsa da DUR — <code>reflection.done=False</code> olsa bile (<code>orchestrator.py:641-646</code>). Bu, savunma-derinliğidir: gerçek <code>Planner.reflect()</code> yolunda <code>Planner._parse_plan</code> boş-draft'lı resource'ları üst akışta zaten eler, yani bu dal production'da fiilen erişilemez (regresyon testi <code>test_reflect_stops_when_next_plan_has_no_query_drafts</code> next_plan'ı doğrudan Pydantic ile kurup gerçek parser'ı bypass eder — sentetik bir kurgu). (2) GERÇEK durma mekanizması: <code>_reflect_retrieve()</code> çağrısından SONRA <code>result.draft_texts</code> boş dönerse de DUR (<code>orchestrator.py:672-677</code>) — next_plan'ın ham taslakları dolu olsa bile <code>_dedupe_and_register</code> (<code>state.tried_searches</code> defteri) HER birini önceki bir turda aynı (koleksiyon, sorgu metni, filtre) ile ZATEN arandığı için elemiş olabilir, yani bu turda hiçbir arama fiilen çalışmamıştır. Canlı <code>kanun_kabul_oylama</code> izindeki round 3→4 tekrarı (reflect-LLM'in aynı sorgu metnini yeniden üretmesi, dedup'ın onu elemesi, round 4'ün AYNI sıkışık duruma tekrar düşüp ~21s'lik boş bir LLM turu harcaması) TAM OLARAK buydu — (1)'deki ham-drafts kontrolü bunu YAKALAYAMAZ çünkü dedup-ÖNCESİ next_plan'a bakar, dedup-SONRASI sonuca değil. <code>added==0</code>'dan FARKLI: dolu (boş olmayan) drafts'lı bir tur GERÇEKTEN arar ama 0 yeni chunk bulursa yine devam eder (bkz. <code>test_reflect_added_zero_but_not_done_continues</code>) — yalnız arama fiilen çalışmayınca (2) durur; prosedür karar verir, doygunluk değil. Regresyon: <code>test_reflect_stops_when_dedup_exhausts_all_drafts</code>.</li>
+    </ul>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="strateji-playbooku">
+    <h2><span class="num">04</span>Araştırma Stratejileri Playbook'u</h2>
+    <p class="section-dek">
+      <code>research_strategies.md</code> — planner'ın sorgu arketipine göre seçtiği stratejiler;
+      yeni bir strateji eklemek kod değişikliği gerektirmez, dosyaya bir <code>## ad</code> bölümü
+      eklemek yeterlidir (<code>src/config/pipeline_loader.py</code> → <code>StrategyPlaybook</code>
+      ayrıştırır). İlk 5 strateji <code>mode: static</code> (tek-tur query_type/answer_directive
+      seçimi); son 3'ü (<code>kanun_*</code>) <code>mode: adaptive</code> — Diyagram 03'teki reflect
+      self-loop'unu besleyen çok-hop bir <code>procedure</code> reçetesi taşır.
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Strateji</th><th>query_type</th><th>mode</th><th>max_rounds</th><th>anchor → target</th><th>section_type</th><th>özel bayraklar</th><th>tetikleyiciler</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>enumerate</td><td>comprehensive</td><td>static</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="stage-name">tüm, hepsi, listele, kaç tane, hangileri</td></tr>
+          <tr><td>summarize</td><td>summary</td><td>static</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="stage-name">özetle, özet, kısaca</td></tr>
+          <tr><td>comparative</td><td>comparison</td><td>static</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="stage-name">karşılaştır, farkı, kıyasla</td></tr>
+          <tr><td>analytical</td><td>reasoning</td><td>static</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="stage-name">neden, nasıl, analiz, değerlendir</td></tr>
+          <tr><td>factual</td><td>fact</td><td>static</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="stage-name">(tetikleyici yok — LLM serbest seçer)</td></tr>
+          <tr><td>kanun_kabul_oylama</td><td>reasoning</td><td><b>adaptive</b></td><td>4</td><td>esas_no → kabul_kaydi</td><td>oylama</td><td>exclude_seen_chunks, window_expand, 1 alias, 3 evidence_priority_patterns</td><td class="stage-name">kaç oyla, kabul edildi, oylama sonucu, oy çokluğu, ret oyu, çekimser, madde kabul</td></tr>
+          <tr><td>kanun_gorusmeleri</td><td>comprehensive</td><td><b>adaptive</b></td><td>4</td><td>esas_no+sıra_sayısı → gorus_kumesi</td><td>kanun_gorusmeleri</td><td>—</td><td class="stage-name">üzerinde görüşmeler, tüm görüşmeler, ne konuşuldu, madde hakkında, muhalefet, eleştiri, ne dedi</td></tr>
+          <tr><td>kanun_rapor_bolumu</td><td>summary</td><td><b>adaptive</b></td><td>3</td><td>esas_no+sıra_sayısı → rapor_bolumu</td><td>kanun_raporu</td><td>1 alias</td><td class="stage-name">genel gerekçe, madde gerekçesi, gerekçesi nedir, muhalefet şerhi, karşı oy yazısı, komisyon raporu, tali komisyon, esas komisyon, ek görüş, kabul edilen metin</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 20px; margin:20px 0;">
+      <p style="margin:0 0 8px; font-family:var(--font-mono); font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--signal);">Sıra sayısı nedir</p>
+      <p style="margin:0; font-size:14.5px; line-height:1.65; color:var(--ink-dim);">
+        TBMM Başkanlığınca bastırılıp milletvekillerine dağıtılan komisyon raporu numarasıdır;
+        her yasama <b style="color:var(--ink)">DÖNEMİ</b> başında (yasama YILI'nda değil)
+        1'den yeniden başlar — aynı numara yalnızca FARKLI dönemlerde tekrar edebilir. Kanun
+        teklifine ilişkin bir sıra sayısı sırasıyla şunları taşır: gerekçe + metin → (varsa)
+        <b style="color:var(--ink)">tali komisyon raporu</b> →
+        <b style="color:var(--ink)">esas komisyon raporu</b> → (varsa)
+        <b style="color:var(--ink)">rapora ek görüşler</b> →
+        <b style="color:var(--ink)">muhalefet şerhleri</b> →
+        <b style="color:var(--ink)">komisyonun kabul ettiği metin</b>. Meclis
+        araştırması/soruşturması komisyonlarına ilişkin sıra sayıları FARKLI yapıdadır
+        (kuruluş önergeleri + komisyon raporu + varsa ek görüş/muhalefet şerhi — gerekçe/metin/
+        kabul edilen metin YOKTUR); <code>kanun_rapor_bolumu</code> stratejisi yalnız KANUN
+        sıra sayıları içindir.
+      </p>
+    </div>
+
+    <p class="section-dek" style="margin-top:22px;"><b style="color:var(--ink)">Alan sözlüğü</b> (bkz. <code>StrategyPlaybook._finalize</code>):</p>
+    <ul class="callouts">
+      <li><b><code>mode</code>:</b> <code>static</code> (varsayılan) yalnız query_type/answer_directive seçer; <code>adaptive</code> Diyagram 03'ün reflect self-loop'unu tetikler (procedure zorunlu).</li>
+      <li><b><code>anchor</code> / <code>target</code>:</b> önce çözülecek kimlik (ör. <code>esas_no</code>) / aranan nihai kaydın biçimi (ör. <code>kabul_kaydi</code>) — yalnız prompt'a bağlam olarak geçer, kod tarafından zorlanmaz.</li>
+      <li><b><code>section_type</code>:</b> SECTION_TYPES enum'undan biri (<code>document_types.py</code>); planlamada <code>extracted_anchors</code>'a tohumlanır, reflect sıra sayısını çözünce <code>{sira_sayisi ∧ section_type}</code> kesin filtresini kurar. Geçersiz/typo değer sessizce None'a düşer (fail-open).</li>
+      <li><b><code>exclude_seen_chunks</code>:</b> yalnız <code>kanun_kabul_oylama</code>'da açık — reflect hop'unun chunk-id dışlamasını etkinleştirir (bkz. Diyagram 03, dr-plain).</li>
+      <li><b><code>window_expand</code>:</b> yalnız <code>kanun_kabul_oylama</code>'da açık; global <code>reflect.window_expand.enabled</code> AÇIK (2026-07-21'de true'ya çekildi) olduğundan reflect'in pencere-genişletmesi (dr-window) bu strateji için fiilen çalışıyor.</li>
+      <li><b><code>aliases</code>:</b> <code>;</code>-ayrılmış <code>halk_dili -&gt; arşiv_terimi</code> çiftleri; <code>kanun_kabul_oylama</code> ve <code>kanun_rapor_bolumu</code>'nda "genel gerekçe" → "sıra sayısı raporu" köprüsü tanımlı.</li>
+      <li><b><code>evidence_priority_patterns</code>:</b> <code>;</code>-ayrılmış, büyük/küçük harf duyarsız alt-dizgiler; eşleşen chunk'lar reflect'in kompakt kanıt penceresinin BAŞINA taşınır (rerank sırası prosedürün hedef kaydını gömebildiği için) — yalnız <code>kanun_kabul_oylama</code>'da tanımlı (bkz. Diyagram 03, dr-llm).</li>
+    </ul>
+
+    <p class="section-dek" style="margin-top:22px;"><b style="color:var(--ink)">Üç adaptive strateji — kısaltılmış hop reçetesi</b> (tam metin <code>research_strategies.md</code>'de):</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Strateji</th><th>Hop 1 — ÇIPA</th><th>Hop 2</th><th>Hop 3 / DURMA</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="stage-name">kanun_kabul_oylama</td>
+            <td>Kanun adı + rapor bağlamıyla semantik ara → chunk metninden esas no'yu ({tür}/{no}) oku, ham id'yi sorgu yapma.</td>
+            <td>Esas no + kanun adının aynı chunk'ta geçtiğini DOĞRULA; sıra sayısı numaralaması yasama DÖNEMİ başına sıfırlanır (yılda değil) — çakışma yalnız FARKLI dönemde olur, kanun adı benzerliğiyle seç.</td>
+            <td>Önce açık-oylama duyurusunu ara (Kullanılan oy/Kabul/Ret/Çekimser SAYILARI); yoksa işaretle kaydını ara ("sayısal döküm yok" de). DURMA: sayılar bulundu VEYA işaretle kaydı doğrulandı.</td>
+          </tr>
+          <tr>
+            <td class="stage-name">kanun_gorusmeleri</td>
+            <td>KAPSAM'ı seç (TÜM-KANUN/MADDE); kanun adından esas no + sıra sayısını çöz (numaralama dönem başına sıfırlanır — çakışmada kanun adıyla doğrula).</td>
+            <td>Görüşme aralığını LOKALİZE et — sıra sayısı numarasıyla anılır, sınır işaretleri: "…görüşmelerine başlıyoruz" / "X. maddeyi okutuyorum".</td>
+            <td>Aralıktaki TÜM görüşleri TOPLA, duruşa göre kümele. DURMA: aralık tükenene kadar farklı grup/duruş açılarıyla genişlet.</td>
+          </tr>
+          <tr>
+            <td class="stage-name">kanun_rapor_bolumu</td>
+            <td>Esas no + sıra sayısını çöz; sorudan BÖLÜM'ü belirle (genel_gerekce/madde_gerekce/esas_komisyon_raporu/tali_komisyon_raporu/ek_gorus/muhalefet_serhi/kabul_edilen_metin).</td>
+            <td>O kanunun sıra sayısı RAPORUNU bul (başlıklar: "GENEL GEREKÇE", "MADDE &lt;n&gt;-", "MUHALEFET ŞERHİ"); tali komisyon raporu VARSA esas komisyon raporundan ÖNCE kendi başlığıyla yer alır.</td>
+            <td>İstenen başlığın altındaki metni ÇIKAR (kabul edilen metin isteniyorsa raporun sonundaki nihai madde metnini). DURMA: istenen bölüm sorulan kanun için bulununca. Not: "madde gerekçesi" (yazılı) ≠ "madde hakkındaki görüşler" (sözlü, → kanun_gorusmeleri).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
   <section id="ogrenilen-terimler">
-    <h2><span class="num">03</span>Öğrenilen terimler — insan onaylı geri besleme</h2>
+    <h2><span class="num">05</span>Öğrenilen terimler — insan onaylı geri besleme</h2>
     <p class="section-dek">
       <code>broaden()</code> bir terim hipotezi üretip o tur gerçekten <code>answer</code>'a
       çıkarsa, tahmin <code>term_candidates</code> tablosuna kuyruklanır — hiçbir zaman
       otomatik uygulanmaz. Bu, istekler arasında süren tek asenkron döngüdür.
+      <b>Genel döngüden (Diyagram 02) AKTİF besleniyor</b> — adaptive <code>reflect</code>
+      self-loop'undan (Diyagram 03) hâlâ beslenmiyor, aşağıdaki callout'a bak.
     </p>
     <p class="click-hint">↳ herhangi bir kutuya tıkla</p>
 
@@ -816,16 +1148,22 @@
       <li><b>Global, oturuma özel değil:</b> bir kullanıcının onayladığı terim genişletmesi herkesin aramasına yansır.</li>
       <li><b>Fire-and-forget:</b> kayıt başarısız olsa da yanıt akışı bozulmaz (<code>_record_term_hypothesis</code> hataları yutar).</li>
       <li><b>Reddedilenler tekrar önerilmez:</b> bir sonraki <code>broaden()</code> çağrısına negatif kısıt olarak geçirilir.</li>
+      <li><b>Yalnız genel döngüden (Diyagram 02) beslenir:</b> kayıt tek nokta <code>orchestrator._node_judge_post_expand</code>'taki <code>_record_term_hypothesis</code> çağrısıdır — bu node artık normal çalışıyor (<code>max_expand_iterations=1</code>/<code>comprehensive_max_rounds=4</code>, 2026-07-21'de POC-nötrlemesi geri alındı), yani bu yol AKTİF. <b>Ama adaptive <code>reflect</code> self-loop'u (Diyagram 03) hâlâ bu kaydı HİÇBİR dalında tetiklemiyor</b> (başarı/fail-open A/fail-open B — üçü de <code>_record_term_hypothesis</code> çağırmıyor) — yani <code>kanun_kabul_oylama</code>/<code>kanun_gorusmeleri</code>/<code>kanun_rapor_bolumu</code> sorgularından öğrenilen terim önerisi hâlâ gelmiyor, yalnızca static stratejili (enumerate/summarize/…) sorgulardan gelir.</li>
     </ul>
   </section>
 
   <!-- ================================================================ -->
   <section id="asamalar">
-    <h2><span class="num">04</span>Aşamalar (on/off)</h2>
+    <h2><span class="num">06</span>Aşamalar (on/off)</h2>
     <p class="section-dek">
       Stage-2 aşamaları başlangıçta kapalıdır ve <code>pipeline.yaml</code> içinde
       stage-başına <code>enabled</code> bayrağıyla açılır. Kapalıyken orchestrator
-      makul bir fallback uygular.
+      makul bir fallback uygular. Ayrı bir "POC nötrlemesi" mekanizması da var — bazı
+      aşamalar sayısal bir knob'un 0'a çekilmesiyle (<code>judge.*</code>) ya da
+      modül-seviyesi bir Python bayrağıyla (<code>_ASSEMBLER_ENABLED</code>) geçici
+      devre dışı bırakılabilir; kod silinmez, tek bir değer değişikliğiyle geri açılır.
+      <b>2026-07-21 itibarıyla <code>judge.*</code> knob'ları geri alındı</b> (yalnız
+      <code>_ASSEMBLER_ENABLED</code> hâlâ kapalı — aşağıdaki tabloya bak).
     </p>
     <div class="table-scroll">
       <table>
@@ -840,9 +1178,10 @@
           <tr><td>2b</td><td class="stage-name">Budget</td><td><code>orchestrator._flat_plans_for</code></td><td><span class="pill pill-on">AÇIK</span> (koşulsuz)</td><td>— ayrı bir "AllocationPlanner" yok; <code>allocator.py</code> silindi</td></tr>
           <tr><td>3</td><td class="stage-name">Retrieve</td><td><code>orchestrator._run_retrieval</code> + <code>tools.SearchTool</code></td><td><span class="pill pill-on">AÇIK</span></td><td>—</td></tr>
           <tr><td>3.5</td><td class="stage-name">Facet + rabbit holes</td><td><code>clarifier.py</code> <code>FacetMiner</code>/<code>AmbiguityGate</code>/<code>QueryRefiner.rabbit_holes</code></td><td><span class="pill pill-on">AÇIK</span> (<code>clarification.enabled</code>)</td><td>öneri üretilmez; retrieval/yanıt etkilenmez</td></tr>
-          <tr><td>4</td><td class="stage-name">Assembler</td><td><code>assembler.py</code> <code>BalancedContextAssembler</code></td><td><span class="pill pill-on">AÇIK</span></td><td>—</td></tr>
-          <tr><td>5</td><td class="stage-name">EvidenceJudge</td><td><code>judge.py</code> <code>EvidenceJudge</code></td><td><span class="pill pill-on">AÇIK</span></td><td>—</td></tr>
-          <tr><td>5.1</td><td class="stage-name">Toplama döngüsü</td><td><code>orchestrator._requery_expand</code> + <code>Planner.broaden</code></td><td><span class="pill pill-on">AÇIK</span></td><td>— <code>expander.py</code>/reserve-stratejisi silindi; tek strateji <code>requery</code></td></tr>
+          <tr><td>4</td><td class="stage-name">Assembler</td><td><code>assembler.py</code> <code>BalancedContextAssembler</code></td><td><span class="pill" style="background:rgba(168,106,8,0.12); color:var(--gate); border:1px solid rgba(168,106,8,0.35);">GEÇİCİ KAPALI</span></td><td>⚠ <code>_ASSEMBLER_ENABLED=False</code> (orchestrator.py modül başı) → <code>_assemble_passthrough</code> kullanılıyor: dedup/max_total/max_per_document UYGULANMIYOR</td></tr>
+          <tr><td>5</td><td class="stage-name">EvidenceJudge</td><td><code>judge.py</code> <code>EvidenceJudge</code></td><td><span class="pill pill-on">AÇIK</span></td><td><code>judge.llm.enabled=true</code> (LLM eskalasyonu açık) + <code>min_rerank_score=0.02</code> (relevance floor açık) — kapatılırsa (POC nötr) her ikisi de devre dışı kalır, ≥2 chunk ∧ ≥1 koleksiyon varsa hep heuristik "answer"</td></tr>
+          <tr><td>5.1</td><td class="stage-name">Toplama döngüsü (genel)</td><td><code>orchestrator._requery_expand</code>/<code>_enumerate_expand</code> + <code>Planner.broaden</code></td><td><span class="pill pill-on">AÇIK</span></td><td><code>judge.max_expand_iterations=1</code> + <code>judge.comprehensive_max_rounds=4</code> — kapatılırsa (POC nötr, ikisi 0'a çekilir) round&lt;max_rounds hiç sağlanmaz, 0 tur döner; <code>expander.py</code>/reserve-stratejisi zaten silindi</td></tr>
+          <tr><td>5.2</td><td class="stage-name">Reflect (adaptive çok-hop)</td><td><code>orchestrator._node_reflect</code> + <code>Planner.reflect</code></td><td><span class="pill pill-on">AÇIK</span> (yalnız <code>mode: adaptive</code> stratejilerde etkili — bkz. <a href="#strateji-playbooku">Strateji Playbook'u</a>)</td><td><code>reflect.enabled=false</code> → adaptive strateji seçilse bile fail-open A tetiklenir, tek <code>_requery_expand</code> turuna düşer (bkz. Diyagram 03)</td></tr>
           <tr><td>6</td><td class="stage-name">Answer / Sanitizer / Citations</td><td><code>tools.py</code> / <code>sanitizer.py</code> / <code>citations.py</code></td><td><span class="pill pill-on">AÇIK</span></td><td>—</td></tr>
         </tbody>
       </table>
@@ -851,41 +1190,55 @@
 
   <!-- ================================================================ -->
   <section id="moduller">
-    <h2><span class="num">05</span>Modüller</h2>
+    <h2><span class="num">07</span>Modüller</h2>
     <div class="table-scroll">
       <table>
         <thead>
           <tr><th>Dosya</th><th>Sınıf</th><th>Sorumluluk</th></tr>
         </thead>
         <tbody>
-          <tr><td>orchestrator.py</td><td>OrchestratorAgent</td><td>State machine; tüm aşamaları sıralar, fallback'leri uygular, toplama döngüsünü ve terim-öğrenme kaydını yönetir.</td></tr>
-          <tr><td>planner.py</td><td>Planner</td><td>Niyet + strateji + kısıt → SearchPlan; <code>plan()</code> (breadth tavanı, strateji seçimi) ve <code>broaden()</code> (re-query, terim hipotezi).</td></tr>
+          <tr><td>orchestrator.py</td><td>OrchestratorAgent</td><td>Her aşamanın gövdesini <code>_node_*</code> metodlarında tutar (node'lar <code>graph.py</code>'ye delege eder); fallback'leri, toplama/reflect döngülerini ve terim-öğrenme kaydını uygular.</td></tr>
+          <tr><td>graph.py</td><td>GraphState, RunContext, build_orchestrator_graph, build_routers</td><td><code>LangGraph StateGraph</code> derlemesi — node'lar <code>OrchestratorAgent._node_*</code>'a delege eder; koşullu kenarlar (<code>route_after_judge/_expansion/_judge_post_expand/_reflect</code>) judge/genişletme/reflect döngülerini yönetir; <code>recursion_limit_for()</code> en büyük adaptive <code>max_rounds</code>'a göre tavanı hesaplar.</td></tr>
+          <tr><td>planner.py</td><td>Planner</td><td>Niyet + strateji + kısıt → SearchPlan; <code>plan()</code> (breadth tavanı, strateji seçimi), <code>broaden()</code> (re-query, terim hipotezi) ve <code>reflect()</code> (adaptive çok-hop prosedür yürütücü — REFLECT_PROMPT, ReflectionOutput).</td></tr>
           <tr><td>classifier.py</td><td>ScopeClassifier</td><td>IntentAnalyzer: scope (in_scope / off_domain / conversational) + tool/db seçimi; fail-open.</td></tr>
           <tr><td>clarifier.py</td><td>FacetMiner, AmbiguityGate, QueryRefiner</td><td>Ana retrieval sonuçlarından facet çıkarma, belirsizlik kapısı, engellemeyen <code>rabbit_holes</code> önerisi. Eski engelleyici soru akışı (<code>build_questions</code>/<code>resolve</code>/<code>auto_constraints</code>) artık çağrılmıyor — geriye dönük/test amaçlı duruyor.</td></tr>
           <tr><td>policy.py</td><td>PolicyEnforcer</td><td>Oturum ∩ planner koleksiyon gating (stage-2).</td></tr>
           <tr><td>assembler.py</td><td>BalancedContextAssembler</td><td>Çapraz-koleksiyon doc-dedup + query_type başına max_total/max_per_document.</td></tr>
           <tr><td>judge.py</td><td>EvidenceJudge</td><td>Hibrit heuristik+LLM kanıt yeterliliği; relevance floor; zayıf-en-iyi-eşleşme durumunda LLM'e eskalasyon; answer/expand/clarify/refuse.</td></tr>
           <tr><td>sanitizer.py</td><td>SanitizerAgent</td><td>Yanıt doğrulama — advisory, yanıtı asla değiştirmez.</td></tr>
-          <tr><td>citations.py</td><td>CitationBuilder</td><td>Atıf listesi.</td></tr>
+          <tr><td>citations.py</td><td>CitationBuilder</td><td>Atıf listesi; her kaynağa <code>cited: bool</code> ekler — (tarih, yazar) çifti <code>final_answer</code> metninde geçiyor mu (fiilen atıf yapılmış mı, yalnızca bağlama girmiş mi).</td></tr>
           <tr><td>suggester.py</td><td>Suggester</td><td>Off-domain alternatif sorgu önerileri.</td></tr>
           <tr><td>bad_words_filter.py</td><td>BadWordsFilter</td><td>LLM'siz yasaklı kelime kapısı.</td></tr>
-          <tr><td>tools.py</td><td>SearchTool, ContextBuilderTool, AnswerTool</td><td>Retrieval+rerank+eşanlamlı genişletme / bağlam birleştirme (<code>ContextBuilderTool</code> orchestrator tarafından kullanılmıyor — kendi testinde) / üretim sarmalayıcı (strict vs synthesis + answer_directive).</td></tr>
-          <tr><td>schemas.py</td><td>Pydantic sözleşmeleri</td><td>SearchPlan, OrchestratorState, FacetSet, TermHypothesis, EvidenceDecision, …</td></tr>
+          <tr><td>tools.py</td><td>SearchTool, ContextBuilderTool, AnswerTool</td><td>Retrieval+rerank+eşanlamlı genişletme + <code>fetch_neighbors()</code> (ANN'siz id-get, reflect'in pencere-genişletmesi için) / bağlam birleştirme (<code>ContextBuilderTool</code> orchestrator tarafından kullanılmıyor — kendi testinde) / üretim sarmalayıcı (strict vs synthesis + answer_directive).</td></tr>
+          <tr><td>schemas.py</td><td>Pydantic sözleşmeleri</td><td>SearchPlan, OrchestratorState (+ <code>extracted_anchors</code>/<code>hop_cursor</code>/<code>window_anchor_keys</code>), FacetSet, TermHypothesis, EvidenceDecision, <code>ReflectionOutput</code> (adaptive reflect turu çıktısı), …</td></tr>
           <tr><td>tracer.py</td><td>PipelineTracer</td><td>Aşama latency/trace olayları (UI callback); <code>print_trace()</code>'daki probe/clarification/allocation satırları artık ateşlenmeyen eski fazlara ait, zararsız kalıntı.</td></tr>
         </tbody>
       </table>
     </div>
     <p class="section-dek" style="margin-top:18px;">
-      <b style="color:var(--ink)">Kaldırıldı:</b> <code>allocator.py</code> (AllocationPlanner, stage-2b) ve
-      <code>expander.py</code> (ExpansionPlanner / reserve-promosyon, stage-5.1) — ilgili
-      test dosyaları (<code>test_allocator.py</code>, <code>test_expander.py</code>) da kaldırıldı.
+      <b style="color:var(--ink)">Kod'dan kaldırıldı</b> (dosyalar silindi): <code>allocator.py</code>
+      (AllocationPlanner, stage-2b) ve <code>expander.py</code> (ExpansionPlanner / reserve-promosyon,
+      stage-5.1) — ilgili test dosyaları (<code>test_allocator.py</code>, <code>test_expander.py</code>)
+      da kaldırıldı.
+    </p>
+    <p class="section-dek" style="margin-top:10px;">
+      <b style="color:var(--gate)">⚠ Kod duruyor, config'te geçici olarak kapatılabilir</b>
+      (bkz. <a href="#asamalar">Aşamalar tablosu</a>): <code>BalancedContextAssembler</code>
+      (module-level <code>_ASSEMBLER_ENABLED=False</code> → <b>şu an fiilen KAPALI</b>, passthrough
+      çalışıyor), genel toplama döngüsü (<code>judge.max_expand_iterations</code> /
+      <code>comprehensive_max_rounds</code>), Judge'ın LLM eskalasyonu (<code>judge.llm.enabled</code>)
+      ve relevance floor'u (<code>min_rerank_score</code>) — bu üçü <b>2026-07-21 itibarıyla tekrar
+      AÇIK</b> (kısa bir POC-nötrleme penceresinden sonra geri alındı); hepsi tek bir
+      <code>pipeline.yaml</code> değeriyle kapatılabilir/açılabilir. Yalnız assembler hâlâ kapalı.
     </p>
   </section>
 
   <footer>
-    Kaynak: <code>src/agent/orchestrator.py</code>, <code>planner.py</code>, <code>clarifier.py</code>,
-    <code>judge.py</code>, <code>schemas.py</code> · yapılandırma: <code>pipeline.yaml</code>,
-    <code>src/config/pipeline_loader.py</code> · strateji playbook'u: <code>research_strategies.md</code>.
+    Kaynak: <code>src/agent/orchestrator.py</code>, <code>graph.py</code>, <code>planner.py</code>,
+    <code>clarifier.py</code>, <code>judge.py</code>, <code>schemas.py</code> · yapılandırma:
+    <code>pipeline.yaml</code>, <code>src/config/pipeline_loader.py</code> (<code>StrategyPlaybook</code>,
+    <code>ReflectConfig</code>) · strateji playbook'u: <code>research_strategies.md</code> · reflect
+    test kapsamı: <code>tests/test_agent_reflect.py</code>.
     Ayrıntılı metin açıklaması için <a href="./README.md">README.md</a>.
   </footer>
 
@@ -983,24 +1336,24 @@
       `Üretilen öneriler AgentOutput.rabbit_holes alanına yazılır; UI'da tıklanabilir çipler olarak gösterilir.`,
       `Sorgunun kendisi ASLA daraltılmaz — kullanıcı isterse çipe tıklar, istemezse orijinal geniş yanıtı okumaya devam eder.`
     ]},
-    "d1-assembler": { kind:"süreç", title:`BalancedContextAssembler`, src:`assembler.py — BalancedContextAssembler.run()`, steps:[
-      `Koleksiyonlar öncelik sırasına göre tek tek gezilir; her birinden chunk'lar sırayla alınır.`,
-      `Aynı belgeden en fazla kaç chunk alınacağı (max_per_document, comprehensive için 6, diğerleri için 3) ve toplamda en fazla kaç chunk'ın bağlama gireceği (max_total, comprehensive için 50, diğerleri için 15) sınırlanır — sayaç koleksiyonlar arası ORTAKTIR, yani aynı belge birden fazla koleksiyon/taslakta çıksa da toplamda sınırlı kalır.`,
-      `Sınıra ulaşan koleksiyon/belge atlanır, bir sonrakine geçilir; toplam sınıra ulaşıldığında tüm süreç durur.`,
-      `Neden var: ham retrieval havuzunu doğrudan LLM'e vermek num_ctx'i zorlar ve tek bir baskın/uzun belge context'in çoğunu kaplayıp diğer kaynakları dışarıda bırakabilir — bu adım hem bütçeyi hem kaynak çeşitliliğini garanti eder.`,
-      `Olmasaydı: EvidenceJudge ve toplama döngüsünün "ceiling" kontrolü de bu adımın çıktısı (assembled_chunks) üzerinden çalıştığı için, Judge'ın "yeterli" dediği kanıt kümesiyle LLM'in gerçekte gördüğü context ayrışırdı.`
+    "d1-assembler": { kind:"süreç · ⚠ GEÇİCİ DEVRE DIŞI", title:`BalancedContextAssembler`, src:`orchestrator.py — _run_assembler()/_assemble_passthrough() (gerçek: assembler.py)`, steps:[
+      `Modül başı bayrak _ASSEMBLER_ENABLED=False → _run_assembler() gerçek BalancedContextAssembler.run() yerine _assemble_passthrough()'a yönleniyor.`,
+      `_assemble_passthrough(): her koleksiyonun retrieval sonucu (zaten kendi fetch_k/retrieval_budget'ıyla sınırlı) öncelik sırasıyla HAM biçimde context'e akar — cross-koleksiyon document_id dedup'ı YOK, max_per_document/max_total limiti UYGULANMIYOR.`,
+      `Neden geçici: tek koleksiyonlu RAG testi için devre dışı bırakıldı (bkz. modül üstü yorum). Kod silinmedi — assembler.py'daki gerçek BalancedContextAssembler hâlâ orada, yalnızca çağrılmıyor.`,
+      `Gerçek (şu an kapalı) davranış — geri açılınca: koleksiyonları öncelik sırasına göre gezer, document_id'ye göre çapraz-koleksiyon dedup uygular; max_total/max_per_document query_type'a göre değişir (comprehensive: 50/6, diğerleri: 15/3).`,
+      `Geri açmak için: _ASSEMBLER_ENABLED=True yap (ya da bu blok + _run_assembler/_assemble_passthrough'u silip iki çağrı noktasını self._assembler.run(state)'e döndür).`
     ]},
     "d1-judge": { kind:"süreç", title:`EvidenceJudge`, src:`judge.py — EvidenceJudge.run()`, steps:[
-      `Önce "relevance floor": rerank skoru çok düşük chunk'lar tamamen elenir; hepsi elenirse bu doğrudan "muhtemel terim uyuşmazlığı" (expand) sinyali sayılır.`,
-      `Kalan chunk sayısı ve kaç farklı koleksiyondan geldiği yeterliyse VE en iyi eşleşme çok zayıf değilse → doğrudan "answer" (heuristik, hızlı, LLM'siz).`,
-      `En iyi eşleşme yeterli sayıya rağmen zayıfsa, ya da chunk sayısı sınırdaysa → küçük bir LLM'e devredilir; o, context'i okuyup answer/expand/clarify/refuse kararı verir.`,
-      `Hiçbiri tutmuyorsa → heuristik olarak "expand" kararı verilir.`
+      `Önce en zayıf sonuçlar elenir: rerank puanı 0.02'nin altında kalan parçalar (chunk) devre dışı bırakılır. Hepsi elenirse (elde hiçbir şey kalmazsa) sistem "yetersiz, daha fazla arama yap" kararı verir.`,
+      `Kalan parçalar sayıca yeterliyse ve en iyi eşleşme yeterince güçlüyse (0.3 eşiğinin üstündeyse) → doğrudan "yanıtla" kararı verilir; hiçbir yapay zekâya sorulmaz, basit bir kurala göre karar verilir. En iyi eşleşme zayıfsa (0.3'ün altındaysa) ya da parça sayısı sınırdaysa, küçük bir yapay zekâ modeline devredilir — bu model metinleri gerçekten okuyup "yanıtla / daha fazla ara / açıklama iste / yanıtlama" kararlarından birini verir.`,
+      `Bu iki mekanizma (zayıf sonuç eleme + yapay zekâya danışma) şu anda ikisi de AÇIK. 19-20 Temmuz'da test amacıyla kısa bir süre kapatılmışlardı, 21 Temmuz'da tekrar açıldı.`,
+      `Özetle: en az 2 parça bulunduysa VE en az 1 koleksiyondan sonuç geldiyse VE eşleşme güçlüyse → direkt "yanıtla" (sabit %85 güven puanıyla, kural-tabanlı). Eşleşme zayıfsa → yapay zekâ okuyup karar verir. Hiç yeterli sonuç yoksa (0-1 parça) → "açıklama iste" ya da "daha fazla ara".`
     ]},
-    "d1-gather": { kind:"döngü", title:`Toplama Döngüsü`, src:`orchestrator.py — bkz. Diyagram 2`, steps:[
-      `Judge "expand" derse (ya da sorgu comprehensive ise koşulsuz), sınırlı sayıda ek arama turu başlar.`,
-      `comprehensive sorgular için facet-yılı bazlı çok-pas + derinlik-tırmanışlı toplama; diğerleri için tek bir "genişlet ve yeniden ara" turu.`,
-      `Turun sonunda bağlam yeniden birleştirilir ve Judge tekrar çalıştırılır; yeni bir yeterlilik kararı üretilir.`,
-      `Döngü, tur tavanına, bağlam tavanına ya da hiç yeni sonuç gelmemesine (doygunluk) kadar sürer.`
+    "d1-gather": { kind:"döngü · dallanma", title:`Toplama / Reflect Döngüsü`, src:`graph.py — route_after_judge`, steps:[
+      `Judge sonrası graf iki ayrı döngüden birine dallanır: planner bir mode:adaptive strateji seçtiyse (research_strategies.md) VE reflect.enabled=true ise → reflect self-loop (bkz. Diyagram 03) — judge'ın answer/expand kararından BAĞIMSIZ girilir, prosedür kendi DURMA koşuluna kadar sürer.`,
+      `Aksi halde genel döngü (bkz. Diyagram 02): judge "expand" derse (ya da sorgu comprehensive ise koşulsuz) ek arama turu başlar — comprehensive için facet-yılı bazlı çok-pas + derinlik-tırmanışlı toplama (judge.comprehensive_max_rounds=4 tura kadar), diğerleri için tek "genişlet ve yeniden ara" (judge.max_expand_iterations=1).`,
+      `Reflect self-loop bu genel döngüden TAMAMEN bağımsız — kendi max_rounds'unu (strateji özel ya da reflect.default_max_rounds=4) ve ayrı bir kill-switch'i (reflect.enabled) kullanır.`,
+      `Her iki yolda da tur sonunda bağlam yeniden birleştirilir (assembler geçici pasif — bkz. o düğüm); genel döngü Judge'ı tekrar çalıştırır, reflect ise kendi DURMA/anchor mantığını kullanır (judge'ı tekrar çağırmaz).`
     ]},
     "d1-clarify-exit": { kind:"çıkış", title:`Çıkış — clarify`, steps:[
       `Judge "clarify" derse (genelde hiç sonuç bulunamadığında), kullanıcıya "sorunuzu netleştirir misiniz" mesajı döner.`,
@@ -1030,14 +1383,16 @@
     "d2-start": { kind:"giriş", title:`EvidenceJudge kararı`, steps:[
       `Bu diyagram, Diyagram 1'deki "Toplama Döngüsü" kutusunun içini açar — EvidenceJudge'ın "expand" kararı VERDİĞİ (ya da sorgunun comprehensive OLDUĞU) andan başlar.`
     ]},
-    "d2-comprehensive-gate": { kind:"kapı", title:`comprehensive mi?`, src:`orchestrator.py — run(), Aşama 5.1 başlangıcı`, steps:[
+    "d2-comprehensive-gate": { kind:"kapı", title:`comprehensive mi?`, src:`graph.py — build_routers()._max_rounds / orchestrator.py Aşama 5.1`, steps:[
       `comprehensive bayrağı (Planner'ın belirlediği query_type) bu turun bütçesini belirler.`,
-      `Evet ise: tur tavanı 4, bağlam tavanı 50 chunk, başlangıç derinliği (fetch_k) 40.`,
-      `Hayır ise: tur tavanı 1, bağlam tavanı sorgu tipine göre değişir (çoğunlukla 15).`
+      `Evet ise: bağlam tavanı 50 chunk, başlangıç derinliği (fetch_k) 40, tur tavanı (comprehensive_max_rounds) 4.`,
+      `Hayır ise: bağlam tavanı sorgu tipine göre değişir (çoğunlukla 15), tur tavanı (max_expand_iterations) 1.`,
+      `Bu değerler pipeline.yaml'da tek bir sayıyla 0'a çekilip döngü tamamen nötrlenebilir (POC modu) — şu an ikisi de aktif değer taşıyor.`
     ]},
     "d2-round-gate": { kind:"kapı", title:`round < max_rounds?`, steps:[
       `Şu ana kadar kaç tur döndüğü (rounds), o sorgu tipi için izin verilen tur sayısıyla (max_rounds) karşılaştırılır.`,
-      `Tavan dolduysa döngü hemen durur — mevcut kararla Aşama 6'ya geçilir.`
+      `Tavan dolduysa döngü hemen durur — mevcut kararla Aşama 6'ya geçilir.`,
+      `max_rounds bu kapıyı config'ten tek bir değerle (0) tamamen kapatabilir (POC-nötr modu) — şu anki pipeline.yaml'da comprehensive=4, diğerleri=1 olduğundan döngü normal çalışıyor.`
     ]},
     "d2-round-exit": { kind:"çıkış", title:`Dur — tur tavanı`, steps:[
       `Tur sayısı tükendi; döngü biter, ne kadar bağlam toplandıysa onunla yanıtlamaya geçilir.`
@@ -1108,6 +1463,99 @@
     "d2-depth-escalate": { kind:"döngü", title:`depth = min(depth × 2, 120)`, src:`orchestrator.py — depth = min(depth * 2, fetch_k_max)`, steps:[
       `Arama derinliği ikiye katlanır (40→80→120), ama tavanı (120) hiç geçmez.`,
       `AYNI tur sayacıyla (round tekrar artırılmaz) en baştaki tur-tavanı kontrolüne dönülüp bu kez daha derin bir aramayla yeniden denenir.`
+    ]},
+
+    "dr-entry": { kind:"giriş", title:`Judge → reflect`, src:`graph.py — route_after_judge / build_routers()._is_adaptive`, steps:[
+      `Judge her zaman önce çalışır (Aşama 5) ama kararı burada YOK SAYILIR — tek istisna clarify/refuse (onlar önce gelir, reflect'e hiç girilmez).`,
+      `_is_adaptive(gs): planner_output.strategy dolu VE research_strategies.md'de o stratejinin mode alanı "adaptive" VE bir procedure metni tanımlıysa true döner; ayrıca reflect.enabled=false ise kill-switch tüm adaptive yolu bastırır (_adaptive_strategy None döner).`,
+      `Koşul sağlanırsa ve rounds &lt; max_rounds ise "reflect" node'una girilir — bu diyagramın geri kalanı o node'un içi.`
+    ]},
+    "dr-notadaptive-gate": { kind:"kapı · savunma", title:`Adaptive strateji + procedure var mı?`, src:`orchestrator.py — _node_reflect() ilk satırlar`, steps:[
+      `_node_reflect kendi başına da "not strategy or strategy.mode != 'adaptive' or not strategy.procedure" kontrolü yapar — router zaten aynı şeyi doğrulamış olsa da.`,
+      `Bu, kodun "Çok-katmanlı FAIL-OPEN" olarak adlandırdığı ilk katmandır (fail-open A); pratikte router'dan hep "evet" ile girilir, ama node kendi başına da güvenli kalır.`,
+      `"Hayır" (teorik) durumda: tek bir _requery_expand() turu çalıştırılır, sonuç reassemble edilir, reflect_done=True ile derhal çıkılır — reflect hiç LLM çağrısı yapmadan biter.`
+    ]},
+    "dr-exit-notadaptive": { kind:"çıkış", title:`Dur — fail-open A`, steps:[
+      `_requery_expand()'ın döndürdüğü sonuçla reassemble edilip reflect_done=True olarak işaretlenir; graf answering/refuse'a devam eder.`
+    ]},
+    "dr-ceiling-gate": { kind:"kapı", title:`Hacim tavanı doldu mu?`, src:`orchestrator.py — reflect.max_total_chunks kontrolü`, steps:[
+      `state.assembled_chunks sayısı reflect.max_total_chunks (varsayılan 50) ile karşılaştırılır — bu, generic döngünün query_type'a göre değişen tavanı (_ceiling_for) DEĞİL, reflect'e özel SABİT bir hacim güvenlik sınırı.`,
+      `Neden ayrı bir sabit gerekiyor: reasoning/summary gibi query_type'larda tek-atım ilk retrieval zaten max_total_primary'yi (15) doldurabilir; generic tavan kullanılsaydı reflect round 1'de "ceiling" ile durur ve HİÇ hop atmazdı — reflect'in gerçek durma bağı max_rounds + done'dur, bu yalnız bağlam taşmasını önleyen üst sınır.`,
+      `Doldu ise: LLM'e hiç gidilmeden reflect_done=True + loop_stop=True ile çıkılır.`
+    ]},
+    "dr-exit-ceiling": { kind:"çıkış", title:`Dur — hacim tavanı`, steps:[
+      `Bu turda Planner.reflect() LLM'i hiç çağrılmadı — mevcut assembled_chunks ile doğrudan cevaplama aşamasına geçilir.`
+    ]},
+    "dr-llm": { kind:"süreç", title:`Planner.reflect()`, src:`planner.py — Planner.reflect() / REFLECT_PROMPT`, steps:[
+      `Strateji prosedürünü (research_strategies.md'nin procedure alanı), answer_directive'i, anchor/target ipuçlarını, alias köprülerini, o ana dek çözülen extracted_anchors'ı, hop_cursor'ı, _compact_evidence() ile üretilen kompakt kanıt özetini ve daha önce denenmiş sorgu metinlerini (tried_queries) tek bir sistem promptuna gömer.`,
+      `_compact_evidence(): assembled_chunks'ın ilk reflect.evidence_max_chunks (10) tanesini, her biri en fazla evidence_char_cap_per_chunk (600) karaktere kırpılmış olarak, toplam evidence_total_char_cap (6000) karakteri aşmadan birleştirir — tam chunk havuzu context'e sığmaz.`,
+      `evidence_priority_patterns (strateji alanı, ör. kanun_kabul_oylama: "oylama sonucunu duyuruyorum; kullanılan oy; kabul edenler"): bu alt-dizgilerden birini içeren chunk'lar pencerenin BAŞINA taşınır (grup-içi sıra korunur). Neden: rerank tek başına prosedürün hedef kaydını (ör. oylama duyurusu) tartışma/rapor chunk'larının altına gömebilir — top-N pencere onu hiç göstermeyince reflect LLM'i DONE diyemez, döngü yalnızca drafts_exhausted_by_dedup fallback'ıyla ölür.`,
+      `LLM'den JSON olarak done/done_reason/hop_cursor/extracted_anchors/resources (bir sonraki hop'un SearchPlan'ı)/reasoning ister; broaden()'dan daha yalın — FilterExtractor pası ve variant tavanı YOK (tek odaklı hop).`,
+      `Planner block'unu (fast-01/qwen3.5:9b) paylaşır — reflect için ayrı bir deployment yok.`
+    ]},
+    "dr-none-gate": { kind:"kapı · savunma", title:`reflection is None?`, src:`planner.py — _call_reflect_llm()`, steps:[
+      `_call_reflect_llm herhangi bir ağ/parse/şema hatasında None döner (try/except ile sarmalanmış).`,
+      `None ise: fail-open B tetiklenir — _requery_expand() ile tek bir klasik broaden turu çalıştırılır, reassemble edilir, reflect_done=True ile çıkılır.`,
+      `None değilse: reflection.extracted_anchors ve hop_cursor state'e işlenir (bkz. Anchor Birleştir).`
+    ]},
+    "dr-failopen-b": { kind:"süreç · fail-open", title:`_requery_expand() (fallback)`, src:`orchestrator.py — aynı fonksiyon Diyagram 02'de kullanılan`, steps:[
+      `Reflect LLM'i başarısız olduğunda, adaptive prosedürün yerine klasik Planner.broaden() + tek re-query turu geçici olarak devreye girer — sistemin tamamen sessiz kalması yerine en azından bir genişletme denemesi yapılır.`,
+      `Bu çağrı da _record_term_hypothesis()'i TETİKLEMEZ (bu node içinde çağrılmıyor) — bkz. Diyagram 05'teki dormancy notu.`
+    ]},
+    "dr-exit-failopen-b": { kind:"çıkış", title:`Dur — reflect_done=True`, steps:[
+      `Fail-open B sonrası graf answering/refuse'a devam eder; hop_cursor/extracted_anchors bir önceki başarılı turdaki hâliyle kalır.`
+    ]},
+    "dr-merge": { kind:"süreç", title:`Anchor Birleştir`, src:`orchestrator.py — _node_reflect() anchor-merge bloğu`, steps:[
+      `merged = eski state.extracted_anchors kopyası + reflection.extracted_anchors'ın YALNIZCA non-null alanları (yeni bir tur eskisini asla None ile ezmez).`,
+      `Yapışkan (sticky) section_type pin: strateji research_strategies.md'de bir section_type tanımlıyorsa (ör. kanun_kabul_oylama → oylama), bu değer reflect-LLM'in o turda emit ettiği section_type'ın ÜZERİNE yazılır — reflect-LLM'in olası hatası stratejinin hedefini asla değiştiremez.`,
+      `state.hop_cursor = reflection.hop_cursor (LLM'in bildirdiği bir sonraki hop numarası).`
+    ]},
+    "dr-done-gate": { kind:"kapı", title:`Prosedür DURDU mu?`, src:`planner.py — ReflectionOutput.done / next_plan`, steps:[
+      `Dört koşuldan biri true ise prosedür biter: reflection.done=true (LLM DURMA koşulunu sağlandı gördü), next_plan None (LLM hiç kaynak üretmedi), next_plan.resources boş liste, ya da resources'un HİÇBİRİNDE query_drafts yoksa (orchestrator.py:641-646).`,
+      `Son alt-koşul (query_drafts) savunma-derinliğidir: gerçek Planner.reflect() çıktısında Planner._parse_plan boş-draft'lı resource'ları üst akışta zaten eler — production'da fiilen erişilemez (bkz. test_reflect_stops_when_next_plan_has_no_query_drafts, next_plan'ı doğrudan Pydantic ile kurup gerçek parser'ı bypass eden sentetik bir test).`,
+      `Durursa: reflect_done=True ile çıkılır — eldeki (bu ana dek toplanan) kanıtla doğrudan cevaplanır, generic judge tekrar ÇAĞRILMAZ.`,
+      `Canlı round-3→4 sıkışmasının GERÇEK durağı bu kapı DEĞİL — dedup-SONRASI kontrol, bkz. "_merge_new_chunks + Reassemble" düğümü / orchestrator.py:672-677.`
+    ]},
+    "dr-exit-done": { kind:"çıkış", title:`Dur — prosedür DONE`, steps:[
+      `state.extracted_anchors (esas_no/sira_sayisi/section_type/…) DOĞRULANAN KİMLİK olarak _build_context()'e enjekte edilir — answer LLM'i her kaydın SORULAN kanuna ait olduğunu bununla doğrular.`
+    ]},
+    "dr-comp-gate": { kind:"kapı", title:`Hop comprehensive mi?`, src:`orchestrator.py — _reflect_retrieve()`, steps:[
+      `next_plan.query_type, state.planner_output.query_type'tan deterministik olarak taşınır (reflect JSON'unda query_type alanı yok — _parse_plan varsayılan "fact"e düşürürdü, bu regresyonu broaden() yolundaki aynı düzeltme önler).`,
+      `"comprehensive" ise (ör. kanun_gorusmeleri): _enumerate_expand'e delege edilir — facet-yıl parçalı + derinlik-tırmanışlı toplama korunur, hop bir broaden-LLM çağrısı ÖDEMEDEN base_plan olarak girer.`,
+      `Değilse (ör. kanun_kabul_oylama, kanun_rapor_bolumu — reasoning/summary): düz yol — tek retrieve, ama kesin anchor-filtresi + chunk-id dışlama + pencere-genişletme ile zenginleştirilmiş.`
+    ]},
+    "dr-enumerate": { kind:"süreç", title:`_enumerate_expand(base_plan=next_plan)`, src:`orchestrator.py — _enumerate_expand()`, steps:[
+      `base_plan verildiği için broaden-LLM çağrısı ATLANIR — reflect zaten bir sonraki hop'un sorgu taslaklarını üretmişti, enumerate onu doğrudan kullanır.`,
+      `_anchor_where_for() burada da devreye girer: sira_sayisi çözüldüyse facet-yıl parçalaması yerine doğrudan {sira_sayisi ∧ section_type} filtresine geçilir (çapraz-kanun sızıntısı riski olmadığından yıl-facet gereksizleşir).`,
+      `Çözülmediyse: 1 filtresiz pas + en sık 4 yıldan her biri için ayrı yıl-filtreli pas, hepsi aynı derinlikte (Diyagram 02'deki mekanizmanın birebir aynısı).`
+    ]},
+    "dr-plain": { kind:"süreç", title:`_anchor_where_for + exclude_ids + _run_retrieval`, src:`orchestrator.py — _reflect_retrieve() düz yol`, steps:[
+      `_anchor_where_for(state, allowed): extracted_anchors'tan sira_sayisi (+section_type, yalnız sira çözüldüyse) okuyup kesin ChromaDB where-filtresi kurar; hiçbir çıpa çözülmediyse None döner ve arama filtresiz semantik kalır.`,
+      `exclude_seen_chunks (strateji bayrağı, ör. kanun_kabul_oylama'da true): açıksa, _seen_chunk_ids(state) — bu koşunun o ana dek gördüğü TÜM chunk id'leri — bu hop'un _run_retrieval çağrısına exclude_ids olarak geçilir; sıralama SONRASI (post-rank) elenir, ChromaDB $nin DEĞİLDİR, bu yüzden bir birleşimi tamamen karartamaz.`,
+      `Sonuç _expand_windows()'a (varsa) ve ardından _merge_new_chunks'a akar.`
+    ]},
+    "dr-window": { kind:"süreç · varsayılan kapalı", title:`_expand_windows()`, src:`orchestrator.py — _expand_windows()`, steps:[
+      `Bu hop'un TAZE sonuçlarındaki en yüksek rerank_score'lu chunk'ı (çıpa) seçer; chunk_id'yi "{document_id}_{index}" örüntüsünden ayrıştırıp belge-içi okuma-sırası komşularını (±neighbor_radius) fetch_neighbors() ile (ANN aramasız, doğrudan id-get) çeker.`,
+      `Neden var: bir kimliksiz roll-call/oy-döküm tablosu, kendini tanımlayan bir duyurunun (ör. "X kanunu açık oylama sonucu…") hemen yanında yer alır ama kendi metninde kanun adı geçmeyebilir — komşu chunk'ları splice etmek bu bölgeyi de pool'a katar.`,
+      `İki kapılı: hem pipeline.yaml → reflect.window_expand.enabled (global, varsayılan false) hem stratejinin kendi window_expand: true bayrağı (ör. kanun_kabul_oylama) AÇIK olmalı — ikisinden biri kapalıysa no-op.`,
+      `Tekrar-koruması: state.window_anchor_keys aynı belgenin penceresini bu koşuda ikinci kez genişletmez (0 komşu bulunsa bile anahtar kaydedilir).`
+    ]},
+    "dr-mergechunks": { kind:"süreç", title:`_merge_new_chunks + Reassemble`, src:`orchestrator.py — _merge_new_chunks() / _run_assembler()`, steps:[
+      `Yeni gelen chunk'lar chunk_id'ye göre deduplenip mevcut havuza eklenir; ilgili koleksiyonun retrieval_budget'ı eklenen kadar artırılır ki reassemble onları görebilsin.`,
+      `_run_assembler(state) çağrılır — ama şu an _ASSEMBLER_ENABLED=False olduğundan gerçek BalancedContextAssembler değil _assemble_passthrough çalışır (bkz. Diyagram 01, d1-assembler).`,
+      `added=0 olsa bile bu adım HER ZAMAN çalışır (Diyagram 02'deki aynı garanti).`,
+      `Hemen ardından GERÇEK durma mekanizması devreye girer (orchestrator.py:672-677): result.draft_texts boş dönerse reflect_done=True ile durulur — next_plan'ın ham taslakları dolu olsa da _dedupe_and_register (state.tried_searches defteri) HER birini önceki bir turda aynı (koleksiyon, sorgu metni, filtre) ile zaten arandığı için elemiş olabilir, yani bu turda hiçbir arama fiilen çalışmamıştır. Canlı kanun_kabul_oylama izindeki round 3→4 tekrarı (reflect-LLM'in aynı sorgu metnini yeniden üretmesi) TAM OLARAK buydu; regresyon: test_reflect_stops_when_dedup_exhausts_all_drafts.`
+    ]},
+    "dr-round-inc": { kind:"süreç", title:`rounds += 1`, steps:[
+      `Tur sayacı bir artırılır — hop başarıyla ilerlesin ya da fail-open'a düşülsün fark etmez, ilgili dönüş değerinde ayrıca rounds+1 taşınır.`
+    ]},
+    "dr-loop-gate": { kind:"kapı", title:`Tur kaldı mı?`, src:`graph.py — route_after_reflect() / build_routers()._max_rounds`, steps:[
+      `_max_rounds(gs): adaptive strateji tanımlıysa strategy["max_rounds"] (research_strategies.md'de tanımlıysa) ya da reflect.default_max_rounds (4); kanun_kabul_oylama=4, kanun_gorusmeleri=4, kanun_rapor_bolumu=3.`,
+      `rounds &lt; max_rounds ise "reflect" node'unun BAŞINA (bu diyagramın en tepesindeki fail-open A kontrolüne) döner — kendi kendine çevrim.`,
+      `Değilse: max_rounds tükendi, o ana dek toplanan çok-hop kanıtıyla (extracted_anchors dahil) doğrudan cevaplama aşamasına geçilir — reflect_done bayrağı hiç set edilmemiş olsa bile route_after_reflect bunu "answering" olarak yönlendirir.`
+    ]},
+    "dr-exit-maxrounds": { kind:"çıkış", title:`Dur — max_rounds tükendi`, steps:[
+      `Prosedür "done" demeden tur tavanına çarptı — yine de reddetme YOK, o ana dek toplanan kanıtla (ve varsa DOĞRULANAN KİMLİK anchor'larıyla) cevaplama denenir.`
     ]},
 
     "d3-broaden": { kind:"süreç", title:`broaden() term_hypothesis`, src:`planner.py — RE_RETRIEVAL_PROMPT, TermHypothesis şeması`, steps:[

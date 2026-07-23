@@ -142,9 +142,13 @@ KURALLAR (TBMM domain — kritik):
   "Kanun Tasarısı (1/N)" ya da yalnızca "(2/773)" biçiminde parantez içinde de geçebilir.
   Esas no'yu / sıra sayısını KANITIN METNİNDEN oku; ham id'yi ("2/773") sorgu olarak ARAMA
   (embedding kesin id'de zayıftır).
-- Bir sonraki hop bir NUMARAYLA (sıra sayısı / esas no) daraltıyorsa, numarayı SORGU METNİNE
-  göm ("5 sıra sayılı … açık oylama sonucu"); metadata filtresine güvenme (sıra_sayısı omurgası
-  henüz yok, LLM filtreleri yok sayılır).
+- Bir kanunun sıra sayısını / esas no'sunu KANITTAN okuduğunda MUTLAKA "extracted_anchors"a
+  yaz (ör. {{"sira_sayisi": 5, "esas_no": "2/773"}}). Sistem bunu KESİN metadata filtresine
+  çevirir — sıra_sayısı/esas_no + bölüm (section_type) omurgası ARTIK VAR; kanun adı hiç
+  geçmese bile o kanunun roll-call/oylama/görüşme bölgesini tam getirir. Kendi "filters"
+  alanına YAZMA (o yok sayılır) — yalnız extracted_anchors kullanılır.
+- Güvence için numarayı SORGU METNİNE de göm ("5 sıra sayılı … açık oylama sonucu"); ama asıl
+  daraltma extracted_anchors ile olur.
 - Bir kaydı (tablo/oylama/gerekçe) kullanmadan önce SORULAN kanuna ait olduğunu adı ve/veya
   esas no'su ile DOĞRULA. Aynı oturumda birden çok kanun işlenir — başka kanunun kaydını bu
   kanuna ATFETME.
@@ -160,7 +164,7 @@ JSON çıktısı:
   "done": true|false,
   "done_reason": "..." veya null,
   "hop_cursor": <bir sonraki hop numarası, int>,
-  "extracted_anchors": {{"esas_no": "...", "sira_sayisi": ..., "madde_no": ..., "granularite": "..."}},
+  "extracted_anchors": {{"esas_no": "...", "sira_sayisi": ..., "madde_no": ..., "section_type": "oylama|kanun_gorusmeleri|kanun_raporu|yazili_soru|... (belge bölümü, biliyorsan)", "granularite": "..."}},
   "resources": [
     {{"collection": "<koleksiyon adı>", "query_drafts": [{{"text": "<sonraki hop sorgusu>", "top_k": 10}}]}}
   ],
@@ -205,6 +209,7 @@ class Planner:
         constraints: dict | None = None,
         max_variants: int | None = None,
         depth: int | None = None,
+        chat_history: list | None = None,
     ) -> SearchPlan:
         """Build an executable SearchPlan.
 
@@ -217,11 +222,15 @@ class Planner:
             max_variants: cap on total query drafts (breadth). Defaults to
                 ``planner.normal_max_query_variants``.
             depth: minimum per-draft top_k (depth). Optional.
+            chat_history: prior turns (``[{"role", "content"}, ...]``), most
+                recent last. Used ONLY as a hint so query_drafts resolve
+                anaphora ("konuyla ilgili", "bu konuda") into concrete terms —
+                it does not change collection routing or filters.
         """
         tracer = tracer or PipelineTracer()
         allowed = set(selected_collections) if selected_collections else None
 
-        plan = self._generate_plan(query, tracer, allowed_keys=allowed)
+        plan = self._generate_plan(query, tracer, allowed_keys=allowed, chat_history=chat_history)
         if plan is None:
             plan = self._fallback_plan(query, allowed_keys=allowed)
         if allowed:
@@ -310,10 +319,12 @@ class Planner:
         hop cursor, a compact evidence summary, and the queries already tried, then asks
         for the NEXT hop's search plan plus whether the procedure is DONE.
 
-        Deliberately leaner than ``broaden()``: no FilterExtractor pass (the domain rule
-        requires anchor numbers to ride in the query TEXT, not a filter, since the
-        sira_sayisi metadata backbone does not exist yet and ``_parse_plan`` drops LLM
-        filters anyway) and no variant cap (the reflect LLM emits one focused hop).
+        Deliberately leaner than ``broaden()``: no FilterExtractor pass and no variant cap
+        (the reflect LLM emits one focused hop). The reflect LLM's own ``filters`` field is
+        dropped by ``_parse_plan``; instead it writes the law identity into
+        ``extracted_anchors`` (sira_sayisi/esas_no), which the orchestrator turns into the
+        EXACT metadata where-filter next hop (``_anchor_where_for`` — the sira_sayisi +
+        section_type backbone). Numbers also ride in the query TEXT as a belt-and-suspenders.
 
         Returns None when the LLM fails, so the caller can fail-open to ``broaden()``.
         """
@@ -438,6 +449,7 @@ class Planner:
         query: str,
         tracer: PipelineTracer,
         allowed_keys: set[str] | None = None,
+        chat_history: list | None = None,
     ) -> SearchPlan | None:
         """Generate a search plan using the planning agent LLM.
 
@@ -450,7 +462,35 @@ class Planner:
         strategy_catalog = self._config.get_strategy_catalog() or "(tanımlı strateji yok — bu alanı null bırak)"
         system_prompt = PLAN_SYSTEM_PROMPT.format(catalog=catalog, strategy_catalog=strategy_catalog)
         self._last_planner_error = None
-        return self._call_planner_llm(f"Sorgu: {query}", system_prompt)
+        history_hint = self._format_history_hint(chat_history)
+        return self._call_planner_llm(f"{history_hint}Sorgu: {query}", system_prompt)
+
+    @staticmethod
+    def _format_history_hint(chat_history: list | None) -> str:
+        """Compact "last turn" block so query_drafts pick up a carried-over topic.
+
+        Only the last user+assistant turn is used (older turns are noise for
+        drafting search terms) and the assistant side is hard-capped — this is
+        a topic hint for the planner LLM, not a full transcript. Empty history
+        → empty string (no-op, matches today's behavior exactly).
+        """
+        if not chat_history:
+            return ""
+        last_user = next((m for m in reversed(chat_history) if m.get("role") == "user" and m.get("content")), None)
+        last_assistant = next((m for m in reversed(chat_history) if m.get("role") == "assistant" and m.get("content")), None)
+        if not last_user and not last_assistant:
+            return ""
+        lines = [
+            "Önceki konuşma (yalnız BAĞLAM için — sorgudaki \"konuyla ilgili\", \"bu konuda\", "
+            "\"peki ya\" gibi atıfları bu geçmişe göre somutlaştır ve arama sorgularına konu "
+            "adını/anahtar terimlerini ekle; bu geçmiş koleksiyon seçimini DEĞİŞTİRMEZ):",
+        ]
+        if last_user:
+            lines.append(f"Önceki kullanıcı sorusu: {last_user['content'][:300]}")
+        if last_assistant:
+            lines.append(f"Önceki yanıt (özet): {last_assistant['content'][:400]}")
+        lines.append("")
+        return "\n".join(lines) + "\n"
 
     def _apply_filter_extractor(
         self,

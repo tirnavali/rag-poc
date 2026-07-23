@@ -1,6 +1,8 @@
 from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.config.document_types import SECTION_TYPES
+
 class RAGBaseModel(BaseModel):
     """Base Pydantic model for the RAG project with strict validation."""
     model_config = ConfigDict(
@@ -53,6 +55,18 @@ class FilterCriteria(RAGBaseModel):
     session: Optional[int] = Field(None, description="TBMM birleşim numarası (örn. 7)")
     sira_sayisi: Optional[int] = Field(None, description="TBMM kanun teklifi/tasarısı sıra sayısı (metadata omurgası; reflect Hop-2'nin kesin ChromaDB filtresi — kanun adı geçmese bile roll-call/görüşme/rapor bölgesini getirir)")
     esas_no: Optional[str] = Field(None, description="TBMM esas numarası (örn. '2/773'); sıra sayısı ile birlikte kanun kimliği. Kesin eşleşme filtresi.")
+    section_type: Optional[Literal[SECTION_TYPES]] = Field(  # type: ignore[valid-type]
+        None,
+        description=(
+            "Tutanak belge BÖLÜMÜ (metadata omurgası; kesin ChromaDB filtresi) — "
+            "kullanıcı belirli bir bölümü isterse: 'kanun_gorusmeleri' (kanun "
+            "görüşmeleri/müzakereleri), 'oylama' (açık oylama/roll-call sonuçları), "
+            "'yazili_soru', 'sozlu_soru', 'gundem_disi', 'genel_gorusme', "
+            "'meclis_arastirmasi', 'gelen_kagit', 'gecen_tutanak', 'tezkere', "
+            "'oneriler', 'secim', 'yemin', 'kanun_raporu', 'icindekiler'. "
+            "sira_sayisi ile birleşir (ör. 'X kanununun oylaması' → sira_sayisi+oylama)."
+        ),
+    )
     document_type: Optional[Literal["tutanak", "press_clip", "pdf_report", "kanun_teklifi"]] = Field(
         None, description="Belgenin türü"
     )

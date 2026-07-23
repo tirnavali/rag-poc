@@ -266,7 +266,8 @@ def test_window_expand_repeat_guard(monkeypatch):
 
 def test_window_expand_config_defaults():
     we = load_pipeline_config().reflect.window_expand
-    assert we.enabled is False
+    # global anahtar açık (2026-07-21) — strateji başına window_expand flag'i gate'ler
+    assert we.enabled is True
     assert we.neighbor_radius == 2
     assert we.max_neighbors_per_hop == 8
     assert we.anchor_count == 1
