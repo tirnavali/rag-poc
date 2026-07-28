@@ -116,6 +116,7 @@ def token_pack_atoms(
     max_tokens: int,
     min_tokens: int,
     join_str: str = "\n\n",
+    overlap_tokens: int = 0,
 ) -> List[Dict[str, Any]]:
     """Atomları **token-tabanlı** greedy paketler; span'ı `full_text`'ten türetir.
 
@@ -127,6 +128,15 @@ def token_pack_atoms(
 
     Args:
         count_tokens: metin → token sayısı (seçili embedding tokenizer'ı).
+        overlap_tokens: bir sonraki chunk'a taşınan kuyruk bütçesi (token);
+            0 = kapalı. Önce atom sınırında denenir (kuyruk atomları bütçeye
+            sığıyorsa bütün taşınır); sığmıyorsa kuyruk atomunun ~bütçe kadarlık
+            SON-EKİ kopyalanır (atom kendi chunk'ında bütün kalır, sonraki chunk
+            yalnız bağlam kopyası alır; tablo/görsel atomlarından son-ek alınmaz).
+            Overlap token'ları min_tokens'a sayılır; bütçe min_tokens-1 ile
+            sınırlandığından bir chunk asla salt-overlap içerikle kapanamaz.
+            Not: bütçe atom-token toplamıyla ölçülür; birleşik metnin token
+            sayısı ayraçlar nedeniyle bütçeyi bir-iki token aşabilir.
     Returns:
         list[dict]: {text, span, label, page, pages} — metadata pack() içinde tamamlanır.
     """
@@ -139,8 +149,11 @@ def token_pack_atoms(
     chunks: List[Dict[str, Any]] = []
     cur_idx: List[int] = []  # mevcut chunk'a giren atom indeksleri
     cur_tokens = 0
+    cur_start_char: int | None = None  # atom-içi son-ek overlap'inde chunk başlangıcı
 
     def _flush():
+        nonlocal cur_start_char
+        start_override, cur_start_char = cur_start_char, None
         if not cur_idx:
             return
         first, last = cur_idx[0], cur_idx[-1]
@@ -148,7 +161,7 @@ def token_pack_atoms(
         s1 = atom_spans[last]
         if s0 is None or s1 is None:
             return  # span çıkarılamadı (beklenmez) — chunk'ı düşür
-        start, end = s0[0], s1[1]
+        start, end = (start_override if start_override is not None else s0[0]), s1[1]
         merged_pages = sorted(
             {p for i in cur_idx for p in atoms[i].get("pages", [])}
         )
@@ -162,6 +175,68 @@ def token_pack_atoms(
             }
         )
 
+    _NO_SUFFIX_LABELS = {"table", "picture"}
+
+    def _suffix_seed(j: int, budget: int) -> tuple[List[int], int | None, int]:
+        """Kuyruk atomunun ~budget token'lık son-ekini overlap olarak hazırla.
+
+        Atom kendi chunk'ında bütün kalır; yalnız bir sonraki chunk'ın başına
+        bağlam kopyası girer. Tablo/görsel atomları parçalanmaz.
+        """
+        span = atom_spans[j]
+        if span is None or atoms[j].get("label") in _NO_SUFFIX_LABELS:
+            return [], None, 0
+        text = atoms[j]["text"]
+        nj = atom_tokens[j] or 1
+        # Oransal tahmin → kelime sınırına ilerle → bütçe aşıldıkça öndan kırp.
+        char_len = min(max(1, int(budget * len(text) / nj)), len(text) - 1)
+        pos = len(text) - char_len
+        ws = text.find(" ", pos)
+        if ws == -1:
+            return [], None, 0
+        suffix = text[ws + 1:]
+        if not suffix.strip():
+            return [], None, 0
+        t = count_tokens(suffix)
+        while t > budget:
+            drop = max(1, len(suffix) - int(len(suffix) * budget / max(t, 1)))
+            ws = suffix.find(" ", drop)
+            if ws == -1:
+                return [], None, 0
+            suffix = suffix[ws + 1:]
+            if not suffix.strip():
+                return [], None, 0
+            t = count_tokens(suffix)
+        return [j], span[1] - len(suffix), t
+
+    def _overlap_seed(
+        prev_idx: List[int], next_atom_tokens: int
+    ) -> tuple[List[int], int | None, int]:
+        """Önceki chunk'ın kuyruğundan overlap tohumu: (atom indeksleri,
+        atom-içi başlangıç ofseti veya None, tohum token sayısı).
+
+        Önce bütçeye sığan bitişik kuyruk atomları bütün alınır; hiçbiri
+        sığmıyorsa kuyruk atomunun son-ekine düşülür. Bitişiklik şart, çünkü
+        chunk metni `full_text[start:end]` dilimiyle birebir aynı olmalı.
+        """
+        if overlap_tokens <= 0 or not prev_idx:
+            return [], None, 0
+        budget = min(overlap_tokens, min_tokens - 1, max_tokens - next_atom_tokens)
+        if budget <= 0:
+            return [], None, 0
+        seed: List[int] = []
+        tok = 0
+        for j in reversed(prev_idx[1:]):  # asla önceki chunk'ın tamamı değil
+            nj = atom_tokens[j]
+            if tok + nj > budget:
+                break
+            seed.append(j)
+            tok += nj
+        if seed:
+            seed.reverse()
+            return seed, None, tok
+        return _suffix_seed(prev_idx[-1], budget)
+
     for i, atom in enumerate(atoms):
         n = atom_tokens[i]
         if not cur_idx:
@@ -171,9 +246,12 @@ def token_pack_atoms(
         proposed = cur_tokens + n
         # min_tokens'a ulaştıysak ve bir sonrakini eklemek max'ı aşıyorsa kes.
         if cur_tokens >= min_tokens and proposed > max_tokens:
+            prev_idx = cur_idx
             _flush()
-            cur_idx = [i]
-            cur_tokens = n
+            seed, start_char, seed_tok = _overlap_seed(prev_idx, n)
+            cur_idx = seed + [i]
+            cur_start_char = start_char
+            cur_tokens = seed_tok + n
         else:
             cur_idx.append(i)
             cur_tokens = proposed
@@ -209,15 +287,20 @@ class DoclingManager:
         tokenizer_name: str | None = None,
         max_chunk_tokens: int = 400,
         min_chunk_tokens: int = 100,
+        chunk_overlap_tokens: int = 0,
         use_vlm: bool | None = None,
-        images_scale: float = 1.0,
+        images_scale: float | None = None,
         ollama_model: str | None = None,
         ollama_url: str | None = None,
+        scanned_page_ocr: bool | None = None,
     ):
         # VLM tablo çıkarımı: argüman verilmezse settings.VLM_TABLE_EXTRACTION'dan
         # gelir; böylece adapter'lar/pipeline değişmeden ayarı miras alır.
         if use_vlm is None:
             use_vlm = settings.VLM_TABLE_EXTRACTION
+        # images_scale ve scanned_page_ocr None ise MarkdownConverter settings'ten
+        # çözer (DOCLING_IMAGES_SCALE / SCANNED_PAGE_OCR). Böylece adapter'lar
+        # değişmeden global ayarı miras alır; istenirse per-belge geçilebilir.
         self._converter = MarkdownConverter(
             ocr_engine=ocr_engine,
             do_ocr=do_ocr,
@@ -225,12 +308,14 @@ class DoclingManager:
             use_vlm=use_vlm,
             ollama_model=ollama_model,
             ollama_url=ollama_url,
+            scanned_page_ocr=scanned_page_ocr,
         )
         self.ocr_engine = self._converter.ocr_engine
         self.do_ocr = self._converter.do_ocr
         self.tokenizer_name = tokenizer_name
         self.max_chunk_tokens = max_chunk_tokens
         self.min_chunk_tokens = min_chunk_tokens
+        self.chunk_overlap_tokens = chunk_overlap_tokens
         # Son pack() çağrısının ürettiği 4 aşamalık artefakt yolları (gözlemlenebilirlik
         # index'i — pipeline raporuna aktarılır). Her pack() çağrısında güncellenir.
         self.last_artifacts: Dict[str, Any] | None = None
@@ -315,9 +400,14 @@ class DoclingManager:
         # Level-2 chunk cache key — token params (hybrid) veya fallback
         author_tag = f"_author_{document_type}" if document_type else ""
         if use_hybrid:
+            # Koşullu _ovl eki: overlap=0 koleksiyonların mevcut cache dosyaları
+            # geçerli kalır (anahtar değişmez).
+            overlap_tag = (
+                f"_ovl{self.chunk_overlap_tokens}" if self.chunk_overlap_tokens else ""
+            )
             chunk_cache_key = hashlib.md5(
                 f"{parsed.ocr_base}_atompack_{self.tokenizer_name}_{self.max_chunk_tokens}"
-                f"_{self.min_chunk_tokens}{author_tag}".encode()
+                f"_{self.min_chunk_tokens}{overlap_tag}{author_tag}".encode()
             ).hexdigest()
         else:
             chunk_cache_key = hashlib.md5(
@@ -515,6 +605,7 @@ class DoclingManager:
             count_tokens=tokenizer.count_tokens,
             max_tokens=self.max_chunk_tokens,
             min_tokens=self.min_chunk_tokens,
+            overlap_tokens=self.chunk_overlap_tokens,
         )
 
         chunks = []
@@ -536,7 +627,10 @@ class DoclingManager:
                 }
             )
 
-        print(f"  [ATOMPACK] {len(atoms)} atom → {len(chunks)} chunk (token-aware, span %100)")
+        print(
+            f"  [ATOMPACK] {len(atoms)} atom → {len(chunks)} chunk "
+            f"(token-aware, span %100, ovl={self.chunk_overlap_tokens})"
+        )
 
         if document_type:
             from src.common.parsing.author_extractor import tag_chunks_post_hoc

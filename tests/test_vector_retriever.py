@@ -9,8 +9,11 @@ from src.config.document_types import DocumentType
 class TestVectorRetriever:
     """Production wrapper: date parsing, post-process, settings flag, return shape."""
 
-    def test_year_in_query_builds_where_filter(self):
-        """Query with year → where_filter passed to VectorSearch."""
+    def test_where_filter_none_means_no_filter_even_with_year_in_query(self):
+        """VectorRetriever is a pure pass-through: where_filter=None (default) stays
+        None even when the query text contains a bare year — no auto-extraction.
+        Regression for the golden_builder "2012 KPSS" bug (a query-text year is
+        often the event's date, not the document's own date)."""
         from src.retriever.vector_retriever import VectorRetriever
         from src.config.collections import CollectionSpec
 
@@ -24,89 +27,42 @@ class TestVectorRetriever:
             mock_vs_class.return_value = mock_vs
 
             retriever = VectorRetriever(spec)
-            retriever.retrieve("1996 yılında ne oldu?")
-
-            # Verify where_filter with year 1996
-            call_kwargs = mock_vs.search.call_args[1]
-            where_filter = call_kwargs["where_filter"]
-            assert where_filter == {"year": {"$eq": 1996}}
-
-    def test_multiple_years_or_filter(self):
-        """Query mentioning 1996 and 1997 → $or filter."""
-        from src.retriever.vector_retriever import VectorRetriever
-        from src.config.collections import CollectionSpec
-
-        spec = MagicMock(spec=CollectionSpec)
-        spec.supports_late_chunking = False
-        spec.doc_type = DocumentType.GAZETE
-
-        with patch("src.retriever.vector_retriever.VectorSearch") as mock_vs_class:
-            mock_vs = MagicMock()
-            mock_vs.search.return_value = []
-            mock_vs_class.return_value = mock_vs
-
-            retriever = VectorRetriever(spec)
-            retriever.retrieve("1996 ve 1997 arasında neler oldu?")
-
-            call_kwargs = mock_vs.search.call_args[1]
-            where_filter = call_kwargs["where_filter"]
-            assert "$or" in where_filter
-
-    def test_no_date_no_filter(self):
-        """Query without date → where_filter=None."""
-        from src.retriever.vector_retriever import VectorRetriever
-        from src.config.collections import CollectionSpec
-
-        spec = MagicMock(spec=CollectionSpec)
-        spec.supports_late_chunking = False
-        spec.doc_type = DocumentType.GAZETE
-
-        with patch("src.retriever.vector_retriever.VectorSearch") as mock_vs_class:
-            mock_vs = MagicMock()
-            mock_vs.search.return_value = []
-            mock_vs_class.return_value = mock_vs
-
-            retriever = VectorRetriever(spec)
-            retriever.retrieve("Kardak kayalıkları")
+            retriever.retrieve("2012 KPSS sınavında soruların çalındığı iddiaları")
 
             call_kwargs = mock_vs.search.call_args[1]
             assert call_kwargs["where_filter"] is None
 
-    def test_use_reranker_flag_on(self):
-        """USE_RERANKER=True → reranker passed."""
+    def test_explicit_where_filter_passed_through_unchanged(self):
+        """An explicit where_filter reaches VectorSearch byte-for-byte, untouched."""
         from src.retriever.vector_retriever import VectorRetriever
         from src.config.collections import CollectionSpec
-        from src.config import settings
 
         spec = MagicMock(spec=CollectionSpec)
         spec.supports_late_chunking = False
         spec.doc_type = DocumentType.GAZETE
 
-        with patch("src.retriever.vector_retriever.VectorSearch") as mock_vs_class, \
-             patch.object(settings, "USE_RERANKER", True), \
-             patch("src.retriever.reranker.CrossEncoderReranker"):
+        with patch("src.retriever.vector_retriever.VectorSearch") as mock_vs_class:
             mock_vs = MagicMock()
             mock_vs.search.return_value = []
             mock_vs_class.return_value = mock_vs
 
             retriever = VectorRetriever(spec)
-            retriever.retrieve("query")
+            where = {"year": {"$eq": 1996}}
+            retriever.retrieve("1996 yılında ne oldu?", where_filter=where)
 
             call_kwargs = mock_vs.search.call_args[1]
-            assert call_kwargs["reranker"] is not None
+            assert call_kwargs["where_filter"] is where
 
-    def test_use_reranker_flag_off(self):
-        """USE_RERANKER=False → reranker=None."""
+    def test_reranker_none_passed_through(self):
+        """No reranker argument → VectorSearch gets reranker=None (no internal construction)."""
         from src.retriever.vector_retriever import VectorRetriever
         from src.config.collections import CollectionSpec
-        from src.config import settings
 
         spec = MagicMock(spec=CollectionSpec)
         spec.supports_late_chunking = False
         spec.doc_type = DocumentType.GAZETE
 
-        with patch("src.retriever.vector_retriever.VectorSearch") as mock_vs_class, \
-             patch.object(settings, "USE_RERANKER", False):
+        with patch("src.retriever.vector_retriever.VectorSearch") as mock_vs_class:
             mock_vs = MagicMock()
             mock_vs.search.return_value = []
             mock_vs_class.return_value = mock_vs
@@ -116,6 +72,28 @@ class TestVectorRetriever:
 
             call_kwargs = mock_vs.search.call_args[1]
             assert call_kwargs["reranker"] is None
+
+    def test_reranker_instance_passed_through(self):
+        """A caller-supplied reranker instance reaches VectorSearch unchanged —
+        VectorRetriever never reads settings.USE_RERANKER or constructs one itself."""
+        from src.retriever.vector_retriever import VectorRetriever
+        from src.config.collections import CollectionSpec
+
+        spec = MagicMock(spec=CollectionSpec)
+        spec.supports_late_chunking = False
+        spec.doc_type = DocumentType.GAZETE
+
+        with patch("src.retriever.vector_retriever.VectorSearch") as mock_vs_class:
+            mock_vs = MagicMock()
+            mock_vs.search.return_value = []
+            mock_vs_class.return_value = mock_vs
+
+            retriever = VectorRetriever(spec)
+            fake_reranker = MagicMock()
+            retriever.retrieve("query", reranker=fake_reranker)
+
+            call_kwargs = mock_vs.search.call_args[1]
+            assert call_kwargs["reranker"] is fake_reranker
 
     def test_retrieval_result_shape(self):
         """Returns RetrievalResult TypedDict with correct shape."""

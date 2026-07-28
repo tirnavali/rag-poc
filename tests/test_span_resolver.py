@@ -19,6 +19,7 @@ def mock_spec():
     spec.doc_type = None
     spec.max_chunk_tokens = 512
     spec.min_chunk_tokens = 384
+    spec.chunk_overlap_tokens = 0
     return spec
 
 
@@ -101,3 +102,28 @@ class TestResolveSpansFromCache:
             assert len(spans) == 0
             assert len(errors) == 2
             assert "format tanınmadı" in errors[0]
+
+
+class TestAtompackCacheKey:
+    """Cache anahtarı docling_manager.pack ile birebir aynı kalmalı."""
+
+    def test_overlap_zero_key_matches_historical_format(self, mock_spec):
+        import hashlib
+        from src.common.span_resolver import _atompack_chunk_cache_key
+
+        key = _atompack_chunk_cache_key(mock_spec, "OCRBASE")
+        expected = hashlib.md5(
+            "OCRBASE_atompack_test-model_512_384".encode()
+        ).hexdigest()
+        assert key == expected, "overlap=0 anahtarı tarihsel formatla aynı olmalı"
+
+    def test_overlap_key_has_ovl_tag(self, mock_spec):
+        import hashlib
+        from src.common.span_resolver import _atompack_chunk_cache_key
+
+        mock_spec.chunk_overlap_tokens = 51
+        key = _atompack_chunk_cache_key(mock_spec, "OCRBASE")
+        expected = hashlib.md5(
+            "OCRBASE_atompack_test-model_512_384_ovl51".encode()
+        ).hexdigest()
+        assert key == expected

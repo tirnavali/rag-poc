@@ -15,6 +15,7 @@ from src.config import settings
 from src.config.collections import get_spec
 from src.generator.ollama_generator import OllamaGenerator
 from src.retriever.context import build_context
+from src.retriever.reranker import CrossEncoderReranker
 from src.retriever.vector_retriever import VectorRetriever
 from src.generator.filter_extractor import FilterExtractor
 
@@ -71,6 +72,10 @@ class RAGService:
         self.retriever = self._init_retriever()
         self.generator = OllamaGenerator()
         self.filter_extractor = FilterExtractor()
+        # Built once, not per-retrieve() call: VectorRetriever no longer reads
+        # settings.USE_RERANKER itself (pure pass-through layer) — RAGService owns
+        # that decision and reuses the same instance across the cascade/mufettis calls.
+        self.reranker = CrossEncoderReranker() if settings.USE_RERANKER else None
         self._pipeline_config_path = pipeline_config_path
         self._orchestrator = None
 
@@ -151,6 +156,7 @@ class RAGService:
                     fetch_k=fetch_k,
                     mufettis_mode=mufettis_mode,
                     where_filter=where,
+                    reranker=self.reranker,
                 )
                 if ctx:
                     ctx.update_details(
@@ -168,6 +174,7 @@ class RAGService:
                 fetch_k=fetch_k,
                 mufettis_mode=mufettis_mode,
                 where_filter=None,
+                reranker=self.reranker,
             )
             fallback_level = "semantic_only"
 
@@ -183,6 +190,7 @@ class RAGService:
                 fetch_k=settings.MUFETTIS_FETCH_K,
                 mufettis_mode=True,
                 where_filter=where_filter,
+                reranker=self.reranker,
             )
             result["expanded_query"] = expanded
         return result

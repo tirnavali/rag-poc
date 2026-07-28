@@ -91,6 +91,12 @@ EMBED_MODEL = os.environ.get("RAG_EMBED_MODEL", _env_config["embed"])
 # qwen2.5:3b-instruct: non-reasoning instruction model — no thinking-mode latency.
 FILTER_LLM_MODEL = os.environ.get("RAG_FILTER_LLM_MODEL", _pipeline_filter_llm or "qwen3.5:9b")
 
+# Optional: point filter_extractor at a remote OpenAI-compatible endpoint (e.g. a
+# LiteLLM/vLLM proxy) instead of the local Ollama host, for A/B testing candidate
+# models. Unset (default) keeps the existing Ollama path unchanged.
+FILTER_LLM_API_BASE = os.environ.get("RAG_FILTER_LLM_API_BASE") or None
+FILTER_LLM_API_KEY = os.environ.get("RAG_FILTER_LLM_API_KEY", "ollama")
+
 # --- Author Transition Cleaning Model ---
 # llm_transition_cleaner.py: OCR error correction for speaker names/roles.
 # Lightweight task (name/role extraction from short text) — llama3:8b sufficient.
@@ -142,6 +148,11 @@ WINDOW_SIZE = 800
 WINDOW_MAX_TOTAL = 3000
 
 LLM_NUM_CTX = 32768
+# Filtre çıkarma çağrısı KÜÇÜK bir iştir (sistem promptu + kısa sorgu + kısa JSON).
+# num_ctx PİNLENMEZSE ollama 256K default context ile yüklemeye çalışıp KV OOM →
+# "model failed to load ... resource limitations (500)" verir (özellikle büyük modeller
+# + paylaşımlı host bellek baskısı). Küçük pinli değer KV cache'i düşük tutar → yüklenir.
+FILTER_LLM_NUM_CTX = int(os.environ.get("RAG_FILTER_LLM_NUM_CTX", "8192"))
 LLM_TEMPERATURE_DEFAULT = 0.1
 LLM_TEMPERATURE_MUFETTIS = 0.2
 LLM_TEMPERATURE_EXPAND = 0.3
@@ -192,6 +203,18 @@ QUALITY_STATS_FILE = PARSE_CACHE_DIR / "quality_stats.json"
 # Engine options: "easyocr", "tesseract", "mac"
 # Override via env: OCR_ENGINE=tesseract python -m scripts.ingest ...
 OCR_ENGINE = os.environ.get("OCR_ENGINE", "easyocr")
+
+# PDF sayfa render çözünürlük ölçeği — Docling'in layout + reading-order + OCR
+# modellerine verilen görüntünün çözünürlüğü. 1.0 (~72 DPI) layout etiketlemeyi ve
+# çok-sütun okuma sırasını bozar; 2.0 (~144 DPI) belirgin iyileştirir (running-head'in
+# PAGE_HEADER olarak doğru etiketlenmesi + sütun sırası dahil). DİKKAT: parse cache
+# anahtarının parçası (_scale{n}) — değiştirmek tüm korpus için yeniden-parse tetikler.
+DOCLING_IMAGES_SCALE = float(os.environ.get("DOCLING_IMAGES_SCALE", "2.0"))
+
+# Docling layout modeli: heron (varsayılan, hızlı) | heron_101 | egret_medium |
+# egret_large | egret_xlarge (daha doğru sütun/etiket, daha yavaş + büyük indirme).
+# Bilinmeyen değer → heron'a düşer. Değiştirmek yeniden-parse gerektirir.
+DOCLING_LAYOUT_MODEL = os.environ.get("DOCLING_LAYOUT_MODEL", "heron").strip().lower()
 
 # GPU/CPU configuration for Docling
 _use_gpu_env = os.environ.get("DOCLING_USE_GPU", "auto").lower()
@@ -288,6 +311,21 @@ PADDLE_OCR_URL = os.environ.get("PADDLE_OCR_URL", "http://10.20.24.16:4000/v1")
 PADDLE_OCR_MODEL = os.environ.get("PADDLE_OCR_MODEL", "paddleocr-vl-1.6")
 PADDLE_OCR_API_KEY = os.environ.get("PADDLE_OCR_API_KEY", "none")
 PADDLE_OCR_TIMEOUT = int(os.environ.get("PADDLE_OCR_TIMEOUT", "120"))
+
+# --- Sayfa-düzeyi yönlendirici (tam-sayfa PaddleOCR-VL) ---
+# :8080 PaddleOCR-VL pipeline proxy'si (layout + tablo + oto-deskew). :4000'daki
+# ham VLM'den AYRI: /ocr endpoint'i multipart file= alır, markdown + parsing_res_list
+# (semantik bloklar) döndürür. Taranmış sayfaları Docling+EasyOCR yerine buraya yollar.
+PADDLE_PAGE_OCR_URL = os.environ.get("PADDLE_PAGE_OCR_URL", "http://10.20.24.16:8080")
+PADDLE_PAGE_TIMEOUT = int(os.environ.get("PADDLE_PAGE_TIMEOUT", "180"))
+# Sayfa-düzeyi yönlendirme anahtarı (varsayılan KAPALI — opt-in). Açıkken her sayfanın
+# native metin karakteri eşiğin altındaysa (taranmış) tam-sayfa Paddle'a yönlenir;
+# digital-born sayfalar dokunulmaz. Etkinleştir: SCANNED_PAGE_OCR=1
+SCANNED_PAGE_OCR = os.environ.get("SCANNED_PAGE_OCR", "0") not in ("0", "false", "False")
+# Bir sayfa bu kadar native (çıkarılabilir) karakterin altındaysa taranmış sayılır.
+SCANNED_PAGE_CHAR_THRESHOLD = int(os.environ.get("SCANNED_PAGE_CHAR_THRESHOLD", "100"))
+# Taranmış sayfayı :8080'e yollamadan önceki render ölçeği (PyMuPDF).
+SCANNED_PAGE_RENDER_ZOOM = float(os.environ.get("SCANNED_PAGE_RENDER_ZOOM", "2.0"))
 # Trial-OCR'da en iyi açı, ikinciyi bu orandan fazla geçerse "net kazanan" sayılır;
 # aksi halde (belirsiz) OSD / aspect / çizgi ipuçları tie-breaker olur.
 TESS_TABLE_ORIENT_MARGIN = float(os.environ.get("TESS_TABLE_ORIENT_MARGIN", "0.15"))
@@ -370,6 +408,37 @@ COMPREHENSIVE_KEYWORDS = [
     "kaç tane", "kac tane", "kaç adet", "kac adet", "kaç defa", "kac defa",
     "hangileri", "hangi hangi", "her biri", "her bir",
     "tek tek", "madde madde", "say bakalım", "hepsini",
+]
+# Kanun/mevzuat bağlam sinyali → adaptive kanun stratejilerinin (kanun_kabul_oylama /
+# kanun_gorusmeleri / kanun_rapor_bolumu) SEÇİLEBİLİR olması için deterministik kapı
+# (OrchestratorAgent._is_law_query). Küçük planner modeli çıplak konuşma-fiili tetikleyicilerine
+# ("ne dedi/ne konuşuldu") kapılıp kanun-dışı olay/kişi sorgusuna kanun stratejisi seçebiliyor;
+# bu liste sorguda GERÇEK bir kanun bağlamı olup olmadığını sınar. normalize_tr ile alt-dizgi
+# eşleşir (Türkçe "İ/ı" güvenli). Kasıtlı olarak DAR: yalnız açık kanun/mevzuat sözcükleri —
+# "oylama"/"görüşme" gibi genel meclis terimleri YOK (olay sorgularında yanlış-pozitif yapardı).
+# KASITLI OLARAK GENİŞ — kapı YALNIZ açıkça kanun-DIŞI (olay/kişi/gündem) sorguda
+# tetiklensin. Aşırı-düşürmek meşru kanun akışlarını bozar (kanun görüşme/oylama sorguları
+# çoğu kez "kanun" sözcüğünü içermez: "X kaç oyla kabul edildi", "X görüşmelerinde kim karşı
+# çıktı"); aşırı-korumak zararsız (prompt katmanı zaten yönlendiriyor). Bu yüzden kanun-nesnesi
+# sözcüklerine EK OLARAK kanun-yapım süreci sinyallerini (oylama/görüşme/rapor) de içerir.
+# normalize_tr yalnız İ/I katlar (ş/ö/ç KATLAMAZ) → Türkçe-karakter + ASCII varyantları birlikte.
+LAW_QUERY_KEYWORDS = [
+    # kanun/mevzuat nesnesi
+    "kanun", "kanunu", "kanunun", "kanunlar", "kanunlaş",
+    "yasa", "yasası", "yasanın", "yasalaş",
+    "teklif", "teklifi", "tasarı", "tasarısı", "tasari",
+    "madde", "maddesi", "maddenin", "maddeye",
+    "sıra sayısı", "sira sayisi", "esas no", "esas numarası", "esas numarasi",
+    # oylama / kanun-yapım süreci sinyalleri
+    "kaç oyla", "kac oyla", "oyla kabul", "oylama", "oy çokluğu", "oy coklugu",
+    "ret oyu", "çekimser", "cekimser", "kabul edildi", "kabul edilen metin",
+    "meclisten geçti", "meclisten gecti", "genel kurulda kabul", "yasalaştı", "yasalasti",
+    # görüşme / komisyon raporu sinyalleri
+    "görüşme", "gorusme", "üzerine görüş", "uzerine gorus",
+    "komisyon raporu", "sıra sayısı raporu", "sira sayisi raporu",
+    "muhalefet şerhi", "muhalefet serhi", "karşı oy", "karsi oy",
+    "genel gerekçe", "genel gerekce", "madde gerekçesi", "madde gerekcesi",
+    "esas komisyon", "tali komisyon",
 ]
 
 # --- Parliamentary Jargon Terms (colloquial → official-synonym expansion) ---

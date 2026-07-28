@@ -48,6 +48,14 @@ Kurallar:
 1c. Yukarıdaki strateji listesinden sorguya en uygun olanı seç (tetikleyici
    kelimeler ipucudur, zorunlu değildir); seçilen stratejinin query_type'ı ile
    1b'de belirlediğin query_type tutarlı olmalı.
+1d. KANUN stratejileri (kanun_kabul_oylama / kanun_gorusmeleri / kanun_rapor_bolumu)
+   YALNIZCA sorgu belirli bir KANUN / TEKLİF / YASA / madde / sıra sayısı / komisyon
+   raporu bağlamına atıfta bulunuyorsa seçilebilir. Sorgu genel bir OLAY, KİŞİ, gündem
+   ya da haber konusu hakkındaysa (bir kanunun Genel Kurul görüşmesi / oylaması / raporu
+   DEĞİLSE) bu stratejileri SEÇME — uygun genel stratejiyi (analytical / summarize /
+   comparative / enumerate / factual) ya da null kullan. "ne konuşuldu", "ne dedi",
+   "eleştiri", "kim ne dedi" gibi ifadeler TEK BAŞINA kanun stratejisi TETİKLEMEZ;
+   somut bir kanun bağlamı şarttır.
 2. Hangi koleksiyonların ilgili olduğunu belirle. Doc-type yönlendirme:
    - Gazete/basın/köşe yazısı/manşet/muhabir/gazeteci soruları → doc_type=gazete koleksiyonları
    - Meclis/oturum/birleşim/milletvekili/konuşma/tutanak soruları → doc_type=tutanak koleksiyonları

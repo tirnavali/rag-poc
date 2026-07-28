@@ -689,6 +689,7 @@ def cmd_inspect(args) -> None:
             tokenizer_name=spec.embed_model,
             max_chunk_tokens=spec.max_chunk_tokens,
             min_chunk_tokens=spec.min_chunk_tokens,
+            chunk_overlap_tokens=spec.chunk_overlap_tokens,
         )
     else:
         mgr = DoclingManager()

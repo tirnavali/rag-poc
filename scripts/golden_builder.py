@@ -426,7 +426,13 @@ class Handler(BaseHTTPRequestHandler):
 
         # rerank havuzu top_k'nın en az 4 katı (sağlıklı cross-encoder seçimi için)
         fetch_k = max(top_k * 4, 120)
-        res = retr.retrieve(query, top_k=top_k, fetch_k=fetch_k, rerank=use_reranker)
+        # VectorRetriever artık saf: where_filter=None (varsayılan) hiçbir tarih
+        # filtresi uygulamaz, etiketleme havuzu her zaman tüm derlemden gelir.
+        reranker = None
+        if use_reranker:
+            from src.retriever.reranker import CrossEncoderReranker
+            reranker = CrossEncoderReranker()
+        res = retr.retrieve(query, top_k=top_k, fetch_k=fetch_k, reranker=reranker)
         docs = res["documents"][0]
         metas = res["metadatas"][0]
         dists = res["distances"][0]

@@ -1,0 +1,18 @@
+# 2x3 Eşit-Koşul Matrisi: Qwen3-0.6B / Jina v4 × chunk 256/512/1024
+# Eşit output dim (1024), ~%10 atom-sınırlı overlap, reranker KAPALI,
+# tam korpus (113 belge, 27/1 + 27/2), standart chunk embedding (simetrik).
+name: "2x3 Matris: qwen3 / jina-v4 x 256/512/1024, 1024d, ~%10 ovl, reranker OFF"
+
+collections:
+  - tutanaklar_qwen3_c256_1024d_ovl
+  - tutanaklar_qwen3_c512_1024d_ovl
+  - tutanaklar_qwen3_c1024_1024d_ovl
+  - tutanaklar_jinav4_c256_1024d_ovl
+  - tutanaklar_jinav4_c512_1024d_ovl
+  - tutanaklar_jinav4_c1024_1024d_ovl
+
+fixture: tests/fixtures/golden_tbmm27001001.json   # 202 soru, page_overlap eşleştirici
+
+top_k: [1, 3, 5, 10, 20]
+reranker: false
+fetch_k: 100

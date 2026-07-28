@@ -159,6 +159,11 @@ class CollectionSpec:
     min_chunk_tokens: int = 384
     """Post-process min token merge eşiği. Bu altındaki chunk'lar bir sonrakiyle birleşir."""
 
+    chunk_overlap_tokens: int = 0
+    """Ardışık chunk'lar arası atom-sınırında örtüşme bütçesi (token, ~%10 · max_chunk_tokens).
+    DİKKAT: `overlap_tokens` (MODEL_SPECS'ten türeyen, pencereli late-chunking MAKRO
+    pencere örtüşmesi) ile karıştırmayın — bu alan chunk'ların kendi örtüşmesidir. 0 = kapalı."""
+
     context_weight: int = 5
     """LLM context'e kaç chunk katılacak (per-collection retrieval)."""
 
@@ -218,6 +223,7 @@ def _build_collections() -> dict[str, CollectionSpec]:
             doc_type=doc_type,
             max_chunk_tokens=cfg.get("max_chunk_tokens", 512),
             min_chunk_tokens=cfg.get("min_chunk_tokens", 384),
+            chunk_overlap_tokens=int(cfg.get("chunk_overlap_tokens", 0)),
             production_ready=bool(cfg.get("production_ready", False)),
         )
         result[key] = spec

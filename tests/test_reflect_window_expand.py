@@ -273,6 +273,18 @@ def test_window_expand_config_defaults():
     assert we.anchor_count == 1
 
 
+def test_max_dry_hops_config_default():
+    # Çözülemeyen-hop iptali global açık: default 1 = ilk verimsiz hop'ta kes.
+    assert load_pipeline_config().reflect.max_dry_hops == 1
+
+
+def test_max_dry_hops_config_parses_and_disables():
+    from src.config.pipeline_loader import ReflectConfig
+    assert ReflectConfig({"max_dry_hops": 2}).max_dry_hops == 2
+    assert ReflectConfig({"max_dry_hops": 0}).max_dry_hops == 0   # kill-switch
+    assert ReflectConfig({}).max_dry_hops == 1                     # kod default
+
+
 def test_strategy_window_expand_flag_parsed():
     got = StrategyPlaybook._finalize({"window_expand": "true"})
     assert got["window_expand"] is True

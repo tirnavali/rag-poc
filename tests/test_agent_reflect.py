@@ -266,30 +266,57 @@ def test_reflect_kill_switch_suppresses_reflect(monkeypatch):
     assert out.answer == "Cevap metni."
 
 
-def test_reflect_added_zero_but_not_done_continues(monkeypatch):
-    # Search always returns the same ids → every reflect hop merges 0 new chunks. The
-    # generic loop would stop on added==0; the reflect self-loop must NOT — it runs to
-    # max_rounds because the procedure (not saturation) decides termination.
-    # NOTE: next_draft varies per round (hop-1..hop-4) rather than reusing one fixed
-    # string. A single repeated draft text would collide with the dedup ledger's
-    # (collection, text, filters) key from round 1 onward — _dedupe_and_register would
-    # prune it starting round 2 (same key already registered at >= fetch_k), making
-    # draft_texts come back empty and (correctly, post-fix) stop the loop early. That
-    # would be testing dedup-exhaustion (see test_reflect_stops_when_dedup_exhausts_all_
-    # drafts), not this test's actual target: a REAL search that executes every round
-    # but never contributes new content. Distinct draft text per round keeps each
-    # round's search un-pruned so only the added==0 signal is exercised in isolation.
-    reflect = _scripted([
+def _dry_reflect():
+    """A reflect() that keeps proposing distinct, well-formed hops (never done, never
+    dedup-pruned). Paired with _fixed_search every hop executes a REAL search that
+    contributes 0 new chunks → exercises the dry-hop signal in isolation."""
+    return _scripted([
         _reflection(done=False, next_draft="hop-1", hop=1),
         _reflection(done=False, next_draft="hop-2", hop=1),
         _reflection(done=False, next_draft="hop-3", hop=1),
         _reflection(done=False, next_draft="hop-4", hop=1),
     ])
+
+
+def test_reflect_cancels_on_first_dry_hop(monkeypatch):
+    # DRY-HOP İPTALİ: _fixed_search her turda AYNI id'leri döndürür → her reflect hop'u 0
+    # yeni chunk merge eder (added==0, window_added==0) ama arama GERÇEKTEN çalışır
+    # (draft_texts distinct → dedup-exhaustion DEĞİL). Default max_dry_hops=1 ile döngü İLK
+    # verimsiz hop'tan sonra max_rounds tavanını (4) beklemeden kesilir. next_draft turdan
+    # tura değişir (tek sabit dize round-2'den itibaren dedup ledger'a çarpıp draft_texts'i
+    # boşaltır → farklı durak yolu; bkz. test_reflect_stops_when_dedup_exhausts_all_drafts).
+    reflect = _dry_reflect()
     agent = _agent(monkeypatch, plan=_plan("kanun_kabul_oylama"), reflect=reflect,
                    search=_fixed_search)
+    assert agent._config.reflect.max_dry_hops == 1        # pipeline.yaml default
+    out = agent.run("bir kanun kaç oyla", session_collections=[COL])
+    assert reflect.state["n"] == 1                        # ilk dry hop → iptal (4 değil)
+    assert out.answer == "Cevap metni."
+
+
+def test_reflect_dry_hop_cancel_kill_switch_runs_to_max_rounds(monkeypatch):
+    # max_dry_hops=0 (kill-switch) → dry-hop iptali devre dışı; eski davranış korunur:
+    # verimsiz hop'lar prosedürü durdurmaz, döngü max_rounds tavanına kadar döner.
+    reflect = _dry_reflect()
+    agent = _agent(monkeypatch, plan=_plan("kanun_kabul_oylama"), reflect=reflect,
+                   search=_fixed_search)
+    agent._config.reflect.max_dry_hops = 0
     out = agent.run("bir kanun kaç oyla", session_collections=[COL])
     strat_max = agent._config.get_strategy("kanun_kabul_oylama")["max_rounds"]
     assert reflect.state["n"] == strat_max
+    assert out.answer == "Cevap metni."
+
+
+def test_reflect_dry_hop_cancel_tolerance_allows_one_dry_hop(monkeypatch):
+    # max_dry_hops=2 → bir verimsiz hop tolere edilir, iptal ancak İKİNCİ ard ardışık
+    # dry hop'ta. _fixed_search'te hop-1 dry (dry_hops=1, devam) → hop-2 dry (dry_hops=2,
+    # iptal) → reflect 2 kez çağrılır.
+    reflect = _dry_reflect()
+    agent = _agent(monkeypatch, plan=_plan("kanun_kabul_oylama"), reflect=reflect,
+                   search=_fixed_search)
+    agent._config.reflect.max_dry_hops = 2
+    out = agent.run("bir kanun kaç oyla", session_collections=[COL])
+    assert reflect.state["n"] == 2
     assert out.answer == "Cevap metni."
 
 
@@ -650,18 +677,20 @@ def test_reflect_injects_sira_sayisi_filter_from_anchor(monkeypatch):
     assert {
         "$and": [{"sira_sayisi": {"$eq": 5}}, {"section_type": {"$eq": "oylama"}}]
     } in seen_filters
-    # Trace bayrağı: filtreli reflect turunda True.
+    # Trace bayrağı: filtreli hop'un RETRIEVAL fazında True (graf=trace: hop retrieval'ı
+    # artık gerçek retrieval node'unda çalışır, telemetri o span'e yayılır — eskiden reflect
+    # fazındaydı).
     def _phase(ev):
         return ev.get("phase") if isinstance(ev, dict) else getattr(ev, "phase", None)
 
     def _details(ev):
         d = ev.get("details") if isinstance(ev, dict) else getattr(ev, "details", None)
         return d or {}
-    reflect_flags = [
+    retrieval_flags = [
         _details(ev).get("sira_sayisi_filter_available")
-        for ev in out.trace if _phase(ev) == "reflect"
+        for ev in out.trace if _phase(ev) == "retrieval"
     ]
-    assert True in reflect_flags
+    assert True in retrieval_flags
 
 
 def test_reflect_no_sira_filter_without_anchor(monkeypatch):

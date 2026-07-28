@@ -1,13 +1,12 @@
 [
   {
     "id": "tbmm27-01-01-001",
-    "query": "Meclisin 27'nci Yasama Döneminin Birinci Yılının ilk Birleşimini hangi başkan açtı?",
+    "query": "Meclisin 27'nci Yasama Döneminin Birinci Yılının ilk Birleşimini açan geçici başkan kim?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-01-20180707",
         "pages": [
-          2,
-          31
+          2
         ]
       },
       {
@@ -24,7 +23,8 @@
       "narrative",
       "medium",
       "cross-page",
-      "cross-document"
+      "cross-document",
+      "approved"
     ]
   },
   {
@@ -88,6 +88,25 @@
         "pages": [
           50
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-99-20190709",
+        "pages": [
+          147,
+          164
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-88-20190612",
+        "pages": [
+          29
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-31-20181213",
+        "pages": [
+          34
+        ]
       }
     ],
     "golden_answer": "24 vatandaş",
@@ -97,7 +116,8 @@
       "narrative",
       "easy",
       "cross-page",
-      "cross-document"
+      "cross-document",
+      "approved"
     ]
   },
   {
@@ -113,14 +133,35 @@
           9,
           11
         ]
+      },
+      {
+        "document_id": "tutanak-27-01-08-20180723",
+        "pages": [
+          167
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-14-20181106",
+        "pages": [
+          125
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          424
+        ]
       }
     ],
     "golden_answer": "İYİ PARTİ, MHP, HDP, CHP, AK PARTİ, Büyük Birlik Partisi (BBP), Demokrat Parti (DP)",
     "tags": [
       "tbmm-minutes",
-      "cross-page",
+      "page-level",
       "narrative",
-      "medium"
+      "medium",
+      "cross-page",
+      "cross-document",
+      "approved"
     ]
   },
   {
@@ -148,7 +189,8 @@
       "narrative",
       "medium",
       "cross-page",
-      "cross-document"
+      "cross-document",
+      "approved"
     ]
   },
   {
@@ -167,7 +209,8 @@
       "tbmm-minutes",
       "page-level",
       "narrative",
-      "medium"
+      "medium",
+      "approved"
     ]
   },
   {
@@ -186,7 +229,8 @@
       "tbmm-minutes",
       "page-level",
       "narrative",
-      "medium"
+      "medium",
+      "approved"
     ]
   },
   {
@@ -205,7 +249,8 @@
       "tbmm-minutes",
       "page-level",
       "narrative",
-      "easy"
+      "easy",
+      "approved"
     ]
   },
   {
@@ -224,7 +269,8 @@
       "tbmm-minutes",
       "page-level",
       "narrative",
-      "medium"
+      "medium",
+      "approved"
     ]
   },
   {
@@ -243,7 +289,8 @@
       "tbmm-minutes",
       "page-level",
       "narrative",
-      "hard"
+      "hard",
+      "approved"
     ]
   },
   {
@@ -255,6 +302,12 @@
         "pages": [
           11
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-57-20190224",
+        "pages": [
+          12
+        ]
       }
     ],
     "golden_answer": "İzmir Milletvekili Binali Yıldırım",
@@ -262,7 +315,10 @@
       "tbmm-minutes",
       "page-level",
       "narrative",
-      "medium"
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
     ]
   },
   {
@@ -274,14 +330,23 @@
         "pages": [
           12
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-57-20190224",
+        "pages": [
+          11
+        ]
       }
     ],
-    "golden_answer": "İstanbul Milletvekili Erdoğan Toprak",
+    "golden_answer": "İstanbul Milletvekili Engin Altay",
     "tags": [
       "tbmm-minutes",
       "page-level",
       "narrative",
-      "medium"
+      "medium",
+      "cross-page",
+      "cross-document",
+      "approved"
     ]
   },
   {
@@ -293,6 +358,12 @@
         "pages": [
           14
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-57-20190224",
+        "pages": [
+          14
+        ]
       }
     ],
     "golden_answer": "581 üye",
@@ -300,7 +371,10 @@
       "tbmm-minutes",
       "page-level",
       "narrative",
-      "hard"
+      "hard",
+      "approved",
+      "cross-page",
+      "cross-document"
     ]
   },
   {
@@ -310,8 +384,14 @@
       {
         "document_id": "tutanak-27-01-04-20180712",
         "pages": [
-          12,
           13,
+          14,
+          16
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-57-20190224",
+        "pages": [
           14
         ]
       }
@@ -321,7 +401,10 @@
       "tbmm-minutes",
       "page-level",
       "narrative",
-      "hard"
+      "hard",
+      "approved",
+      "cross-page",
+      "cross-document"
     ]
   },
   {
@@ -340,7 +423,8 @@
       "tbmm-minutes",
       "page-level",
       "narrative",
-      "medium"
+      "medium",
+      "flagged"
     ]
   },
   {
@@ -375,6 +459,7 @@
       "page-level",
       "deputy",
       "medium",
+      "approved",
       "cross-page",
       "cross-document"
     ]
@@ -386,7 +471,14 @@
       {
         "document_id": "tutanak-27-01-01-20180707",
         "pages": [
-          40
+          40,
+          42
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-17-20181114",
+        "pages": [
+          177
         ]
       }
     ],
@@ -395,7 +487,10 @@
       "tbmm-minutes",
       "page-level",
       "bulletin",
-      "medium"
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
     ]
   },
   {
@@ -413,7 +508,8 @@
     "tags": [
       "tbmm-minutes",
       "page-level",
-      "easy"
+      "easy",
+      "approved"
     ]
   },
   {
@@ -442,19 +538,27 @@
         "pages": [
           18
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-57-20190224",
+        "pages": [
+          14,
+          18
+        ]
       }
     ],
     "golden_answer": "",
     "tags": [
       "tbmm-minutes",
       "page-level",
+      "approved",
       "cross-page",
       "cross-document"
     ]
   },
   {
     "id": "tbmm27-01-01-157",
-    "query": "Cumhurbaşkanlığı hükümet sisteminin ilk kabinesi?",
+    "query": "Cumhurbaşkanlığı hükümet sisteminin ilk bakanlar kurulu listesi?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-01-01-20180707",
@@ -481,6 +585,7 @@
     "tags": [
       "tbmm-minutes",
       "page-level",
+      "approved",
       "cross-page",
       "cross-document"
     ]
@@ -570,6 +675,21 @@
           123,
           177
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-16-20181113",
+        "pages": [
+          142
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-34-20181216",
+        "pages": [
+          54,
+          185,
+          186,
+          187
+        ]
       }
     ],
     "golden_answer": "",
@@ -578,7 +698,9 @@
       "page-level",
       "bulletin",
       "hard",
-      "cross-page"
+      "approved",
+      "cross-page",
+      "cross-document"
     ]
   },
   {
@@ -649,6 +771,7 @@
           108,
           114,
           125,
+          140,
           157,
           162
         ]
@@ -663,7 +786,8 @@
       {
         "document_id": "tutanak-27-02-11-20181030",
         "pages": [
-          231
+          231,
+          247
         ]
       },
       {
@@ -679,6 +803,7 @@
       "page-level",
       "bulletin",
       "hard",
+      "approved",
       "cross-page",
       "cross-document"
     ]
@@ -728,6 +853,7 @@
     "tags": [
       "tbmm-minutes",
       "page-level",
+      "approved",
       "cross-page",
       "cross-document"
     ]
@@ -766,12 +892,32 @@
         "pages": [
           66
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-97-20190703",
+        "pages": [
+          33
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-33-20181215",
+        "pages": [
+          130
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-99-20190709",
+        "pages": [
+          163,
+          164
+        ]
       }
     ],
     "golden_answer": "",
     "tags": [
       "tbmm-minutes",
       "page-level",
+      "approved",
       "cross-page",
       "cross-document"
     ]
@@ -807,6 +953,7 @@
     "tags": [
       "tbmm-minutes",
       "page-level",
+      "approved",
       "cross-page",
       "cross-document"
     ]
@@ -826,7 +973,6 @@
         "pages": [
           54,
           55,
-          56,
           57,
           58,
           108
@@ -864,12 +1010,56 @@
         "pages": [
           91
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-27-20181206",
+        "pages": [
+          33
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          134,
+          171
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          30
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-28-20181210",
+        "pages": [
+          76
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-53-20190214",
+        "pages": [
+          93
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-29-20181211",
+        "pages": [
+          162
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-54-20190219",
+        "pages": [
+          89
+        ]
       }
     ],
     "golden_answer": "arzumuz bu kararların ve bu uygulamaların hakkaniyetli olmasıdır ama bize gelen, bizlere intikal eden birçok konunun ne kadar çok insanı mağdur ettiğini görmekten de üzüntü duyuyoruz\n\nFETÖ soruşturmaları nedeniyle kamuda çok sayıda kadroda boşalma söz konusu olmuştur. Yirmi bir günlük temel eğitim nedeniyle hâkimler, doktorlar, avukatlar ve kamuda çalışan çok sayıda kişi işini bırakıp askerlik görevini yerine getireceklerdir. Bu yirmi bir günlük temel eğitim kamuda yeni boşalmalara sebebiyet verecektir, bu da vatandaşların mağduriyetine neden olacaktır\n\nŞimdi, 15 Temmuz sonrası adaletsizlik uygulamaları yine FETÖ'nün ekmeğine yağ çalar\n\nTürkiye'de hâl böyleyse ve yargıç teminatı kalmamışsa FETÖ soruşturmalarından sağlıklı sonuç almak hiç mümkün değildir,",
     "tags": [
       "tbmm-minutes",
       "page-level",
+      "approved",
       "cross-page",
       "cross-document"
     ]
@@ -897,6 +1087,57 @@
         "pages": [
           50
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-26-20181205",
+        "pages": [
+          98,
+          99
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-18-20181115",
+        "pages": [
+          72,
+          73
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-96-20190702",
+        "pages": [
+          91
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-41-20181226",
+        "pages": [
+          38
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-45-20190115",
+        "pages": [
+          61
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-51-20190212",
+        "pages": [
+          23
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-49-20190206",
+        "pages": [
+          21,
+          71
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-46-20190116",
+        "pages": [
+          90
+        ]
       }
     ],
     "golden_answer": "",
@@ -904,6 +1145,7 @@
       "tbmm-minutes",
       "page-level",
       "medium",
+      "approved",
       "cross-page",
       "cross-document"
     ]
@@ -970,79 +1212,24 @@
         "pages": [
           45
         ]
-      }
-    ],
-    "golden_answer": "",
-    "tags": [
-      "tbmm-minutes",
-      "page-level",
-      "cross-page",
-      "cross-document"
-    ]
-  },
-  {
-    "id": "tbmm27-02-06-003",
-    "query": "müslümanların yaşatılan zulümler nelerdir",
-    "relevant_pages": [
+      },
       {
-        "document_id": "tutanak-27-02-06-20181010",
+        "document_id": "tutanak-27-02-99-20190709",
         "pages": [
-          150,
-          151,
-          163,
-          170
+          193
         ]
       },
       {
-        "document_id": "tutanak-27-02-08-20181017",
+        "document_id": "tutanak-27-02-18-20181115",
         "pages": [
-          103,
-          214
+          27,
+          72
         ]
       },
       {
-        "document_id": "tutanak-27-02-09-20181023",
+        "document_id": "tutanak-27-02-52-20190213",
         "pages": [
-          44,
-          88
-        ]
-      },
-      {
-        "document_id": "tutanak-27-02-07-20181016",
-        "pages": [
-          144,
-          145,
-          147,
-          150,
-          153,
-          156
-        ]
-      },
-      {
-        "document_id": "tutanak-27-02-10-20181024",
-        "pages": [
-          14,
-          17,
-          25
-        ]
-      },
-      {
-        "document_id": "tutanak-27-01-08-20180723",
-        "pages": [
-          89,
-          95
-        ]
-      },
-      {
-        "document_id": "tutanak-27-01-04-20180712",
-        "pages": [
-          9
-        ]
-      },
-      {
-        "document_id": "tutanak-27-01-09-20180724",
-        "pages": [
-          94
+          29
         ]
       }
     ],
@@ -1050,6 +1237,7 @@
     "tags": [
       "tbmm-minutes",
       "page-level",
+      "approved",
       "cross-page",
       "cross-document"
     ]
@@ -1276,12 +1464,31 @@
           51,
           138
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-51-20190212",
+        "pages": [
+          62
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-104-20190717",
+        "pages": [
+          56
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-45-20190115",
+        "pages": [
+          178
+        ]
       }
     ],
     "golden_answer": "",
     "tags": [
       "tbmm-minutes",
       "page-level",
+      "approved",
       "cross-page",
       "cross-document"
     ]
@@ -1339,12 +1546,56 @@
         "pages": [
           96
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-84-20190528",
+        "pages": [
+          146
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-28-20181210",
+        "pages": [
+          71,
+          97
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-37-20181219",
+        "pages": [
+          190
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-81-20190522",
+        "pages": [
+          39
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-36-20181218",
+        "pages": [
+          44
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-38-20181220",
+        "pages": [
+          116
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          50
+        ]
       }
     ],
     "golden_answer": "",
     "tags": [
       "tbmm-minutes",
       "page-level",
+      "approved",
       "cross-page",
       "cross-document"
     ]
@@ -1378,6 +1629,7 @@
     "tags": [
       "tbmm-minutes",
       "page-level",
+      "flagged",
       "cross-page",
       "cross-document"
     ]
@@ -1547,6 +1799,7 @@
     "tags": [
       "tbmm-minutes",
       "page-level",
+      "approved",
       "cross-page"
     ]
   },
@@ -2007,12 +2260,32 @@
         "pages": [
           119
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-24-20181129",
+        "pages": [
+          61,
+          62
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-13-20181101",
+        "pages": [
+          99
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-33-20181215",
+        "pages": [
+          154
+        ]
       }
     ],
     "golden_answer": "",
     "tags": [
       "tbmm-minutes",
       "page-level",
+      "approved",
       "cross-page",
       "cross-document"
     ]
@@ -3890,8 +4163,8 @@
       "page-level",
       "narrative",
       "medium",
-      "cross-page",
-      "unverified"
+      "approved",
+      "cross-page"
     ]
   },
   {
@@ -4579,6 +4852,18 @@
         "pages": [
           124
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          169
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-43-20190109",
+        "pages": [
+          23
+        ]
       }
     ],
     "golden_answer": "",
@@ -4587,9 +4872,9 @@
       "page-level",
       "narrative",
       "easy",
+      "approved",
       "cross-page",
-      "cross-document",
-      "unverified"
+      "cross-document"
     ]
   },
   {
@@ -7384,8 +7669,7 @@
       "narrative",
       "hard",
       "cross-page",
-      "cross-document",
-      "unverified"
+      "cross-document"
     ]
   },
   {
@@ -8015,7 +8299,11 @@
           8,
           84,
           85,
-          86
+          86,
+          87,
+          237,
+          254,
+          263
         ]
       },
       {
@@ -8036,6 +8324,7 @@
       {
         "document_id": "tutanak-27-02-89-20190613",
         "pages": [
+          44,
           47,
           48
         ]
@@ -8068,7 +8357,7 @@
       "medium",
       "cross-page",
       "cross-document",
-      "unverified"
+      "approved"
     ]
   },
   {
@@ -8197,6 +8486,12 @@
         "pages": [
           427
         ]
+      },
+      {
+        "document_id": "tutanak-27-02-42-20190108",
+        "pages": [
+          92
+        ]
       }
     ],
     "golden_answer": "",
@@ -8205,9 +8500,9 @@
       "page-level",
       "narrative",
       "medium",
+      "approved",
       "cross-page",
-      "cross-document",
-      "unverified"
+      "cross-document"
     ]
   },
   {
@@ -8502,37 +8797,32 @@
           90,
           142,
           167,
-          223,
-          236
+          223
         ]
       },
       {
         "document_id": "tutanak-27-02-82-20190523",
         "pages": [
           39,
-          120,
-          121
+          120
         ]
       },
       {
         "document_id": "tutanak-27-02-100-20190710",
         "pages": [
           88,
-          133,
-          149
+          133
         ]
       },
       {
         "document_id": "tutanak-27-02-26-20181205",
         "pages": [
-          10,
-          101
+          10
         ]
       },
       {
         "document_id": "tutanak-27-02-40-20181225",
         "pages": [
-          54,
           62
         ]
       },
@@ -8556,9 +8846,9 @@
       "page-level",
       "narrative",
       "medium",
+      "approved",
       "cross-page",
-      "cross-document",
-      "unverified"
+      "cross-document"
     ]
   },
   {
@@ -8578,6 +8868,7 @@
           49,
           50,
           54,
+          56,
           57,
           59
         ]
@@ -8641,13 +8932,12 @@
       "page-level",
       "medium",
       "cross-page",
-      "cross-document",
-      "unverified"
+      "cross-document"
     ]
   },
   {
     "id": "tbmm27-02-64-301",
-    "query": "Afşin-Elbistan B Termik Santrali'ne kömür sağlayan Çöllolar Kömür Sahası'nda 2011'de yaşanan göçükte kaç işçi hayatını kaybetti?",
+    "query": "Afşin-Elbistan Termik Santrali'ne kömür sağlayan Çöllolar Kömür Sahası'nda 2011'de yaşanan göçükte kaç işçi hayatını kaybetti?",
     "relevant_pages": [
       {
         "document_id": "tutanak-27-02-64-20190410",
@@ -8715,8 +9005,1630 @@
       "narrative",
       "hard",
       "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-33-401",
+    "query": "ankaradaki hızlı tren faciasından sonra hat daha bitmeden neden sefere açıldı diye soranlar oldu mu, bakanın istifası istendi mi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-33-20181215",
+        "pages": [
+          130,
+          140,
+          242,
+          243,
+          252
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
+      "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-33-402",
+    "query": "izban grevi işe gidemeyen izmirliler",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-33-20181215",
+        "pages": [
+          163,
+          164
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "hard",
+      "cross-page",
+      "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-33-403",
+    "query": "maraş katliamının gerçek yüzünün ortaya çıkması için hangi kurumun arşivleri açılsın istendi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-33-20181215",
+        "pages": [
+          70,
+          117,
+          124,
+          126
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
+      "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-33-404",
+    "query": "müslüman olmayan öğrenciler zorunlu din dersinden muaf olamıyor, bu sorun mecliste nasıl dile getirildi",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-33-20181215",
+        "pages": [
+          176,
+          212
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
+      "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-34-401",
+    "query": "Şehir hastanelerinin anlaşmaları neden denetimden kaçırılıyor eleştirilerine Sağlık Bakanı nasıl cevap verdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-34-20181216",
+        "pages": [
+          175,
+          189,
+          190,
+          191,
+          192
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
+      "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-34-402",
+    "query": "rakka'da ortaya çıkan belediye araçları hangi şehrin belediyesine aitti?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          102
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-86-20190530",
+        "pages": [
+          27
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "flagged",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-34-403",
+    "query": "mckinsey'e neden iş verildi tartışması",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-34-20181216",
+        "pages": [
+          39,
+          40
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          302
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-99-20190709",
+        "pages": [
+          110,
+          112
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "hard",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-35-401",
+    "query": "çatışmada yaralanıp da gazi sayılmayan askerlerin mağduriyetine mecliste kimler nasıl itiraz etti?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          82,
+          92
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
+      "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-35-402",
+    "query": "dünya şampiyonu olup meclis kürsüsünden kutlanan kadın voleybol takımımız hangisiydi",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-78-20190515",
+        "pages": [
+          9
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          41
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
       "cross-document",
       "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-35-403",
+    "query": "sulama elektriği borcuna batan çiftçiler",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          105,
+          165,
+          181
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "hard",
+      "cross-page",
+      "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-48-401",
+    "query": "burdur'da halk neden toplu şekilde hastanelik oldu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [
+          4,
+          83,
+          95
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
+      "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-48-402",
+    "query": "Salda Gölü'ne millet bahçesi yapılmasına kimler neden karşı çıktı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [
+          4,
+          87,
+          95,
+          96
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
+      "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-49-401",
+    "query": "kuşadasına gemi turisti gelmiyor esnaf dertli",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-49-20190206",
+        "pages": [
+          20,
+          105
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "hard",
+      "cross-page",
+      "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-49-402",
+    "query": "sedat peker'in tehditlerine rağmen serbest dolaşması mecliste nasıl sorgulandı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-01-01-20180707",
+        "pages": [
+          317,
+          457
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          263
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
+      "cross-document",
+      "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-51-401",
+    "query": "Trabzonspor'un hakem kararlarına isyanı Meclis'e nasıl yansıdı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-51-20190212",
+        "pages": [
+          15,
+          16,
+          41
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "cross-page",
+      "unverified"
+    ]
+  },
+  {
+    "id": "tbmm27-02-52-401",
+    "query": "silivride bulunan doğalgaz kaç evi kaç yıl idare edecek",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-52-20190213",
+        "pages": [
+          102
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "flagged"
+    ]
+  },
+  {
+    "id": "tbmm27-02-52-402",
+    "query": "izmirde gömülü nükleer atık skandalı",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-52-20190213",
+        "pages": [
+          111,
+          118,
+          119
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "hard",
+      "approved",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-02-54-401",
+    "query": "birinci dünya savaşında rusyaya kaçırılan tarihi eserlerimiz geri gelecek mi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-54-20190219",
+        "pages": [
+          41,
+          42
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-02-54-402",
+    "query": "hangi ilimizde hala devlet hastanesi yok?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-54-20190219",
+        "pages": [
+          52
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-17-20181114",
+        "pages": [
+          64
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-55-401",
+    "query": "atatürk havalimanının kapanması neden sürekli erteleniyor, mecliste ne konuşuldu?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-55-20190220",
+        "pages": [
+          34,
+          35,
+          37,
+          38
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-84-20190528",
+        "pages": [
+          17
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-11-20181030",
+        "pages": [
+          176
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          185
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-57-401",
+    "query": "Meclis binasına girmesi yasak olan vatandaşlar var mı, kaç kişi ve neden yasaklı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-57-20190224",
+        "pages": [
+          22,
+          23
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-16-20181113",
+        "pages": [
+          156
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-94-20190626",
+        "pages": [
+          130
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-64-401",
+    "query": "Rusya'ya daha fazla domates satabilmek karşılığında et alma sözü mü verildi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-64-20190410",
+        "pages": [
+          8,
+          9,
+          11
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-42-20190108",
+        "pages": [
+          141
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-61-401",
+    "query": "Eski cumhurbaşkanlarını kaç koruma polisi koruyor, emirlerine kaç araç verilmiş?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-61-20190403",
+        "pages": [
+          13,
+          14
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "flagged",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-02-73-401",
+    "query": "kadın erkek eşitliği komisyonuna vatandaşlar en çok hangi konularda başvuruyor",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-73-20190502",
+        "pages": [
+          8,
+          11,
+          13,
+          14,
+          15,
+          16
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-93-20190625",
+        "pages": [
+          583
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-69-401",
+    "query": "Meclis 99 yaşına girerken parti liderleri kürsüden neler söyledi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-69-20190423",
+        "pages": [
+          19,
+          23,
+          24,
+          28,
+          35,
+          36,
+          37,
+          39,
+          40
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-80-20190521",
+        "pages": [
+          52
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-72-401",
+    "query": "boğaziçi üniversitesindeki bir konferansta atatürke hakaret edildiği iddiasına meclisten gelen tepkiler",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-72-20190430",
+        "pages": [
+          4,
+          71
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-18-20181115",
+        "pages": [
+          19
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-73-20190502",
+        "pages": [
+          3
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-74-401",
+    "query": "İsrail'in Gazze'de Türk haber ajansının ofisini vurmasına vekillerden nasıl tepkiler geldi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-74-20190507",
+        "pages": [
+          32,
+          33,
+          36
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-75-20190508",
+        "pages": [
+          24
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-63-401",
+    "query": "Manisa'da kurulmak istenen jeotermal santralle ilgili endişeler Meclis gündemine nasıl geldi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-63-20190409",
+        "pages": [
+          14,
+          16,
+          17,
+          113
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-43-20190109",
+        "pages": [
+          164
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-63-402",
+    "query": "urfada elektrikler sürekli kesiliyor dedaş şikayetleri",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-63-20190409",
+        "pages": [
+          9,
+          11
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          334,
+          337
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-01-20181001",
+        "pages": [
+          282
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "hard",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-60-401",
+    "query": "göcek tünelinden geçmek neden bu kadar pahalandı",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-60-20190402",
+        "pages": [
+          12,
+          14,
+          64,
+          65,
+          67
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "hard",
+      "approved",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-02-75-401",
+    "query": "kültür bakanının kendi otellerini kayırdığı iddiaları mecliste nasıl gündeme geldi",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-75-20190508",
+        "pages": [
+          59
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-99-20190709",
+        "pages": [
+          218
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-77-401",
+    "query": "Elâzığ'daki bakır madeninin satışından sonra mağdur olanlar için Meclis'te ne istendi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          6,
+          79,
+          80,
+          81,
+          84
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-78-20190515",
+        "pages": [
+          11
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-72-20190430",
+        "pages": [
+          100
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-78-401",
+    "query": "meclise saldırı girişimi güvenlik açığı",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-78-20190515",
+        "pages": [
+          16,
+          37
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "hard",
+      "approved",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-02-79-401",
+    "query": "thy filosunda uçuştan çekilen max tipi uçaklardan kaç tane var",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-79-20190516",
+        "pages": [
+          120,
+          121
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-02-79-402",
+    "query": "saraya otobüs hediye edildiği iddiasına hangi bakan yanıt verdi",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-79-20190516",
+        "pages": [
+          7,
+          8,
+          9,
+          107,
+          108
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          16
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-12-20181031",
+        "pages": [
+          32
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-80-401",
+    "query": "Yabancılara ev satıp karşılığında vatandaşlık verilmesine Meclis'te kimler itiraz etti?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-80-20190521",
+        "pages": [
+          55,
+          56,
+          59,
+          60,
+          63
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          266
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-92-20190620",
+        "pages": [
+          43
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-81-401",
+    "query": "yaş çay alım sınırı üretici isyanı",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-81-20190522",
+        "pages": [
+          19
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-101-20190711",
+        "pages": [
+          47,
+          48,
+          49,
+          51
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-80-20190521",
+        "pages": [
+          41,
+          42
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "hard",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-81-402",
+    "query": "trt'de kadro şişkinliği ve savurganlık iddiaları",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-81-20190522",
+        "pages": [
+          35,
+          48,
+          49,
+          50,
+          51
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-84-20190528",
+        "pages": [
+          76,
+          102
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-09-20180724",
+        "pages": [
+          97
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "hard",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-82-401",
+    "query": "Çocuklarına aşı yaptırmayan ailelerin çoğalmasına karşı Meclis'te ne yapılması istendi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-42-20190108",
+        "pages": [
+          273
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [
+          257
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-54-20190219",
+        "pages": [
+          184
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-72-20190430",
+        "pages": [
+          177
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-67-20190417",
+        "pages": [
+          46
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-66-20190416",
+        "pages": [
+          92
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-83-401",
+    "query": "Konya'da öldürülen ilçe belediye başkanı kimdi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-83-20190527",
+        "pages": [
+          77,
+          80
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-84-20190528",
+        "pages": [
+          10,
+          69
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-86-20190530",
+        "pages": [
+          19
+        ]
+      }
+    ],
+    "golden_answer": "Konya ili Doğanhisar Belediye Başkanı İhsan Öztoklu",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-94-401",
+    "query": "murat dağı'na altın madeni yapılmasına meclis'te kimler neden karşı çıktı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-94-20190626",
+        "pages": [
+          29
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-86-20190530",
+        "pages": [
+          58
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-84-20190528",
+        "pages": [
+          63
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          36
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-99-20190709",
+        "pages": [
+          101,
+          103
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-94-402",
+    "query": "fındık fiyatı hala açıklanmadı üretici mağdur",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-94-20190626",
+        "pages": [
+          116
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-08-20181017",
+        "pages": [
+          116
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-84-20190528",
+        "pages": [
+          38
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-09-20181023",
+        "pages": [
+          58
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-101-20190711",
+        "pages": [
+          73
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-87-20190611",
+        "pages": [
+          89
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-05-20181009",
+        "pages": [
+          22
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "hard",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-95-401",
+    "query": "şehit eren bülbül'ün hatırası için thy uçağına verilen isim neydi",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-95-20190627",
+        "pages": [
+          45
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-100-20190710",
+        "pages": [
+          87
+        ]
+      }
+    ],
+    "golden_answer": "Maçka",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-95-402",
+    "query": "göçmenlerin tutulduğu geri gönderme merkezinde tüberküloz çıktığı iddiası",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-95-20190627",
+        "pages": [
+          61
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-88-20190612",
+        "pages": [
+          15
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "hard",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-96-401",
+    "query": "Devlet televizyonunun terörist başının kardeşini ekrana çıkarması Meclis'te nasıl tepki topladı?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-96-20190702",
+        "pages": [
+          7,
+          49,
+          50,
+          51,
+          54
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-97-20190703",
+        "pages": [
+          14,
+          152
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-31-20181213",
+        "pages": [
+          119
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-96-402",
+    "query": "Ergenekon'da herkes beraat edince Meclis'te yaşanan özür ve tazminat tartışmasında neler söylendi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-96-20190702",
+        "pages": [
+          42,
+          46,
+          47,
+          48,
+          122
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-97-20190703",
+        "pages": [
+          102
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-27-20181206",
+        "pages": [
+          33
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-54-20190219",
+        "pages": [
+          119
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-29-20181211",
+        "pages": [
+          71
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-97-401",
+    "query": "garanti ödemeli zafer havalimanını 2018'de gerçekte kaç yolcu kullandı",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-97-20190703",
+        "pages": [
+          11,
+          233,
+          234,
+          235,
+          238,
+          239
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page"
+    ]
+  },
+  {
+    "id": "tbmm27-02-98-401",
+    "query": "Yağlı güreşte altın kemeri kimseye kaptırmayan başpehlivanlara devlet hangi unvanı verecek?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-96-20190702",
+        "pages": [
+          106
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          11
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-98-402",
+    "query": "öğrenim kredisi borcunu ödeyemeyen üniversite mezunu gençler için meclis'te ne yapılması istendi?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-98-20190704",
+        "pages": [
+          7,
+          50,
+          51,
+          52,
+          54
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-92-20190620",
+        "pages": [
+          40
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-94-20190626",
+        "pages": [
+          28
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-100-401",
+    "query": "açlık grevini bırakan HDP'li kadın vekil Meclis'te yeminini ne zaman etti?",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-48-20190205",
+        "pages": [
+          94
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-77-20190514",
+        "pages": [
+          72
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "narrative",
+      "medium",
+      "flagged",
+      "cross-page",
+      "cross-document"
+    ]
+  },
+  {
+    "id": "tbmm27-02-34-404",
+    "query": "Akdenizde kıyıya vuran göçmen bebek",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-34-20181216",
+        "pages": [
+          38
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "easy",
+      "approved"
+    ]
+  },
+  {
+    "id": "tbmm27-02-103-302",
+    "query": "müslüman soykırımı",
+    "relevant_pages": [
+      {
+        "document_id": "tutanak-27-02-103-20190716",
+        "pages": [
+          33
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-101-20190711",
+        "pages": [
+          26
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-18-20181115",
+        "pages": [
+          72
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-72-20190430",
+        "pages": [
+          38,
+          77
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-06-20181010",
+        "pages": [
+          200
+        ]
+      },
+      {
+        "document_id": "tutanak-27-02-35-20181217",
+        "pages": [
+          141
+        ]
+      },
+      {
+        "document_id": "tutanak-27-01-04-20180712",
+        "pages": [
+          9
+        ]
+      }
+    ],
+    "golden_answer": "",
+    "tags": [
+      "tbmm-minutes",
+      "page-level",
+      "medium",
+      "approved",
+      "cross-page",
+      "cross-document"
     ]
   }
 ]

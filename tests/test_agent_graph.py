@@ -85,7 +85,8 @@ def _agent(monkeypatch) -> OrchestratorAgent:
 
 
 def _gs(agent, *, action="answer", comprehensive=False, rounds=0, added=None,
-        escalated=False, loop_stop=False, depth=None, fetch_k_max=None):
+        escalated=False, loop_stop=False, depth=None, fetch_k_max=None,
+        pending_hop=None, draft_texts=None, dry_hops=0):
     """Router doğruluk tablosu için sentetik GraphState."""
     state = OrchestratorState(request_id="t", user_query="soru")
     state.evidence_decision = EvidenceDecision(
@@ -93,10 +94,11 @@ def _gs(agent, *, action="answer", comprehensive=False, rounds=0, added=None,
         action=action, missing_aspects=[], judge_type="heuristic",
     )
     last_result = None
-    if added is not None:
+    if added is not None or draft_texts is not None:
         last_result = _RequeryResult(
-            added=added, draft_texts={}, term_hypothesis=None,
-            plan=_make_plan("gazete_arsivi"), pruned=0,
+            added=added or 0,
+            draft_texts=draft_texts if draft_texts is not None else {},
+            term_hypothesis=None, plan=_make_plan("gazete_arsivi"), pruned=0,
         )
     return {
         "s": state,
@@ -107,6 +109,8 @@ def _gs(agent, *, action="answer", comprehensive=False, rounds=0, added=None,
         "loop_stop": loop_stop,
         "depth": depth,
         "fetch_k_max": fetch_k_max,
+        "pending_hop": pending_hop,
+        "dry_hops": dry_hops,
     }
 
 
@@ -187,9 +191,11 @@ def test_route_after_judge_post_expand_truth_table(monkeypatch):
 
 
 def _adaptive_gs(agent, *, strategy="kanun_kabul_oylama", action="answer",
-                 rounds=0, reflect_done=False, loop_stop=False):
+                 rounds=0, reflect_done=False, loop_stop=False,
+                 pending_hop=None, draft_texts=None, dry_hops=0):
     """Sentetik GraphState — planner_output.strategy adaptive stratejiye kurulu."""
-    gs = _gs(agent, action=action, rounds=rounds, loop_stop=loop_stop)
+    gs = _gs(agent, action=action, rounds=rounds, loop_stop=loop_stop,
+             pending_hop=pending_hop, draft_texts=draft_texts, dry_hops=dry_hops)
     plan = _make_plan("gazete_arsivi")
     plan.strategy = strategy
     gs["s"].planner_output = plan
@@ -197,14 +203,26 @@ def _adaptive_gs(agent, *, strategy="kanun_kabul_oylama", action="answer",
     return gs
 
 
-def test_reflect_self_loop_edges_exist(monkeypatch):
+# Reflect KARAR node'unun ürettiği tipik pending_hop payload'u (plan içeriği router'ı
+# ilgilendirmez — yalnız varlığı hop-mode'a geçirir).
+_HOP = {"plan": None, "exclude_seen": False, "window_expand": False}
+
+
+def test_reflect_edges_exist(monkeypatch):
+    """Reflect artık self-loop DEĞİL: karar → gerçek retrieval node'u → assembly → karar."""
     agent = _agent(monkeypatch)
     edges = {(e.source, e.target) for e in agent._graph.get_graph().edges}
     for pair in [
-        ("judge", "reflect"), ("reflect", "reflect"),
+        ("judge", "reflect"), ("reflect", "retrieval"),
+        ("retrieval", "assembly"), ("assembly", "reflect"),
         ("reflect", "answering"), ("reflect", "refuse"),
     ]:
         assert pair in edges, f"eksik reflect kenarı: {pair}"
+    # Eski self-loop kaldırıldı.
+    assert ("reflect", "reflect") not in edges
+    # Round-0 akışı korunur.
+    assert ("retrieval", "rabbit_holes") in edges
+    assert ("assembly", "judge") in edges
 
 
 def test_route_after_judge_routes_adaptive_to_reflect(monkeypatch):
@@ -229,18 +247,65 @@ def test_route_after_judge_kill_switch_suppresses_reflect(monkeypatch):
 
 
 def test_route_after_reflect_truth_table(monkeypatch):
+    """KARAR router'ı: hop ürettiyse → retrieval; terminal (done/ceiling) → answering/refuse."""
     agent = _agent(monkeypatch)
     route = build_routers(agent)["reflect"]
-    strat_max = agent._config.get_strategy("kanun_kabul_oylama")["max_rounds"]
+    # pending_hop → gerçek retrieval node'u (hop-mode).
+    assert route(_adaptive_gs(agent, pending_hop=_HOP)) == "retrieval"
     # done → answering (clarify'a saygı → refuse).
     assert route(_adaptive_gs(agent, reflect_done=True, action="answer")) == "answering"
     assert route(_adaptive_gs(agent, reflect_done=True, action="clarify")) == "refuse"
     # ceiling (loop_stop) → answering.
     assert route(_adaptive_gs(agent, loop_stop=True, action="answer")) == "answering"
-    # done değil + tur kaldı → reflect (self-loop).
-    assert route(_adaptive_gs(agent, reflect_done=False, rounds=1)) == "reflect"
-    # done değil ama max_rounds tükendi → answering.
-    assert route(_adaptive_gs(agent, reflect_done=False, rounds=strat_max)) == "answering"
+
+
+def test_route_after_retrieval_truth_table(monkeypatch):
+    """Round-0 → rabbit_holes; reflect hop → assembly (rabbit_holes atlanır)."""
+    agent = _agent(monkeypatch)
+    route = build_routers(agent)["retrieval"]
+    assert route(_gs(agent)) == "rabbit_holes"
+    assert route(_gs(agent, pending_hop=_HOP)) == "assembly"
+
+
+def test_route_after_assembly_truth_table(monkeypatch):
+    """Round-0 → judge; reflect hop-sonrası durma + döngü-geri + max_rounds tavanı."""
+    agent = _agent(monkeypatch)
+    route = build_routers(agent)["assembly"]
+    strat_max = agent._config.get_strategy("kanun_kabul_oylama")["max_rounds"]
+    # round-0 (pending_hop yok) → judge (mevcut akış).
+    assert route(_adaptive_gs(agent)) == "judge"
+    # hop + gerçek arama (draft_texts dolu) + tur kaldı → bir sonraki karar hop'u.
+    assert route(_adaptive_gs(
+        agent, pending_hop=_HOP, draft_texts={"gazete_arsivi": ["q"]}, rounds=1)) == "reflect"
+    # hop ama dedup TÜM taslakları eledi (draft_texts boş) → drafts_exhausted → answering.
+    assert route(_adaptive_gs(
+        agent, pending_hop=_HOP, draft_texts={}, action="answer", rounds=1)) == "answering"
+    # drafts_exhausted + clarify → refuse (_final_route'a saygı).
+    assert route(_adaptive_gs(
+        agent, pending_hop=_HOP, draft_texts={}, action="clarify", rounds=1)) == "refuse"
+    # hop + dolu ama max_rounds tükendi → doğrudan answering (clarify'a düşmez).
+    assert route(_adaptive_gs(
+        agent, pending_hop=_HOP, draft_texts={"gazete_arsivi": ["q"]},
+        action="clarify", rounds=strat_max)) == "answering"
+    # ÇÖZÜLEMEYEN-HOP İPTALİ: arama çalıştı (draft_texts dolu) ama dry_hops eşiğe ulaştı
+    # → tur kalsa bile _final_route (max_rounds beklemeden kes). Default max_dry_hops=1.
+    assert agent._config.reflect.max_dry_hops == 1
+    assert route(_adaptive_gs(
+        agent, pending_hop=_HOP, draft_texts={"gazete_arsivi": ["q"]},
+        action="answer", rounds=1, dry_hops=1)) == "answering"
+    # dry-hop iptali + clarify → refuse (_final_route'a saygı, drafts_exhausted ile aynı).
+    assert route(_adaptive_gs(
+        agent, pending_hop=_HOP, draft_texts={"gazete_arsivi": ["q"]},
+        action="clarify", rounds=1, dry_hops=1)) == "refuse"
+    # REGRESYON GUARD'I: verimli hop (dry_hops=0) tur kalırken DEĞİŞMEDEN reflect döner.
+    assert route(_adaptive_gs(
+        agent, pending_hop=_HOP, draft_texts={"gazete_arsivi": ["q"]},
+        action="answer", rounds=1, dry_hops=0)) == "reflect"
+    # kill-switch: max_dry_hops=0 → dry-hop dalı devre dışı, dry_hops yüksek olsa da devam.
+    agent._config.reflect.max_dry_hops = 0
+    assert route(_adaptive_gs(
+        agent, pending_hop=_HOP, draft_texts={"gazete_arsivi": ["q"]},
+        action="answer", rounds=1, dry_hops=5)) == "reflect"
 
 
 def test_routers_read_config_at_route_time(monkeypatch):
@@ -264,13 +329,13 @@ def test_recursion_limit_formula(monkeypatch):
     adaptive_max = max(
         (s.get("max_rounds") or 0) for s in cfg.strategy_playbook.by_name.values()
     )
-    expected = 32 + 4 * max(
+    expected = 32 + 5 * max(
         cfg.judge.comprehensive_max_rounds, cfg.judge.max_expand_iterations,
         adaptive_max, cfg.reflect.default_max_rounds,
     )
     assert recursion_limit_for(cfg) == expected
-    # Doğrusal yol (~14 node) + reflect self-loop turları için gerçekten yeterli pay:
-    assert expected >= 14 + 2 * cfg.reflect.default_max_rounds
+    # Doğrusal yol (~14 node) + reflect hop başına 3 node (reflect→retrieval→assembly) için yeterli pay:
+    assert expected >= 14 + 3 * cfg.reflect.default_max_rounds
 
 
 # --------------------------------------------------------- callback yayılımı

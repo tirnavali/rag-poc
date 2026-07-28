@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { Clock, Terminal, Compass } from 'lucide-react';
 import { parseMarkdown, formatTime, formatRelativeTime } from '../utils';
 import SourceCardGrid from './SourceCardGrid';
@@ -43,6 +44,14 @@ export default function MessageBubble({
   onSendSuggestion,
   onCitationClick,
 }) {
+  const thinkingRef = useRef(null);
+
+  // Sliding window: içerik büyüdükçe kutuyu en son (tail) satıra kilitli tutar.
+  useEffect(() => {
+    const el = thinkingRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [message.thinking]);
+
   if (message.role === 'user') {
     return (
       <div
@@ -87,7 +96,7 @@ export default function MessageBubble({
             <Terminal size={14} />
             <span>Agent Düşünce Süreci</span>
           </div>
-          <div>{message.thinking}</div>
+          <div className="thinking-box-content" ref={thinkingRef}>{message.thinking}</div>
         </div>
       )}
 

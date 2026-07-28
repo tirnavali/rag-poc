@@ -1,7 +1,7 @@
 # Langfuse v3 self-host — RAM-limitli, paylaşımlı sunucu için ayarlı.
 #
-# - Yalnız web (127.0.0.1:3100) ve MinIO S3 (127.0.0.1:9090) yayınlanır;
-#   Postgres/ClickHouse/Redis compose ağının içinde kalır.
+# - Web (3100) LAN'a açık (remote erişim için); MinIO S3 (127.0.0.1:9090)
+#   yalnız loopback'te kalır. Postgres/ClickHouse/Redis compose ağının içinde kalır.
 # - Her serviste mem_limit + memswap_limit: toplam tavan ~5.75 GiB,
 #   tipik kullanım ~2.5-3.5 GiB. OOM'da konteyner ölür ve restart policy
 #   ile kalkar — Ollama/vLLM süreçleri asla etkilenmez.
@@ -25,7 +25,7 @@ services:
       redis:
         condition: service_started
     ports:
-      - "127.0.0.1:3100:3000"
+      - "3100:3000"
     mem_limit: 1536m
     memswap_limit: 1536m
     environment: &langfuse-env
@@ -34,7 +34,7 @@ services:
       SALT: ${SALT}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-      NEXTAUTH_URL: http://localhost:3100
+      NEXTAUTH_URL: http://10.20.24.13:3100
       TELEMETRY_ENABLED: "false"
       LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES: "false"
       CLICKHOUSE_MIGRATION_URL: clickhouse://clickhouse:9000
@@ -107,8 +107,8 @@ services:
     image: docker.io/clickhouse/clickhouse-server:25.5
     restart: unless-stopped
     user: "101:101"
-    mem_limit: 1536m
-    memswap_limit: 1536m
+    mem_limit: 3584m
+    memswap_limit: 3584m
     environment:
       CLICKHOUSE_USER: clickhouse
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}

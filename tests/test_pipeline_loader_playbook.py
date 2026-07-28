@@ -73,6 +73,7 @@ mode: adaptive
 max_rounds: 4
 anchor: esas_no
 target: oy_dokumu
+exclude_seen_chunks: true
 aliases: genel gerekçe -> sıra sayısı raporu ; muhalefet şerhi -> karşı oy
 answer_directive: Oy sayılarını esas no ile ilişkilendirerek ver.
 procedure:
@@ -94,6 +95,7 @@ def test_playbook_parses_multihop_optional_fields(tmp_path):
     assert spec["max_rounds"] == 4
     assert spec["anchor"] == "esas_no"
     assert spec["target"] == "oy_dokumu"
+    assert spec["exclude_seen_chunks"] is True
     assert spec["aliases"] == [
         {"term": "genel gerekçe", "official_phrase": "sıra sayısı raporu"},
         {"term": "muhalefet şerhi", "official_phrase": "karşı oy"},
@@ -114,6 +116,7 @@ def test_playbook_optional_fields_have_safe_defaults(tmp_path):
     assert factual["max_rounds"] is None
     assert factual["anchor"] is None
     assert factual["target"] is None
+    assert factual["exclude_seen_chunks"] is False
     assert factual["aliases"] == []
     assert factual["procedure"] == ""
 
@@ -130,6 +133,39 @@ def test_playbook_malformed_optional_fields_fail_open(tmp_path):
     assert spec["mode"] == "static"      # unknown mode → safe default
     assert spec["max_rounds"] is None    # non-int → dropped, not raised
     assert spec["aliases"] == []         # missing '->' → skipped
+
+
+def test_playbook_exclude_seen_chunks_parses_bool(tmp_path):
+    md = tmp_path / "research_strategies.md"
+    md.write_text(
+        "## on\nexclude_seen_chunks: true\n"
+        "## blank\nexclude_seen_chunks:   \n"
+        "## bogus\nexclude_seen_chunks: maybe\n",
+        encoding="utf-8",
+    )
+
+    by_name = StrategyPlaybook(path=md).by_name
+
+    assert by_name["on"]["exclude_seen_chunks"] is True
+    assert by_name["blank"]["exclude_seen_chunks"] is False   # blank → False
+    assert by_name["bogus"]["exclude_seen_chunks"] is False   # unrecognized → False (fail-safe)
+
+
+def test_playbook_parses_section_type(tmp_path):
+    """section_type geçerli SECTION_TYPES değeriyse tutulur; geçersiz/boş → None (fail-open)."""
+    md = tmp_path / "research_strategies.md"
+    md.write_text(
+        "## ok\nsection_type: kanun_gorusmeleri\n"
+        "## bogus\nsection_type: bilinmeyen_bolum\n"
+        "## blank\nsection_type:   \n",
+        encoding="utf-8",
+    )
+
+    by_name = StrategyPlaybook(path=md).by_name
+
+    assert by_name["ok"]["section_type"] == "kanun_gorusmeleri"
+    assert by_name["bogus"]["section_type"] is None   # enum dışı → düşer, patlamaz
+    assert by_name["blank"]["section_type"] is None   # boş → None
 
 
 def test_pipeline_config_exposes_real_playbook():
@@ -149,3 +185,41 @@ def test_pipeline_config_exposes_real_playbook():
     assert kanun["mode"] == "adaptive"
     assert kanun["anchor"] == "esas_no"
     assert {"term": "genel gerekçe", "official_phrase": "sıra sayısı raporu"} in kanun["aliases"]
+    assert kanun["exclude_seen_chunks"] is True
+
+    # Bölüm omurgası: üç adaptif kanun stratejisi hedef section_type'ını pinler.
+    assert kanun["section_type"] == "oylama"
+    assert cfg.get_strategy("kanun_gorusmeleri")["section_type"] == "kanun_gorusmeleri"
+    assert cfg.get_strategy("kanun_rapor_bolumu")["section_type"] == "kanun_raporu"
+
+    # Scoped deliberately: kanun_gorusmeleri COLLECTS across birleşims on purpose
+    # (comprehensive), and kanun_rapor_bolumu's target lives in a report document —
+    # neither opts into chunk-id novelty exclusion.
+    assert cfg.get_strategy("kanun_gorusmeleri")["exclude_seen_chunks"] is False
+    assert cfg.get_strategy("kanun_rapor_bolumu")["exclude_seen_chunks"] is False
+
+
+def test_playbook_parses_evidence_priority_patterns(tmp_path):
+    md = tmp_path / "research_strategies.md"
+    md.write_text(
+        "## s\n"
+        "mode: adaptive\n"
+        "evidence_priority_patterns: Oylama Sonucunu Duyuruyorum; kullanılan oy ;; \n"
+        "procedure: Hop 1 — bul.\n"
+        "\n## plain\nquery_type: fact\n",
+        encoding="utf-8",
+    )
+    book = StrategyPlaybook(path=md)
+
+    # `;`-separated, casefolded, empties dropped.
+    assert book.by_name["s"]["evidence_priority_patterns"] == [
+        "oylama sonucunu duyuruyorum", "kullanılan oy",
+    ]
+    # Safe default: strategies without the key expose an empty list.
+    assert book.by_name["plain"]["evidence_priority_patterns"] == []
+
+
+def test_live_playbook_kanun_kabul_oylama_has_priority_patterns():
+    kanun = load_pipeline_config().get_strategy("kanun_kabul_oylama")
+    assert kanun["evidence_priority_patterns"], "vote strategy must prioritize its target record"
+    assert "oylama sonucunu duyuruyorum" in kanun["evidence_priority_patterns"]

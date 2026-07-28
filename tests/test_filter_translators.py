@@ -101,6 +101,31 @@ def test_chroma_translator_year_range_with_author():
     }
 
 
+def test_chroma_translator_section_type():
+    """section_type should produce a single $eq condition (bölüm omurgası)."""
+    result = ChromaFilterTranslator().translate(FilterCriteria(section_type="oylama"))
+    assert result == {"section_type": {"$eq": "oylama"}}
+
+
+def test_chroma_translator_sira_and_section_compose():
+    """sira_sayisi + section_type → $and: "N kanununun oylaması" bileşik hedefi."""
+    result = ChromaFilterTranslator().translate(
+        FilterCriteria(sira_sayisi=5, section_type="oylama")
+    )
+    assert result == {
+        "$and": [
+            {"sira_sayisi": {"$eq": 5}},
+            {"section_type": {"$eq": "oylama"}},
+        ]
+    }
+
+
+def test_chroma_translator_rejects_unknown_section_type():
+    """Kapalı enum: tanınmayan section_type Pydantic doğrulamasında reddedilir."""
+    with pytest.raises(Exception):
+        FilterCriteria(section_type="bilinmeyen_bolum")
+
+
 # --- AuthorResolver: case-insensitive, Turkish-aware token-subset matching ---
 
 def _seeded_resolver(labels: list[str] | None) -> AuthorResolver:

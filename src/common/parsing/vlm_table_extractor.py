@@ -91,7 +91,10 @@ def table_is_low_quality(atom: Dict[str, Any]) -> bool:
     """
     if atom.get("label") != "table":
         return False
-    if atom.get("extracted_by") == "vlm":
+    # Zaten bir backend'le yeniden okunmuş tabloyu (VLM / Paddle / tam-sayfa Paddle /
+    # Tesseract) yeniden tetikleme — Paddle tabloları HTML <table> olduğu için
+    # _looks_like_garbage yanlış-pozitif verirdi; guard bunu keser.
+    if atom.get("extracted_by") in ("vlm", "paddle", "paddle_page", "tesseract"):
         return False
     num_rows = atom.get("table_num_rows")
     num_cols = atom.get("table_num_cols")

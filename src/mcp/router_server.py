@@ -22,6 +22,7 @@ from src.generator.deep_pipeline import DeepPipeline, ReportResult
 from src.generator.service import RAGService
 from src.mcp._base import create_app, format_response, run_server
 from src.retriever.context import build_context, build_structured_context
+from src.retriever.filters import auto_date_where_filter
 from src.retriever.vector_retriever import VectorRetriever
 from src.config import settings
 
@@ -67,6 +68,8 @@ def _resolve_mode(query: str, requested: Optional[str]) -> bool:
 mcp = Server("rag-router")
 _retriever: Optional[VectorRetriever] = None
 _service: Optional[RAGService] = None
+_reranker = None
+_reranker_built = False
 
 
 def _get_retriever() -> VectorRetriever:
@@ -75,6 +78,17 @@ def _get_retriever() -> VectorRetriever:
         from src.config.collections import get_spec
         _retriever = VectorRetriever(get_spec(settings.DEFAULT_COLLECTION))
     return _retriever
+
+
+def _get_reranker():
+    """Lazy-built once, matching RAGService's own reranker caching (src/generator/service.py)."""
+    global _reranker, _reranker_built
+    if not _reranker_built:
+        if settings.USE_RERANKER:
+            from src.retriever.reranker import CrossEncoderReranker
+            _reranker = CrossEncoderReranker()
+        _reranker_built = True
+    return _reranker
 
 
 def _get_pipeline() -> DeepPipeline:
@@ -208,7 +222,11 @@ async def call_tool(
 
     if name == "search_archives":
         mufettis_mode = _resolve_mode(query, arguments.get("mode"))
-        results = _get_retriever().retrieve(query, mufettis_mode=mufettis_mode)
+        where_filter, _ = auto_date_where_filter(query)
+        results = _get_retriever().retrieve(
+            query, mufettis_mode=mufettis_mode,
+            where_filter=where_filter, reranker=_get_reranker(),
+        )
 
         ctx_args = {
             "max_chars": settings.MUFETTIS_CONTEXT_MAX_CHARS if mufettis_mode else settings.CONTEXT_MAX_CHARS,
@@ -259,7 +277,11 @@ app: FastAPI = create_app(
 async def api_search(req: RouterSearchRequest) -> SearchResponse:
     """Her iki arşivde arama yap ve ilgili bağlamı döndür."""
     mufettis_mode = _resolve_mode(req.query, req.mode)
-    results = _get_retriever().retrieve(req.query, mufettis_mode=mufettis_mode)
+    where_filter, _ = auto_date_where_filter(req.query)
+    results = _get_retriever().retrieve(
+        req.query, mufettis_mode=mufettis_mode,
+        where_filter=where_filter, reranker=_get_reranker(),
+    )
     ctx_args = {
         "max_chars": settings.MUFETTIS_CONTEXT_MAX_CHARS if mufettis_mode else settings.CONTEXT_MAX_CHARS,
         "total_max_chars": settings.MUFETTIS_CONTEXT_TOTAL_MAX if mufettis_mode else settings.CONTEXT_TOTAL_MAX,

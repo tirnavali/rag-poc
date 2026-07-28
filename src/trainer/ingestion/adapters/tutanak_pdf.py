@@ -18,7 +18,7 @@ from typing import Optional
 from src.common.parsing.docling_manager import DoclingManager
 from src.config import settings
 from src.trainer.ingestion.adapters.base import DocumentAdapter, DocumentInput
-from src.trainer.ingestion.law_region_tagger import tag_law_regions
+from src.trainer.ingestion.law_region_tagger import tag_law_regions, tag_sections
 from src.trainer.ingestion.downloader import resolve_source
 
 
@@ -108,15 +108,19 @@ class TutanakPdfAdapter(DocumentAdapter):
                 "metadata": meta,
             })
 
-        # Metadata omurgası: kanun bölgelerini deterministik etiketle (paylaşılan çekirdek —
-        # backfill de aynı fonksiyonu çağırır) → sira_sayisi/esas_no/kanun_adi her chunk'a
-        # native biner, gelecek ingest'ler omurgayı taşır. None değerler eklenmez (pipeline
-        # metadata sanitizasyonu None'ı zaten düşürür; sira_sayisi int olarak korunur).
-        region_tags = tag_law_regions([c["text"] for c in chunks])
-        for c, tag in zip(chunks, region_tags):
-            for key, val in tag.items():
-                if val is not None:
-                    c["metadata"][key] = val
+        # Metadata omurgası: kanun bölgelerini + bölümleri deterministik etiketle
+        # (paylaşılan çekirdek — backfill de aynı fonksiyonları çağırır) →
+        # sira_sayisi/esas_no/kanun_adi + section_type/section_ord/section_path her
+        # chunk'a native biner, gelecek ingest'ler omurgayı taşır. None değerler
+        # eklenmez (pipeline metadata sanitizasyonu None'ı zaten düşürür; int'ler korunur).
+        chunk_texts = [c["text"] for c in chunks]
+        region_tags = tag_law_regions(chunk_texts)
+        section_tags = tag_sections(chunk_texts)
+        for c, rtag, stag in zip(chunks, region_tags, section_tags):
+            for tag in (rtag, stag):
+                for key, val in tag.items():
+                    if val is not None:
+                        c["metadata"][key] = val
 
         return full_text, chunks
 

@@ -59,10 +59,15 @@ from src.common.chroma import where_year_filter
 from src.common.filter_translators import build_chroma_where
 from src.common.schemas import FilterCriteria
 from src.common.llm_client_pool import LLMClientPool
+from src.common.text import normalize_tr
 from src.config.collections import COLLECTIONS, get_production_collection_keys
 from src.config.document_types import FILTER_APPLICABILITY, SECTION_TYPES
 from src.config.pipeline_loader import PipelineConfig
-from src.config.settings import COMPREHENSIVE_KEYWORDS, PARLIAMENTARY_TERM_SYNONYMS
+from src.config.settings import (
+    COMPREHENSIVE_KEYWORDS,
+    LAW_QUERY_KEYWORDS,
+    PARLIAMENTARY_TERM_SYNONYMS,
+)
 from src.generator.prompts import CONVERSATIONAL_SYS_PROMPT
 
 
@@ -294,6 +299,23 @@ class OrchestratorAgent:
                 # Anaphora hint only ("konuyla ilgili" etc.) — draft wording, not routing.
                 chat_history=ctx.chat_history,
             )
+            # Kanun-stratejisi alan kapısı (deterministik, LLM'den bağımsız güvenlik ağı):
+            # küçük planner modeli çıplak konuşma-fiili tetikleyicilerine ("ne dedi/ne
+            # konuşuldu") kapılıp kanun-DIŞI olay/kişi sorgusuna bir kanun stratejisi
+            # (kanun_gorusmeleri vb.) seçebiliyor — bu da query_type=comprehensive override'ını
+            # + adaptive reflect over-gather'ını tetikleyip bağlamı num_ctx üstüne şişirir
+            # (cemal kaşıkçı regresyonu). Sorguda kanun sinyali yoksa stratejiyi DÜŞÜR →
+            # aşağıdaki fail-open resolution hiçbir override uygulamaz, genel/factual yola düşer.
+            if (
+                state.planner_output
+                and state.planner_output.strategy
+                and self._is_law_strategy(self._config.get_strategy(state.planner_output.strategy))
+                and not self._is_law_query(query)
+            ):
+                dropped = state.planner_output.strategy
+                state.planner_output.strategy = None
+                if tctx:
+                    tctx.update_details(law_strategy_dropped=dropped)
             # Resolve the planner-selected strategy (research_strategies.md) into a
             # query_type + answer_directive override. An unknown/undefined strategy
             # name is a no-op — fail-open, Faz A behavior.
@@ -388,9 +410,45 @@ class OrchestratorAgent:
         return {}
 
     def _node_retrieval(self, gs: GraphState, config: RunnableConfig) -> dict:
-        """Stage 3: retrieval (parallel fan-out + RRF + rerank)."""
+        """Stage 3: retrieval (parallel fan-out + RRF + rerank).
+
+        İki mod, tek gerçek node (graf=trace: hem round-0 hem reflect hop'u bu node'dan
+        geçer, trace'te ayrı ``retrieval`` span'i olur):
+          * ROUND-0 (``pending_hop`` yok): plans planner filtrelerinden kurulur, sonuç
+            ``state.retrieval_results``'a TAZE yazılır.
+          * REFLECT HOP-MODE (``gs["pending_hop"]`` dolu): reflect KARAR node'unun ürettiği
+            hop planını yürütür — ``_reflect_retrieve`` (anchor where-filtresi + exclude_seen
+            + window-expand + merge). Assembler'ı ÇAĞIRMAZ (assembly node yapar). Hop
+            telemetrisini ``retrieval`` fazına yayar."""
         ctx = run_ctx(config)
         state = gs["s"]
+        hop = gs.get("pending_hop")
+        if hop:
+            with ctx.tracer.phase("retrieval") as tctx:
+                result = self._reflect_retrieve(
+                    state, hop["plan"], ctx.tracer,
+                    exclude_seen=hop["exclude_seen"], window_expand=hop["window_expand"],
+                )
+                # Çözülemeyen-hop sayacı: net-yeni kanıt (merge VEYA window komşusu) geldiyse
+                # verimli → sıfırla; ikisi de 0 ise ard ardışık dry sayacını artır.
+                # route_after_assembly bu sayacı reflect.max_dry_hops eşiğiyle karşılaştırır.
+                productive = result.added > 0 or result.window_added > 0
+                new_dry = 0 if productive else gs.get("dry_hops", 0) + 1
+                if tctx:
+                    # Hop-2 metadata omurgası: sıra sayısı filtresi UYGULANDIYSA kesin
+                    # where-araması; yoksa filtresiz semantiğe düşer. Bu anahtarlar eskiden
+                    # reflect fazındaydı — graf=trace kararıyla retrieval span'ine taşındı.
+                    sira_applied = result.sira_filter is not None
+                    tctx.update_details(
+                        added=result.added, drafts=result.draft_texts,
+                        hop2_semantic_fallback=not sira_applied,
+                        sira_sayisi_filter_available=sira_applied,
+                        sira_filter=result.sira_filter,
+                        excluded_seen_chunks=result.excluded_seen_count,
+                        window_added=result.window_added,
+                        dry_hops=new_dry,
+                    )
+            return {"last_result": result, "dry_hops": new_dry}
         with ctx.tracer.phase("retrieval") as tctx:
             fallback = self._fallback_query(state)
             # Register the initial searches in the tried-ledger so expansion
@@ -558,20 +616,21 @@ class OrchestratorAgent:
         return update
 
     def _node_reflect(self, gs: GraphState, config: RunnableConfig) -> dict:
-        """Stage 5.2: adaptive çok-hop reflect / re-plan (self-loop çevrim gövdesi).
+        """Stage 5.2: adaptive çok-hop reflect / re-plan — KARAR node'u.
 
         Yalnızca ``mode: adaptive`` stratejiler için girilir — yönlendirme
-        (``_is_adaptive``) strateji modu + ``reflect.enabled`` üzerinden kapılar. Her tur
-        bir prosedür hop'u yürütür: kanıttan varlık çıkar, DURMA'ya karar ver, değilse bir
-        sonraki hop'u getir. Çok-katmanlı FAIL-OPEN: beklenmeyen hata / adaptive-olmayan
-        strateji / reflect-LLM ``None`` → generic ``broaden()`` yoluna düşer ve çıkar.
-        Durma: prosedür ``done`` sinyali, boş next_plan, next_plan'ı olsa da içindeki tüm
-        resource'ların query_drafts'ı boşsa (savunma-derinliği — gerçek parser zaten filtreler),
-        dedup ledger'ı (``_dedupe_and_register``) bu turun TÜM taslaklarını önceki bir turda
-        zaten arandığı için elerse (``draft_texts`` boş — gerçek durma mekanizması, bkz.
-        ``done_reason="drafts_exhausted_by_dedup"``), tavan, veya ``strategy.max_rounds``
-        (``route_after_reflect`` uygular). HER dal ``rounds``'u artırır; yalnızca "execute"
-        dalı ``reflect_done=False`` döndürür (aksi hâlde recursion-limit'e kadar dönerdi).
+        (``_is_adaptive``) strateji modu + ``reflect.enabled`` üzerinden kapılar. Bu node
+        RETRIEVAL YAPMAZ: kanıttan varlık çıkarır, DURMA'ya karar verir, devam edecekse bir
+        sonraki hop'un planını + bayraklarını ``pending_hop`` kanalına stash'ler ve grafı
+        gerçek ``retrieval`` node'una yönlendirir (``retrieval → assembly → reflect`` çevrimi;
+        graf=kaynak). Hop'un yürütülmesi + assembler yenilemesi o node'larda olur; hop-sonrası
+        durma (``drafts_exhausted_by_dedup``) ve döngü-geri/max_rounds kararı ``route_after_assembly``'de
+        verilir (retrieval çalışmadan bilinemez). Çok-katmanlı FAIL-OPEN: beklenmeyen hata /
+        adaptive-olmayan strateji / reflect-LLM ``None`` → generic ``broaden()`` yoluna düşer ve
+        çıkar (bunlar terminal, inline kalır). Durma (bu node'da): prosedür ``done`` sinyali, boş
+        next_plan, next_plan'ı olsa da içindeki tüm resource'ların query_drafts'ı boşsa
+        (savunma-derinliği), veya tavan. HER dal ``rounds``'u artırır; her dönüş ``pending_hop``
+        anahtarını (hop dict'i VEYA None) İÇERİR — bir önceki hop'un stash'i üzerine yazılsın diye.
         """
         ctx = run_ctx(config)
         state = gs["s"]
@@ -589,7 +648,8 @@ class OrchestratorAgent:
                     if tctx:
                         tctx.update_details(round=rounds + 1, adaptive=False,
                                             fell_back="not_adaptive", added=result.added)
-                    return {"last_result": result, "rounds": rounds + 1, "reflect_done": True}
+                    return {"last_result": result, "rounds": rounds + 1,
+                            "reflect_done": True, "pending_hop": None}
 
                 # Hacim güvenlik tavanı — generic çevrimin query_type tavanı (_ceiling_for)
                 # DEĞİL: reasoning/summary'de tek-atım ilk retrieval zaten o tavanı (15)
@@ -599,7 +659,8 @@ class OrchestratorAgent:
                     if tctx:
                         tctx.update_details(round=rounds + 1, skipped=True, stop_reason="ceiling",
                                             assembled_total=len(state.assembled_chunks))
-                    return {"reflect_done": True, "loop_stop": True, "rounds": rounds + 1}
+                    return {"reflect_done": True, "loop_stop": True,
+                            "rounds": rounds + 1, "pending_hop": None}
 
                 evidence = self._compact_evidence(state, strategy)
                 tried = self._tried_query_texts(state)
@@ -624,7 +685,8 @@ class OrchestratorAgent:
                     self._run_assembler(state)
                     if tctx:
                         tctx.update_details(round=rounds + 1, reflect_failed=True, added=result.added)
-                    return {"last_result": result, "rounds": rounds + 1, "reflect_done": True}
+                    return {"last_result": result, "rounds": rounds + 1,
+                            "reflect_done": True, "pending_hop": None}
 
                 # Anchor'ları birleştir (yeni non-null kazanır) + hop imlecini ilerlet.
                 merged = dict(state.extracted_anchors)
@@ -648,53 +710,30 @@ class OrchestratorAgent:
                         tctx.update_details(round=rounds + 1, hop=state.hop_cursor, done=True,
                                             done_reason=reflection.done_reason,
                                             anchors=state.extracted_anchors)
-                    return {"reflect_done": True, "rounds": rounds + 1}
+                    return {"reflect_done": True, "rounds": rounds + 1, "pending_hop": None}
 
-                # Sonraki hop'un retrieval'ını yürüt, sonra yeniden-birleştir (answering/tavan görsün).
-                result = self._reflect_retrieve(
-                    state, reflection.next_plan, ctx.tracer,
-                    exclude_seen=bool(strategy.get("exclude_seen_chunks")),
-                    window_expand=bool(strategy.get("window_expand")),
-                )
-                self._run_assembler(state)
-
-                # DURMA (gerçek mekanizma): reflection.next_plan'ın ham taslakları dolu
-                # olsa da, _dedupe_and_register her birini önceki bir turda ZATEN aranmış
-                # (aynı koleksiyon × metin × filtre, bu-veya-daha-derin fetch_k) bulup
-                # eleyebilir — bu durumda draft_texts boş döner: bu turda HİÇBİR arama
-                # çalışmadı. Reflect-LLM'in (temperature-0) 2+ hop sonra yeni açı
-                # üretemeyip aynı metni yeniden üretmesi tipik tetikleyici. Üstteki
-                # query_drafts kontrolü (satır ~642) bunu YAKALAYAMAZ — o ham next_plan'a
-                # bakar, dedup SONRASI sonuca değil. added==0 (gerçek ama verimsiz arama,
-                # bkz. test_reflect_added_zero_but_not_done_continues) İLE karıştırma:
-                # o turda arama GERÇEKTEN çalıştı, sadece yeni chunk bulamadı — döngü
-                # devam etmeli. Burada arama hiç çalışmadı → devam etmenin anlamı yok.
-                if not result.draft_texts:
-                    if tctx:
-                        tctx.update_details(round=rounds + 1, hop=state.hop_cursor, done=True,
-                                            done_reason="drafts_exhausted_by_dedup",
-                                            anchors=state.extracted_anchors)
-                    return {"last_result": result, "reflect_done": True, "rounds": rounds + 1}
-
+                # Hop'u YÜRÜTME — planı + bayrakları stash'le, gerçek `retrieval` node'una
+                # yönlendir (graf=kaynak: retrieval/assembly gerçek node geçişleri). Hop'un
+                # yürütülmesi (`_reflect_retrieve`) + assembler yenilemesi o node'larda olur.
+                # Hop-sonrası durma (`drafts_exhausted_by_dedup`: dedup TÜM taslakları eleyince
+                # `result.draft_texts` boş → bu turda hiçbir arama çalışmadı) ve döngü-geri/
+                # max_rounds kararı retrieval+assembly SONRASINDA `route_after_assembly`'de verilir —
+                # retrieval çalışmadan bunlar bilinemez (bkz. o router).
                 if tctx:
-                    # Hop-2 metadata omurgası: sıra sayısı filtresi UYGULANDIYSA kesin
-                    # where-araması (kanun adı geçmese bile roll-call'a ulaşır); yoksa
-                    # (çıpa çözülmedi / koleksiyon taşımıyor) filtresiz semantiğe düşer.
-                    sira_applied = result.sira_filter is not None
-                    tctx.update_details(
-                        round=rounds + 1, hop=state.hop_cursor, done=False, added=result.added,
-                        anchors=state.extracted_anchors, drafts=result.draft_texts,
-                        assembled_total=len(state.assembled_chunks),
-                        hop2_semantic_fallback=not sira_applied,
-                        sira_sayisi_filter_available=sira_applied,
-                        sira_filter=result.sira_filter,
-                        excluded_seen_chunks=result.excluded_seen_count,
-                        window_added=result.window_added,
-                    )
-                return {"last_result": result, "rounds": rounds + 1, "reflect_done": False}
+                    tctx.update_details(round=rounds + 1, hop=state.hop_cursor, done=False,
+                                        anchors=state.extracted_anchors)
+                return {
+                    "pending_hop": {
+                        "plan": reflection.next_plan,
+                        "exclude_seen": bool(strategy.get("exclude_seen_chunks")),
+                        "window_expand": bool(strategy.get("window_expand")),
+                    },
+                    "rounds": rounds + 1,
+                    "reflect_done": False,
+                }
         except Exception as exc:  # fail-open: reflect asla cevap yolunu kırmasın
             state.errors.append(f"reflect_failed: {type(exc).__name__}")
-            return {"reflect_done": True, "rounds": rounds + 1}
+            return {"reflect_done": True, "rounds": rounds + 1, "pending_hop": None}
 
     def _node_refuse(self, gs: GraphState, config: RunnableConfig) -> dict:
         """Refuse/clarify çıkışı — gerekçe policy/budget kanalından ya da judge kararından."""
@@ -787,6 +826,28 @@ class OrchestratorAgent:
         """Enumeration/exhaustive intent — substring match against COMPREHENSIVE_KEYWORDS."""
         q = (query or "").lower()
         return any(kw in q for kw in COMPREHENSIVE_KEYWORDS)
+
+    # Kanun stratejilerinin hedeflediği belge bölümleri (research_strategies.md). Bir
+    # stratejinin "kanun stratejisi" olup olmadığı buradan veri-güdümlü belirlenir
+    # (ad-prefix'e bağımlı değil) — bkz. _is_law_strategy / _node_planning kanun-kapısı.
+    _LAW_SECTION_TYPES = frozenset({"oylama", "kanun_gorusmeleri", "kanun_raporu"})
+
+    @staticmethod
+    def _is_law_query(query: str) -> bool:
+        """Sorguda GERÇEK bir kanun/mevzuat bağlamı var mı — LAW_QUERY_KEYWORDS alt-dizgi
+        eşleşmesi (_is_comprehensive deseninin ikizi, normalize_tr ile Türkçe-güvenli).
+
+        Kanun stratejilerinin (kanun_kabul_oylama/kanun_gorusmeleri/kanun_rapor_bolumu)
+        deterministik kapısı: küçük planner modeli çıplak "ne dedi/ne konuşuldu"
+        tetikleyicilerine kapılıp olay/kişi sorgusuna kanun stratejisi seçebiliyor; bu kapı
+        kanun sinyali yoksa stratejiyi düşürür (bkz. _node_planning)."""
+        q = normalize_tr(query or "")
+        return any(normalize_tr(kw) in q for kw in LAW_QUERY_KEYWORDS)
+
+    @classmethod
+    def _is_law_strategy(cls, strategy: Optional[dict]) -> bool:
+        """Çözülmüş strateji dict'i bir kanun stratejisi mi (section_type kanun kümesinde)."""
+        return bool(strategy) and strategy.get("section_type") in cls._LAW_SECTION_TYPES
 
     @staticmethod
     def _is_known_parliamentary_term(query: str) -> bool:

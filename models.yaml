@@ -124,6 +124,16 @@ model_specs:
     supports_late_chunking: true
     description: "Jina v4 (retrieval): 8192 ctx, 1024 dim (MRL), encode_text API; standart chunking."
 
+  # --- Qwen3-0.6B, 2048 ctx: 1024-token chunk için pay (son-token/EOS truncation'a
+  #     kurban gitmesin; base model 32K destekler) ---
+  Qwen/Qwen3-Embedding-0.6B-ctx2048-dim1024:
+    base_model: Qwen/Qwen3-Embedding-0.6B
+    max_context_tokens: 2048
+    overlap_tokens: 128
+    embed_dim: 1024
+    supports_late_chunking: true
+    description: "Qwen3-Embedding-0.6B: 2048 ctx (1024-token chunk payı), 1024 dim (tam), son-token havuzlama; standart chunking."
+
 # ---------------------------------------------------------------------------
 # Collection Registry
 # ---------------------------------------------------------------------------
@@ -287,6 +297,90 @@ collections:
     doc_type: tutanak
     max_chunk_tokens: 512
     min_chunk_tokens: 384
+
+  # =========================================================================
+  # 2x3 Eşit-Koşul Benchmark Matrisi (2026-07): qwen3 / jina-v4 × 256/512/1024
+  # Eşit output dim (1024), ~%10 atom-sınırlı chunk overlap, reranker kapalı,
+  # tam korpus (113 belge, 27/1 + 27/2). İki model de standart chunk embedding
+  # kullanır (late-chunking span-pooling yok) → indexleme yolu simetrik.
+  # =========================================================================
+
+  tutanaklar_qwen3_c256_1024d_ovl:
+    collection_name: tutanaklar_qwen3_c256_1024d_ovl
+    chroma_path: data_lake/tutanaklar_qwen3_c256_1024d_ovl
+    embed_model: Qwen/Qwen3-Embedding-0.6B-ctx2048-dim1024
+    doc_type: tutanak
+    max_chunk_tokens: 256
+    min_chunk_tokens: 192
+    chunk_overlap_tokens: 26
+
+  tutanaklar_qwen3_c512_1024d_ovl:
+    collection_name: tutanaklar_qwen3_c512_1024d_ovl
+    chroma_path: data_lake/tutanaklar_qwen3_c512_1024d_ovl
+    embed_model: Qwen/Qwen3-Embedding-0.6B-ctx2048-dim1024
+    doc_type: tutanak
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+    chunk_overlap_tokens: 51
+
+  tutanaklar_qwen3_c1024_1024d_ovl:
+    collection_name: tutanaklar_qwen3_c1024_1024d_ovl
+    chroma_path: data_lake/tutanaklar_qwen3_c1024_1024d_ovl
+    embed_model: Qwen/Qwen3-Embedding-0.6B-ctx2048-dim1024
+    doc_type: tutanak
+    max_chunk_tokens: 1024
+    min_chunk_tokens: 768
+    chunk_overlap_tokens: 102
+
+  tutanaklar_jinav4_c256_1024d_ovl:
+    collection_name: tutanaklar_jinav4_c256_1024d_ovl
+    chroma_path: data_lake/tutanaklar_jinav4_c256_1024d_ovl
+    embed_model: jinaai/jina-embeddings-v4-ctx8192-dim1024
+    doc_type: tutanak
+    max_chunk_tokens: 256
+    min_chunk_tokens: 192
+    chunk_overlap_tokens: 26
+
+  tutanaklar_jinav4_c512_1024d_ovl:
+    collection_name: tutanaklar_jinav4_c512_1024d_ovl
+    chroma_path: data_lake/tutanaklar_jinav4_c512_1024d_ovl
+    embed_model: jinaai/jina-embeddings-v4-ctx8192-dim1024
+    doc_type: tutanak
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+    chunk_overlap_tokens: 51
+
+  tutanaklar_jinav4_c1024_1024d_ovl:
+    collection_name: tutanaklar_jinav4_c1024_1024d_ovl
+    chroma_path: data_lake/tutanaklar_jinav4_c1024_1024d_ovl
+    embed_model: jinaai/jina-embeddings-v4-ctx8192-dim1024
+    doc_type: tutanak
+    max_chunk_tokens: 1024
+    min_chunk_tokens: 768
+    chunk_overlap_tokens: 102
+
+  # POC: büyük-chunk deneyi (512..1536), oy-döküm tablosu fragmentasyonu (#2) testi.
+  # v4 span-pooling YAPMAZ (encode_text API) → "late chunking" nominal, standart per-chunk.
+  tutanaklar_jinav4_c1536_1024d_ovl:
+    collection_name: tutanaklar_jinav4_c1536_1024d_ovl
+    chroma_path: data_lake/tutanaklar_jinav4_c1536_1024d_ovl
+    embed_model: jinaai/jina-embeddings-v4-ctx8192-dim1024
+    doc_type: tutanak
+    max_chunk_tokens: 1536
+    min_chunk_tokens: 512
+    chunk_overlap_tokens: 154
+
+  # Nomic 512-chunk hücresi: matrisle aynı chunk rejimi (~%10 ovl), dim nomic
+  # tavanı olan 768 (1024 üretemez). Üretim (chunk256, ovl'siz) ile matris
+  # arasındaki köprü kıyas hücresi.
+  tutanaklar_nomic_c512_768d_ovl:
+    collection_name: tutanaklar_nomic_c512_768d_ovl
+    chroma_path: data_lake/tutanaklar_nomic_c512_768d_ovl
+    embed_model: nomic-ai/nomic-embed-text-v2-moe-ctx512
+    doc_type: tutanak
+    max_chunk_tokens: 512
+    min_chunk_tokens: 384
+    chunk_overlap_tokens: 51
 
 defaults:
   tutanak: tutanaklar_nomic_chunk256_768d   # production_ready koleksiyon

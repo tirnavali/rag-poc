@@ -23,14 +23,17 @@ def _file_hash(path: str) -> str:
 def _atompack_chunk_cache_key(spec, ocr_base: str) -> str:
     """docling_manager.pack (atom-token-pack yol) ile birebir aynı chunk cache anahtarı.
 
-    Token-tabanlı: tokenizer_name=spec.embed_model + max/min_chunk_tokens (+ author_tag).
+    Token-tabanlı: tokenizer_name=spec.embed_model + max/min_chunk_tokens
+    (+ koşullu _ovl eki + author_tag).
     """
     author_tag = (
         f"_author_{spec.doc_type.value}" if getattr(spec, "doc_type", None) else ""
     )
+    overlap = getattr(spec, "chunk_overlap_tokens", 0) or 0
+    overlap_tag = f"_ovl{overlap}" if overlap else ""
     return hashlib.md5(
         f"{ocr_base}_atompack_{spec.embed_model}_{spec.max_chunk_tokens}"
-        f"_{spec.min_chunk_tokens}{author_tag}".encode()
+        f"_{spec.min_chunk_tokens}{overlap_tag}{author_tag}".encode()
     ).hexdigest()
 
 

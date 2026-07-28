@@ -1,0 +1,12 @@
+# Üretim Nomic koleksiyonu — 2x3 matrisle aynı fixture ve koşullar (reranker OFF)
+# Not: eşit-koşul hücresi DEĞİL (768d, overlap yok, nomic tokenizer) — üretim taban çizgisi.
+name: "Nomic üretim taban çizgisi: chunk256 768d, reranker OFF, 202 soru"
+
+collections:
+  - tutanaklar_nomic_chunk256_768d
+
+fixture: tests/fixtures/golden_tbmm27001001.json
+
+top_k: [1, 3, 5, 10, 20]
+reranker: false
+fetch_k: 100

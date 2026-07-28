@@ -12,6 +12,7 @@ export const PHASE_LABELS = {
   judge: 'Kanıt Değerlendirme',
   expansion: 'Sorgu Genişletme',
   judge_post_expand: 'Kanıt Değerlendirme (Genişletme Sonrası)',
+  reflect: 'Yansıtma / Yeniden Planlama',
   answering: 'Yanıt Üretimi',
   validation: 'Yanıt Doğrulama',
   citation: 'Kaynak Atıflandırma',
@@ -184,6 +185,27 @@ export const formatRelativeTime = (isoOrSqlString) => {
 export const truncate = (text, max = 500) =>
   !text ? '' : (text.length > max ? text.slice(0, max) + '…' : text);
 
+// navigator.clipboard needs a secure context (https, or the loopback origins
+// localhost/127.0.0.1) — plain http://<lan-ip> doesn't qualify, so the API is
+// undefined there. Fall back to the legacy execCommand path, which has no
+// such restriction.
+export const copyToClipboard = async (text) => {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text);
+  }
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;opacity:0;left:-9999px';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    if (!document.execCommand('copy')) throw new Error('execCommand("copy") başarısız');
+  } finally {
+    document.body.removeChild(ta);
+  }
+};
+
 // Exports the whole observed flow (question, plan/strategy, every pipeline
 // stage, sources, memory) as Markdown — for eyeballing the run or pasting
 // into an LLM for further analysis. Works both for a live-just-generated
@@ -221,11 +243,26 @@ export const buildMarkdownExport = ({ question, answer, trace, sources, memory }
   if (!trace || trace.length === 0) lines.push('_Trace verisi yok._');
 
   lines.push('## Kaynaklar');
-  (sources || []).forEach((s, i) => {
+  const srcList = sources || [];
+  const formatSource = (s, i) => {
     lines.push(`${i + 1}. **${s.source_name || 'Bilinmeyen Kaynak'}** — ${s.date || 'tarih yok'} — ${s.author || 'Belirtilmemiş'}${s.title ? ` — _"${s.title}"_` : ''}`);
     if (s.text) lines.push(`   > ${truncate(s.text, 300).replace(/\n/g, ' ')}`);
-  });
-  if (!sources || sources.length === 0) lines.push('_Kaynak yok._');
+  };
+  if (srcList.length === 0) {
+    lines.push('_Kaynak yok._');
+  } else if (srcList.some(s => typeof s.cited === 'boolean')) {
+    // Backend flags which retrieved chunks the prose actually cites (best-effort
+    // match on inline "(Kaynak: ..., Tarih, Yazar)" markers) — split so 40
+    // retrieved-but-unused chunks don't read as 40 sources the answer drew on.
+    const used = srcList.filter(s => s.cited);
+    const rest = srcList.filter(s => !s.cited);
+    lines.push('', `### Yanıtta Kullanılan Kaynaklar (${used.length})`, '');
+    if (used.length) used.forEach(formatSource); else lines.push('_Yok._');
+    lines.push('', `### Ek Taranan Kaynaklar (${rest.length})`, '', '_Retrieval kapsamına girdi ama yanıt metninde doğrudan atıf tespit edilmedi (heuristik eşleşme kaçırmış olabilir)._', '');
+    if (rest.length) rest.forEach(formatSource); else lines.push('_Yok._');
+  } else {
+    srcList.forEach(formatSource);
+  }
   lines.push('');
 
   lines.push('## Hafıza (Bağlam)');
