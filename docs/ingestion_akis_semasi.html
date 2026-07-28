@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TBMM RAG · Ingestion Akış Şeması (PDF → Chunk)</title>
+<style>
+  :root{
+    --bg:#f5f3ee; --card:#ffffff; --ink:#20262e; --muted:#6b7280; --line:#d7d2c6;
+    --mono:"SF Mono",ui-monospace,"Cascadia Code",Consolas,monospace;
+    --io:#64748b; --parse:#2563eb; --chunk:#0d9488; --meta:#7c3aed; --embed:#16a34a;
+    --karar:#d97706; --kosul:#db2777;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,"Segoe UI",Roboto,system-ui,sans-serif;}
+  .wrap{max-width:960px;margin:0 auto;padding:32px 22px 80px;}
+  header{border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:8px;}
+  h1{font-size:24px;margin:0 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:14px}
+  .meta-row{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px;font-size:13px;color:var(--muted)}
+  .meta-row b{color:var(--ink);font-weight:600}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 6px;font-size:12.5px}
+  .lg{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+  .dot{width:13px;height:13px;border-radius:50%;background:var(--io);flex:0 0 auto}
+  .dot.d{border-radius:3px;transform:rotate(45deg);background:var(--karar)}
+  .dot.k{background:var(--kosul);border-radius:50%;outline:2px dotted var(--kosul);outline-offset:1px}
+
+  .phase{margin-top:26px}
+  .phase-h{display:flex;align-items:baseline;gap:10px;font-weight:700;font-size:13px;
+    letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--accent);
+    padding:6px 12px;border-radius:7px 7px 0 0;}
+  .phase-h .fn{opacity:.85;font-weight:600}
+  .rail{border-left:3px solid var(--accent);margin-left:14px;padding:4px 0 4px 0;}
+
+  .node{position:relative;padding:9px 0 9px 30px;margin-left:0}
+  .node::before{content:"";position:absolute;left:-9px;top:16px;width:15px;height:15px;
+    border-radius:50%;background:var(--accent);border:3px solid var(--bg);}
+  .node.karar::before{border-radius:3px;transform:rotate(45deg);background:var(--karar);top:15px}
+  .node.kosul::before{background:var(--kosul);outline:2px dotted var(--kosul);outline-offset:1px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:9px;
+    padding:10px 13px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .card.kosul{border-style:dashed;border-color:var(--kosul)}
+  .n-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .num{font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent);font-size:13px;
+    background:color-mix(in srgb,var(--accent) 12%,#fff);border-radius:5px;padding:0 6px}
+  .ttl{font-weight:650}
+  .tag{font-size:11px;font-weight:700;letter-spacing:.03em;padding:1px 7px;border-radius:10px;text-transform:uppercase}
+  .tag.karar{background:#fef3c7;color:#92400e;border:1px solid #f0c869}
+  .tag.kosul{background:#fce7f3;color:#9d174d;border:1px solid #f0a6cd}
+  .desc{color:#374151;font-size:13.5px;margin-top:3px}
+  .ref{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:5px;
+    background:#f3f1ea;border:1px solid var(--line);border-radius:5px;padding:2px 7px;display:inline-block}
+  .branch{display:flex;gap:8px;flex-wrap:wrap;margin-top:7px}
+  .chip{font-size:12px;border:1px solid var(--line);border-radius:14px;padding:2px 10px;background:#fbfaf7}
+  .chip b{color:var(--karar)}
+  .chip.alt b{color:var(--chunk)}
+  .arrow{color:var(--muted);text-align:center;font-size:15px;line-height:1;margin:-2px 0 -6px 14px}
+  footer{margin-top:34px;border-top:1px solid var(--line);padding-top:12px;color:var(--muted);font-size:12.5px}
+  code{font-family:var(--mono);font-size:.92em;background:#eeece4;padding:1px 4px;border-radius:4px}
+  @media print{ body{background:#fff} .card{box-shadow:none} .wrap{max-width:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>TBMM RAG · Ingestion Akış Şeması</h1>
+    <div class="sub">PDF → Chunk · KATMAN 1 (parse) + KATMAN 2 (chunk) + metadata + gömme</div>
+    <div class="meta-row">
+      <span>📅 Tarih: <b>19 Temmuz 2026</b></span>
+      <span>Giriş: <b>IngestionPipeline.run_document</b></span>
+      <span>Kaynak: <code>src/trainer/ingestion/</code> · <code>src/common/parsing/</code></span>
+    </div>
+    <div class="legend">
+      <span class="lg"><span class="dot"></span> adım</span>
+      <span class="lg"><span class="dot d"></span> karar (dallanma)</span>
+      <span class="lg"><span class="dot k"></span> koşullu adım</span>
+    </div>
+  </header>
+
+  <!-- FAZ 0 -->
+  <section class="phase" style="--accent:var(--io)">
+    <div class="phase-h">Faz 0 · Giriş &amp; Idempotency <span class="fn">— pipeline.run_document</span></div>
+    <div class="rail">
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">1</span><span class="ttl">Girdi</span></div>
+        <div class="desc"><code>DocumentInput</code> (belge + kaynak + tip) ve <code>CollectionSpec</code> (Chroma yolu, embed modeli, chunk token limitleri) alınır.</div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node karar"><div class="card">
+        <div class="n-top"><span class="num">2</span><span class="ttl">Manifest hash kontrolü</span><span class="tag karar">karar</span></div>
+        <div class="desc">İçerik SHA-256 → <code>DocumentManifest.diff</code> ile yeni/değişti/değişmedi.</div>
+        <div class="ref">src/trainer/ingestion/manifest.py</div>
+        <div class="branch"><span class="chip"><b>değişmedi</b> → ATLA (idempotent)</span><span class="chip"><b>yeni / değişti</b> → devam</span></div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">3</span><span class="ttl">Adapter seçimi</span></div>
+        <div class="desc"><code>document_type</code>'a göre tip-özel adapter: tutanak_pdf / kanun_teklifi / gazete / pdf_report.</div>
+        <div class="ref">src/trainer/ingestion/adapters/</div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- FAZ 1 -->
+  <section class="phase" style="--accent:var(--io)">
+    <div class="phase-h">Faz 1 · Kaynak Çözümleme <span class="fn">— adapter.parse → resolve_source</span></div>
+    <div class="rail">
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">4</span><span class="ttl">PDF'i yerelleştir</span></div>
+        <div class="desc"><code>document_source</code> URL ise <code>data_lake/downloads/{collection}/{doc_id}/</code> altına indirilir (Content-Length ile skip); yerelse olduğu gibi kullanılır.</div>
+        <div class="ref">downloader.resolve_source</div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- FAZ 2 -->
+  <section class="phase" style="--accent:var(--parse)">
+    <div class="phase-h">Faz 2 · PARSE — KATMAN 1 <span class="fn">— MarkdownConverter.convert</span></div>
+    <div class="rail">
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">5</span><span class="ttl">Cache anahtarı</span></div>
+        <div class="desc"><code>ocr_base = {hash}_{engine}{_no_ocr?}_scale{images_scale}_pypdfium{_vlm/_tess/_paddle?}{_pgpaddle?}</code></div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node karar"><div class="card">
+        <div class="n-top"><span class="num">6</span><span class="ttl">Level-1 parse cache</span><span class="tag karar">karar</span></div>
+        <div class="desc"><code>parse_cache/{md5}_atoms.json</code> (schema≥2) var mı?</div>
+        <div class="branch"><span class="chip"><b>hit</b> → atoms + full_text + page_furniture diskten (7–9 atlanır)</span><span class="chip"><b>miss</b> → Docling çalışır</span></div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">7</span><span class="ttl">Docling parse</span></div>
+        <div class="desc"><b>PyPdfium backend</b> (glyph fix) + <b>EasyOCR</b>[tr] + <b>layout modeli</b> (Heron/Egret) + <b>reading-order modeli</b> @ <code>images_scale=2.0</code>. İç sıra: sayfa render → layout (bölge+etiket) → OCR → okuma sırası → <code>DoclingDocument</code>.</div>
+        <div class="ref">DocumentConverter.convert · PdfPipelineOptions</div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">8</span><span class="ttl">Gövde atomları</span></div>
+        <div class="desc"><code>_extract_atoms</code>: <code>iterate_items()</code> <b>[BODY]</b> → atom <code>{text, label, page, pages, page_texts?, table meta?}</code>; <code>full_text = "\n\n".join(atom.text)</code>.</div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">9</span><span class="ttl">Üst/alt bilgi (furniture)</span></div>
+        <div class="desc"><code>_extract_furniture</code>: <code>iterate_items({FURNITURE})</code> → sayfa başına <code>page_header</code>/<code>page_footer</code> (gövdeye <b>girmez</b>, page-metadata). + <code>extract_ocr_confidence</code>.</div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node kosul"><div class="card kosul">
+        <div class="n-top"><span class="num">10</span><span class="ttl">Paddle sayfa-yönlendirici</span><span class="tag kosul">koşullu · SCANNED_PAGE_OCR</span></div>
+        <div class="desc"><b>Taranmış</b> sayfalar (native char &lt; eşik) → <code>:8080</code> PaddleOCR-VL: HTML→MD, furniture <code>_furniture_role</code> ile ayrılır, o sayfanın atomları değiştirilir; digital sayfalar Docling'de kalır. furniture → page_furniture merge; full_text yenilenir. (Hata → Docling atomları korunur.)</div>
+        <div class="ref">paddle_page_extractor.process_pages_with_paddle</div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node kosul"><div class="card kosul">
+        <div class="n-top"><span class="num">11</span><span class="ttl">VLM tablo çıkarımı</span><span class="tag kosul">koşullu · use_vlm</span></div>
+        <div class="desc"><code>table_is_low_quality</code> atomlar → PDF'ten tablo kırp → VLM / Tesseract / Paddle ile yeniden oku → tablo metni değiştirilir; full_text yenilenir.</div>
+        <div class="ref">vlm_table_extractor</div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">12</span><span class="ttl">Kalite metrikleri</span></div>
+        <div class="desc"><code>compute_quality</code>: atom yoğunluğu + karakter sapması + OCR güveni + Türkçe sinyaller (ı/İ, ünlü uyumu) → <code>flags</code>.</div>
+        <div class="ref">src/common/parsing/quality.py</div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">13</span><span class="ttl">Cache + artifact yazımı</span></div>
+        <div class="desc">Level-1 cache (<code>schema_version=4</code>: full_text, atoms, quality, page_furniture) + artifact'lar: <code>markdown/</code>, <code>atoms/</code>, <code>pages/</code> (header/footer dahil), <code>reports/</code>. → <code>ParsedDocument</code>.</div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- FAZ 3 -->
+  <section class="phase" style="--accent:var(--chunk)">
+    <div class="phase-h">Faz 3 · CHUNK — KATMAN 2 <span class="fn">— DoclingManager.pack</span></div>
+    <div class="rail">
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">14</span><span class="ttl">Atom → span eşlemesi</span></div>
+        <div class="desc"><code>_atom_char_spans</code>: her atomun metni <code>full_text</code> içinde konumlanır (ofset).</div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">15</span><span class="ttl">Token-bütçeli paketleme</span></div>
+        <div class="desc"><code>token_pack_atoms</code>: atomlar sırayla, embed tokenizer'ıyla <code>max_chunk_tokens</code>'a kadar greedy paketlenir. <b>Tablo/görsel bölünmez</b>; <code>min_chunk_tokens</code> altı birleşir; opsiyonel <code>chunk_overlap_tokens</code>. <b>chunk.text = full_text[span]</b> (late-chunking güvencesi).</div>
+        <div class="ref">docling_manager._atom_token_pack</div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">16</span><span class="ttl">Konuşmacı/yazar etiketleme</span></div>
+        <div class="desc"><code>tag_chunks_post_hoc</code>: durum makinesi (regex + düşük-güvende LLM) → <code>author</code>, <code>author_role</code>, <code>authors_in_chunk</code>.</div>
+        <div class="ref">src/common/parsing/author_extractor.py</div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- FAZ 4 -->
+  <section class="phase" style="--accent:var(--meta)">
+    <div class="phase-h">Faz 4 · Metadata <span class="fn">— adapter</span></div>
+    <div class="rail">
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">17</span><span class="ttl">Kanonik metadata</span></div>
+        <div class="desc">Her chunk'a: <code>document_id, document_type, period, legislative_year, session, date, year, author, source_name, source_title, topics</code> (manifest/DocumentInput'tan).</div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">18</span><span class="ttl">Kanun bölgesi etiketleme</span></div>
+        <div class="desc"><code>tag_law_regions</code>: chunk metinleri üzerinde regex durum makinesi → <code>sira_sayisi, esas_no, kanun_adi</code> (roll-call omurgası). [+ varsa section_type].</div>
+        <div class="ref">src/trainer/ingestion/law_region_tagger.py</div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- FAZ 5-7 -->
+  <section class="phase" style="--accent:var(--embed)">
+    <div class="phase-h">Faz 5–7 · Gömme &amp; Yazma <span class="fn">— pipeline</span></div>
+    <div class="rail">
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">19</span><span class="ttl">ID + sanitize</span></div>
+        <div class="desc"><code>chunk_id = {document_id}_{i}</code>; metadata Chroma-scalar'a sanitize (list→virgül-string, dict→json, None-drop).</div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node karar"><div class="card">
+        <div class="n-top"><span class="num">20</span><span class="ttl">Gömme stratejisi</span><span class="tag karar">karar</span></div>
+        <div class="desc">Koleksiyon late-chunking destekliyor mu?</div>
+        <div class="branch">
+          <span class="chip alt"><b>Jina v3/v4</b> → full_text bir kez encode, span'e göre mean-pool</span>
+          <span class="chip alt"><b>Nomic 256</b> → her chunk bağımsız embed</span>
+        </div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">21</span><span class="ttl">Chroma upsert</span></div>
+        <div class="desc"><code>collection.upsert(ids, embeddings, documents, metadatas)</code>.</div>
+      </div></div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="card">
+        <div class="n-top"><span class="num">22</span><span class="ttl">Manifest + rapor</span></div>
+        <div class="desc"><code>DocumentManifest.upsert(status=done, chunk_count, quality_json, perf_json)</code> + <code>reports/{doc_id}.json</code> (timings, chunk stats, artifacts index, warnings).</div>
+      </div></div>
+    </div>
+  </section>
+
+  <footer>
+    <div><b>İki katman ayrımı:</b> KATMAN 1 (parse) = PDF → <code>(full_text, atoms, furniture)</code>, cache'lenebilir. KATMAN 2 (chunk) = atomlar → token-bütçeli chunk'lar, span <code>full_text</code>'ten türer (late-chunking güvencesi). Paddle (10) ve VLM (11) yolları KATMAN 1 içinde, atomları <i>pack'ten önce</i> değiştirir — bu yüzden chunking'e Docling atomlarıyla aynı biçimde girerler.</div>
+    <div style="margin-top:8px">TBMM RAG POC · ingestion boru hattı · oluşturulma: 19 Temmuz 2026 · kendine yeten tek dosya (internetsiz açılır).</div>
+  </footer>
+</div>
+</body>
+</html>

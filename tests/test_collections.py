@@ -90,3 +90,44 @@ def test_get_available_collections_handles_missing_collection():
         # All collections should have count=0 due to mocked exception
         for collection in result:
             assert collection["count"] == 0, f"Expected count=0 for missing collection, got {collection['count']}"
+
+
+def test_chunk_overlap_tokens_default_zero():
+    """CollectionSpec.chunk_overlap_tokens defaults to 0 (overlap kapalı)."""
+    with patch("src.config.collections.MODEL_SPECS", {
+        "test-model": {
+            "max_context_tokens": 512,
+            "overlap_tokens": 128,
+            "embed_dim": 768,
+            "supports_late_chunking": False,
+        }
+    }):
+        spec = CollectionSpec(
+            name="test_col",
+            db_path=Path("/tmp/test"),
+            embed_model="test-model",
+            doc_type=DocumentType.TUTANAK,
+        )
+        assert spec.chunk_overlap_tokens == 0
+
+
+def test_chunk_overlap_tokens_custom_value():
+    """chunk_overlap_tokens YAML'dan gelen değerle set edilebilir; model spec'ten
+    türeyen overlap_tokens (makro pencere) alanından bağımsızdır."""
+    with patch("src.config.collections.MODEL_SPECS", {
+        "test-model": {
+            "max_context_tokens": 512,
+            "overlap_tokens": 128,
+            "embed_dim": 768,
+            "supports_late_chunking": False,
+        }
+    }):
+        spec = CollectionSpec(
+            name="test_col",
+            db_path=Path("/tmp/test"),
+            embed_model="test-model",
+            doc_type=DocumentType.TUTANAK,
+            chunk_overlap_tokens=51,
+        )
+        assert spec.chunk_overlap_tokens == 51
+        assert spec.overlap_tokens == 128  # makro pencere alanı etkilenmez

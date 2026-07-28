@@ -98,6 +98,163 @@ def test_token_pack_oversize_atom_becomes_own_chunk():
         assert full_text[c["span"][0]:c["span"][1]] == c["text"]
 
 
+# ---------------------------------------------------------------------------
+# Chunk overlap (atom-sınırlı ~%10) — token_pack_atoms(overlap_tokens=...)
+# ---------------------------------------------------------------------------
+
+def _four_word_atoms(n, pages=None):
+    return [
+        {"text": f"atom{i} kelime{i}a kelime{i}b kelime{i}c", "pages": pages or [1]}
+        for i in range(n)
+    ]
+
+
+def test_token_pack_overlap_zero_unchanged():
+    """overlap_tokens=0 ve parametresiz çağrı birebir aynı çıktıyı vermeli."""
+    atoms = _four_word_atoms(6)
+    full_text = _atoms_to_full_text(atoms)
+    base = token_pack_atoms(
+        atoms, full_text, count_tokens=_word_tokens, max_tokens=8, min_tokens=5
+    )
+    explicit = token_pack_atoms(
+        atoms, full_text, count_tokens=_word_tokens, max_tokens=8, min_tokens=5,
+        overlap_tokens=0,
+    )
+    assert base == explicit
+    # overlap kapalıyken chunk'lar örtüşmez
+    for prev, nxt in zip(base, base[1:]):
+        assert nxt["span"][0] >= prev["span"][1]
+
+
+def test_token_pack_overlap_budget_respected():
+    """Yeni chunk önceki chunk'ın kuyruk atomuyla başlar; örtüşme bütçeyi aşmaz."""
+    atoms = _four_word_atoms(4)
+    full_text = _atoms_to_full_text(atoms)
+    chunks = token_pack_atoms(
+        atoms, full_text, count_tokens=_word_tokens, max_tokens=8, min_tokens=5,
+        overlap_tokens=4,
+    )
+    assert len(chunks) >= 2
+    for prev, nxt in zip(chunks, chunks[1:]):
+        # Gerçek örtüşme: sonraki chunk öncekinin bitişinden ÖNCE başlar,
+        # ama başlangıçlar kesin artan (kopya chunk yok).
+        assert nxt["span"][0] < prev["span"][1]
+        assert nxt["span"][0] > prev["span"][0]
+        # Örtüşen bölgenin token sayısı bütçeyi aşmaz
+        overlap_text = full_text[nxt["span"][0]:prev["span"][1]]
+        assert _word_tokens(overlap_text) <= 4
+        # Örtüşme öncekinin kuyruğu = sonrakinin başı
+        assert nxt["text"].startswith(overlap_text)
+        assert prev["text"].endswith(overlap_text)
+    for c in chunks:
+        assert full_text[c["span"][0]:c["span"][1]] == c["text"]
+
+
+def test_token_pack_overlap_pages_union():
+    """Overlap atomunun sayfası yeni chunk'ın pages birleşimine dahil olmalı."""
+    atoms = _four_word_atoms(2, pages=[1]) + _four_word_atoms(2, pages=[2])[0:2]
+    # atom0,1 → sayfa 1; atom2,3 → sayfa 2 (metinler farklı olsun diye yeniden adlandır)
+    atoms[2]["text"] = "beta0 kelimeb0 kelimeb1 kelimeb2"
+    atoms[3]["text"] = "beta1 kelimeb3 kelimeb4 kelimeb5"
+    full_text = _atoms_to_full_text(atoms)
+    chunks = token_pack_atoms(
+        atoms, full_text, count_tokens=_word_tokens, max_tokens=8, min_tokens=5,
+        overlap_tokens=4,
+    )
+    # chunk0 = [atom0, atom1] (sayfa 1); chunk1 = [atom1(ovl, s.1), atom2(s.2)] → [1, 2]
+    assert len(chunks) >= 2
+    assert chunks[1]["pages"] == [1, 2]
+    assert chunks[1]["page"] == 1
+
+
+def test_token_pack_overlap_span_with_repeated_text():
+    """Tekrarlayan atom metinleri overlap açıkken de doğru span üretmeli."""
+    atoms = [
+        {"text": "Tekrar eden paragraf metni burada.", "pages": [1]},
+        {"text": "Tekrar eden paragraf metni burada.", "pages": [1]},
+        {"text": "Tekrar eden paragraf metni burada.", "pages": [2]},
+        {"text": "Farklı kapanış cümlesi geliyor şimdi.", "pages": [2]},
+    ]
+    full_text = _atoms_to_full_text(atoms)
+    chunks = token_pack_atoms(
+        atoms, full_text, count_tokens=_word_tokens, max_tokens=10, min_tokens=6,
+        overlap_tokens=5,
+    )
+    starts = [c["span"][0] for c in chunks]
+    assert starts == sorted(starts) and len(set(starts)) == len(starts)
+    for c in chunks:
+        assert full_text[c["span"][0]:c["span"][1]] == c["text"]
+
+
+def test_token_pack_overlap_suffix_fallback():
+    """Kuyruk atomu bütçeye sığmıyorsa son-eki kopyalanır: sonraki chunk atom
+    İÇİNDEN başlar, örtüşme bütçeyi aşmaz, atom kendi chunk'ında bütün kalır."""
+    atoms = _four_word_atoms(4)  # her atom 4 token, bütçe 2 → atom bütün sığmaz
+    full_text = _atoms_to_full_text(atoms)
+    chunks = token_pack_atoms(
+        atoms, full_text, count_tokens=_word_tokens, max_tokens=8, min_tokens=5,
+        overlap_tokens=2,
+    )
+    assert len(chunks) >= 2
+    found_suffix = False
+    for prev, nxt in zip(chunks, chunks[1:]):
+        assert nxt["span"][0] < prev["span"][1], "Son-ek fallback örtüşme üretmedi"
+        overlap_text = full_text[nxt["span"][0]:prev["span"][1]]
+        assert _word_tokens(overlap_text) <= 2
+        # Atom-içi başlangıç: örtüşme tam atom değil, atomun son-eki
+        if 0 < _word_tokens(overlap_text) < 4:
+            found_suffix = True
+    assert found_suffix
+    for c in chunks:
+        assert full_text[c["span"][0]:c["span"][1]] == c["text"]
+    # Önceki chunk'ın kuyruk atomunun sayfası yeni chunk'a taşınmalı
+    assert chunks[1]["pages"] and chunks[0]["pages"][-1] in chunks[1]["pages"]
+
+
+def test_token_pack_overlap_table_atom_not_split():
+    """Tablo etiketli kuyruk atomundan son-ek alınmaz — tablo parçalanmaz."""
+    table = " ".join(f"hucre{i}" for i in range(6))
+    atoms = [
+        {"text": "Giriş cümlesi tam dört kelime.", "pages": [1]},
+        {"text": table, "pages": [1], "label": "table"},
+        {"text": "Devam eden açıklama metni burada beş.", "pages": [2]},
+        {"text": "Son paragraf da beş kelime içerir.", "pages": [2]},
+    ]
+    full_text = _atoms_to_full_text(atoms)
+    chunks = token_pack_atoms(
+        atoms, full_text, count_tokens=_word_tokens, max_tokens=11, min_tokens=8,
+        overlap_tokens=4,
+    )
+    # Tablo ile biten chunk'tan sonra gelen chunk tablo içinden BAŞLAYAMAZ
+    for prev, nxt in zip(chunks, chunks[1:]):
+        if prev["text"].endswith(table):
+            assert nxt["span"][0] >= prev["span"][1], "Tablo atomu son-ek için bölündü"
+    for c in chunks:
+        assert full_text[c["span"][0]:c["span"][1]] == c["text"]
+
+
+def test_token_pack_overlap_oversized_atom_own_chunk():
+    """Max'ı aşan atom kendi chunk'ı olur; önüne tohum girmez, kopya chunk oluşmaz."""
+    big = " ".join(f"buyuk{i}" for i in range(12))
+    atoms = [
+        {"text": "Kısa giriş cümlesi burada dört.", "pages": [1]},
+        {"text": big, "pages": [1]},
+        {"text": "Kapanış cümlesi de dört kelime.", "pages": [2]},
+    ]
+    full_text = _atoms_to_full_text(atoms)
+    chunks = token_pack_atoms(
+        atoms, full_text, count_tokens=_word_tokens, max_tokens=8, min_tokens=3,
+        overlap_tokens=4,
+    )
+    assert any(c["text"] == big for c in chunks), "Oversize atom kendi chunk'ı olmadı"
+    # Oversize atomun ÖNÜNE tohum girmez (bütçe = max - n < 0)
+    big_chunk = next(c for c in chunks if c["text"] == big)
+    prev_chunk = chunks[chunks.index(big_chunk) - 1]
+    assert big_chunk["span"][0] >= prev_chunk["span"][1]
+    texts = [c["text"] for c in chunks]
+    assert len(texts) == len(set(texts)), "Kopya chunk üretildi"
+
+
 def test_docling_manager_uses_pypdfium_backend():
     """DoclingManager'ın PDF formatı için PyPdfium backend'i kullandığını doğrular.
 

@@ -97,6 +97,14 @@ class GraphState(TypedDict, total=False):
     loop_stop: bool  # expansion node'unda ceiling'e takıldı → döngüden çık
     escalated: bool  # kuru turda derinlik ikiye katlandı → devam
     reflect_done: bool  # adaptive reflect self-loop'unun DURMA sinyali → answering'e çık
+    # Ard ardışık VERİMSİZ reflect hop sayacı (added==0 VE window_added==0). retrieval
+    # node'unun hop-dalı günceller (verimli hop → 0 sıfırlar); route_after_assembly okur:
+    # eşiğe (reflect.max_dry_hops) ulaşınca çözülemeyen döngü iptal edilir → answer.
+    dry_hops: int
+    # Reflect KARAR node'unun ürettiği bir sonraki hop planı — retrieval node'u hop-mode'a
+    # geçer. None = round-0 / terminal. Her reflect dönüşü bu anahtarı set eder (bir önceki
+    # hop'un stash'i üzerine yazılsın). {"plan": SearchPlan, "exclude_seen": bool, "window_expand": bool}.
+    pending_hop: Optional[Any]
     # --- cevap yolu taşıyıcıları (bugünkü run() lokalleri) ---
     thinking: str
     context: str
@@ -118,6 +126,8 @@ def initial_graph_state(state: OrchestratorState) -> GraphState:
         "loop_stop": False,
         "escalated": False,
         "reflect_done": False,
+        "pending_hop": None,
+        "dry_hops": 0,
         "thinking": "",
         "context": "",
         "validation": None,
@@ -232,21 +242,51 @@ def build_routers(agent: "OrchestratorAgent") -> dict:
             return "expansion"
         return _final_route(gs["s"].evidence_decision)
 
-    def route_after_reflect(gs: GraphState) -> str:
-        # Prosedür DURMA sinyali (done) ya da ceiling → answering (clarify/refuse'a saygı).
-        if gs.get("reflect_done") or gs.get("loop_stop"):
+    def route_after_retrieval(gs: GraphState) -> str:
+        # Reflect hop retrieval'ı rabbit_holes'u ATLAR (hop'lar facet madenciliği yeniden
+        # koşmaz) → doğrudan assembly. Round-0 (pending_hop yok) mevcut akış: rabbit_holes.
+        return "assembly" if gs.get("pending_hop") else "rabbit_holes"
+
+    def route_after_assembly(gs: GraphState) -> str:
+        # Round-0 (pending_hop yok) → mevcut akış: judge.
+        if not gs.get("pending_hop"):
+            return "judge"
+        # Reflect hop-sonrası durma noktası (retrieval çalıştıktan SONRA bilinen).
+        result = gs.get("last_result")
+        # drafts_exhausted_by_dedup: dedup bu turun TÜM taslaklarını eledi (result.draft_texts
+        # boş) → bu turda hiçbir arama çalışmadı, devam etmenin anlamı yok. added==0 (gerçek ama
+        # verimsiz arama) İLE karıştırma: orada draft_texts DOLU olur, döngü devam eder.
+        if not (result and result.draft_texts):
             return _final_route(gs["s"].evidence_decision)
-        # Henüz done değil ve tur kaldı → bir sonraki hop.
+        # Çözülemeyen (dry) hop iptali: arama ÇALIŞTI ama net-yeni kanıt getirmedi
+        # (added==0 VE window_added==0 → retrieval node'u dry_hops'u artırdı). Ard ardışık
+        # verimsiz hop sayısı eşiğe ulaştıysa max_rounds tavanını beklemeden kes; drafts_exhausted
+        # (hiç arama yok) ile tamamlayıcı ama ayrık durum. max_dry_hops=0 → kapalı (kill-switch).
+        max_dry = agent._config.reflect.max_dry_hops
+        if max_dry and gs.get("dry_hops", 0) >= max_dry:
+            return _final_route(gs["s"].evidence_decision)
+        # Tur kaldı → bir sonraki KARAR hop'u (reflect). Yoksa max_rounds tavanı → doğrudan
+        # answering (clarify/refuse'a düşmez: çok-hop kanıtı eldeyken cevapla).
         if gs.get("rounds", 0) < _max_rounds(gs):
             return "reflect"
-        # max_rounds tükendi → eldeki çok-hop kanıtıyla cevapla.
         return "answering"
+
+    def route_after_reflect(gs: GraphState) -> str:
+        # KARAR node'u: hop ürettiyse → gerçek retrieval node'u (hop-mode). Aksi hâlde
+        # terminal: prosedür DURMA (done) / ceiling → answering (clarify/refuse'a saygı).
+        if gs.get("pending_hop"):
+            return "retrieval"
+        if gs.get("reflect_done") or gs.get("loop_stop"):
+            return _final_route(gs["s"].evidence_decision)
+        return "answering"  # güvenlik (karar node'u daima pending_hop VEYA reflect_done set eder)
 
     return {
         "bad_words": route_after_bad_words,
         "classification": route_after_classification,
         "policy": route_after_policy,
         "budget": route_after_budget,
+        "retrieval": route_after_retrieval,
+        "assembly": route_after_assembly,
         "judge": route_after_judge,
         "expansion": route_after_expansion,
         "judge_post_expand": route_after_judge_post_expand,
@@ -290,9 +330,13 @@ def build_orchestrator_graph(agent: "OrchestratorAgent") -> "CompiledStateGraph"
     g.add_edge("planning", "policy")
     g.add_conditional_edges("policy", routers["policy"], ["refuse", "budget"])
     g.add_conditional_edges("budget", routers["budget"], ["refuse", "retrieval"])
-    g.add_edge("retrieval", "rabbit_holes")
+    # retrieval iki mod: round-0 → rabbit_holes (mevcut akış); reflect hop → assembly (rabbit_holes atlanır).
+    g.add_conditional_edges("retrieval", routers["retrieval"], ["rabbit_holes", "assembly"])
     g.add_edge("rabbit_holes", "assembly")
-    g.add_edge("assembly", "judge")
+    # assembly: round-0 → judge; reflect hop-sonrası → reflect (bir sonraki karar) / answering / refuse.
+    g.add_conditional_edges(
+        "assembly", routers["assembly"], ["judge", "reflect", "answering", "refuse"]
+    )
     g.add_conditional_edges(
         "judge", routers["judge"], ["reflect", "expansion", "refuse", "answering"]
     )
@@ -304,10 +348,10 @@ def build_orchestrator_graph(agent: "OrchestratorAgent") -> "CompiledStateGraph"
         routers["judge_post_expand"],
         ["expansion", "refuse", "answering"],
     )
-    # Adaptive multi-hop reflect self-loop (reflect → reflect) — bağımsız çevrim;
-    # DURMA'da (reflect_done/ceiling/max_rounds) answering'e/refuse'a çıkar.
+    # Adaptive multi-hop reflect KARAR node'u → gerçek retrieval node'u (hop-mode); çevrim
+    # reflect → retrieval → assembly → reflect. DURMA'da (reflect_done/ceiling) answering'e/refuse'a çıkar.
     g.add_conditional_edges(
-        "reflect", routers["reflect"], ["reflect", "answering", "refuse"]
+        "reflect", routers["reflect"], ["retrieval", "answering", "refuse"]
     )
     g.add_edge("answering", "validation")
     g.add_edge("validation", "citation")
@@ -318,12 +362,13 @@ def build_orchestrator_graph(agent: "OrchestratorAgent") -> "CompiledStateGraph"
 
 
 def recursion_limit_for(config: Any) -> int:
-    """Doğrusal ~14 node + tur başına 2 node; >2× pay bırakır (default 25 dar).
+    """Doğrusal ~14 node + reflect hop başına 3 node (reflect→retrieval→assembly);
+    >× pay bırakır (default 25 dar).
 
-    Adaptive reflect self-loop turları ``strategy.max_rounds``'tan gelir (judge
+    Adaptive reflect çevrimi turları ``strategy.max_rounds``'tan gelir (judge
     knob'larından değil) — POC'ta judge knob'ları 0'a çekilse bile reflect döner,
     o yüzden en büyük strateji ``max_rounds``'unu + reflect fallback tavanını da
-    hesaba kat.
+    hesaba kat. Katsayı 5: hop başına 3 node + pay (self-loop dönemi 4'tü).
     """
     adaptive_max = 0
     try:
@@ -340,4 +385,4 @@ def recursion_limit_for(config: Any) -> int:
         adaptive_max,
         reflect_default,
     )
-    return 32 + 4 * max_rounds
+    return 32 + 5 * max_rounds

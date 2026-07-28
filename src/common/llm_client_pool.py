@@ -16,6 +16,7 @@ import ollama
 from langchain_core.messages import BaseMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_ollama import ChatOllama
+from langchain_openai import ChatOpenAI
 
 from src.config.pipeline_loader import PipelineConfig
 
@@ -56,6 +57,8 @@ class BlockClient:
         retries: int = 1,
         keep_alive: "str | int | None" = None,
         default_num_ctx: "int | None" = None,
+        api_type: str = "ollama",
+        api_key: str = "not-needed",
     ) -> None:
         self.host = host
         self.block_name = block_name
@@ -70,10 +73,17 @@ class BlockClient:
         # default (5m). A long value (e.g. "2h" or -1) avoids re-loading the model
         # from disk on the first query after an idle gap (the ~11s cold-start).
         self.keep_alive = keep_alive
+        # "openai": host is a remote OpenAI-compatible proxy (LiteLLM/vLLM) —
+        # transport becomes ChatOpenAI, num_ctx/keep_alive don't apply (no local
+        # Ollama runner to pin/reload). health_check() is Ollama-only either way;
+        # an openai-type block is reported healthy by construction.
+        self.api_type = api_type
+        self.api_key = api_key
         # Raw client kept only for health_check(); chat traffic goes through
-        # ChatOllama so LangChain callbacks (Langfuse) see every generation.
-        self._client = ollama.Client(host=host, timeout=timeout_seconds)
-        self._chat_models: dict[str, ChatOllama] = {}
+        # ChatOllama/ChatOpenAI so LangChain callbacks (Langfuse) see every
+        # generation.
+        self._client = ollama.Client(host=host, timeout=timeout_seconds) if api_type == "ollama" else None
+        self._chat_models: dict[str, Any] = {}
         self._healthy = True
         self._last_error: str | None = None
 
@@ -81,18 +91,35 @@ class BlockClient:
     def is_healthy(self) -> bool:
         return self._healthy
 
-    def _chat_model(self, model: str) -> ChatOllama:
+    def _chat_model(self, model: str) -> Any:
         if model not in self._chat_models:
-            kwargs: dict[str, Any] = {
-                "model": model,
-                "base_url": self.host,
-                # Forwarded to httpx so a stuck/loading model raises instead of
-                # hanging forever.
-                "client_kwargs": {"timeout": self.timeout_seconds},
-            }
-            if self.keep_alive is not None:
-                kwargs["keep_alive"] = self.keep_alive
-            self._chat_models[model] = ChatOllama(**kwargs)
+            if self.api_type == "openai":
+                self._chat_models[model] = ChatOpenAI(
+                    model=model,
+                    base_url=self.host,
+                    api_key=self.api_key,
+                    timeout=self.timeout_seconds,
+                    # streaming=True: httpx timeout chunk-arası boşluğu sınırlar,
+                    # toplam üretim süresini değil (ChatOllama tarafındaki
+                    # non-stream-invoke-de-içeride-stream'ler davranışıyla aynı
+                    # felsefe — uzun answering üretimleri kısa timeout'a takılmasın).
+                    streaming=True,
+                    # max_retries=0: SDK'nın kendi retry'ı BlockClient.chat()'in
+                    # zaten yaptığı dış retry döngüsüyle (self.retries) çakışıp
+                    # tekrarları katlamasın.
+                    max_retries=0,
+                )
+            else:
+                kwargs: dict[str, Any] = {
+                    "model": model,
+                    "base_url": self.host,
+                    # Forwarded to httpx so a stuck/loading model raises instead of
+                    # hanging forever.
+                    "client_kwargs": {"timeout": self.timeout_seconds},
+                }
+                if self.keep_alive is not None:
+                    kwargs["keep_alive"] = self.keep_alive
+                self._chat_models[model] = ChatOllama(**kwargs)
         return self._chat_models[model]
 
     def chat(
@@ -126,16 +153,32 @@ class BlockClient:
         if self.default_num_ctx is not None:
             merged_options.setdefault("num_ctx", self.default_num_ctx)
 
-        # Invoke-time kwargs: `options` fully replaces ChatOllama's constructor
-        # defaults and `reasoning` maps to Ollama's `think` (None → omitted),
-        # so this is byte-equivalent to the raw ollama.Client call it replaced.
         call_kwargs: dict[str, Any] = {}
-        if merged_options:
-            call_kwargs["options"] = merged_options
-        if format:
-            call_kwargs["format"] = format
-        if think is not None:
-            call_kwargs["reasoning"] = think
+        if self.api_type == "openai":
+            # OpenAI-uyumlu (LiteLLM/vLLM) çağrı şekli — options/format/think'in
+            # Ollama eşdeğerleri buraya çevrilir. num_ctx atlanır (context sunucu
+            # tarafında sabit). enable_thinking vLLM/Qwen3 konvansiyonu: kapalıyken
+            # hız/token kazancı büyük; AÇIK olsa da langchain_openai bu vendor'a
+            # özel reasoning_content alanını yüzeye çıkarmıyor (yalnızca `content`
+            # etkilenir) — bu blok için "thinking" izi her zaman boş kalır.
+            if "temperature" in merged_options:
+                call_kwargs["temperature"] = merged_options["temperature"]
+            if "num_predict" in merged_options:
+                call_kwargs["max_tokens"] = merged_options["num_predict"]
+            if format == "json":
+                call_kwargs["response_format"] = {"type": "json_object"}
+            if think is not None:
+                call_kwargs["extra_body"] = {"chat_template_kwargs": {"enable_thinking": think}}
+        else:
+            # Invoke-time kwargs: `options` fully replaces ChatOllama's constructor
+            # defaults and `reasoning` maps to Ollama's `think` (None → omitted),
+            # so this is byte-equivalent to the raw ollama.Client call it replaced.
+            if merged_options:
+                call_kwargs["options"] = merged_options
+            if format:
+                call_kwargs["format"] = format
+            if think is not None:
+                call_kwargs["reasoning"] = think
 
         chat_model = self._chat_model(model)
         if stream:
@@ -155,7 +198,7 @@ class BlockClient:
 
     def _stream(
         self,
-        chat_model: ChatOllama,
+        chat_model: Any,
         messages: list[dict],
         call_kwargs: dict[str, Any],
         config: Optional[RunnableConfig],
@@ -170,7 +213,14 @@ class BlockClient:
             raise
 
     def health_check(self) -> bool:
-        """Quick health check by listing models."""
+        """Quick health check by listing models.
+
+        openai-type blocks have no raw client here (no Ollama /api/tags
+        equivalent wired up) — reports current state as-is; actual chat()
+        failures still flip _healthy via the normal retry/exception path.
+        """
+        if self._client is None:
+            return self._healthy
         try:
             self._client.list()
             self._healthy = True
@@ -211,6 +261,8 @@ class LLMClientPool:
                 retries=block.retries,
                 keep_alive=getattr(self._config, "keep_alive", None),
                 default_num_ctx=block.max_num_ctx,
+                api_type=block.api_type,
+                api_key=block.api_key,
             )
         return self._clients[block_name]
 

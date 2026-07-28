@@ -612,7 +612,7 @@ def test_orchestrator_propagates_extracted_filters_to_retrieval(monkeypatch):
 
     monkeypatch.setattr(
         agent._planner, "_generate_plan",
-        lambda q, tracer, allowed_keys=None: _make_plan("col_a"),
+        lambda q, tracer, allowed_keys=None, chat_history=None: _make_plan("col_a"),
     )
 
     chunks = [{"chunk_id": f"a{i}", "document_id": f"da{i}"} for i in range(3)]
@@ -660,7 +660,7 @@ def test_orchestrator_falls_back_to_refined_query_when_no_drafts(monkeypatch):
     )
     monkeypatch.setattr(
         agent._planner, "_generate_plan",
-        lambda q, tracer, allowed_keys=None: plan_no_drafts,
+        lambda q, tracer, allowed_keys=None, chat_history=None: plan_no_drafts,
     )
     # Single-chunk retrieval trips the judge into expand; broaden must not reach a
     # live LLM (new drafts would overwrite the refined-query capture asserted below).
@@ -801,7 +801,10 @@ def test_orchestrator_caps_query_variants(monkeypatch):
         )],
         reasoning="r",
     )
-    monkeypatch.setattr(agent._planner, "_generate_plan", lambda q, tracer, allowed_keys=None: big_plan)
+    monkeypatch.setattr(
+        agent._planner, "_generate_plan",
+        lambda q, tracer, allowed_keys=None, chat_history=None: big_plan,
+    )
 
     seen = []
 

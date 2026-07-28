@@ -59,10 +59,15 @@ from src.common.chroma import where_year_filter
 from src.common.filter_translators import build_chroma_where
 from src.common.schemas import FilterCriteria
 from src.common.llm_client_pool import LLMClientPool
+from src.common.text import normalize_tr
 from src.config.collections import COLLECTIONS, get_production_collection_keys
-from src.config.document_types import FILTER_APPLICABILITY
+from src.config.document_types import FILTER_APPLICABILITY, SECTION_TYPES
 from src.config.pipeline_loader import PipelineConfig
-from src.config.settings import COMPREHENSIVE_KEYWORDS, PARLIAMENTARY_TERM_SYNONYMS
+from src.config.settings import (
+    COMPREHENSIVE_KEYWORDS,
+    LAW_QUERY_KEYWORDS,
+    PARLIAMENTARY_TERM_SYNONYMS,
+)
 from src.generator.prompts import CONVERSATIONAL_SYS_PROMPT
 
 
@@ -90,7 +95,7 @@ class _RequeryResult(NamedTuple):
     plan: Optional[SearchPlan] = None
     pruned: int = 0
     excluded_seen_count: int = 0  # already-seen chunk ids held out of this hop's retrieval
-    sira_filter: Optional[dict] = None  # positive {sira_sayisi: {$eq: N}} applied this hop, if any
+    sira_filter: Optional[dict] = None  # positive anchor where-filter (sira_sayisi and/or section_type) applied this hop, if any
     window_added: int = 0  # neighbor chunks spliced by window-expand this hop, if any
 
 
@@ -291,7 +296,26 @@ class OrchestratorAgent:
                 selected_collections=state.selected_collections or self._production,
                 constraints=state.applied_constraints or None,
                 max_variants=self._config.planner.normal_max_query_variants,
+                # Anaphora hint only ("konuyla ilgili" etc.) — draft wording, not routing.
+                chat_history=ctx.chat_history,
             )
+            # Kanun-stratejisi alan kapısı (deterministik, LLM'den bağımsız güvenlik ağı):
+            # küçük planner modeli çıplak konuşma-fiili tetikleyicilerine ("ne dedi/ne
+            # konuşuldu") kapılıp kanun-DIŞI olay/kişi sorgusuna bir kanun stratejisi
+            # (kanun_gorusmeleri vb.) seçebiliyor — bu da query_type=comprehensive override'ını
+            # + adaptive reflect over-gather'ını tetikleyip bağlamı num_ctx üstüne şişirir
+            # (cemal kaşıkçı regresyonu). Sorguda kanun sinyali yoksa stratejiyi DÜŞÜR →
+            # aşağıdaki fail-open resolution hiçbir override uygulamaz, genel/factual yola düşer.
+            if (
+                state.planner_output
+                and state.planner_output.strategy
+                and self._is_law_strategy(self._config.get_strategy(state.planner_output.strategy))
+                and not self._is_law_query(query)
+            ):
+                dropped = state.planner_output.strategy
+                state.planner_output.strategy = None
+                if tctx:
+                    tctx.update_details(law_strategy_dropped=dropped)
             # Resolve the planner-selected strategy (research_strategies.md) into a
             # query_type + answer_directive override. An unknown/undefined strategy
             # name is a no-op — fail-open, Faz A behavior.
@@ -301,6 +325,16 @@ class OrchestratorAgent:
                     if strategy.get("query_type"):
                         state.planner_output.query_type = strategy["query_type"]
                     state.answer_directive = strategy.get("answer_directive") or None
+                    # Bölüm omurgası: strateji hedef section_type pinliyorsa extracted_anchors'a
+                    # tohumla → reflect sıra sayısını çözünce _anchor_where_for ikisini $and'ler
+                    # (kesin {sira_sayisi ∧ section_type} bölge filtresi). Reflect LLM'e bağımlı
+                    # DEĞİL. Round-0 retrieval'ı etkilemez (plans planner_output filtrelerinden
+                    # kurulur; extracted_anchors yalnız reflect hop'larında where'e döner).
+                    if strategy.get("section_type"):
+                        state.extracted_anchors = {
+                            **state.extracted_anchors,
+                            "section_type": strategy["section_type"],
+                        }
             # Deterministic enumeration/exhaustive override: a keyword match promotes
             # query_type to 'comprehensive' (the planner LLM may also emit it). This
             # drives larger context caps + the iterative gather loop downstream, and
@@ -376,9 +410,45 @@ class OrchestratorAgent:
         return {}
 
     def _node_retrieval(self, gs: GraphState, config: RunnableConfig) -> dict:
-        """Stage 3: retrieval (parallel fan-out + RRF + rerank)."""
+        """Stage 3: retrieval (parallel fan-out + RRF + rerank).
+
+        İki mod, tek gerçek node (graf=trace: hem round-0 hem reflect hop'u bu node'dan
+        geçer, trace'te ayrı ``retrieval`` span'i olur):
+          * ROUND-0 (``pending_hop`` yok): plans planner filtrelerinden kurulur, sonuç
+            ``state.retrieval_results``'a TAZE yazılır.
+          * REFLECT HOP-MODE (``gs["pending_hop"]`` dolu): reflect KARAR node'unun ürettiği
+            hop planını yürütür — ``_reflect_retrieve`` (anchor where-filtresi + exclude_seen
+            + window-expand + merge). Assembler'ı ÇAĞIRMAZ (assembly node yapar). Hop
+            telemetrisini ``retrieval`` fazına yayar."""
         ctx = run_ctx(config)
         state = gs["s"]
+        hop = gs.get("pending_hop")
+        if hop:
+            with ctx.tracer.phase("retrieval") as tctx:
+                result = self._reflect_retrieve(
+                    state, hop["plan"], ctx.tracer,
+                    exclude_seen=hop["exclude_seen"], window_expand=hop["window_expand"],
+                )
+                # Çözülemeyen-hop sayacı: net-yeni kanıt (merge VEYA window komşusu) geldiyse
+                # verimli → sıfırla; ikisi de 0 ise ard ardışık dry sayacını artır.
+                # route_after_assembly bu sayacı reflect.max_dry_hops eşiğiyle karşılaştırır.
+                productive = result.added > 0 or result.window_added > 0
+                new_dry = 0 if productive else gs.get("dry_hops", 0) + 1
+                if tctx:
+                    # Hop-2 metadata omurgası: sıra sayısı filtresi UYGULANDIYSA kesin
+                    # where-araması; yoksa filtresiz semantiğe düşer. Bu anahtarlar eskiden
+                    # reflect fazındaydı — graf=trace kararıyla retrieval span'ine taşındı.
+                    sira_applied = result.sira_filter is not None
+                    tctx.update_details(
+                        added=result.added, drafts=result.draft_texts,
+                        hop2_semantic_fallback=not sira_applied,
+                        sira_sayisi_filter_available=sira_applied,
+                        sira_filter=result.sira_filter,
+                        excluded_seen_chunks=result.excluded_seen_count,
+                        window_added=result.window_added,
+                        dry_hops=new_dry,
+                    )
+            return {"last_result": result, "dry_hops": new_dry}
         with ctx.tracer.phase("retrieval") as tctx:
             fallback = self._fallback_query(state)
             # Register the initial searches in the tried-ledger so expansion
@@ -546,16 +616,21 @@ class OrchestratorAgent:
         return update
 
     def _node_reflect(self, gs: GraphState, config: RunnableConfig) -> dict:
-        """Stage 5.2: adaptive çok-hop reflect / re-plan (self-loop çevrim gövdesi).
+        """Stage 5.2: adaptive çok-hop reflect / re-plan — KARAR node'u.
 
         Yalnızca ``mode: adaptive`` stratejiler için girilir — yönlendirme
-        (``_is_adaptive``) strateji modu + ``reflect.enabled`` üzerinden kapılar. Her tur
-        bir prosedür hop'u yürütür: kanıttan varlık çıkar, DURMA'ya karar ver, değilse bir
-        sonraki hop'u getir. Çok-katmanlı FAIL-OPEN: beklenmeyen hata / adaptive-olmayan
-        strateji / reflect-LLM ``None`` → generic ``broaden()`` yoluna düşer ve çıkar.
-        Durma: prosedür ``done`` sinyali, boş next_plan, tavan, veya ``strategy.max_rounds``
-        (``route_after_reflect`` uygular). HER dal ``rounds``'u artırır; yalnızca "execute"
-        dalı ``reflect_done=False`` döndürür (aksi hâlde recursion-limit'e kadar dönerdi).
+        (``_is_adaptive``) strateji modu + ``reflect.enabled`` üzerinden kapılar. Bu node
+        RETRIEVAL YAPMAZ: kanıttan varlık çıkarır, DURMA'ya karar verir, devam edecekse bir
+        sonraki hop'un planını + bayraklarını ``pending_hop`` kanalına stash'ler ve grafı
+        gerçek ``retrieval`` node'una yönlendirir (``retrieval → assembly → reflect`` çevrimi;
+        graf=kaynak). Hop'un yürütülmesi + assembler yenilemesi o node'larda olur; hop-sonrası
+        durma (``drafts_exhausted_by_dedup``) ve döngü-geri/max_rounds kararı ``route_after_assembly``'de
+        verilir (retrieval çalışmadan bilinemez). Çok-katmanlı FAIL-OPEN: beklenmeyen hata /
+        adaptive-olmayan strateji / reflect-LLM ``None`` → generic ``broaden()`` yoluna düşer ve
+        çıkar (bunlar terminal, inline kalır). Durma (bu node'da): prosedür ``done`` sinyali, boş
+        next_plan, next_plan'ı olsa da içindeki tüm resource'ların query_drafts'ı boşsa
+        (savunma-derinliği), veya tavan. HER dal ``rounds``'u artırır; her dönüş ``pending_hop``
+        anahtarını (hop dict'i VEYA None) İÇERİR — bir önceki hop'un stash'i üzerine yazılsın diye.
         """
         ctx = run_ctx(config)
         state = gs["s"]
@@ -573,7 +648,8 @@ class OrchestratorAgent:
                     if tctx:
                         tctx.update_details(round=rounds + 1, adaptive=False,
                                             fell_back="not_adaptive", added=result.added)
-                    return {"last_result": result, "rounds": rounds + 1, "reflect_done": True}
+                    return {"last_result": result, "rounds": rounds + 1,
+                            "reflect_done": True, "pending_hop": None}
 
                 # Hacim güvenlik tavanı — generic çevrimin query_type tavanı (_ceiling_for)
                 # DEĞİL: reasoning/summary'de tek-atım ilk retrieval zaten o tavanı (15)
@@ -583,9 +659,10 @@ class OrchestratorAgent:
                     if tctx:
                         tctx.update_details(round=rounds + 1, skipped=True, stop_reason="ceiling",
                                             assembled_total=len(state.assembled_chunks))
-                    return {"reflect_done": True, "loop_stop": True, "rounds": rounds + 1}
+                    return {"reflect_done": True, "loop_stop": True,
+                            "rounds": rounds + 1, "pending_hop": None}
 
-                evidence = self._compact_evidence(state)
+                evidence = self._compact_evidence(state, strategy)
                 tried = self._tried_query_texts(state)
                 reflection = self._planner.reflect(
                     ctx.query,
@@ -608,48 +685,55 @@ class OrchestratorAgent:
                     self._run_assembler(state)
                     if tctx:
                         tctx.update_details(round=rounds + 1, reflect_failed=True, added=result.added)
-                    return {"last_result": result, "rounds": rounds + 1, "reflect_done": True}
+                    return {"last_result": result, "rounds": rounds + 1,
+                            "reflect_done": True, "pending_hop": None}
 
                 # Anchor'ları birleştir (yeni non-null kazanır) + hop imlecini ilerlet.
                 merged = dict(state.extracted_anchors)
                 merged.update({k: v for k, v in (reflection.extracted_anchors or {}).items() if v is not None})
+                # Yapışkan pin: stratejinin hedef section_type'ı sabittir → reflect-LLM'in
+                # emit ettiği (belki yanlış) section'ı EZ. Üç pinli kanun stratejisinin bölümü
+                # tasarımca değişmez; deterministik tohum otoriter kalsın.
+                if strategy.get("section_type"):
+                    merged["section_type"] = strategy["section_type"]
                 state.extracted_anchors = merged
                 state.hop_cursor = reflection.hop_cursor or state.hop_cursor
 
                 # DONE (ya da aranacak bir şey kalmadı) → eldekiyle cevapla.
-                if reflection.done or reflection.next_plan is None or not reflection.next_plan.resources:
+                if (
+                    reflection.done
+                    or reflection.next_plan is None
+                    or not reflection.next_plan.resources
+                    or not any(r.query_drafts for r in reflection.next_plan.resources)
+                ):
                     if tctx:
                         tctx.update_details(round=rounds + 1, hop=state.hop_cursor, done=True,
                                             done_reason=reflection.done_reason,
                                             anchors=state.extracted_anchors)
-                    return {"reflect_done": True, "rounds": rounds + 1}
+                    return {"reflect_done": True, "rounds": rounds + 1, "pending_hop": None}
 
-                # Sonraki hop'un retrieval'ını yürüt, sonra yeniden-birleştir (answering/tavan görsün).
-                result = self._reflect_retrieve(
-                    state, reflection.next_plan, ctx.tracer,
-                    exclude_seen=bool(strategy.get("exclude_seen_chunks")),
-                    window_expand=bool(strategy.get("window_expand")),
-                )
-                self._run_assembler(state)
+                # Hop'u YÜRÜTME — planı + bayrakları stash'le, gerçek `retrieval` node'una
+                # yönlendir (graf=kaynak: retrieval/assembly gerçek node geçişleri). Hop'un
+                # yürütülmesi (`_reflect_retrieve`) + assembler yenilemesi o node'larda olur.
+                # Hop-sonrası durma (`drafts_exhausted_by_dedup`: dedup TÜM taslakları eleyince
+                # `result.draft_texts` boş → bu turda hiçbir arama çalışmadı) ve döngü-geri/
+                # max_rounds kararı retrieval+assembly SONRASINDA `route_after_assembly`'de verilir —
+                # retrieval çalışmadan bunlar bilinemez (bkz. o router).
                 if tctx:
-                    # Hop-2 metadata omurgası: sıra sayısı filtresi UYGULANDIYSA kesin
-                    # where-araması (kanun adı geçmese bile roll-call'a ulaşır); yoksa
-                    # (çıpa çözülmedi / koleksiyon taşımıyor) filtresiz semantiğe düşer.
-                    sira_applied = result.sira_filter is not None
-                    tctx.update_details(
-                        round=rounds + 1, hop=state.hop_cursor, done=False, added=result.added,
-                        anchors=state.extracted_anchors, drafts=result.draft_texts,
-                        assembled_total=len(state.assembled_chunks),
-                        hop2_semantic_fallback=not sira_applied,
-                        sira_sayisi_filter_available=sira_applied,
-                        sira_filter=result.sira_filter,
-                        excluded_seen_chunks=result.excluded_seen_count,
-                        window_added=result.window_added,
-                    )
-                return {"last_result": result, "rounds": rounds + 1, "reflect_done": False}
+                    tctx.update_details(round=rounds + 1, hop=state.hop_cursor, done=False,
+                                        anchors=state.extracted_anchors)
+                return {
+                    "pending_hop": {
+                        "plan": reflection.next_plan,
+                        "exclude_seen": bool(strategy.get("exclude_seen_chunks")),
+                        "window_expand": bool(strategy.get("window_expand")),
+                    },
+                    "rounds": rounds + 1,
+                    "reflect_done": False,
+                }
         except Exception as exc:  # fail-open: reflect asla cevap yolunu kırmasın
             state.errors.append(f"reflect_failed: {type(exc).__name__}")
-            return {"reflect_done": True, "rounds": rounds + 1}
+            return {"reflect_done": True, "rounds": rounds + 1, "pending_hop": None}
 
     def _node_refuse(self, gs: GraphState, config: RunnableConfig) -> dict:
         """Refuse/clarify çıkışı — gerekçe policy/budget kanalından ya da judge kararından."""
@@ -715,9 +799,10 @@ class OrchestratorAgent:
         ctx = run_ctx(config)
         state = gs["s"]
         with ctx.tracer.phase("citation") as tctx:
-            state.citations = CitationBuilder.build(state.assembled_chunks)
+            state.citations = CitationBuilder.build(state.assembled_chunks, final_answer=state.final_answer)
             if tctx:
-                tctx.update_details(citation_count=len(state.citations))
+                cited_count = sum(1 for c in state.citations if c.get("cited"))
+                tctx.update_details(citation_count=len(state.citations), cited_count=cited_count)
 
         return {"output": AgentOutput(
             answer=state.final_answer,
@@ -741,6 +826,28 @@ class OrchestratorAgent:
         """Enumeration/exhaustive intent — substring match against COMPREHENSIVE_KEYWORDS."""
         q = (query or "").lower()
         return any(kw in q for kw in COMPREHENSIVE_KEYWORDS)
+
+    # Kanun stratejilerinin hedeflediği belge bölümleri (research_strategies.md). Bir
+    # stratejinin "kanun stratejisi" olup olmadığı buradan veri-güdümlü belirlenir
+    # (ad-prefix'e bağımlı değil) — bkz. _is_law_strategy / _node_planning kanun-kapısı.
+    _LAW_SECTION_TYPES = frozenset({"oylama", "kanun_gorusmeleri", "kanun_raporu"})
+
+    @staticmethod
+    def _is_law_query(query: str) -> bool:
+        """Sorguda GERÇEK bir kanun/mevzuat bağlamı var mı — LAW_QUERY_KEYWORDS alt-dizgi
+        eşleşmesi (_is_comprehensive deseninin ikizi, normalize_tr ile Türkçe-güvenli).
+
+        Kanun stratejilerinin (kanun_kabul_oylama/kanun_gorusmeleri/kanun_rapor_bolumu)
+        deterministik kapısı: küçük planner modeli çıplak "ne dedi/ne konuşuldu"
+        tetikleyicilerine kapılıp olay/kişi sorgusuna kanun stratejisi seçebiliyor; bu kapı
+        kanun sinyali yoksa stratejiyi düşürür (bkz. _node_planning)."""
+        q = normalize_tr(query or "")
+        return any(normalize_tr(kw) in q for kw in LAW_QUERY_KEYWORDS)
+
+    @classmethod
+    def _is_law_strategy(cls, strategy: Optional[dict]) -> bool:
+        """Çözülmüş strateji dict'i bir kanun stratejisi mi (section_type kanun kümesinde)."""
+        return bool(strategy) and strategy.get("section_type") in cls._LAW_SECTION_TYPES
 
     @staticmethod
     def _is_known_parliamentary_term(query: str) -> bool:
@@ -1271,13 +1378,24 @@ class OrchestratorAgent:
         if not allowed:
             return _RequeryResult(added=0, draft_texts={}, term_hypothesis=term_hypothesis, plan=base_plan)
 
-        # Pass 1 = unfiltered (deeper global reach); passes 2..N = one per mined year.
-        filter_variants: list[Optional[dict]] = [None]
-        if self._config.retrieval_budget.enumerate_facet_partition:
-            for year in self._facet_years(state):
-                wf = where_year_filter([year])
-                if wf is not None:
-                    filter_variants.append(wf)
+        # Bölüm omurgası: kanun kimliği çözüldüyse comprehensive toplamayı da kesin
+        # {sira_sayisi ∧ section_type} filtresine bağla (non-comprehensive yolun
+        # _anchor_where_for'unun aynısı) → yalnız o kanunun hedef bölgesi, çapraz-kanun
+        # sızıntısı yok; yıl-facet gereksiz (sıra sayısı tek yasama bağlamında).
+        # _anchor_where_for section_type'ı yalnız sira_sayisi da çözülünce ekler; sıra sayısı
+        # yoksa None döner → ilk kimlik hop'unda mevcut semantik + yıl-facet toplama korunur
+        # (section-only over-broad olurdu).
+        anchor_where = self._anchor_where_for(state, allowed)
+        if anchor_where is not None:
+            filter_variants: list[Optional[dict]] = [anchor_where]
+        else:
+            # Pass 1 = unfiltered (deeper global reach); passes 2..N = one per mined year.
+            filter_variants = [None]
+            if self._config.retrieval_budget.enumerate_facet_partition:
+                for year in self._facet_years(state):
+                    wf = where_year_filter([year])
+                    if wf is not None:
+                        filter_variants.append(wf)
 
         query_text = (base_plan.refined_query if base_plan else None) or state.user_query
         added_total = 0
@@ -1303,35 +1421,56 @@ class OrchestratorAgent:
             state.expanded = True
         state.expand_iterations += 1
         return _RequeryResult(added=added_total, draft_texts=draft_texts,
-                              term_hypothesis=term_hypothesis, plan=base_plan, pruned=pruned_total)
+                              term_hypothesis=term_hypothesis, plan=base_plan, pruned=pruned_total,
+                              sira_filter=anchor_where)
 
-    def _sira_sayisi_filter_for(
+    def _anchor_where_for(
         self, state: OrchestratorState, collections: list[str],
     ) -> Optional[dict]:
-        """Metadata omurgası — reflect'in çıkardığı sıra sayısı çıpasından pozitif
-        ``{'sira_sayisi': {'$eq': N}}`` where-filtresi kur (Hop-2'nin KESİN filtresi:
-        kanun adı geçmese bile kimliksiz roll-call/görüşme/rapor bölgesini getirir).
+        """Metadata omurgası — reflect'in çıkardığı çıpalardan (``sira_sayisi`` +
+        ``section_type``) pozitif where-filtresi kur (Hop-2'nin KESİN filtresi). sira_sayisi
+        kanun adı geçmese bile kimliksiz roll-call/görüşme/rapor bölgesini; section_type
+        belge içi bölümü (oylama / kanun_gorusmeleri / yazili_soru …) hedefler; ikisi
+        birlikte ``$and``'lenir (ör. "N kanununun oylaması" → yalnız o kanunun oy-döküm
+        bölgesi).
 
-        None (no-op) döner ve o zaman hop bugünkü filtresiz semantik aramaya düşer:
-        çıpa yoksa, sıra sayısı int'e çevrilemiyorsa, ya da hedef koleksiyonlardan
-        biri ``sira_sayisi`` metadata'sını taşımıyorsa. Son guard, ``override_filter``
-        tek ``_flat_plans_for`` çağrısında TÜM koleksiyonlara aynen uygulandığından
-        şart: sira_sayisi taşımayan bir koleksiyona filtre dayatmak onu sıfırlardı
-        (``_seen_chunk_ids`` chunk-id dışlamasıyla dikey çalışır — biri hangi chunk'ların
-        ELENDİĞİNİ, diğeri hangi bölgenin ARANDIĞINI belirler)."""
-        raw = (state.extracted_anchors or {}).get("sira_sayisi")
-        if raw is None:
+        None (no-op) döner ve o zaman hop filtresiz semantik aramaya düşer: hiçbir çıpa
+        çözülemezse. Alanlar ALAN-BAZINDA elenir: bir alan yalnız TÜM hedef koleksiyonlar
+        onu taşıyorsa dahil edilir (``override_filter`` tek ``_flat_plans_for`` çağrısında
+        TÜM koleksiyonlara aynen uygulandığından, alanı taşımayan koleksiyona dayatmak onu
+        sıfırlardı). sira_sayisi-only davranışı birebir korunur (section_type çıpası yoksa).
+        ``_seen_chunk_ids`` chunk-id dışlamasıyla dikey: biri neyi ELER, diğeri neyi ARAR."""
+        anchors = state.extracted_anchors or {}
+        cand: dict = {}
+        raw = anchors.get("sira_sayisi")
+        if raw is not None:
+            try:
+                cand["sira_sayisi"] = int(str(raw).strip())
+            except (TypeError, ValueError):
+                pass  # "S.S. 5" gibi çözülmemiş biçim → sira alanı atlanır
+        # section_type YALNIZ sira_sayisi da çözüldüyse eklenir. Tek başına section_type
+        # (kanun kimliği henüz yokken — ör. strateji seed'i var ama reflect sıra sayısını
+        # okumadı) tüm korpustaki o bölümü (bütün oylamalar/görüşmeler) getirirdi → over-broad.
+        # Kanun pinlenince {sira ∧ section} cerrahi olur; öncesinde semantik aramaya bırak.
+        sec = anchors.get("section_type")
+        if "sira_sayisi" in cand and isinstance(sec, str) and sec in SECTION_TYPES:
+            cand["section_type"] = sec
+        if not cand:
             return None
-        try:
-            n = int(str(raw).strip())
-        except (TypeError, ValueError):
-            return None  # "S.S. 5" gibi çözülmemiş biçim → filtresiz semantiğe bırak
-        for name in collections:
-            spec = COLLECTIONS.get(name)
-            allowed = FILTER_APPLICABILITY.get(spec.doc_type) if spec else None
-            if allowed is None or "sira_sayisi" not in allowed:
-                return None
-        return build_chroma_where(FilterCriteria(sira_sayisi=n), collections[0])
+        crit: dict = {}
+        for field, val in cand.items():
+            supported = True
+            for name in collections:
+                spec = COLLECTIONS.get(name)
+                allowed = FILTER_APPLICABILITY.get(spec.doc_type) if spec else None
+                if allowed is None or field not in allowed:
+                    supported = False
+                    break
+            if supported:
+                crit[field] = val
+        if not crit:
+            return None
+        return build_chroma_where(FilterCriteria(**crit), collections[0])
 
     def _reflect_retrieve(
         self, state: OrchestratorState, plan: SearchPlan, tracer: PipelineTracer,
@@ -1370,10 +1509,11 @@ class OrchestratorAgent:
         # Snapshot the seen pool BEFORE this round's merge, so it reflects the hop's start.
         exclude_ids = self._seen_chunk_ids(state) if exclude_seen else None
         excluded_n = len(exclude_ids) if exclude_ids else 0
-        # Metadata omurgası: sıra sayısı çıpası çözüldüyse bu hop'u kesin where-filtresine
-        # bağla (kanun adı geçmese bile kimliksiz roll-call bölgesini getirir). exclude_ids
-        # (chunk-id dışlama) ile dikey: biri neyi ELER, diğeri hangi bölgeyi ARAR.
-        sira_filter = self._sira_sayisi_filter_for(state, allowed)
+        # Metadata omurgası: sıra sayısı + bölüm (section_type) çıpaları çözüldüyse bu
+        # hop'u kesin where-filtresine bağla (kanun adı geçmese bile kimliksiz roll-call /
+        # belirli bölüm bölgesini getirir). exclude_ids (chunk-id dışlama) ile dikey: biri
+        # neyi ELER, diğeri hangi bölgeyi ARAR.
+        sira_filter = self._anchor_where_for(state, allowed)
         plans = self._flat_plans_for(plan, allowed, override_filter=sira_filter)
         plans, pruned = self._dedupe_and_register(state, plans, query_text)
         draft_texts = {p.collection_name: list(p.query_drafts) for p in plans}
@@ -1395,18 +1535,34 @@ class OrchestratorAgent:
                               plan=plan, pruned=pruned, excluded_seen_count=excluded_n,
                               sira_filter=sira_filter, window_added=window_added)
 
-    def _compact_evidence(self, state: OrchestratorState) -> str:
+    def _compact_evidence(self, state: OrchestratorState,
+                          strategy: Optional[dict] = None) -> str:
         """Deterministic compact summary of gathered evidence for the reflect LLM.
 
         The full chunk pool won't fit the reflect context, so take the top-N assembled
         chunks (already rerank-ordered) and emit a short header + head-truncated body per
         chunk. esas_no/sıra sayısı usually appear near a report/agenda chunk's head, so
         truncating from the head keeps them readable. Bounded by the reflect.evidence_* caps.
+
+        ``strategy.evidence_priority_patterns``: chunks containing one of these
+        substrings (case-insensitive) are moved to the FRONT of the window (rank order
+        preserved within each group). Rerank alone buries the procedure's target record —
+        e.g. the vote announcement ranks below discussion/report chunks, so a pure
+        top-N window never shows the reflect LLM the numbers and DURMA can't fire;
+        the loop then only dies via the drafts_exhausted_by_dedup fallback.
         """
         cfg = self._config.reflect
+        chunks = state.assembled_chunks
+        patterns = (strategy or {}).get("evidence_priority_patterns") or []
+        if patterns:
+            hits = [c for c in chunks
+                    if any(p in (c.text or "").casefold() for p in patterns)]
+            if hits:
+                hit_ids = {id(c) for c in hits}
+                chunks = hits + [c for c in chunks if id(c) not in hit_ids]
         parts: list[str] = []
         total = 0
-        for c in state.assembled_chunks[: cfg.evidence_max_chunks]:
+        for c in chunks[: cfg.evidence_max_chunks]:
             meta = c.metadata or {}
             tags = [c.source_title or c.document_id]
             if meta.get("date"):

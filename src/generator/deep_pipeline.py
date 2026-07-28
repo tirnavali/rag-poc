@@ -20,6 +20,7 @@ from typing import Iterable, Optional
 from src.common.protocols import RetrievalResult, StreamChunk
 from src.config import settings
 from src.retriever.context import build_context, build_structured_context
+from src.retriever.filters import auto_date_where_filter
 
 
 @dataclass
@@ -128,11 +129,14 @@ class DeepPipeline:
             else query
         )
         t1 = time.perf_counter()
+        where_filter, _ = auto_date_where_filter(combined)
         result = self.service.retriever.retrieve(
             combined,
             top_k=settings.MUFETTIS_TOP_K,
             fetch_k=settings.MUFETTIS_FETCH_K,
             mufettis_mode=True,
+            where_filter=where_filter,
+            reranker=self.service.reranker,
         )
         t_retrieve_ms = (time.perf_counter() - t1) * 1000
 

@@ -58,6 +58,7 @@
   .md p { margin: .65em 0; }
   .md strong, .md b { color: #15110a; }
   .md a { color: #1d6fb8; }
+  .md mark.hl { background: rgba(34,197,94,.55); color: #0b2b17; padding: 0 2px; border-radius: 3px; font-weight: 700; }
   .pane { padding: 14px 16px; flex: 0 0 auto; }
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px 16px; }
   .card + .card { margin-top: 12px; }
@@ -78,11 +79,14 @@
   .res { padding: 9px 11px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: flex-start; }
   .res:last-child { border-bottom: none; }
   .res:hover { background: var(--panel2); }
+  .res.active { background: rgba(91,148,255,.14); box-shadow: inset 3px 0 0 var(--accent); }
+  .res.active:hover { background: rgba(91,148,255,.2); }
   .res .rank { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; width: 22px; flex: 0 0 auto; padding-top: 2px; }
   .res .rbody { flex: 1; min-width: 0; cursor: pointer; }
   .res .rhead { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 10px; }
   .res .rhead .pg { color: var(--accent2); font-weight: 600; }
   .res .rhead .sc { color: var(--ok); font-variant-numeric: tabular-nums; }
+  .res .rhead .dupe { color: var(--warn); border: 1px solid var(--warn); border-radius: 10px; padding: 0 6px; cursor: help; }
   .res .snip { font-size: 13.5px; line-height: 1.55; margin-top: 4px; color: var(--fg); max-height: 4.6em; overflow: hidden; }
   .res .markbtn { flex: 0 0 auto; align-self: center; font-size: 12px; padding: 5px 9px; border-radius: 18px; background: var(--panel2); border: 1px solid var(--border); color: var(--muted); font-weight: 600; }
   .res .markbtn.on { background: var(--ok); border-color: var(--ok); color: #06210f; }
@@ -108,15 +112,27 @@
   .existing .ex-head { display: flex; align-items: center; gap: 8px; padding: 14px 16px 6px; }
   .existing h3 { font-size: 13px; color: var(--muted); margin: 0; text-transform: uppercase; letter-spacing: .03em; }
   .existing .ex-head input { flex: 1; max-width: 240px; margin-left: auto; padding: 5px 9px; }
-  .entry { padding: 9px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 8px; }
+  .ex-progress { padding: 0 16px 8px; font-size: 12px; color: var(--muted); }
+  .ex-progress b { color: var(--fg); }
+  .ex-filters { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 16px 10px; }
+  .ex-filters .filterbtn { background: var(--panel2); border: 1px solid var(--border); color: var(--muted); border-radius: 20px; padding: 4px 11px; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+  .ex-filters .filterbtn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .entry { padding: 9px 16px; border-bottom: 1px solid var(--border); border-left: 3px solid transparent; display: flex; align-items: flex-start; gap: 8px; }
   .entry:hover { background: var(--panel); }
+  .entry.status-approved { border-left-color: var(--ok); background: rgba(34,197,94,.06); }
+  .entry.status-flagged { border-left-color: var(--warn); background: rgba(245,158,11,.06); }
   .entry .body { flex: 1; min-width: 0; cursor: pointer; }
   .entry .q { font-size: 13.5px; line-height: 1.5; }
   .entry .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .entry .status-badge { font-size: 11px; font-weight: 700; border-radius: 6px; padding: 1px 7px; margin-left: 6px; white-space: nowrap; }
+  .entry .status-badge.approved { background: rgba(34,197,94,.15); color: #22c55e; border: 1px solid var(--ok); }
+  .entry .status-badge.flagged { background: rgba(245,158,11,.15); color: #f59e0b; border: 1px solid var(--warn); }
   .entry .entry-actions { display: flex; gap: 4px; flex-shrink: 0; padding-top: 2px; }
   .entry .entry-actions button { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); padding: 2px 7px; font-size: 12px; cursor: pointer; }
   .entry .entry-actions button:hover { border-color: var(--accent); color: var(--accent); }
   .entry .entry-actions button.del:hover { border-color: #ff6b6b; color: #ff6b6b; }
+  .entry .entry-actions button.approve.on { background: var(--ok); border-color: var(--ok); color: #06210f; }
+  .entry .entry-actions button.flag.on { background: var(--warn); border-color: var(--warn); color: #3a2405; }
   .edit-badge { display:none; font-size:11px; background: rgba(79,140,255,.15); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; padding: 2px 8px; margin-left: 4px; vertical-align: middle; }
   .editing .edit-badge { display: inline; }
   .editing .card-title { color: var(--warn); }
@@ -184,6 +200,8 @@
         <div class="tagrow" id="catRow"></div>
         <label>Zorluk</label>
         <div class="tagrow" id="diffRow"></div>
+        <label>Durum</label>
+        <div class="tagrow" id="statusRow"></div>
 
         <div class="actions">
           <button class="ghost" id="clearBtn">Temizle</button>
@@ -199,6 +217,8 @@
         <h3>Tüm sorular (<span id="exCount">0</span>)</h3>
         <input id="exFilter" type="search" placeholder="sorularda ara…">
       </div>
+      <div class="ex-progress" id="exProgress"></div>
+      <div class="ex-filters" id="exFilters"></div>
       <div id="existingList"></div>
     </div>
   </div>
@@ -212,12 +232,77 @@ const state = {
   results: [],                    // son retrieval sonuçları
   selMarks: new Map(),           // key `${doc}#${page}` -> {document_id, page, label}
   entries: [],                   // tüm golden sorular
-  cat: null, diff: null, editId: null,
+  cat: null, diff: null, status: null, editId: null,
   useReranker: false,            // etiketleme havuzu varsayılan: reranker KAPALI (tarafsız embedding havuzu)
+  activeResult: -1,               // solda önizlemesi açık olan sonucun indeksi
+  hlTerms: [],                    // sayfa üzerinde yeşil vurgulanacak sorgu kelimeleri
+  statusFilter: "all",            // "Tüm sorular" listesi doğrulama-durumu filtresi
 };
 const CATS = ["narrative", "deputy", "bulletin"];
 const DIFFS = ["easy", "medium", "hard"];
+const STATUSES = ["approved", "flagged"];
+const STATUS_LABEL = { approved: "✓ Onaylandı", flagged: "⚑ Sorunlu" };
+const STATUS_SET = new Set(STATUSES);
+const statusOf = (tags) => (tags || []).find(t => STATUS_SET.has(t)) || null;
 const markKey = (doc, page) => `${doc}#${page}`;
+const TR_STOPWORDS = new Set(["ve","ile","ya","da","de","bir","bu","şu","o","mi","mı","mu","mü",
+  "midir","mıdır","mudur","müdür","ne","nedir","kim","kimdir","nasıl","için","gibi","ki","ise",
+  "veya","ama","fakat","çok","daha","en","kaç","hangi","hangisi","nerede","nereye","niçin","niye","değil"]);
+
+// Türkçe büyük/küçük harf normalizasyonu — İ/I çiftlerini uzunluk koruyarak eşler,
+// böylece normalize edilmiş metindeki indeksler orijinal metinle birebir hizalı kalır.
+function trLower(s){ return (s||"").replace(/İ/g, "i").replace(/I/g, "ı").toLowerCase(); }
+function extractTerms(query){
+  const words = trLower(query).match(/[\p{L}\p{N}]+/gu) || [];
+  return [...new Set(words.filter(w => w.length >= 2 && !TR_STOPWORDS.has(w)))];
+}
+function isWordChar(ch){ return !!ch && /[\p{L}\p{N}_]/u.test(ch); }
+function termRanges(normText, terms){
+  const ranges = [];
+  terms.forEach(term => {
+    let from = 0;
+    while(true){
+      const at = normText.indexOf(term, from);
+      if(at === -1) break;
+      from = at + 1;
+      if(!isWordChar(normText[at-1]) && !isWordChar(normText[at+term.length])) ranges.push([at, at+term.length]);
+    }
+  });
+  ranges.sort((a,b) => a[0]-b[0]);
+  const merged = [];
+  ranges.forEach(r => {
+    const last = merged[merged.length-1];
+    if(last && r[0] <= last[1]) last[1] = Math.max(last[1], r[1]);
+    else merged.push(r.slice());
+  });
+  return merged;
+}
+function highlightTextNode(node, terms){
+  const text = node.textContent;
+  const ranges = termRanges(trLower(text), terms);
+  if(!ranges.length) return;
+  const frag = document.createDocumentFragment();
+  let pos = 0;
+  ranges.forEach(([s, e]) => {
+    if(s > pos) frag.appendChild(document.createTextNode(text.slice(pos, s)));
+    const mark = document.createElement("mark");
+    mark.className = "hl";
+    mark.textContent = text.slice(s, e);
+    frag.appendChild(mark);
+    pos = e;
+  });
+  if(pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
+  node.parentNode.replaceChild(frag, node);
+}
+function highlightPage(terms){
+  if(!terms || !terms.length) return;
+  const root = $("pageMd");
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  const nodes = [];
+  let n;
+  while((n = walker.nextNode())) nodes.push(n);
+  nodes.forEach(node => highlightTextNode(node, terms));
+}
 
 // --- minik markdown renderer (tablo + başlık + paragraf) ---
 function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
@@ -271,6 +356,7 @@ async function init(){
     `<option value="${d.document_id}">${esc(d.label)} (${d.page_count} s.)</option>`).join("");
   sel.onchange = () => { if(sel.value) loadDoc(sel.value); };
   buildTagRows();
+  buildExFilters();
   renderChips();
   await loadEntries();
 }
@@ -278,11 +364,15 @@ async function init(){
 function buildTagRows(){
   $("catRow").innerHTML = CATS.map(c => `<button class="tagbtn" data-cat="${c}">${c}</button>`).join("");
   $("diffRow").innerHTML = DIFFS.map(c => `<button class="tagbtn" data-diff="${c}">${c}</button>`).join("");
+  $("statusRow").innerHTML = STATUSES.map(s => `<button class="tagbtn" data-status="${s}">${STATUS_LABEL[s]}</button>`).join("");
   $("catRow").querySelectorAll(".tagbtn").forEach(b => b.onclick = () => {
     state.cat = state.cat === b.dataset.cat ? null : b.dataset.cat; syncTags();
   });
   $("diffRow").querySelectorAll(".tagbtn").forEach(b => b.onclick = () => {
     state.diff = state.diff === b.dataset.diff ? null : b.dataset.diff; syncTags();
+  });
+  $("statusRow").querySelectorAll(".tagbtn").forEach(b => b.onclick = () => {
+    state.status = state.status === b.dataset.status ? null : b.dataset.status; syncTags();
   });
 }
 
@@ -294,12 +384,14 @@ function syncReranker(){
 function syncTags(){
   $("catRow").querySelectorAll(".tagbtn").forEach(b => b.classList.toggle("on", b.dataset.cat === state.cat));
   $("diffRow").querySelectorAll(".tagbtn").forEach(b => b.classList.toggle("on", b.dataset.diff === state.diff));
+  $("statusRow").querySelectorAll(".tagbtn").forEach(b => b.classList.toggle("on", b.dataset.status === state.status));
 }
 
 // ---------- Retrieval ----------
 async function runSearch(){
   const query = $("query").value.trim();
   if(!query){ showMsg("Önce bir soru yazın.", "err"); return; }
+  state.hlTerms = extractTerms(query);
   const top_k = Math.max(1, Math.min(+$("topk").value || 30, 100));
   $("searchBtn").disabled = true;
   $("searchHint").innerHTML = "Aranıyor… (ilk arama modelleri yüklerken birkaç saniye sürebilir)";
@@ -315,6 +407,7 @@ async function runSearch(){
       return;
     }
     state.results = res.results || [];
+    state.activeResult = -1;
     renderResults();
     const mode = res.reranker ? "rerank açık" : "rerank kapalı — embedding havuzu";
     $("searchHint").innerHTML = `${state.results.length} sonuç · <code>${esc(res.collection)}</code> · ${mode} · ilgili olanı <b>+ golden</b> ile işaretleyin, satıra tıklayınca sayfası solda açılır.`;
@@ -322,21 +415,47 @@ async function runSearch(){
   finally { $("searchBtn").disabled = false; }
 }
 
+// aynı metin farklı belge/chunk'ta tekrar ediyorsa (ör. karara bağlanana kadar
+// art arda birleşimlerin gündeminde birebir tekrarlanan önergeler) kafa karıştırmasın
+// diye rozetle işaretle — bug değil, kaynağın kendi tekrarı; bkz. rank listesi göster.
+function normSnippet(s){ return (s||"").toLocaleLowerCase("tr").replace(/\s+/g, " ").trim(); }
+function dupeGroups(results){
+  const byText = new Map();
+  results.forEach((r, i) => {
+    const k = normSnippet(r.snippet);
+    if(!k) return;
+    if(!byText.has(k)) byText.set(k, []);
+    byText.get(k).push(i);
+  });
+  const groupOf = new Map(); // index -> other ranks sharing this text
+  byText.forEach(idxs => {
+    if(idxs.length < 2) return;
+    idxs.forEach(i => groupOf.set(i, idxs.filter(j => j !== i).map(j => results[j].rank)));
+  });
+  return groupOf;
+}
+
 function renderResults(){
   const box = $("results");
   if(!state.results.length){ box.innerHTML = ""; return; }
+  const dupes = dupeGroups(state.results);
   box.innerHTML = state.results.map((r, i) => {
     const marked = r.page != null && state.selMarks.has(markKey(r.document_id, r.page));
     const span = (r.pages && r.pages.length > 1) ? `s. ${r.pages[0]}–${r.pages[r.pages.length-1]}` :
                  (r.page != null ? `s. ${r.page}` : "sayfa yok");
     const canMark = r.page != null;
-    return `<div class="res" data-i="${i}">
+    const otherRanks = dupes.get(i);
+    const dupeBadge = otherRanks
+      ? `<span class="dupe" title="Bu metin kaynakta birebir tekrarlanıyor (ör. karara bağlanana kadar art arda gündeme alınan önerge) — bug değil.">⧉ tekrar: #${otherRanks.join(", #")}</span>`
+      : "";
+    return `<div class="res ${i === state.activeResult ? "active" : ""}" data-i="${i}">
       <div class="rank">${r.rank}</div>
       <div class="rbody">
         <div class="rhead">
           <span class="pg">${span}</span>
           <span>${esc(r.label)}</span>
           <span class="sc">skor ${r.score}</span>
+          ${dupeBadge}
         </div>
         <div class="snip">${esc(r.snippet)}</div>
       </div>
@@ -346,9 +465,13 @@ function renderResults(){
     </div>`;
   }).join("");
   box.querySelectorAll(".res .rbody").forEach(el => el.onclick = () => {
-    const r = state.results[+el.closest(".res").dataset.i];
-    if(r.has_pages && r.page != null) openInViewer(r.document_id, r.page);
-    else showMsg("Bu belgenin sayfa önizlemesi yok (sidecar bulunamadı).", "warn");
+    const i = +el.closest(".res").dataset.i;
+    const r = state.results[i];
+    if(r.has_pages && r.page != null){
+      state.activeResult = i;
+      renderResults();
+      openInViewer(r.document_id, r.page);
+    } else showMsg("Bu belgenin sayfa önizlemesi yok (sidecar bulunamadı).", "warn");
   });
   box.querySelectorAll(".markbtn").forEach(btn => btn.onclick = () => {
     toggleMark(state.results[+btn.dataset.i]);
@@ -389,6 +512,7 @@ function showPage(idx){
   state.idx = Math.max(0, Math.min(idx, state.pages.length - 1));
   const pg = state.pages[state.idx];
   $("pageMd").innerHTML = renderMd(pg.sayfa_markdown);
+  highlightPage(state.hlTerms);
   $("pageJump").value = pg.sayfa_no;
   $("curPageLbl").textContent = pg.sayfa_no;
   $("counter").textContent = `${shortLabel(state.docLabel)} · sayfa ${pg.sayfa_no}/${state.pages.length}`;
@@ -421,23 +545,70 @@ async function loadEntries(){
   if(!Array.isArray(state.entries)) state.entries = [];
   renderEntries();
 }
+function buildExFilters(){
+  const opts = [
+    { key: "all", label: "Tümü" },
+    { key: "pending", label: "Bekliyor" },
+    { key: "approved", label: "✓ Onaylı" },
+    { key: "flagged", label: "⚑ Sorunlu" },
+  ];
+  $("exFilters").innerHTML = opts.map(o => `<button class="filterbtn" data-key="${o.key}">${o.label}</button>`).join("");
+  $("exFilters").querySelectorAll(".filterbtn").forEach(b => b.onclick = () => {
+    state.statusFilter = b.dataset.key; renderEntries();
+  });
+}
+
+async function setEntryStatus(entry, clickedStatus){
+  const current = statusOf(entry.tags);
+  const next = current === clickedStatus ? null : clickedStatus;
+  const tags = (entry.tags || []).filter(t => !STATUS_SET.has(t));
+  if(next) tags.push(next);
+  try {
+    const res = await getJSON("/api/save", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        query: entry.query, golden_answer: entry.golden_answer || "",
+        relevant_pages: entry.relevant_pages, edit_id: entry.id, tags,
+      })
+    });
+    if(res.error){ showMsg("Hata: " + res.error, "err"); return; }
+    if(state.editId === entry.id){ state.status = next; syncTags(); }
+    await loadEntries();
+  } catch(e){ showMsg("İstek hatası: " + e, "err"); }
+}
+
 function renderEntries(){
+  const total = state.entries.length;
+  const approved = state.entries.filter(e => statusOf(e.tags) === "approved").length;
+  const flagged = state.entries.filter(e => statusOf(e.tags) === "flagged").length;
+  $("exProgress").innerHTML = total
+    ? `<b>${approved}</b> onaylandı · <b>${flagged}</b> sorunlu · <b>${total - approved - flagged}</b> bekliyor (${total} toplam)`
+    : "";
+  $("exFilters").querySelectorAll(".filterbtn").forEach(b => b.classList.toggle("on", b.dataset.key === state.statusFilter));
+
   const q = ($("exFilter").value || "").toLocaleLowerCase("tr");
-  const list = q ? state.entries.filter(e => (e.query||"").toLocaleLowerCase("tr").includes(q)) : state.entries;
-  $("exCount").textContent = `${list.length}${q ? " / " + state.entries.length : ""}`;
+  let list = q ? state.entries.filter(e => (e.query||"").toLocaleLowerCase("tr").includes(q)) : state.entries;
+  if(state.statusFilter !== "all"){
+    list = list.filter(e => (statusOf(e.tags) || "pending") === state.statusFilter);
+  }
+  $("exCount").textContent = `${list.length}${(q || state.statusFilter !== "all") ? " / " + total : ""}`;
   if(!list.length){
-    $("existingList").innerHTML = `<div class="entry" style="cursor:default;color:var(--muted)"><div class="body">${q ? "Eşleşen soru yok." : "Henüz girdi yok."}</div></div>`;
+    $("existingList").innerHTML = `<div class="entry" style="cursor:default;color:var(--muted)"><div class="body">${q || state.statusFilter !== "all" ? "Eşleşen soru yok." : "Henüz girdi yok."}</div></div>`;
     return;
   }
   $("existingList").innerHTML = list.map(e => {
     const prov = (e.relevant_pages||[]).map(rp =>
       `${esc(shortLabel(rp.label))} s.${(rp.pages||[]).join(", ")}`).join(" | ");
-    return `<div class="entry" data-id="${esc(e.id)}">
+    const st = statusOf(e.tags);
+    const badge = st ? `<span class="status-badge ${st}">${STATUS_LABEL[st]}</span>` : "";
+    return `<div class="entry ${st ? "status-"+st : ""}" data-id="${esc(e.id)}">
        <div class="body">
-         <div class="q">${esc(e.query)}</div>
+         <div class="q">${esc(e.query)}${badge}</div>
          <div class="meta">${esc(e.id)} · ${prov}${e.golden_answer ? " · " + esc(e.golden_answer.slice(0,50)) : ""}</div>
        </div>
        <div class="entry-actions">
+         <button class="approve ${st === "approved" ? "on" : ""}" title="Onaylandı olarak işaretle">✓</button>
+         <button class="flag ${st === "flagged" ? "on" : ""}" title="Sorunlu olarak işaretle">⚑</button>
          <button class="edit-btn" title="Formu doldur ve düzenle">✏️</button>
          <button class="del" title="Sil">🗑️</button>
        </div>
@@ -447,7 +618,18 @@ function renderEntries(){
     const id = el.closest(".entry").dataset.id;
     const found = state.entries.find(e => e.id === id);
     const rp = found && (found.relevant_pages||[])[0];
+    if(found) state.hlTerms = extractTerms(found.query || "");
     if(rp && rp.document_id && (rp.pages||[]).length) openInViewer(rp.document_id, rp.pages[0]);
+  });
+  $("existingList").querySelectorAll(".approve").forEach(btn => btn.onclick = (ev) => {
+    ev.stopPropagation();
+    const found = state.entries.find(e => e.id === btn.closest(".entry").dataset.id);
+    if(found) setEntryStatus(found, "approved");
+  });
+  $("existingList").querySelectorAll(".flag").forEach(btn => btn.onclick = (ev) => {
+    ev.stopPropagation();
+    const found = state.entries.find(e => e.id === btn.closest(".entry").dataset.id);
+    if(found) setEntryStatus(found, "flagged");
   });
   $("existingList").querySelectorAll(".edit-btn").forEach(btn => btn.onclick = (ev) => {
     ev.stopPropagation();
@@ -478,6 +660,7 @@ function renderEntries(){
 function loadEntry(e){
   $("query").value = e.query || "";
   $("answer").value = e.golden_answer || "";
+  state.hlTerms = extractTerms(e.query || "");
   state.selMarks = new Map();
   (e.relevant_pages || []).forEach(rp => (rp.pages || []).forEach(p => {
     state.selMarks.set(markKey(rp.document_id, p), { document_id: rp.document_id, page: +p, label: rp.label || rp.document_id });
@@ -486,6 +669,7 @@ function loadEntry(e){
   const CATS_SET = new Set(CATS), DIFFS_SET = new Set(DIFFS);
   state.cat  = tags.find(t => CATS_SET.has(t))  || null;
   state.diff = tags.find(t => DIFFS_SET.has(t)) || null;
+  state.status = statusOf(tags);
   state.editId = e.id;
   syncTags(); renderChips(); renderResults();
   $("formCard").classList.add("editing");
@@ -501,7 +685,7 @@ function loadEntry(e){
 function showMsg(text, kind){ const m = $("msg"); m.className = "msg " + kind; m.textContent = text; }
 function clearForm(){
   $("query").value = ""; $("answer").value = "";
-  state.selMarks = new Map(); state.cat = null; state.diff = null; state.editId = null;
+  state.selMarks = new Map(); state.cat = null; state.diff = null; state.status = null; state.editId = null;
   syncTags(); renderChips(); renderResults();
   $("formCard").classList.remove("editing");
   $("editBadge").textContent = "";
@@ -519,6 +703,7 @@ async function save(){
   const tags = [];
   if(state.cat) tags.push(state.cat);
   if(state.diff) tags.push(state.diff);
+  if(state.status) tags.push(state.status);
   $("saveBtn").disabled = true;
   try {
     const body = { query, golden_answer: answer, marks, tags };

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ingestion Debug Viewer</title>
+<style>
+  :root {
+    --bg: #15171c; --panel: #1c1f27; --panel2: #242833; --border: #313745;
+    --fg: #dfe3ea; --muted: #9aa3b2; --accent: #5b94ff; --accent2: #34d8c4;
+    --ok: #22c55e; --warn: #f59e0b; --bad: #ef4444; --chip: #2a3140;
+    --paper: #f4efe4; --paper-card: #fbf8f1; --paper-border: #e0d6c3;
+    --ink: #26221b; --ink-muted: #6f6757; --ink-head: #0e6f6a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg); color: var(--fg); height: 100vh; overflow: hidden; }
+  header { display: flex; align-items: center; gap: 12px; padding: 8px 16px;
+    background: var(--panel); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  header h1 { font-size: 15px; margin: 0; font-weight: 600; }
+  header .coll { color: var(--accent2); font-size: 12px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; }
+  header .coll.err { color: var(--bad); border-color: var(--bad); }
+  select, input, button { font: inherit; color: var(--fg); background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 7px; padding: 6px 9px; }
+  select { max-width: 320px; }
+  input.page-jump { width: 60px; text-align: center; }
+  button { cursor: pointer; }
+  button.ghost { background: var(--panel2); color: var(--fg); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .nav { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  /* sayfa-nokta şeridi: kalite renk kodlu hızlı gezinme */
+  .dots { display: flex; flex-wrap: wrap; gap: 3px; padding: 6px 16px;
+    background: var(--panel); border-bottom: 1px solid var(--border); max-height: 74px; overflow-y: auto; }
+  .dot { width: 15px; height: 15px; border-radius: 3px; cursor: pointer; position: relative;
+    border: 1px solid rgba(0,0,0,.35); font-size: 0; }
+  .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
+  .dot.cur { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .dot.tagged::after { content: ""; position: absolute; right: 1px; bottom: 1px;
+    width: 5px; height: 5px; border-radius: 50%; background: #0b1220; box-shadow: 0 0 0 1px #fff6; }
+  .legend { color: var(--muted); font-size: 11px; margin-left: auto; display: flex; gap: 10px; align-items: center; }
+  .legend b { color: var(--fg); font-weight: 600; }
+  /* sinyal rozet şeridi */
+  .sigbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 7px 16px;
+    background: var(--panel2); border-bottom: 1px solid var(--border); align-items: center; }
+  .badge { font-size: 12px; padding: 3px 9px; border-radius: 14px; background: var(--chip);
+    border: 1px solid var(--border); display: inline-flex; gap: 5px; align-items: center; }
+  .badge b { font-variant-numeric: tabular-nums; }
+  .badge.ok { border-color: var(--ok); } .badge.warn { border-color: var(--warn); color: #fcd9a0; }
+  .badge.bad { border-color: var(--bad); color: #ffc2c2; }
+  .badge.info { border-color: var(--accent2); color: #bfeee7; }
+  .flagnote { color: var(--warn); font-size: 12px; }
+  /* 3 kolon */
+  .main { display: flex; height: calc(100vh - 49px - 74px - 40px); }
+  .col { flex: 1; min-width: 0; display: flex; flex-direction: column; border-right: 1px solid var(--border); }
+  .col:last-child { border-right: none; }
+  .col-head { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    color: var(--accent2); padding: 8px 14px; background: var(--panel); border-bottom: 1px solid var(--border); }
+  .col-body { flex: 1; overflow: auto; }
+  /* panel 1: görüntü */
+  .imgwrap { padding: 14px; text-align: center; background: #0f1115; min-height: 100%; }
+  .imgwrap img { max-width: 100%; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,.5); background: #fff; }
+  .placeholder { color: var(--muted); padding: 40px 20px; font-size: 13px; }
+  /* panel 2: OCR metni (kâğıt yüzey) */
+  .md { background: var(--paper); color: var(--ink); padding: 22px 26px 60px; min-height: 100%;
+    font-size: 15px; line-height: 1.72; }
+  .md h2, .md h3 { color: var(--ink-head); margin: 1.1em 0 .4em; font-size: 17px; font-weight: 700; }
+  .md table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
+  .md th, .md td { border: 1px solid var(--paper-border); padding: 5px 9px; text-align: left; vertical-align: top; }
+  .md th { background: #efe7d7; font-weight: 700; }
+  .md p { margin: .55em 0; }
+  .md strong { color: #15110a; }
+  /* panel 3: chunk kartları */
+  .chunks { padding: 12px 12px 60px; }
+  .chunk { background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--border);
+    border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+  .chunk.tagged { border-left-color: var(--accent2); }
+  .chunk-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .chunk-head .cid { font-size: 11px; color: var(--muted); font-family: ui-monospace, monospace; }
+  .tag { font-size: 11px; padding: 1px 7px; border-radius: 10px; border: 1px solid var(--border); background: var(--chip); }
+  .tag.key { border-color: var(--accent2); color: #bfeee7; font-weight: 600; }
+  .tag.pg { border-color: var(--accent); color: #cfe0ff; }
+  .chunk-text { font-size: 12.5px; line-height: 1.5; color: var(--fg); background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; margin: 6px 0;
+    max-height: 140px; overflow: auto; white-space: pre-wrap; }
+  .meta-tbl { width: 100%; font-size: 11.5px; border-collapse: collapse; }
+  .meta-tbl td { padding: 2px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .meta-tbl td.k { color: var(--muted); width: 38%; white-space: nowrap; }
+  .meta-tbl td.v { color: var(--fg); word-break: break-word; }
+  .meta-tbl tr.hl td { color: #bfeee7; }
+  .empty { color: var(--muted); padding: 24px 14px; font-size: 13px; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 11.5px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔬 Ingestion Debug Viewer</h1>
+  <span class="coll" id="collLbl">koleksiyon: —</span>
+  <select id="docSelect"><option value="">— belge seç —</option></select>
+  <div class="nav">
+    <button class="ghost" id="prevBtn">◀</button>
+    <span>Sayfa</span>
+    <input class="page-jump" id="pageJump" type="number" min="1" value="1">
+    <span id="pageTotal">/ —</span>
+    <button class="ghost" id="nextBtn">▶</button>
+  </div>
+</header>
+
+<div class="dots" id="dots">
+  <span class="legend" id="dotsLegend">belge seçin…</span>
+</div>
+
+<div class="sigbar" id="sigbar"><span style="color:var(--muted)">—</span></div>
+
+<div class="main">
+  <div class="col">
+    <div class="col-head">1 · Orijinal Sayfa (PDF)</div>
+    <div class="col-body"><div class="imgwrap" id="imgwrap">
+      <div class="placeholder">Belge ve sayfa seçin.</div>
+    </div></div>
+  </div>
+  <div class="col">
+    <div class="col-head" style="display:flex;align-items:center;gap:8px;">
+      <span>2 · OCR Sonrası Metin</span>
+      <button class="ghost" id="redoclingBtn" title="Bu sayfayı güncel Docling+EasyOCR ayarlarıyla (scale 2.0 + üst bilgi yakalama) canlı yeniden oku — hiçbir şeye yazmaz"
+        style="margin-left:auto;text-transform:none;font-weight:600;font-size:12px;padding:3px 9px;" disabled>⟳ Docling (yeni)</button>
+      <button class="ghost" id="reocrBtn" title="Bu sayfayı PaddleOCR-VL (:8080) ile canlı yeniden oku — hiçbir şeye yazmaz"
+        style="text-transform:none;font-weight:600;font-size:12px;padding:3px 9px;" disabled>⟳ PaddleOCR-VL</button>
+    </div>
+    <div class="col-body"><div class="md" id="ocr"><div class="empty">—</div></div></div>
+  </div>
+  <div class="col">
+    <div class="col-head">3 · Chunk + Metadata</div>
+    <div class="col-body"><div class="chunks" id="chunks"><div class="empty">—</div></div></div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { docId: null, label: null, pages: [], idx: 0, currentOcr: null };
+// metadata'da önce gösterilecek (ve vurgulanacak) anahtarlar
+const KEY_FIELDS = ["sira_sayisi", "esas_no", "kanun_adi"];
+const HEAD_FIELDS = ["page", "pages", "author", "author_role", "sira_sayisi", "esas_no", "kanun_adi", "ocr_flagged"];
+
+function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+async function getJSON(url, opts){ const r = await fetch(url, opts); return r.json(); }
+
+// --- minik markdown renderer (golden_builder'dan) ---
+function renderMd(src){
+  const lines = (src||"").split("\n");
+  let html = "", i = 0, para = [];
+  const flush = () => { if(para.length){ html += "<p>"+para.join("<br>")+"</p>"; para=[]; } };
+  while(i < lines.length){
+    let ln = lines[i];
+    if(/^\s*\|.*\|\s*$/.test(ln)){
+      flush(); const rows = [];
+      while(i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])){ rows.push(lines[i]); i++; }
+      const cells = (r) => r.trim().replace(/^\||\|$/g,"").split("|").map(c=>c.trim());
+      let t = "<table>";
+      rows.forEach((r, ri) => {
+        if(/^\s*\|[\s:|-]+\|\s*$/.test(r)) return;
+        const tag = ri === 0 ? "th" : "td";
+        t += "<tr>" + cells(r).map(c => `<${tag}>${inline(c)}</${tag}>`).join("") + "</tr>";
+      });
+      t += "</table>"; html += t; continue;
+    }
+    const h = ln.match(/^(#{1,4})\s+(.*)$/);
+    if(h){ flush(); const lvl = Math.min(h[1].length+1, 4); html += `<h${lvl}>${inline(h[2])}</h${lvl}>`; i++; continue; }
+    if(ln.trim() === ""){ flush(); i++; continue; }
+    para.push(inline(ln)); i++;
+  }
+  flush();
+  return html || "<em style='color:var(--ink-muted)'>(boş sayfa)</em>";
+}
+function inline(s){ return esc(s).replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/\*([^*]+)\*/g,"<em>$1</em>"); }
+
+async function init(){
+  try {
+    const cfg = await getJSON("/api/config");
+    const lbl = $("collLbl");
+    lbl.textContent = "koleksiyon: " + (cfg.collection || "?");
+    if(!cfg.collection_ok){ lbl.classList.add("err"); lbl.title = cfg.collection_error || "koleksiyon açılamadı"; lbl.textContent += " ⚠"; }
+  } catch(e){}
+  const docs = await getJSON("/api/documents");
+  const sel = $("docSelect");
+  sel.innerHTML = `<option value="">— belge seç (${docs.length}) —</option>` + docs.map(d =>
+    `<option value="${d.document_id}">${esc(d.label)} · ${d.page_count} s.${d.has_pdf ? "" : " (PDF yok)"}</option>`).join("");
+  sel.onchange = () => { if(sel.value) loadDoc(sel.value); };
+}
+
+async function loadDoc(docId){
+  state.docId = docId; state.idx = 0;
+  $("dots").innerHTML = '<span class="legend">yükleniyor…</span>';
+  const data = await getJSON("/api/document?document_id=" + encodeURIComponent(docId));
+  if(data.error){ $("dots").innerHTML = `<span class="legend">Hata: ${esc(data.error)}</span>`; return; }
+  state.label = data.label; state.pages = data.pages || [];
+  $("pageTotal").textContent = "/ " + state.pages.length;
+  $("pageJump").max = state.pages.length;
+  renderDots(data);
+  if(state.pages.length) showByIndex(0);
+}
+
+function renderDots(data){
+  const dots = $("dots");
+  const bad = state.pages.filter(p => p.worst_level === "bad").length;
+  const warn = state.pages.filter(p => p.worst_level === "warn").length;
+  const taggedPages = state.pages.filter(p => p.tagged_chunks > 0).length;
+  const collErr = data.collection_error ? ` · <span style="color:var(--bad)">chunk kaynağı: ${esc(data.collection_error)}</span>` : "";
+  let html = state.pages.map((p, i) =>
+    `<span class="dot ${p.worst_level}${p.tagged_chunks>0?" tagged":""}" data-i="${i}"
+       title="s.${p.sayfa_no} · ${p.char_count} krktr · ${p.chunk_count} chunk · ${p.tagged_chunks} etiketli"></span>`).join("");
+  html += `<span class="legend">
+      <span><b>${state.pages.length}</b> sayfa</span>
+      <span style="color:var(--bad)">⬛ ${bad} kötü</span>
+      <span style="color:var(--warn)">⬛ ${warn} şüpheli</span>
+      <span title="sira_sayisi/esas_no taşıyan chunk'ı olan sayfalar">● ${taggedPages} etiketli</span>
+      <span>chunk: <b>${data.chunk_total}</b>${data.has_pdf?"":" · <span style='color:var(--warn)'>PDF yok</span>"}${collErr}</span>
+    </span>`;
+  dots.innerHTML = html;
+  dots.querySelectorAll(".dot").forEach(el => el.onclick = () => showByIndex(+el.dataset.i));
+}
+
+async function showByIndex(idx){
+  if(!state.pages.length) return;
+  state.idx = Math.max(0, Math.min(idx, state.pages.length - 1));
+  const p = state.pages[state.idx];
+  $("pageJump").value = p.sayfa_no;
+  $("dots").querySelectorAll(".dot").forEach((el, i) => el.classList.toggle("cur", i === state.idx));
+  // panel 1: görüntü
+  const iw = $("imgwrap");
+  if(state.docId){
+    iw.innerHTML = `<img id="pageImg" alt="s.${p.sayfa_no}">
+      <div class="placeholder" id="imgPh" style="display:none">Bu sayfa için PDF görüntüsü üretilemedi (PDF yok ya da render başarısız).</div>`;
+    const img = $("pageImg");
+    img.onerror = () => { img.style.display="none"; $("imgPh").style.display="block"; };
+    img.src = `/api/page-image?document_id=${encodeURIComponent(state.docId)}&page=${p.sayfa_no}`;
+  }
+  // panel 2 + 3: detay
+  const detail = await getJSON(`/api/page?document_id=${encodeURIComponent(state.docId)}&page=${p.sayfa_no}`);
+  if(detail.error){ $("ocr").innerHTML = `<div class="empty">Hata: ${esc(detail.error)}</div>`; return; }
+  state.currentOcr = detail.ocr_markdown;
+  $("ocr").innerHTML = renderMd(detail.ocr_markdown);
+  $("ocr").parentElement.scrollTop = 0;
+  $("reocrBtn").disabled = false;
+  $("redoclingBtn").disabled = false;
+  renderSignals(detail.signals);
+  renderChunks(detail.chunks);
+}
+
+// --- Tek-sayfa PaddleOCR-VL canlı önizleme (salt-okuma; hiçbir şey yazmaz) ---
+async function reOcrPage(){
+  if(!state.docId || !state.pages.length) return;
+  const p = state.pages[state.idx];
+  const btn = $("reocrBtn"); const old = btn.textContent;
+  btn.disabled = true; btn.textContent = "⟳ okunuyor…";
+  try {
+    const res = await getJSON("/api/reocr-page", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ document_id: state.docId, page: p.sayfa_no })
+    });
+    renderReocr(res.error ? null : res, res.error || null);
+  } catch(e){ renderReocr(null, "" + e); }
+  finally { btn.disabled = false; btn.textContent = old; }
+}
+
+function _restoreOriginal(){
+  const p = state.pages[state.idx];
+  $("ocr").innerHTML = renderMd(state.currentOcr);
+  $("ocr").parentElement.scrollTop = 0;
+  const img = $("pageImg");
+  if(img) img.src = `/api/page-image?document_id=${encodeURIComponent(state.docId)}&page=${p.sayfa_no}`;
+}
+
+// --- Tek-sayfa canlı Docling (yeni ayar) önizleme (salt-okuma; hiçbir şey yazmaz) ---
+async function reDoclingPage(){
+  if(!state.docId || !state.pages.length) return;
+  const p = state.pages[state.idx];
+  const btn = $("redoclingBtn"); const old = btn.textContent;
+  btn.disabled = true; btn.textContent = "⟳ okunuyor…";
+  try {
+    const res = await getJSON("/api/reparse-page", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ document_id: state.docId, page: p.sayfa_no })
+    });
+    renderRedocling(res.error ? null : res, res.error || null);
+  } catch(e){ renderRedocling(null, "" + e); }
+  finally { btn.disabled = false; btn.textContent = old; }
+}
+
+function renderRedocling(res, err){
+  const ocr = $("ocr");
+  const backLink = `<a href="#" id="redocBack" style="color:#0e6f6a">‹ orijinale dön</a>`;
+  if(err){
+    ocr.innerHTML = `<div style="padding:2px 0 12px;display:flex;gap:10px;align-items:center">
+        <b style="color:#b23">Docling (yeni) hatası</b><span style="margin-left:auto">${backLink}</span></div>
+      <div style="color:var(--ink-muted)">${esc(err)}</div>`;
+    $("redocBack").onclick = (e)=>{ e.preventDefault(); _restoreOriginal(); };
+    return;
+  }
+  // yakalanan üst/alt bilgi (eskiden düşürülüyordu) rozet olarak
+  const furn = [];
+  if(res.page_header) furn.push(`<span style="display:inline-block;font-size:12px;padding:2px 8px;border-radius:12px;border:1px solid #0e6f6a;margin:2px 3px;background:#e6efee;color:#0e6f6a">üst bilgi: ${esc(res.page_header)}</span>`);
+  if(res.page_footer) furn.push(`<span style="display:inline-block;font-size:12px;padding:2px 8px;border-radius:12px;border:1px solid #0e6f6a;margin:2px 3px;background:#e6efee;color:#0e6f6a">alt bilgi: ${esc(res.page_footer)}</span>`);
+  const furnHtml = furn.length ? `<div style="margin-bottom:12px">${furn.join("")}</div>`
+    : `<div style="margin-bottom:12px;color:var(--ink-muted);font-size:12px">(bu sayfada üst/alt bilgi bulunamadı)</div>`;
+  ocr.innerHTML =
+    `<div style="padding:2px 0 10px;border-bottom:1px solid var(--paper-border);margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+       <b style="color:#0e6f6a">Docling+EasyOCR (yeni ayar, canlı)</b>
+       <span style="color:var(--ink-muted)">scale ${res.images_scale} · ${res.elapsed_s}s · ${res.atom_count} atom</span>
+       <span style="margin-left:auto">${backLink}</span>
+     </div>`
+    + furnHtml
+    + renderMd(res.markdown);
+  ocr.parentElement.scrollTop = 0;
+  $("redocBack").onclick = (e)=>{ e.preventDefault(); _restoreOriginal(); };
+}
+
+function renderReocr(res, err){
+  const ocr = $("ocr");
+  const backLink = `<a href="#" id="reocrBack" style="color:#0e6f6a">‹ orijinale dön</a>`;
+  if(err){
+    ocr.innerHTML = `<div style="padding:2px 0 12px;display:flex;gap:10px;align-items:center">
+        <b style="color:#b23">PaddleOCR-VL hatası</b><span style="margin-left:auto">${backLink}</span></div>
+      <div style="color:var(--ink-muted)">${esc(err)}</div>`;
+    $("reocrBack").onclick = (e)=>{ e.preventDefault(); _restoreOriginal(); };
+    return;
+  }
+  const counts = {};
+  (res.blocks||[]).forEach(b => { counts[b.label] = (counts[b.label]||0)+1; });
+  // header/footer/number artık ATILMIYOR → page-metadata olarak yakalanıyor (Docling hizası)
+  const FURN = new Set(["number","header","footer"]);
+  const badge = (lab,n,furn) => `<span style="display:inline-block;font-size:12px;padding:2px 8px;border-radius:12px;`
+    + `border:1px solid var(--paper-border);margin:2px 3px;background:${furn?'#eef3ea':'#e6efee'};color:${furn?'#5a7a3a':'#0e6f6a'}">`
+    + `${esc(lab)} ${n}${furn?' → üst/alt bilgi':''}</span>`;
+  const badges = Object.keys(counts).sort().map(l => badge(l, counts[l], FURN.has(l))).join("");
+  // yakalanan üst/alt bilgi (eskiden atılıyordu) — Docling butonuyla aynı gösterim
+  const furn = [];
+  if(res.page_header) furn.push(`<span style="display:inline-block;font-size:12px;padding:2px 8px;border-radius:12px;border:1px solid #0e6f6a;margin:2px 3px;background:#e6efee;color:#0e6f6a">üst bilgi: ${esc(res.page_header)}</span>`);
+  if(res.page_footer) furn.push(`<span style="display:inline-block;font-size:12px;padding:2px 8px;border-radius:12px;border:1px solid #0e6f6a;margin:2px 3px;background:#e6efee;color:#0e6f6a">alt bilgi: ${esc(res.page_footer)}</span>`);
+  const furnHtml = furn.length ? `<div style="margin-bottom:12px">${furn.join("")}</div>` : "";
+  const angle = (res.angle===0||res.angle) ? res.angle+"°" : "—";
+  const hasImg = !!res.annotated_image_b64;
+  const layoutLink = hasImg ? `<a href="#" id="reocrLayout" style="color:#0e6f6a">layout kutuları</a> · ` : "";
+  ocr.innerHTML =
+    `<div style="padding:2px 0 10px;border-bottom:1px solid var(--paper-border);margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+       <b style="color:#0e6f6a">PaddleOCR-VL (canlı, MD-hizalı)</b>
+       <span style="color:var(--ink-muted)">açı ${angle} · ${res.elapsed_s}s · ${(res.atoms||[]).length} atom</span>
+       <span style="margin-left:auto">${layoutLink}${backLink}</span>
+     </div>
+     <div style="margin-bottom:12px">${badges || '<span style="color:var(--ink-muted)">(blok yok)</span>'}</div>`
+    + furnHtml
+    + renderMd(res.body_markdown || res.markdown);
+  ocr.parentElement.scrollTop = 0;
+  $("reocrBack").onclick = (e)=>{ e.preventDefault(); _restoreOriginal(); };
+  if(hasImg){
+    $("reocrLayout").onclick = (e)=>{ e.preventDefault(); const img = $("pageImg"); if(img) img.src = "data:image/png;base64," + res.annotated_image_b64; };
+  }
+}
+
+function renderSignals(s){
+  const lv = s.levels || {};
+  const b = (cls, label, val) => `<span class="badge ${cls}">${label} <b>${val}</b></span>`;
+  let html = "";
+  html += b(lv.char || "ok", "karakter", s.char_count);
+  html += b("info", "kelime", s.word_count);
+  html += b(lv.chunks || "ok", "chunk", s.chunk_count);
+  html += b(lv.i_confusion || "ok", "ı/İ karışma", "%" + (s.i_confusion_ratio*100).toFixed(1));
+  html += b(lv.vowel || "ok", "ünlü uyumu ihlali", "%" + (s.vowel_harmony_violation_ratio*100).toFixed(1));
+  html += b(s.tagged_chunks>0 ? "info" : "ok", "sira_sayisi'li chunk", s.tagged_chunks);
+  html += b(s.esas_chunks>0 ? "info" : "ok", "esas_no'lu chunk", s.esas_chunks);
+  if(s.flags && s.flags.length) html += `<span class="flagnote">⚠ ${s.flags.map(esc).join(" · ")}</span>`;
+  $("sigbar").innerHTML = html;
+}
+
+function renderChunks(chunks){
+  if(!chunks || !chunks.length){ $("chunks").innerHTML = `<div class="empty">Bu sayfaya değen chunk yok.<br><small>(Koleksiyon bu belgeyi içermiyor olabilir ya da sayfa parçalanmamış.)</small></div>`; return; }
+  $("chunks").innerHTML = chunks.map(c => {
+    const m = c.metadata || {};
+    const tagged = KEY_FIELDS.some(k => m[k] !== undefined && m[k] !== null && String(m[k]).trim() && String(m[k]).trim() !== "0");
+    const keyTags = KEY_FIELDS.filter(k => m[k] !== undefined && m[k] !== null && String(m[k]).trim() && String(m[k]).trim() !== "0")
+      .map(k => `<span class="tag key">${k}: ${esc(String(m[k]))}</span>`).join("");
+    const pgSpan = (c.pages && c.pages.length) ? `<span class="tag pg">s.${c.pages.join(", ")}</span>` : "";
+    // metadata tablosu: önce başlık alanları, sonra kalanlar
+    const shown = new Set(HEAD_FIELDS);
+    const rows = [];
+    HEAD_FIELDS.forEach(k => { if(m[k] !== undefined) rows.push([k, m[k], KEY_FIELDS.includes(k)]); });
+    Object.keys(m).sort().forEach(k => { if(!shown.has(k)) rows.push([k, m[k], false]); });
+    const tbl = rows.map(([k,v,hl]) =>
+      `<tr class="${hl?"hl":""}"><td class="k">${esc(k)}</td><td class="v">${esc(String(v))}</td></tr>`).join("");
+    return `<div class="chunk ${tagged?"tagged":""}">
+      <div class="chunk-head">
+        <span class="cid">${esc(c.chunk_id)}</span> ${pgSpan} ${keyTags}
+      </div>
+      <div class="chunk-text">${esc(c.text)}</div>
+      <details><summary>metadata (${rows.length} alan)</summary>
+        <table class="meta-tbl">${tbl}</table>
+      </details>
+    </div>`;
+  }).join("");
+  $("chunks").parentElement.scrollTop = 0;
+}
+
+$("prevBtn").onclick = () => showByIndex(state.idx - 1);
+$("nextBtn").onclick = () => showByIndex(state.idx + 1);
+$("reocrBtn").onclick = reOcrPage;
+$("redoclingBtn").onclick = reDoclingPage;
+$("pageJump").onchange = () => {
+  const i = state.pages.findIndex(p => String(p.sayfa_no) === String($("pageJump").value));
+  showByIndex(i >= 0 ? i : 0);
+};
+document.addEventListener("keydown", (e) => {
+  if(["INPUT","SELECT","TEXTAREA"].includes(e.target.tagName)) return;
+  if(e.key === "ArrowLeft") showByIndex(state.idx - 1);
+  if(e.key === "ArrowRight") showByIndex(state.idx + 1);
+});
+
+init();
+</script>
+</body>
+</html>

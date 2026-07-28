@@ -5,11 +5,15 @@ diliminden küçük fixture ile durum makinesini doğrular: görüşme→roll-ca
 bölgesinde N/esas doğru yayılıyor mu, ön-materyal bölge başlatmıyor mu, belirsiz
 (çok-N) chunk bölge değiştirmiyor mu, OCR/tarih/kanun-no tuzakları es geçiliyor mu.
 """
-from src.trainer.ingestion.law_region_tagger import tag_law_regions
+from src.trainer.ingestion.law_region_tagger import tag_law_regions, tag_sections
 
 
 def _sira(tags):
     return [t["sira_sayisi"] for t in tags]
+
+
+def _sec(tags):
+    return [t["section_type"] for t in tags]
 
 
 def test_basic_region_propagates_to_identityless_rollcall():
@@ -178,3 +182,120 @@ def test_real_slice_kalkinma_vote_region():
     assert _sira(tags) == [5, 5, 5, 5, 5, 5, 5, 5, None, None]
     for i in range(8):
         assert tags[i]["esas_no"] == "2/773", f"chunk {i} esas_no"
+
+
+# ── tag_sections (bölüm etiketleyici — kardeş durum makinesi) ───────────────
+
+
+def test_section_labels_every_chunk_and_propagates_to_rollcall():
+    """Gelen kâğıt → görüşme → oy duyurusu → kimliksiz roll-call → yazılı-soru:
+    HER chunk section_type alır; roll-call satırları ileri-yaymayla 'oylama' (ASIL
+    amaç — reflect section_type=oylama filtresi kimliksiz tabloya ulaşsın)."""
+    chunks = [
+        # gelen kâğıtlar başlığı → gelen_kagit
+        "## II.- GELEN KÂĞITLAR\nTeklifler: (2/900) (2/901) (2/902)",
+        # güçlü açıcı: görüşme-başla (gövde) → kanun_gorusmeleri
+        "5 sıra sayılı Türkiye Kalkınma Bankası Anonim Şirketi Hakkında Kanun "
+        "Teklifi (2/773) (S. Sayısı: 5) görüşmelerine başlıyoruz.",
+        # görüşme gövdesi (sinyal yok) → ileri-yayma kanun_gorusmeleri
+        "Sayın Başkan, değerli milletvekilleri; bu teklif hakkında söz almak istiyorum.",
+        # açık oy duyurusu (gövde) → oylama
+        "5 sıra sayılı Kanun Teklifi'nin açık oylama sonucu: Kullanılan oy sayısı: 247",
+        # kimliksiz roll-call satırları → ileri-yayma ile oylama almalı
+        "| Antalya | Uslu | Atay | AK PARTİ | Kabul |",
+        "| İstanbul | Özdemir | sibel | CHP | Red |",
+        # terminatör başlığı → yazili_soru (kanun-tagger'da KAPATICI, burada AÇICI)
+        "## X.- YAZILI SORULAR VE CEVAPLARI\nŞırnak Milletvekili Hüseyin Kaçmaz'ın sorusu",
+        "Aşağıdaki sorularımın cevaplandırılmasını saygılarımla arz ederim.",
+    ]
+    tags = tag_sections(chunks)
+    assert _sec(tags) == [
+        "gelen_kagit", "kanun_gorusmeleri", "kanun_gorusmeleri",
+        "oylama", "oylama", "oylama", "yazili_soru", "yazili_soru",
+    ]
+    # oylama breadcrumb'ı kapsayan görüşmeyi taşır (yalnız görüntü/debug):
+    assert tags[3]["section_path"] == "kanun_gorusmeleri > oylama"
+    # section_ord bölüm değiştikçe artan monoton int; aynı bölümde sabit:
+    assert tags[4]["section_ord"] == tags[3]["section_ord"]
+    assert tags[1]["section_ord"] < tags[3]["section_ord"] < tags[6]["section_ord"]
+
+
+def test_vote_header_wins_over_deliberation_heading():
+    """Aynı chunk hem oy DUYURUSU (gövde) hem kanun-işi başlığı taşırsa → 'oylama'
+    (öncelik sırası: _VOTE_HEADER, _GORUSME'den önce)."""
+    chunks = [
+        # önce görüşme aç (strong_seen kapısı için)
+        "5 sıra sayılı Kanun Teklifi (2/773) görüşmelerine başlıyoruz.",
+        # başlık kanun-işi ama gövdede açık oy sonucu → oylama kazanır
+        "## VIII.- KANUN TEKLİFLERİ İLE KOMİSYONLARDAN GELEN DİĞER İŞLER\n"
+        "5 sıra sayılı Kanun Teklifi'nin açık oylama sonucu açıklanmıştır.",
+    ]
+    assert _sec(tag_sections(chunks)) == ["kanun_gorusmeleri", "oylama"]
+
+
+def test_toc_headings_stay_icindekiler_until_strong_opener():
+    """İÇİNDEKİLER + TOC rubrik-başlıkları (KANUN TEKLİFLERİ / YAZILI SORULAR) ilk
+    GÜÇLÜ açıcıdan önce bölümü FLIP etmez → 'icindekiler' yapışır (parçalanma yok)."""
+    chunks = [
+        "## İÇİNDEKİLER",
+        "## VIII.- KANUN TEKLİFLERİ İLE KOMİSYONLARDAN GELEN DİĞER İŞLER  Sayfa 12",
+        "## X.- YAZILI SORULAR VE CEVAPLARI  Sayfa 40",
+        # ilk güçlü açıcı: gerçek görüşme → buradan itibaren kanun_gorusmeleri
+        "5 sıra sayılı Kanun Teklifi (2/773) görüşmelerine başlıyoruz.",
+    ]
+    assert _sec(tag_sections(chunks)) == [
+        "icindekiler", "icindekiler", "icindekiler", "kanun_gorusmeleri",
+    ]
+
+
+def test_toc_exits_at_gecen_tutanak_then_flips_freely():
+    """Aralıklı 'İ Ç İ N D E K İ L E R' başlığı yakalanır; TOC rubrik-listelemelerinde
+    yapışır; ilk GEÇEN TUTANAK (birleşimin kanonik gerçek başlangıcı) TOC'u kapatır,
+    ardından rubrikler SERBESTÇE akar (gerçek _27-02-06 belgesinin başı bu şablonda)."""
+    chunks = [
+        "## İ Ç İ N D E K İ L E R",                    # aralıklı başlık → icindekiler
+        "## VII.- ÖNERİLER",                            # TOC listesi → bastırılır
+        "## VIII.- KANUN TEKLİFLERİ / IX.- OYLAMALAR",  # TOC listesi (çoklu) → bastırılır
+        "## I.- GEÇEN TUTANAK ÖZETİ",                   # GERÇEK başlangıç → gecen_tutanak
+        "Önceki birleşimin özeti okundu.",              # sinyal yok → yayma
+        "## II.- GELEN KÂĞITLAR",                       # serbest geçiş → gelen_kagit
+    ]
+    assert _sec(tag_sections(chunks)) == [
+        "icindekiler", "icindekiler", "icindekiler",
+        "gecen_tutanak", "gecen_tutanak", "gelen_kagit",
+    ]
+
+
+def test_page_furniture_inert_and_forward_fill_across_gaps():
+    """'## Sayfa' mobilya başlığı + tanınmaz/OCR-bozuk başlık EYLEMSİZ (yaymayı bozmaz);
+    Docling'e yalnız '# bastı' kadarıyla güvenilir — tanınmayan başlık yanlış etiketlemez."""
+    chunks = [
+        "5 sıra sayılı Kanun Teklifi (2/773) görüşmelerine başlıyoruz.",  # kanun_gorusmeleri
+        "## Sayfa 42",                          # mobilya → eylemsiz
+        "Görüşmelere devam ediyoruz efendim.",  # sinyal yok → yayma
+        "## Bir Şey (OCR bozuk başlık glıph)",  # tanınmaz → eylemsiz
+    ]
+    assert _sec(tag_sections(chunks)) == ["kanun_gorusmeleri"] * 4
+
+
+def test_terminator_recompose_preserves_law_tagger_matches():
+    """_TERMINATOR alt-kümeden YENİDEN DERLENDİ — kanun-tagger'ın gördüğü tüm rubrik
+    başlıkları hâlâ eşleşmeli (davranış-korunur guard'ı); yemin terminatör DEĞİL."""
+    from src.trainer.ingestion.law_region_tagger import _TERMINATOR
+
+    for s in [
+        "YAZILI SORULAR", "SÖZLÜ SORU", "GÜNDEM DIŞI", "GELEN KÂĞITLAR",
+        "GEÇEN TUTANAK ÖZETİ", "İÇİNDEKİLER", "ÖNERİLER", "SEÇİM",
+        "GENEL GÖRÜŞME", "MECLİS ARAŞTIRMASI",
+        "BAŞKANLIĞIN GENEL KURULA SUNUŞLARI", "TEZKERE",
+    ]:
+        assert _TERMINATOR.search(s), s
+    assert not _TERMINATOR.search("YEMİN")  # yemin kanun-tagger terminatörü değil
+
+
+def test_sections_empty_and_none_inputs_are_robust():
+    assert tag_sections([]) == []
+    tags = tag_sections(["", None])
+    assert _sec(tags) == [None, None]
+    assert tags[0]["section_ord"] is None
+    assert tags[0]["section_path"] is None

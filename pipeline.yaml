@@ -25,11 +25,14 @@ deployment_blocks:
     host: http://localhost:11434
     purpose: "planning,filter_extraction,sanitization,judge"
     models:
-      planner: gemma4:31b
-      filter_extractor: gemma4:31b
+      planner: gemma4:31b      # geri alındı (eskisi qwen3.5:9b, ~5-10s — kalite yetersizdi; geri
+                               # almak için bu satırı qwen3.5:9b yap). ~31s'ye çıkar ama
+                               # classifier/judge/suggester/filter_extractor ile aynı resident
+                               # model'i paylaşır → ek VRAM yok.
+      filter_extractor: gemma4:31b  # kalite > hız (qwen3.5 ~5s idi); classifier zaten gemma4'ü ısıtıyor → swap yok, judge/classifier/suggester ile aynı resident model. Hız ayrı iyileştirilecek
       sanitizer: qwen3.5:9b
-      judge: gemma4:31b        # judge LLM (borderline-only) — gemma4 warm ~1.5s; planner/classifier ile aynı resident model
-      classifier: gemma4:31b  # warm ~1.2s (qwen verbose ~7.8s). planner ile aynı modeli paylaşır → classify→plan ek yükleme yok
+      judge: gemma4:31b        # judge LLM (borderline-only) — gemma4 warm ~1.5s; classifier/suggester ile aynı resident model
+      classifier: gemma4:31b  # warm ~1.2s (qwen verbose ~7.8s). judge/suggester ile aynı modeli paylaşır
       suggester: gemma4:31b
     timeout_seconds: 60
     retries: 1
@@ -55,6 +58,19 @@ deployment_blocks:
     timeout_seconds: 120
     max_num_ctx: 65536
     max_num_predict: 16384
+
+  # Deneme: uzak LiteLLM/vLLM proxy (OpenAI-uyumlu). host = tam base_url (/v1
+  # dahil). max_num_ctx/keep_alive burada anlamsız (context sunucu tarafında
+  # sabit, idle-unload kavramı yok) — BlockClient api_type=openai için ikisini
+  # de yok sayar.
+  remote-01:
+    host: http://10.20.24.16:4000/v1
+    api_type: openai
+    purpose: "answering (deneme: qwen3.6-35b)"
+    models:
+      answer: qwen3.6-35b
+    timeout_seconds: 180  # 4096 token'a kadar üretim; kısa timeout yük altında yarım kesebilir
+    max_num_predict: 4096
 
 # ---------------------------------------------------------------------------
 # Agent Configuration
@@ -285,18 +301,21 @@ agent:
     evidence_max_chunks: 10     # reflect LLM'e verilen kompakt kanıt: en çok N chunk
     evidence_char_cap_per_chunk: 600
     evidence_total_char_cap: 6000
+    max_dry_hops: 1             # çözülemeyen-hop iptali: N ard ardışık VERİMSİZ hop
+                                # (added==0 VE window_added==0) → max_rounds beklemeden kes;
+                                # 1 = ilk boş hop'ta dur, 0 = kapalı (kill-switch)
     # Pencere-genişletme: reflect hop'unda çıpanın belge-içi okuma-sırası komşularını
     # (ANN-siz id-get) pool'a katar → kimliksiz roll-call'ı self-identifying duyurunun
     # yanına getirir. Global kill-switch; ek olarak strateji `window_expand: true` demeli.
     window_expand:
-      enabled: false            # açmak için true + stratejide window_expand: true
+      enabled: true             # global anahtar; ek olarak strateji window_expand: true demeli (şu an yalnız kanun_kabul_oylama)
       neighbor_radius: 2        # çıpa etrafında ±k chunk
       max_neighbors_per_hop: 8  # hop başına toplam komşu tavanı (tüm çıpalar)
       anchor_count: 1           # kaç üst çıpa genişletilir
 
   # Answering Agent — retrieve edilen context'ten nihai yanıtı üretir
   answering:
-    block: gpu-01
+    block: remote-01  # deneme: qwen3.6-35b (eskisi gpu-01/gemma4:31b — geri almak için satırı değiştir)
     model_key: answer
     think: false
     temperature: 0.3
@@ -382,7 +401,7 @@ judge:
     # Gevşek: bilgilendirici veri kalsın, yalnızca çok alakasız chunk elensin.
     min_chunks: 2
     min_collection_coverage: 1
-    min_rerank_score: 0.0      # [POC nötrle] relevance-floor kapalı — ham chunk seti korunur (eski: 0.02)
+    min_rerank_score: 0.02     # relevance-floor açık (POC nötrlemesi geri alındı 2026-07-21; nötr POC değeri: 0.0)
     # Reddetme değil ESKALASYON eşiği: count/coverage yeterli görünse bile en iyi
     # eşleşme bu kadar zayıfsa körlemesine "answer" deme — LLM judge'a devret (içeriği
     # gerçekten okuyup karar versin). Golden Q&A fixture'ına karşı ölçüldü: sabit bir
@@ -391,13 +410,13 @@ judge:
     # aralığında — bu yüzden REDDETMEK yerine LLM'e DEVRETMEK tercih edildi.
     llm_escalation_score: 0.3
   llm:
-    enabled: false           # [POC nötrle] içerik-okuma eskalasyonu kapalı (eski: true)
+    enabled: true            # içerik-okuma eskalasyonu açık (POC nötrlemesi geri alındı 2026-07-21; nötr POC değeri: false)
     block: fast-01
     model_key: judge
     borderline_band: [1, 2]
     max_borderline_score_floor: 0.35
     timeout_seconds: 5
-  max_expand_iterations: 0      # [POC nötrle] genişletme döngüsü kapalı — tek-atım retrieval (eski: 1)
-  comprehensive_max_rounds: 0   # [POC nötrle] genişletme döngüsü kapalı (eski: 4)
+  max_expand_iterations: 1      # judge action=expand bir tur genişletebilsin (POC nötr değeri: 0 — tek-atım)
+  comprehensive_max_rounds: 4   # comprehensive doygunluk döngüsü açık (POC nötr değeri: 0)
   on_low_confidence: expand
   # Genişletme = yeni çeşitlendirilmiş re-query (broaden → yeniden retrieve → birleştir).

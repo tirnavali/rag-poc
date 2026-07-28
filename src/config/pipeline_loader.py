@@ -31,6 +31,12 @@ class DeploymentBlock:
         self.retries = config.get("retries", 1)
         self.max_num_ctx = config.get("max_num_ctx", 32768)
         self.max_num_predict = config.get("max_num_predict", 4096)
+        # "ollama" (default) → ChatOllama/native Ollama API. "openai" → an
+        # OpenAI-compatible remote endpoint (LiteLLM/vLLM proxy); `host` is then
+        # the full base_url (e.g. ".../v1") and num_ctx/keep_alive don't apply
+        # (server-side fixed context, no idle-unload concept).
+        self.api_type = config.get("api_type", "ollama")
+        self.api_key = config.get("api_key", "ollama")
 
     def get_model(self, key: str) -> str:
         return self.models.get(key, "")
@@ -314,6 +320,11 @@ class ReflectConfig:
         # bağı max_rounds + done; bu yalnızca bağlam taşmasını önleyen üst sınır
         # (comprehensive'in kanıtlı-güvenli 50 chunk bağıyla hizalı).
         self.max_total_chunks = int(config.get("max_total_chunks", 50))
+        # Çözülemeyen (dry) hop iptali: ard ardışık VERİMSİZ hop (added==0 VE window_added==0)
+        # sayısı >= max_dry_hops → reflect döngüsü max_rounds tavanını beklemeden kesilir ve
+        # eldeki kanıtla cevaplanır. 1 = ilk verimsiz hop'ta kes (boşa dönen turları önler);
+        # 0 = KAPALI (kill-switch). route_after_assembly'de tüketilir.
+        self.max_dry_hops = int(config.get("max_dry_hops", 1))
         self.window_expand = _WindowExpandConfig(config.get("window_expand", {}))
 
 
@@ -367,12 +378,21 @@ class StrategyPlaybook:
         multi-hop strategy whose ``procedure`` a reflect step consumes.
       * ``max_rounds`` — int cap on expansion rounds for this strategy (None = default).
       * ``anchor`` / ``target`` — the entity resolved first / the answer shape sought.
+      * ``section_type`` — the target document section (SECTION_TYPES enum) this strategy
+        pins; seeded into ``extracted_anchors`` so the reflect hop applies the exact
+        ``{sira_sayisi ∧ section_type}`` where-filter. Invalid value → None (fail-open).
       * ``exclude_seen_chunks`` — ``true`` makes each reflect hop hold the exact chunk
         ids already surfaced this run out of its ranked pool, so fetch_k fills with novel
         chunks (see ``OrchestratorAgent._seen_chunk_ids`` / ``_run_retrieval``). Chunk-id,
         not a metadata ``$nin`` — never blacks out a whole sitting.
       * ``aliases`` — ``;``-separated ``term -> official_phrase`` pairs mapping a
         colloquial query word to its archive phrasing (term-hypothesis seed).
+      * ``evidence_priority_patterns`` — ``;``-separated case-insensitive substrings;
+        assembled chunks containing one are moved to the FRONT of the reflect
+        LLM's compact evidence window (``_compact_evidence``). Without this the
+        window is purely rerank-ordered and the procedure's target record (e.g.
+        the vote announcement) can rank below ``evidence_max_chunks`` — the
+        reflect LLM then never sees it and the DURMA condition cannot fire.
       * ``procedure`` — free-text multi-hop recipe (read by the reflect step).
 
     The first three keys are consumed today (catalog + query_type +
@@ -450,9 +470,12 @@ class StrategyPlaybook:
             "max_rounds": StrategyPlaybook._parse_int(fields.get("max_rounds", "")),
             "anchor": fields.get("anchor", "").strip() or None,
             "target": fields.get("target", "").strip() or None,
+            "section_type": StrategyPlaybook._parse_section_type(fields.get("section_type", "")),
             "exclude_seen_chunks": StrategyPlaybook._parse_bool(fields.get("exclude_seen_chunks", "")),
             "window_expand": StrategyPlaybook._parse_bool(fields.get("window_expand", "")),
             "aliases": StrategyPlaybook._parse_aliases(fields.get("aliases", "")),
+            "evidence_priority_patterns": StrategyPlaybook._parse_patterns(
+                fields.get("evidence_priority_patterns", "")),
             "procedure": fields.get("procedure", "").strip(),
         }
 
@@ -470,6 +493,23 @@ class StrategyPlaybook:
     def _parse_bool(raw: str) -> bool:
         """Truthy playbook flag (fail-safe: anything unrecognized is False)."""
         return raw.strip().lower() in ("1", "true", "yes", "evet", "on")
+
+    @staticmethod
+    def _parse_section_type(raw: str) -> "str | None":
+        """Bir stratejinin hedef belge bölümü (section_type omurgası). Reflect kanun
+        kimliğini (sira_sayisi) çözünce orchestrator ``{sira_sayisi ∧ section_type}``
+        kesin filtresini kurar. Fail-open: SECTION_TYPES'ta olmayan değer (typo) → None
+        (o strateji için no-op, sira_sayisi-only davranış). Lazy import — modül yükleme
+        sırası kaygısını önler (bkz. get_collection_catalog lazy import deseni)."""
+        from src.config.document_types import SECTION_TYPES
+        val = raw.strip()
+        return val if val in SECTION_TYPES else None
+
+    @staticmethod
+    def _parse_patterns(raw: str) -> "list[str]":
+        """Parse ``;``-separated evidence-priority substrings, casefolded for
+        case-insensitive matching (fail-open: empty/whitespace entries dropped)."""
+        return [p.strip().casefold() for p in raw.split(";") if p.strip()]
 
     @staticmethod
     def _parse_aliases(raw: str) -> "list[dict[str, str]]":

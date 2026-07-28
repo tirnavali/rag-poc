@@ -75,12 +75,45 @@ _VOTE_HEADER = re.compile(
 # görüşme-İÇİ prosedürel araya-girmeler — bunlar bir kanunun görüşmesi SÜRERKEN olur;
 # terminatör sayılırsa görüşme bölgesi delik deşik olur (roll-call yine güvende ama
 # konuşma chunk'ları kaybolur). İleri-yayma onların üzerinden geçsin.
+#
+# Her terminatör rubriği AYRI derlenir ve kanonik ``section_type``'a eşlenir
+# (``tag_sections`` — kardeş bölüm etiketleyici; kanun-tagger'ın KAPATICI'ları orada
+# AÇICI olur). ``_TERMINATOR`` bu alt-kümeden YENİDEN DERLENİR → kanun bölgesi durum
+# makinesinin (``tag_law_regions``) davranışı DEĞİŞMEZ: yalnız ``.search()`` boolean'ı
+# kullanılır, dolayısıyla alternatif sırası önemsizdir.
+# Harf-arası ``\s*`` → TBMM kapak/TOC başlıklarında sık görülen aralıklı dizgiyi
+# ("İ Ç İ N D E K İ L E R") da yakalar; 11-harflik dizi çok özgül, false-match yok.
+_R_ICINDEKILER = re.compile(
+    r"İ\s*Ç\s*İ\s*N\s*D\s*E\s*K\s*[İIiı]\s*L\s*E\s*R", re.IGNORECASE
+)
+_R_GECEN_TUTANAK = re.compile(r"GEÇEN\s+TUTANAK", re.IGNORECASE)
+_R_GELEN_KAGIT = re.compile(r"GELEN\s+K[AÂ]Ğ[Iı]T", re.IGNORECASE)
+_R_YAZILI_SORU = re.compile(r"YAZILI\s+SORU", re.IGNORECASE)
+_R_SOZLU_SORU = re.compile(r"SÖZLÜ\s+SORU", re.IGNORECASE)
+_R_GUNDEM_DISI = re.compile(r"GÜNDEM\s+DIŞI", re.IGNORECASE)
+_R_SECIM = re.compile(r"SEÇ[İIi]M", re.IGNORECASE)
+_R_GENEL_GORUSME = re.compile(r"GENEL\s+GÖRÜŞME", re.IGNORECASE)
+_R_MECLIS_ARASTIRMASI = re.compile(r"MECL[İIi]S\s+ARAŞTIRMASI", re.IGNORECASE)
+_R_TEZKERE = re.compile(r"BAŞKANLIĞIN\s+GENEL\s+KURULA|TEZKERE", re.IGNORECASE)
+_R_ONERILER = re.compile(r"ÖNER[İIi]LER", re.IGNORECASE)
+
+# (section_type, desen) — kanun-tagger terminatörleri; ``tag_sections``'ta AÇICI.
+_TERMINATOR_RUBRICS: list[tuple[str, "re.Pattern[str]"]] = [
+    ("icindekiler", _R_ICINDEKILER),
+    ("gecen_tutanak", _R_GECEN_TUTANAK),
+    ("gelen_kagit", _R_GELEN_KAGIT),
+    ("yazili_soru", _R_YAZILI_SORU),
+    ("sozlu_soru", _R_SOZLU_SORU),
+    ("gundem_disi", _R_GUNDEM_DISI),
+    ("secim", _R_SECIM),
+    ("genel_gorusme", _R_GENEL_GORUSME),
+    ("meclis_arastirmasi", _R_MECLIS_ARASTIRMASI),
+    ("tezkere", _R_TEZKERE),
+    ("oneriler", _R_ONERILER),
+]
+# Kanun-tagger'ın gördüğü tek terminatör regex'i (alt-kümeden yeniden derlenir).
 _TERMINATOR = re.compile(
-    r"YAZILI\s+SORU|SÖZLÜ\s+SORU|GÜNDEM\s+DIŞI|"
-    r"GELEN\s+K[AÂ]Ğ[Iı]T|GEÇEN\s+TUTANAK|İÇİNDEK[İIi]LER|"
-    r"ÖNER[İIi]LER|SEÇ[İIi]M|GENEL\s+GÖRÜŞME|MECL[İIi]S\s+ARAŞTIRMASI|"
-    r"BAŞKANLIĞIN\s+GENEL\s+KURULA|TEZKERE",
-    re.IGNORECASE,
+    "|".join(p.pattern for _, p in _TERMINATOR_RUBRICS), re.IGNORECASE
 )
 
 # Kanun adı: "… Hakkında Kanun Teklifi/Tasarısı" → adı (best-effort, opsiyonel).
@@ -227,4 +260,138 @@ def tag_law_regions(
                 "esas_no": n_to_esas.get(current),
                 "kanun_adi": n_adi.get(current),
             })
+    return out
+
+
+# ── Bölüm (section) etiketleyici — kardeş durum makinesi ────────────────────
+# Ant içme bölümü — kanun-tagger terminatörü DEĞİL (yeni), yalnız section_type için.
+_R_YEMIN = re.compile(r"YEM[İIi]N", re.IGNORECASE)
+
+# `#`-başlık rubrikleri, first-match-wins. Çıplak kanun-işi başlığı ("KANUN
+# TEKLİFLERİ" / "KOMİSYONLARDAN GELEN") = ``kanun_gorusmeleri`` DEVAM açıcısı (yalnız
+# güçlü açıcı görüldükten sonra geçerli — ön-materyal kapısı). Terminatör rubrikleri
+# kanonik section_type'larıyla + yemin. Güçlü açıcılar (görüşme/oy DUYURULARI +
+# rapor kapağı) burada DEĞİL — onlar gövdede/kapakta ayrı aranır (tag_sections).
+_HEADING_RUBRICS: list[tuple[str, "re.Pattern[str]"]] = [
+    ("kanun_gorusmeleri", _LAW_HEADING),
+    *_TERMINATOR_RUBRICS,
+    ("yemin", _R_YEMIN),
+]
+
+
+def _match_heading_rubric(headings: str) -> Optional[str]:
+    """`#`-başlık metninde ilk eşleşen rubrik section_type'ını döndür (yoksa None)."""
+    for section_type, rx in _HEADING_RUBRICS:
+        if rx.search(headings):
+            return section_type
+    return None
+
+
+def tag_sections(
+    ordered_chunk_texts: list[str], *, pages: Optional[list[Optional[int]]] = None
+) -> list[dict[str, Any]]:
+    """Sıralı chunk metinlerini kanonik BÖLÜM (section) tiplerine göre etiketle.
+
+    ``tag_law_regions``'ın kardeşi: aynı `#`-başlık disiplinini + ileri-yaymayı
+    kullanır ama HER chunk'a bir ``section_type`` koyar (kanun-tagger'ın yalnız kanun
+    bölgelerini etiketlemesinin aksine). Kanun-tagger'ın terminatörleri burada AÇICI
+    olur (yazili_soru, icindekiler, gelen_kagit… birinci sınıf bölüm).
+
+    **Sinyaller (öncelik sırasıyla):**
+      1. ``_VOTE_HEADER`` (gövde) → ``oylama`` — güçlü. Roll-call tablo başlığı /
+         "açık oylama sonucu" duyurusu; kimliksiz tablo satırları ileri-yayma ile
+         ``oylama`` alır (ASIL senaryo — reflect ``section_type=oylama`` filtresi).
+      2. ``_GORUSME`` (gövde) → ``kanun_gorusmeleri`` — güçlü ("görüşmelerine başl").
+      3. ``_SS_COVER`` (başlık) → ``kanun_raporu`` — güçlü (rapor kapağı).
+      4. ``#``-başlık rubrikleri (``_HEADING_RUBRICS``, first-match) → terminatör
+         rubrikleri + çıplak kanun-işi başlığı (DEVAM) + yemin.
+
+    **Güven sınırı = kanun-tagger ile aynı:** terminatör/kanun-işi/yemin rubrikleri
+    YALNIZ ``#``-başlık satırlarında aranır (gövde false-positive'i yok); görüşme/oy
+    DUYURULARI gövdede aranır (başlık değil — akış içinde söylenirler). Ham başlık
+    metni SAKLANMAZ → tanınmayan/OCR-bozuk başlık eylemsizdir (ileri-yayar, yanlış
+    kovaya etiketlemez); Docling'e yalnız "`#` bastı" kadarıyla güvenilir.
+
+    **İÇİNDEKİLER (TOC) kapısı:** TBMM tutanağının başında İÇİNDEKİLER tüm gündemi
+    sayfa-no'yla LİSTELER (aralıklı "İ Ç İ N D E K İ L E R" başlığı + "VIII.- KANUN
+    TEKLİFLERİ", "X.- YAZILI SORULAR" gibi satırlar). Bu TOC satırları içerik değildir
+    → ``icindekiler``'deyken bölümü FLIP ETMEZ. TOC yalnız ilk GEÇEN TUTANAK
+    (birleşimin kanonik gerçek ilk gündemi) ya da bir güçlü açıcı ile kapanır; sonra
+    rubrik başlıkları (gecen_tutanak/gelen_kagit/tezkere/…) SERBESTÇE geçiş yapar.
+    İÇİNDEKİLER saptanamayan belgede (saf rapor PDF) kapı hiç devreye girmez.
+
+    **Tasarım sapması (kanun-tagger'dan):** kanun-tagger şüphede ``None`` bırakır;
+    bölüm-tagger İLERİ-YAYAR → kaçırılan bir sınırdan sonra bir sonraki gerçek rubrik
+    yeniden çıpalayana dek AKTİF yanlış etiketleyebilir. Backfill ``--dry-run``
+    histogramı bunu ölçer (``diger``/None oranı + section_type dağılımı).
+
+    Returns:
+        Her chunk için ``{"section_type": str|None, "section_ord": int|None,
+        "section_path": str|None}`` — ilk rubrikten önceki chunk'lar için hepsi None.
+        ``section_ord`` bölüm her DEĞİŞTİĞİNDE artan monoton int (aralık gezinme);
+        ``section_path`` yalnız görüntü/debug breadcrumb'ı (oylama için kapsayan
+        üst bölüm: "kanun_gorusmeleri > oylama").
+    """
+    out: list[dict[str, Any]] = []
+    current: Optional[str] = None
+    strong_seen = False
+    ordinal = 0
+    last_major: Optional[str] = None  # oylama'yı kapsayan üst bölüm (breadcrumb)
+
+    for t in ordered_chunk_texts:
+        text = t or ""
+        headings = _headings(text)
+
+        # Güçlü açıcılar (duyuru sinyalleri) — gövde + kapak başlığı.
+        if _VOTE_HEADER.search(text):
+            cand, strong = "oylama", True
+        elif _GORUSME.search(text):
+            cand, strong = "kanun_gorusmeleri", True
+        elif _SS_COVER.search(headings):
+            cand, strong = "kanun_raporu", True
+        else:
+            cand, strong = _match_heading_rubric(headings), False
+
+        if cand is not None:
+            if strong:
+                fire = True
+            elif cand == "kanun_gorusmeleri":
+                # Çıplak kanun-işi başlığı = DEVAM açıcısı; yalnız güçlü açıcı sonrası
+                # geçerli → İÇİNDEKİLER'deki "VIII.- KANUN TEKLİFLERİ" TOC satırının
+                # kanun_gorusmeleri açmasını engeller (en zararlı TOC hatası).
+                fire = strong_seen
+            elif current is None:
+                # İlk tanınan rubrik ön-materyali açar (tipik İÇİNDEKİLER kapağı).
+                fire = True
+            elif current == "icindekiler":
+                # İÇİNDEKİLER (TOC) bölgesindeyiz: diğer rubrik-başlıkları içerik değil
+                # TOC LİSTELEMELERİDİR (tüm gündemi sayfa-no'yla sayar) → bölümü FLIP
+                # ETMEZ. TOC yalnız ilk GEÇEN TUTANAK (birleşimin kanonik gerçek ilk
+                # gündemi) ya da güçlü açıcıyla kapanır → parçalanma önlenir. İÇİNDEKİLER
+                # saptanamayan belgede (saf rapor PDF) bu dal hiç girilmez, güvenli.
+                fire = cand == "gecen_tutanak"
+            else:
+                # Gövdedeyiz — rubrik başlıkları serbestçe geçiş yapar.
+                fire = True
+            if fire:
+                if strong:
+                    strong_seen = True
+                if cand != current:
+                    current = cand
+                    ordinal += 1
+
+        if current is None:
+            out.append({"section_type": None, "section_ord": None, "section_path": None})
+            continue
+
+        if current == "oylama":
+            path = f"{last_major} > oylama" if last_major else "oylama"
+        else:
+            path = current
+            last_major = current
+        out.append({
+            "section_type": current,
+            "section_ord": ordinal,
+            "section_path": path,
+        })
     return out

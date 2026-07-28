@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { buildMarkdownExport, findMatchingSource } from './utils';
+import { buildMarkdownExport, findMatchingSource, copyToClipboard } from './utils';
 import Sidebar from './components/Sidebar';
 import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
@@ -415,7 +415,7 @@ export default function App() {
     });
 
     try {
-      await navigator.clipboard.writeText(markdown);
+      await copyToClipboard(markdown);
       setCopyStatus('copied');
       setTimeout(() => setCopyStatus('idle'), 1500);
     } catch (e) {
@@ -432,7 +432,7 @@ export default function App() {
     );
     const text = [message.content, ...(sourceLines.length ? ['', 'Kaynaklar:', ...sourceLines] : [])].join('\n');
     try {
-      await navigator.clipboard.writeText(text);
+      await copyToClipboard(text);
     } catch (e) {
       console.error('Copy failed', e);
     }

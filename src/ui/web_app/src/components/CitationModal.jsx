@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Copy, Check, Calendar, User, FileText, Bookmark } from 'lucide-react';
+import { copyToClipboard } from '../utils';
 
 export default function CitationModal({ isOpen, onClose, source, citationText }) {
   const [copied, setCopied] = useState(false);
@@ -8,7 +9,7 @@ export default function CitationModal({ isOpen, onClose, source, citationText })
 
   const handleCopyText = async () => {
     try {
-      await navigator.clipboard.writeText(source.text || '');
+      await copyToClipboard(source.text || '');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (e) {

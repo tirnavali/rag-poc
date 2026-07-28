@@ -23,6 +23,7 @@ from src.agent.schemas import (
     FacetSet,
     FacetValue,
 )
+from src.common.text import normalize_tr
 from src.agent.tracer import PipelineTracer
 from src.common.llm_client_pool import LLMClientPool
 from src.common.llm_utils import extract_json_from_text
@@ -263,13 +264,17 @@ class QueryRefiner:
         (the orchestrator then simply shows no chips).
         """
         q = (query or "").strip()
-        q_low = q.lower()
+        q_low = normalize_tr(q)
 
         # Per-axis candidate pools, most frequent first. Skip facet values already
         # present in the query (e.g. query "1980 ohal" shouldn't suggest "... 1980").
-        years = [f.value for f in facets.years[:2] if f.value and f.value.lower() not in q_low]
-        topics = [f.value for f in facets.topics[:2] if f.value and f.value.lower() not in q_low]
-        authors = [f.value for f in facets.authors[:1] if f.value and f.value.lower() not in q_low]
+        # normalize_tr (not bare .lower()) so Turkish "İ" doesn't defeat this check —
+        # str.lower() maps "İ" to "i̇" (combining dot), which never substring-matches
+        # a plain-typed query, letting an already-named author leak back as a "new"
+        # suggestion (e.g. "... ENGİN ÖZKOÇ" when the query already said "engin özkoç").
+        years = [f.value for f in facets.years[:2] if f.value and normalize_tr(f.value) not in q_low]
+        topics = [f.value for f in facets.topics[:2] if f.value and normalize_tr(f.value) not in q_low]
+        authors = [f.value for f in facets.authors[:1] if f.value and normalize_tr(f.value) not in q_low]
 
         # Round-robin across axes so the result set spans dimensions, not just years.
         axes = [years, topics, authors]
@@ -289,7 +294,7 @@ class QueryRefiner:
         seen: set[str] = set()
         for value in ordered:
             suggestion = f"{q} {value}".strip() if q else str(value).strip()
-            key = suggestion.lower()
+            key = normalize_tr(suggestion)
             if not suggestion or key == q_low or key in seen:
                 continue
             seen.add(key)

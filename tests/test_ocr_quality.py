@@ -182,9 +182,14 @@ def _make_converter() -> MarkdownConverter:
 
 
 def _atoms_cache_path(file_path: Path, ocr_engine: str = "easyocr") -> Path:
-    """convert() ile aynı Level-1 cache anahtarını üretir."""
+    """convert() ile aynı Level-1 cache anahtarını üretir.
+
+    _make_converter() varsayılanlarını yansıtır: do_ocr=True (ocr_tag yok),
+    images_scale=1.0, PyPdfium backend (_pypdfium), use_vlm=False (vlm_tag yok),
+    scanned_page_ocr=False (page_tag yok).
+    """
     file_hash = hashlib.sha256(file_path.read_bytes()).hexdigest()
-    ocr_base = f"{file_hash}_{ocr_engine}"
+    ocr_base = f"{file_hash}_{ocr_engine}_scale1.0_pypdfium"
     key = hashlib.md5(ocr_base.encode()).hexdigest()
     return settings.PARSE_CACHE_DIR / f"{key}_atoms.json"
 
@@ -195,7 +200,10 @@ class TestMarkdownConverterQuality:
         pdf = isolated_dirs / "belge.pdf"
         pdf.write_bytes(b"%PDF-fake")
 
+        # schema_version >= 2 (çok-sayfalı split kapısı) ama quality alanı YOK —
+        # test edilen şey quality alanının yokluğu, schema sürümü değil.
         old_cache = {
+            "schema_version": 2,
             "full_text": "Atom bir\n\nAtom iki",
             "atoms_data": [
                 {"text": "Atom bir", "label": "text", "page": 1, "pages": [1]},

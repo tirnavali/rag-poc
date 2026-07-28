@@ -1,12 +1,13 @@
-"""Production retriever: wraps VectorSearch with date filtering, post-processing, and RetrievalResult shape.
+"""Production retriever: wraps VectorSearch with post-processing and RetrievalResult shape.
 
-Renamed from hybrid.py to reflect reality: single-collection mode dropped BM25, only ANN+rerank remain.
+Pure pass-through for filtering/reranking — where_filter and reranker are whatever the
+caller passes (None = none). Auto date-filter extraction lives in src.retriever.filters;
+reranker construction is the caller's responsibility (see src.retriever.reranker).
 """
 from __future__ import annotations
 
 from typing import Optional
 
-from src.common.chroma import where_year_filter
 from src.common.dates import extract_dates
 from src.common.protocols import RetrievalResult
 from src.common.text import extract_relevant_windows
@@ -17,7 +18,7 @@ from src.retriever.vector_search import VectorSearch
 
 
 class VectorRetriever:
-    """Production retriever: date-aware, post-processed, RetrievalResult shape."""
+    """Production retriever: pure ANN+optional-rerank, post-processed, RetrievalResult shape."""
 
     def __init__(self, spec: CollectionSpec) -> None:
         self.spec = spec
@@ -31,20 +32,24 @@ class VectorRetriever:
         fetch_k: int = settings.RETRIEVE_FETCH_K,
         mufettis_mode: bool = False,
         where_filter: Optional[dict] = None,
-        rerank: Optional[bool] = None,
+        reranker=None,
     ) -> RetrievalResult:
-        """Retrieve and post-process. Applies date filtering + metadata prefix + window cropping.
+        """Pure vector retrieval + post-process (metadata prefix + window cropping).
+
+        No implicit filtering or reranking — both are opt-in, decided by the caller.
 
         Args:
-            query: user search text (may contain date hints)
+            query: user search text
             top_k: final result count
             fetch_k: candidates before reranking
             mufettis_mode: use deep research settings (40 results, 150 fetch)
-            where_filter: pre-extracted filter dictionary (bypasses automatic date extraction)
-            rerank: per-call override for cross-encoder reranking. None = use settings.USE_RERANKER
-                (default behavior). True/False forces rerank on/off for this call only — used by
-                golden_builder to build an unbiased (rerank-off) labeling pool without touching
-                the global setting.
+            where_filter: Chroma where dict, or None for unfiltered search (pure
+                pass-through — no auto-extraction from query text). Callers that
+                want query-text-derived date filtering build it explicitly via
+                `src.retriever.filters.auto_date_where_filter()`.
+            reranker: pre-constructed CrossEncoderReranker instance, or None to skip
+                reranking. VectorRetriever never reads settings.USE_RERANKER itself —
+                the caller decides.
 
         Returns:
             RetrievalResult TypedDict with documents/metadatas/distances in list-of-lists shape.
@@ -53,34 +58,8 @@ class VectorRetriever:
             top_k = settings.MUFETTIS_TOP_K
             fetch_k = settings.MUFETTIS_FETCH_K
 
-        # Parse dates from query and build where filter if not provided
-        if where_filter is None:
-            parsed_dates = extract_dates(query)
-            years = parsed_dates.get("years", [])
-            exact_dates = parsed_dates.get("exact_dates", [])
-            year_from_exact = [int(d[:4]) for d in exact_dates if d]
-            all_years = list(set([int(y) for y in years] + year_from_exact))
-            where_filter = where_year_filter(all_years)
-        else:
-            # Try to extract year from where_filter to populate parsed_dates for compatibility
-            years_found = []
-            def _find_years(d):
-                if isinstance(d, dict):
-                    for k, v in d.items():
-                        if k == "year" and isinstance(v, dict) and "$eq" in v:
-                            years_found.append(str(v["$eq"]))
-                        elif k in ("$and", "$or") and isinstance(v, list):
-                            for item in v:
-                                _find_years(item)
-            _find_years(where_filter)
-            parsed_dates = {"years": years_found, "exact_dates": []}
-
-        # Build reranker if enabled (per-call `rerank` overrides the global setting)
-        use_reranker = settings.USE_RERANKER if rerank is None else rerank
-        reranker = None
-        if use_reranker:
-            from src.retriever.reranker import CrossEncoderReranker
-            reranker = CrossEncoderReranker()
+        # Informational only (tracing/UI) — never affects the Chroma query.
+        parsed_dates = extract_dates(query)
 
         # Search
         raw = self.search.search(

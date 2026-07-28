@@ -30,9 +30,45 @@ from docling.datamodel.pipeline_options import (
 from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling_core.transforms.serializer.markdown import MarkdownDocSerializer
+from docling_core.types.doc import ContentLayer
 
 from src.common.parsing.quality import compute_quality, extract_ocr_confidence
 from src.config import settings
+
+
+# Docling layout modeli seçimi (settings.DOCLING_LAYOUT_MODEL). heron varsayılan
+# (mevcut davranış); egret* daha doğru sütun/etiket ama yavaş. Bilinmeyen → None
+# (Docling varsayılanı = heron). Import guard'lı: docling sürümü değişirse patlamaz.
+def _resolve_layout_options():
+    key = getattr(settings, "DOCLING_LAYOUT_MODEL", "heron")
+    if not key or key == "heron":
+        return None
+    try:
+        from docling.datamodel.pipeline_options import (
+            LayoutOptions,
+            DOCLING_LAYOUT_HERON_101,
+            DOCLING_LAYOUT_EGRET_MEDIUM,
+            DOCLING_LAYOUT_EGRET_LARGE,
+            DOCLING_LAYOUT_EGRET_XLARGE,
+        )
+    except Exception as e:  # noqa: BLE001
+        print(f"  [WARN] Layout modeli seçilemedi (import): {e}; heron kullanılıyor.")
+        return None
+    specs = {
+        "heron_101": DOCLING_LAYOUT_HERON_101,
+        "egret_medium": DOCLING_LAYOUT_EGRET_MEDIUM,
+        "egret_large": DOCLING_LAYOUT_EGRET_LARGE,
+        "egret_xlarge": DOCLING_LAYOUT_EGRET_XLARGE,
+    }
+    spec = specs.get(key)
+    if spec is None:
+        print(f"  [WARN] Bilinmeyen DOCLING_LAYOUT_MODEL={key!r}; heron kullanılıyor.")
+        return None
+    try:
+        return LayoutOptions(model_spec=spec)
+    except Exception as e:  # noqa: BLE001
+        print(f"  [WARN] LayoutOptions kurulamadı ({key}): {e}; heron kullanılıyor.")
+        return None
 
 
 @dataclass
@@ -48,6 +84,10 @@ class ParsedDocument:
     pages_path: str | None = field(default=None)
     pages_by_number: List[Dict[str, Any]] = field(default_factory=list)
     quality: Dict[str, Any] = field(default_factory=dict)  # Tier-1 OCR kalite metrikleri
+    # Sayfa-düzeyi üst/alt bilgi (running-head/footer). Docling bunları FURNITURE
+    # katmanında tutar; gövdeye SOKMADAN page-metadata olarak yakalanır.
+    # {sayfa_no: {"page_header": "...", "page_footer": "..."}}
+    page_furniture: Dict[int, Dict[str, str]] = field(default_factory=dict)
 
 
 def _build_ocr_options(engine: str):
@@ -80,30 +120,43 @@ class MarkdownConverter:
         self,
         ocr_engine: str | None = None,
         do_ocr: bool = True,
-        images_scale: float = 1.0,
+        images_scale: float | None = None,
         use_vlm: bool = False,
         ollama_model: str | None = None,
         ollama_url: str | None = None,
         force_band: bool = False,
         paddle_url: str | None = None,
         paddle_model: str | None = None,
+        scanned_page_ocr: bool | None = None,
     ):
         engine = ocr_engine or settings.OCR_ENGINE
         self.ocr_engine = engine
         self.do_ocr = do_ocr
-        self.images_scale = images_scale
+        # images_scale verilmezse settings'ten (varsayılan 2.0) miras alınır. 1.0 (~72 DPI)
+        # layout etiketleme + okuma sırasını bozar; bu yüzden global varsayılan yükseltildi.
+        self.images_scale = settings.DOCLING_IMAGES_SCALE if images_scale is None else images_scale
         self.use_vlm = use_vlm
         self.ollama_model = ollama_model or settings.VLM_TABLE_MODEL
         self.ollama_url = ollama_url or settings.OLLAMA_HOST
         self.force_band = force_band
         self.paddle_url = paddle_url or settings.PADDLE_OCR_URL
         self.paddle_model = paddle_model or settings.PADDLE_OCR_MODEL
+        # Sayfa-düzeyi yönlendirme: taranmış sayfaları tam-sayfa PaddleOCR-VL'e (:8080)
+        # yolla. Argüman verilmezse settings.SCANNED_PAGE_OCR'dan miras alınır.
+        self.scanned_page_ocr = (
+            settings.SCANNED_PAGE_OCR if scanned_page_ocr is None else scanned_page_ocr
+        )
 
+        # Layout modeli (opsiyonel egret; None → Docling varsayılanı heron).
+        layout_options = _resolve_layout_options()
+        common_opts: Dict[str, Any] = {"images_scale": self.images_scale}
+        if layout_options is not None:
+            common_opts["layout_options"] = layout_options
         if do_ocr:
             ocr_options = _build_ocr_options(engine)
-            pipeline_options = PdfPipelineOptions(do_ocr=True, ocr_options=ocr_options, images_scale=self.images_scale)
+            pipeline_options = PdfPipelineOptions(do_ocr=True, ocr_options=ocr_options, **common_opts)
         else:
-            pipeline_options = PdfPipelineOptions(do_ocr=False, images_scale=self.images_scale)
+            pipeline_options = PdfPipelineOptions(do_ocr=False, **common_opts)
 
         # PyPdfium backend: gömülü fontun ToUnicode/CMap eşlemesi bozuk PDF'lerde
         # Docling'in varsayılan backend'i native metin katmanını yanlış Unicode'a
@@ -160,7 +213,10 @@ class MarkdownConverter:
         # _pypdfium: PyPdfium backend'iyle üretilen (doğru-kodlanmış) atom'lar, eski
         # varsayılan-backend (bozuk) cache'inden ayrı anahtarlansın; aksi halde
         # reingest eski bozuk metni cache'ten okur.
-        ocr_base = f"{file_hash}_{self.ocr_engine}{ocr_tag}_scale{self.images_scale}_pypdfium{vlm_tag}"
+        # _pgpaddle: sayfa-yönlendirici açıkken taranmış sayfa atomları değiştiği için
+        # yönlendirilmiş çıktı, yönlendirilmemiş cache'ten ayrı anahtarlanır.
+        page_tag = "_pgpaddle" if self.scanned_page_ocr else ""
+        ocr_base = f"{file_hash}_{self.ocr_engine}{ocr_tag}_scale{self.images_scale}_pypdfium{vlm_tag}{page_tag}"
         ocr_cache_key = hashlib.md5(ocr_base.encode()).hexdigest()
 
         cache_dir = settings.PARSE_CACHE_DIR
@@ -172,6 +228,7 @@ class MarkdownConverter:
         full_text = None
         dl_doc = None
         ocr_mean_confidence = None
+        page_furniture: Dict[int, Dict[str, str]] = {}
 
         # Level-1 hit: atomlar daha önce parse edilmiş
         if ocr_cache_file.exists():
@@ -196,6 +253,11 @@ class MarkdownConverter:
                     ocr_mean_confidence = (ocr_cached.get("quality") or {}).get(
                         "ocr_mean_confidence"
                     )
+                    # page_furniture v4'te eklendi; eski (v2/v3) cache'lerde yok → boş
+                    # (üst bilgi ancak yeniden-parse'ta yakalanır, cache'i geçersiz kılmaz).
+                    page_furniture = {
+                        int(k): v for k, v in (ocr_cached.get("page_furniture") or {}).items()
+                    }
                     print(f"  [CACHE] OCR önbellekten okundu: {os.path.basename(file_path)}")
                 else:
                     print("  [CACHE] OCR önbelleğinde sayfa numarası eksik, yeniden parse ediliyor.")
@@ -225,6 +287,9 @@ class MarkdownConverter:
 
             atoms_data = self._extract_atoms(dl_doc)
             full_text = "\n\n".join(a["text"] for a in atoms_data)
+            # Üst/alt bilgiyi (FURNITURE) ayrı geçişte yakala — gövdeye GİRMEZ,
+            # page-metadata olarak saklanır.
+            page_furniture = self._extract_furniture(dl_doc)
             ocr_mean_confidence = extract_ocr_confidence(result) if self.do_ocr else None
 
             if use_hybrid and dl_doc is not None:
@@ -233,6 +298,29 @@ class MarkdownConverter:
                         json.dump(dl_doc.model_dump(mode="json"), f, ensure_ascii=False)
                 except Exception as e:
                     print(f"  [WARN] Doc önbellek yazma hatası: {e}")
+
+        # Sayfa-düzeyi yönlendirici — taranmış sayfaların Docling+EasyOCR atomlarını
+        # tam-sayfa PaddleOCR-VL (:8080) çıktısıyla değiştirir. VLM-tablo bloğundan
+        # ÖNCE çalışır ki digital sayfalardaki bozuk tablolar hâlâ tablo-VLM'e düşsün.
+        # Cache hit'te atomlar zaten paddle_page ile işaretli → yeniden çağrı yapılmaz.
+        page_router_applied = False
+        already_routed = any(a.get("extracted_by") == "paddle_page" for a in atoms_data or [])
+        if self.scanned_page_ocr and atoms_data and not already_routed:
+            from src.common.parsing.paddle_page_extractor import process_pages_with_paddle
+            print("  [PAGE-ROUTER] Taranmış sayfalar tam-sayfa PaddleOCR-VL (:8080) ile yeniden okunuyor...")
+            atoms_data, pr_stats = process_pages_with_paddle(file_path, atoms_data)
+            if pr_stats["paddle_calls"] > 0:
+                full_text = "\n\n".join(a["text"] for a in atoms_data)
+                page_router_applied = True
+                # Paddle'ın yakaladığı üst/alt bilgi, yönlendirilen sayfalar için
+                # Docling FURNITURE'ını ezer (Docling o taranmış sayfada zaten zayıftı).
+                for pno, furn in (pr_stats.get("page_furniture") or {}).items():
+                    page_furniture[int(pno)] = furn
+                print(
+                    f"  [PAGE-ROUTER] {len(pr_stats['scanned_pages'])} taranmış sayfa, "
+                    f"{pr_stats['paddle_calls']} Paddle çağrısı, "
+                    f"{len(pr_stats.get('empty', []))} boş, {len(pr_stats['failed'])} başarısız."
+                )
 
         # VLM table extraction — yalnızca "bozuk" tablolarda (TableFormer yapı
         # çıkaramamış veya OCR çöp); düzgün okunan tablolara dokunmaz.
@@ -278,17 +366,20 @@ class MarkdownConverter:
             )
 
         # Level-1 önbelleğe kaydet (quality alanı dahil)
-        if parsed_fresh or vlm_applied:
+        if parsed_fresh or vlm_applied or page_router_applied:
             try:
                 with open(ocr_cache_file, "w", encoding="utf-8") as f:
                     json.dump(
                         {
                             # v3: tablo atomlarına table_num_rows/table_num_cols +
-                            # opsiyonel extracted_by alanları eklendi. Okuma kapısı >=2.
-                            "schema_version": 3,
+                            # opsiyonel extracted_by alanları. v4: page_furniture
+                            # (sayfa üst/alt bilgi) eklendi. Okuma kapısı >=2 kalır
+                            # (eski cache geçerli; furniture yoksa boş).
+                            "schema_version": 4,
                             "full_text": full_text,
                             "atoms_data": atoms_data,
                             "quality": quality,
+                            "page_furniture": page_furniture,
                         },
                         f,
                         ensure_ascii=False,
@@ -297,10 +388,10 @@ class MarkdownConverter:
             except Exception as e:
                 print(f"  [WARN] OCR önbellek yazma hatası: {e}")
 
-        overwrite_artifacts = parsed_fresh or vlm_applied
+        overwrite_artifacts = parsed_fresh or vlm_applied or page_router_applied
         markdown_path = self._save_markdown_artifact(file_path, file_hash, full_text, overwrite=overwrite_artifacts)
         atoms_path = self._save_atoms_artifact(file_path, file_hash, atoms_data, overwrite=overwrite_artifacts)
-        pages_by_number = self._build_pages_by_number(atoms_data)
+        pages_by_number = self._build_pages_by_number(atoms_data, page_furniture)
         pages_path = self._save_pages_artifact(file_path, file_hash, pages_by_number, overwrite=overwrite_artifacts)
 
         return ParsedDocument(
@@ -313,6 +404,7 @@ class MarkdownConverter:
             pages_path=pages_path,
             pages_by_number=pages_by_number,
             quality=quality,
+            page_furniture=page_furniture,
         )
 
     # ------------------------------------------------------------------
@@ -391,10 +483,18 @@ class MarkdownConverter:
             atom["table_num_cols"] = getattr(data, "num_cols", None)
 
     @staticmethod
-    def _build_pages_by_number(atoms: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Atomları primary page'e göre gruplar; sorted [{sayfaNo, sayfa_markdown}] döner."""
+    def _build_pages_by_number(
+        atoms: List[Dict[str, Any]],
+        page_furniture: Dict[int, Dict[str, str]] | None = None,
+    ) -> List[Dict[str, Any]]:
+        """Atomları primary page'e göre gruplar; sorted [{sayfa_no, sayfa_markdown, ...}].
+
+        page_furniture verilirse her sayfa girdisine `page_header`/`page_footer`
+        (yalnız doluysa) eklenir — gövdeye SOKMADAN page-metadata olarak.
+        """
         from collections import defaultdict
 
+        page_furniture = page_furniture or {}
         page_buckets: dict[int, list[str]] = defaultdict(list)
         for atom in atoms:
             # Sayfa sınırını aşan atom: her parça prov charspan'ine göre doğru sayfaya.
@@ -409,10 +509,57 @@ class MarkdownConverter:
             if primary_page is None:
                 continue
             page_buckets[primary_page].append(atom["text"])
-        return [
-            {"sayfa_no": page_no, "sayfa_markdown": "\n\n".join(page_buckets[page_no])}
-            for page_no in sorted(page_buckets.keys())
-        ]
+
+        # Yalnız üst bilgi içeren (gövde atomu olmayan) sayfalar da görünsün.
+        all_pages = set(page_buckets.keys()) | {int(p) for p in page_furniture.keys()}
+        result: List[Dict[str, Any]] = []
+        for page_no in sorted(all_pages):
+            entry: Dict[str, Any] = {
+                "sayfa_no": page_no,
+                "sayfa_markdown": "\n\n".join(page_buckets.get(page_no, [])),
+            }
+            furn = page_furniture.get(page_no) or {}
+            if furn.get("page_header"):
+                entry["page_header"] = furn["page_header"]
+            if furn.get("page_footer"):
+                entry["page_footer"] = furn["page_footer"]
+            result.append(entry)
+        return result
+
+    def _extract_furniture(self, dl_doc) -> Dict[int, Dict[str, str]]:
+        """Üst/alt bilgiyi (FURNITURE katmanı: PAGE_HEADER/PAGE_FOOTER) sayfa bazında toplar.
+
+        Gövde atomlarından AYRI ikinci geçiş. Docling `iterate_items()` varsayılan
+        `{BODY}` olduğu için running-head/footer normalde tamamen elenir; burada
+        `{FURNITURE}` ile açıkça gezip page-metadata olarak yakalarız (gövdeye girmez).
+        Dönen: {sayfa_no: {"page_header": "...", "page_footer": "..."}}.
+        """
+        from collections import defaultdict
+
+        header_buckets: dict[int, list[str]] = defaultdict(list)
+        footer_buckets: dict[int, list[str]] = defaultdict(list)
+        try:
+            for item, _ in dl_doc.iterate_items(
+                included_content_layers={ContentLayer.FURNITURE}
+            ):
+                txt = (getattr(item, "text", "") or "").strip()
+                if not txt:
+                    continue
+                label = str(getattr(item, "label", "")).lower()
+                bucket = footer_buckets if "footer" in label else header_buckets
+                for pno in self._extract_pages(item):
+                    bucket[pno].append(txt)
+        except Exception as e:  # noqa: BLE001
+            print(f"  [WARN] Üst/alt bilgi (furniture) çıkarımı başarısız: {e}")
+            return {}
+
+        out: Dict[int, Dict[str, str]] = {}
+        for pno in set(header_buckets) | set(footer_buckets):
+            out[pno] = {
+                "page_header": " | ".join(header_buckets.get(pno, [])),
+                "page_footer": " | ".join(footer_buckets.get(pno, [])),
+            }
+        return out
 
     @staticmethod
     def _extract_pages(item) -> List[int]:
@@ -593,7 +740,8 @@ if __name__ == "__main__":
         "--pages-json", action="store_true", help="Sayfa bazlı JSON çıktısını stdout'a yaz"
     )
     parser.add_argument(
-        "--images-scale", type=float, default=1.0, help="PDF sayfalarının render çözünürlük ölçeği (örn: 2.0 veya 3.0)"
+        "--images-scale", type=float, default=None,
+        help=f"PDF render çözünürlük ölçeği (örn: 2.0/3.0). Verilmezse settings.DOCLING_IMAGES_SCALE ({settings.DOCLING_IMAGES_SCALE})"
     )
     parser.add_argument(
         "--force", action="store_true", help="Önbelleği yoksay ve dosyayı zorla yeniden parse et"
@@ -628,6 +776,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ollama-url", default=None, help="Ollama API host adresi (örn: http://localhost:11434)"
     )
+    parser.add_argument(
+        "--page-router", action="store_true",
+        help="Sayfa-düzeyi yönlendirme: taranmış sayfaları tam-sayfa PaddleOCR-VL (:8080) ile oku"
+    )
     args = parser.parse_args()
 
     # --vlm <backend>: tablo düzeltme katmanını aç + backend'i ayarla.
@@ -644,16 +796,21 @@ if __name__ == "__main__":
 
     use_table_layer = bool(vlm_backend) or args.use_vlm or args.use_tesseract
 
+    # images_scale verilmezse settings varsayılanı — force-key ile birebir eşleşmesi için
+    # tek yerde çözülür (aksi halde _scaleNone yanlış anahtar üretir).
+    eff_images_scale = args.images_scale if args.images_scale is not None else settings.DOCLING_IMAGES_SCALE
+
     conv = MarkdownConverter(
         ocr_engine=args.ocr_engine,
         do_ocr=not args.no_ocr,
-        images_scale=args.images_scale,
+        images_scale=eff_images_scale,
         use_vlm=use_table_layer,
         ollama_model=args.ollama_model,
         ollama_url=args.ollama_url,
         force_band=args.band,
         paddle_url=args.paddle_url,
         paddle_model=args.paddle_model,
+        scanned_page_ocr=args.page_router,
     )
 
     # If force is true, delete the matching cache file first (vlm anahtarı dahil)
@@ -676,7 +833,8 @@ if __name__ == "__main__":
             vtag = f"_vlm-{args.ollama_model or settings.VLM_TABLE_MODEL}"
         else:
             vtag = ""
-        obase = f"{fh}_{engine}{otag}_scale{args.images_scale}{vtag}"
+        ptag = "_pgpaddle" if args.page_router else ""
+        obase = f"{fh}_{engine}{otag}_scale{eff_images_scale}_pypdfium{vtag}{ptag}"
         ckey = hashlib.md5(obase.encode()).hexdigest()
         cfile = settings.PARSE_CACHE_DIR / f"{ckey}_atoms.json"
         if cfile.exists():

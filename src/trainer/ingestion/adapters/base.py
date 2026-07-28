@@ -108,6 +108,9 @@ class DocumentInput:
     min_chunk_tokens: Optional[int] = None
     """Koleksiyon düzeyindeki minimum parça boyutunu (token) geçersiz kılar."""
 
+    chunk_overlap_tokens: Optional[int] = None
+    """Koleksiyon düzeyindeki chunk örtüşme bütçesini (token) geçersiz kılar. 0 = kapalı."""
+
     tokenizer_name: Optional[str] = None
     """Token sayımı/chunklama için HuggingFace tokenizer adı (genelde embed_model).
     Pipeline tarafından CollectionSpec'ten enjekte edilir."""
@@ -141,6 +144,7 @@ class DocumentInput:
             "ocr": self.ocr,
             "max_chunk_tokens": self.max_chunk_tokens,
             "min_chunk_tokens": self.min_chunk_tokens,
+            "chunk_overlap_tokens": self.chunk_overlap_tokens,
             "tokenizer_name": self.tokenizer_name,
             "content_hash": self.content_hash,
         }
@@ -168,6 +172,7 @@ class DocumentInput:
             ocr=d.get("ocr", True),
             max_chunk_tokens=d.get("max_chunk_tokens"),
             min_chunk_tokens=d.get("min_chunk_tokens"),
+            chunk_overlap_tokens=d.get("chunk_overlap_tokens"),
             tokenizer_name=d.get("tokenizer_name"),
             content_hash=d.get("content_hash"),
         )

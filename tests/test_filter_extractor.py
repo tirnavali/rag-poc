@@ -46,6 +46,14 @@ class TestFilterExtractor:
         # First word capitalized should be ignored if it's the only capitalized word
         assert fe.has_filter_hints("Kardak krizi nedir") is False
 
+    def test_has_filter_hints_section_intent(self):
+        """Bölüm (section_type) niyet kelimeleri LLM'i tetiklemeli (aksi halde
+        'kanun görüşmeleri bölümüne git' sorgusu LLM'e hiç ulaşmaz)."""
+        fe = FilterExtractor()
+        assert fe.has_filter_hints("kanun görüşmelerinde ne konuşuldu") is True
+        assert fe.has_filter_hints("açık oylama sonuçları") is True
+        assert fe.has_filter_hints("gündem dışı konuşmalar") is True
+
     def test_to_chroma_filter_single(self):
         """Should convert single filter to $eq condition."""
         filters = FilterCriteria(year=1996)
@@ -110,7 +118,12 @@ class TestFilterExtractor:
             assert res.filters.author is None
 
     def test_extract_with_llm_success(self):
-        """Queries with filter hints should call LLM and parse structured output."""
+        """Queries with filter hints should call LLM and parse structured filters.
+
+        SORGU-KIRPMA YOK: refined_query her zaman ORİJİNAL sorgudur — LLM kırpılmış bir
+        refined_query ("Kardak adaları") dönse bile kod onu yok sayar (precision filtreden
+        gelir; içerik silme = arama bozulması). Yalnız `filters` LLM'den alınır.
+        """
         fe = FilterExtractor()
         mock_response = MagicMock()
         mock_response.message.content = (
@@ -120,10 +133,31 @@ class TestFilterExtractor:
         with patch.object(fe.client, "chat", return_value=mock_response) as mock_chat:
             res = fe.extract("Deniz Baykal 1996 Kardak adaları konuşması")
             mock_chat.assert_called_once()
-            assert res.refined_query == "Kardak adaları"
+            # refined_query = orijinal sorgu (LLM'in kırptığı değil)
+            assert res.refined_query == "Deniz Baykal 1996 Kardak adaları konuşması"
+            assert res.removed_words == []
             assert res.filters.year == 1996
             assert res.filters.author == "Deniz Baykal"
             assert res.filters.document_type == "tutanak"
+
+    def test_extract_with_llm_section_type(self):
+        """LLM bir bölüm (section_type) çıkarırsa FilterCriteria'ya taşınmalı — kesin
+        ChromaDB where filtresine dönüşen bölüm omurgası (kanun görüşmeleri/oylama)."""
+        fe = FilterExtractor()
+        mock_response = MagicMock()
+        mock_response.message.content = (
+            '{"refined_query": "kim ret oyu kullandı", "filters": '
+            '{"section_type": "oylama", "document_type": "tutanak"}}'
+        )
+        with patch.object(fe.client, "chat", return_value=mock_response):
+            res = fe.extract("açık oylama sonuçlarında kim ret oyu kullandı")
+            assert res.filters.section_type == "oylama"
+            assert FilterExtractor.to_chroma_filter(res.filters) == {
+                "$and": [
+                    {"section_type": {"$eq": "oylama"}},
+                    {"document_type": {"$eq": "tutanak"}},
+                ]
+            }
 
     def test_extract_with_llm_failure_fallback(self):
         """Should gracefully fall back to original query and empty filters on LLM or parse failure."""
@@ -206,6 +240,43 @@ class TestIntegration:
             # Should call retriever twice: once with full filter (empty), once with None (non-empty)
             assert mock_vr.retrieve.call_count == 2
             assert result["fallback_level"] == "semantic_only"
+
+    def test_semantic_only_fallback_is_genuinely_filter_free_with_year_in_query(self):
+        """Regression: the 'semantic_only' cascade tier must stay filter-free even
+        when the query text contains a bare year — VectorRetriever no longer
+        auto-re-derives a date filter from query text (was the golden_builder
+        '2012 KPSS' bug: the year in the query is the event's date, not the
+        document's own date, so re-filtering on it silently zeroed the result)."""
+        with patch("src.generator.service.FilterExtractor") as mock_fe_class, \
+             patch("src.generator.service.VectorRetriever") as mock_vr_class:
+
+            mock_fe = MagicMock()
+            mock_fe.extract.return_value = ExtractedFilterResponse(
+                refined_query="2012 KPSS sınavında soruların çalındığı iddiaları",
+                filters=FilterCriteria(),
+            )
+            mock_fe.fallback_chain.return_value = [("semantic_only", None)]
+            mock_fe_class.return_value = mock_fe
+
+            mock_vr = MagicMock()
+            mock_vr.retrieve.return_value = {
+                "documents": [["content"]],
+                "metadatas": [[{"id": 1}]],
+                "distances": [[0.1]],
+                "is_minutes": False,
+                "parsed_dates": {},
+                "expanded_query": None,
+                "fallback_level": None,
+            }
+            mock_vr_class.return_value = mock_vr
+
+            service = RAGService()
+            service.retrieve("2012 KPSS sınavında soruların çalındığı iddiaları")
+
+            # The only retrieve() call must pass where_filter=None as given —
+            # not a year-2012 filter silently re-derived from the query text.
+            _, kwargs = mock_vr.retrieve.call_args
+            assert kwargs["where_filter"] is None
 
 
 class TestFilterHintsKnownLimitations:

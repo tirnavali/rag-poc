@@ -167,6 +167,26 @@ def test_rabbit_holes_skips_facet_values_already_in_query():
     assert all(s != "1997 bütçe" for s in out)
 
 
+def test_rabbit_holes_skips_turkish_dotted_i_author_already_in_query():
+    """Regression: bare str.lower() maps "İ" (U+0130) to "i̇" (i + combining
+    dot), which never substring-matches a plain-typed query — so an author
+    already named in the query (e.g. "engin özkoç") used to leak back as a
+    redundant suggestion ("... ENGİN ÖZKOÇ"). normalize_tr() must fix this."""
+    refiner = QueryRefiner(None, None)
+    fs = FacetSet(
+        years=[FacetValue(value="2019", count=5)],
+        authors=[FacetValue(value="ENGİN ÖZKOÇ", count=5)],
+        collections=[FacetValue(value="tutanaklar", count=5)],
+        total=5,
+    )
+    out = refiner.rabbit_holes("engin özkoç konuyla ilgili başka açıklama yaptı mı?", fs, count=3)
+    # ENGİN ÖZKOÇ is already named in the query → must not be re-suggested,
+    # even though the query was typed all-lowercase and the facet is uppercase.
+    assert not any(s.endswith("ENGİN ÖZKOÇ") for s in out)
+    # The other facet (year) is unrelated and should still come through.
+    assert any(s.endswith("2019") for s in out)
+
+
 def test_rabbit_holes_empty_when_no_facets():
     refiner = QueryRefiner(None, None)
     assert refiner.rabbit_holes("anything", FacetSet(total=0), count=3) == []

@@ -108,34 +108,23 @@ Aşağıdaki kurallara kesinlikle uy:
     "source_name": null veya string,
     "period": null veya integer,
     "session": null veya integer,
+    "section_type": null veya "kanun_gorusmeleri" | "oylama" | "yazili_soru" | "sozlu_soru" | "gundem_disi" | "genel_gorusme" | "meclis_arastirmasi" | "gelen_kagit" | "gecen_tutanak" | "tezkere" | "oneriler" | "secim" | "yemin" | "kanun_raporu" | "icindekiler",
     "document_type": null veya "tutanak" | "press_clip" | "pdf_report" | "kanun_teklifi"
   },
   "removed_words": ["kelime1", "kelime2"]
 }
 
-3. refined_query kuralları — ÇOK ÖNEMLİ:
-   - Soru kelimelerini ASLA silme: "kim", "ne", "nasıl", "neden", "niye", "nerede", "hangi", "kimin", "kime", "kimden", "neyi", "nereden"
-   - Fiilleri ASLA silme: "dedi", "konuştu", "savundu", "eleştirdi", "yanıtladı", "sordu", "vurdu", "belirtti", "ifade etti"
-   - Diyalog/çekişme belirten ifadeleri ASLA silme: "kim kime dedi", "nasıl yanıt verdi", "ne dedi", "kim eleştirdi"
-   - SADECE pure metadata olan kelimeleri sil: yıllar (1996, 2023), kişi adları (Deniz Baykal, Ahmet Kabil), dönem/birleşim sayıları (20. Dönem, 7. Birleşim), gazete adları (Hürriyet, Milliyet)
-   - "meclis", "tutanak", "gazete" gibi belge türü belirten kelimeleri de sil (bunlar document_type filtresine dönüşür)
-   - Geriye kalan tüm kelimeleri koru. Kısa bile olsa tam anlamını koru.
+3. refined_query kuralları — SORGU-KIRPMA YOK:
+   - "refined_query" = kullanıcının girdiği sorgunun BİREBİR AYNISI. Hiçbir kelime SİLME,
+     ekleme veya değiştirme yapma. Sorguyu olduğu gibi kopyala.
+   - Precision tamamen FİLTRELERDEN gelir; sorgudan metadata kelimelerini çıkarmaya GEREK
+     YOK (yıl/kişi/gazete/dönem sorguda kalsa bile filtre işi kesin yapar). Kanun/kurum
+     adı gibi içeriğin silinmesi ARAMAYI BOZAR; bu yüzden hiç silme.
+   - NOT: Aşağıdaki örneklerde YALNIZCA "filters" çıkarımına odaklan. Örneklerdeki
+     refined_query/removed_words alanları eski gösterimdir; sen refined_query'i her zaman
+     girdi sorgusunun aynısı yap ve removed_words'ü boş [] bırak.
 
-   DOĞRU örnekler:
-   - "mecliste kim kime merdikıpti dedi? 23 dönem" → refined_query: "kim kime merdikıpti dedi", removed_words: ["23 dönem"]
-   - "Deniz Baykal'ın 1996 yılındaki Ege adaları hakkındaki konuşmaları" → refined_query: "Ege adaları hakkındaki konuşmaları", removed_words: ["Deniz Baykal", "1996"]
-   - "bakan ekonomi hakkında ne söyledi" → refined_query: "bakan ekonomi hakkında ne söyledi", removed_words: [] (yazar adı yok, "bakan" bir rol ama sorunun parçası)
-   - "Hürriyet'te 1998'de Kardak krizi" → refined_query: "Kardak krizi", removed_words: ["Hürriyet", "1998"]
-
-   YANLIŞ örnekler (BUNLARI YAPMA):
-   - "kim kime merdikıpti dedi" → "merdikıpti" (YANLIŞ: "kim kime dedi" diyalog sinyalini sildin)
-   - "nasıl yanıt verdi" → "yanıt" (YANLIŞ: "nasıl" ve "verdi" fiilini sildin)
-   - "ne dedi" → "" (YANLIŞ: soru kelimesini ve fiili sildin)
-
-4. removed_words kuralları:
-   - refined_query'den çıkarılan HER kelimeyi veya ifadeyi bu listeye ekle
-   - Örn: "23 dönem" → removed_words: ["23 dönem"], "Deniz Baykal'ın" → removed_words: ["Deniz Baykal"]
-   - Sadece metadata olarak çıkarılanları yaz, gereksiz kelimeleri ekleme
+4. removed_words: her zaman boş liste [] (artık sorgudan kelime çıkarılmıyor).
 
 5. Filtre Kuralları:
    - "year": Sorguda belirli bir yıl kesin olarak belirtilmişse (örn. "1996 yılında", "1996'da") integer olarak çıkar. Aralık ifadelerinde (önce/sonra) null bırak.
@@ -151,6 +140,16 @@ Aşağıdaki kurallara kesinlikle uy:
      * "press_clip": Gazete haberleri, köşe yazıları, basın kupürleri.
      * "pdf_report": Raporlar.
      * "kanun_teklifi": Önerge, kanun teklifleri.
+   - "section_type": SADECE kullanıcı tutanağın BELİRLİ bir BÖLÜMÜNÜ istiyorsa ata (yoksa null).
+     Tutanak belge içi bölümleridir; genel konu değil, gündem-işi türüdür:
+     * "kanun_gorusmeleri": bir kanunun görüşmeleri/müzakereleri ("... kanununun görüşmelerinde").
+     * "oylama": açık oylama sonuçları / roll-call kim-ne-oy-verdi tabloları ("... oylamasında", "kim kabul oyu verdi").
+     * "yazili_soru" / "sozlu_soru": yazılı / sözlü soru önergeleri ve cevapları.
+     * "gundem_disi": gündem dışı konuşmalar.
+     * "genel_gorusme" / "meclis_arastirmasi": genel görüşme / meclis araştırması önergeleri.
+     * "gelen_kagit", "gecen_tutanak", "tezkere", "oneriler", "secim", "yemin", "kanun_raporu", "icindekiler".
+     Bölüm istenmiyorsa (genel konu araması) null bırak. Kanun kimliği + bölüm birlikte gelebilir
+     (ör. "X kanununun oylama sonuçları" → sira_sayisi/esas_no + section_type="oylama").
 
 Örnekler:
 - Sorgu: "mecliste kim kime merdikıpti dedi? 23 dönem"
@@ -166,6 +165,7 @@ Aşağıdaki kurallara kesinlikle uy:
       "source_name": null,
       "period": 23,
       "session": null,
+      "section_type": null,
       "document_type": "tutanak"
     },
     "removed_words": ["mecliste", "23 dönem"]
@@ -184,6 +184,7 @@ Aşağıdaki kurallara kesinlikle uy:
       "source_name": null,
       "period": null,
       "session": null,
+      "section_type": null,
       "document_type": "tutanak"
     },
     "removed_words": ["Ahmet Kabil", "1996 yılı", "tutanaklarındaki"]
@@ -202,6 +203,7 @@ Aşağıdaki kurallara kesinlikle uy:
       "source_name": "Hürriyet",
       "period": null,
       "session": null,
+      "section_type": null,
       "document_type": "press_clip"
     },
     "removed_words": ["gazetesinde", "1998 yılında", "yayınlanan"]
@@ -220,9 +222,48 @@ Aşağıdaki kurallara kesinlikle uy:
       "source_name": null,
       "period": 20,
       "session": 3,
+      "section_type": null,
       "document_type": "tutanak"
     },
     "removed_words": ["meclis", "tutanakları"]
+  }
+
+- Sorgu: "açık oylama sonuçlarında kimler ret oyu kullandı"
+  JSON:
+  {
+    "refined_query": "kimler ret oyu kullandı",
+    "filters": {
+      "year": null,
+      "year_lte": null,
+      "year_gte": null,
+      "author": null,
+      "author_role": null,
+      "source_name": null,
+      "period": null,
+      "session": null,
+      "section_type": "oylama",
+      "document_type": "tutanak"
+    },
+    "removed_words": ["açık oylama sonuçları"]
+  }
+
+- Sorgu: "kanun görüşmelerinde bütçe açığı nasıl tartışıldı"
+  JSON:
+  {
+    "refined_query": "bütçe açığı nasıl tartışıldı",
+    "filters": {
+      "year": null,
+      "year_lte": null,
+      "year_gte": null,
+      "author": null,
+      "author_role": null,
+      "source_name": null,
+      "period": null,
+      "session": null,
+      "section_type": "kanun_gorusmeleri",
+      "document_type": "tutanak"
+    },
+    "removed_words": ["kanun görüşmelerinde"]
   }
 
 - Sorgu: "2000 yılından önce yapılan meclis konuşmaları"
@@ -238,6 +279,7 @@ Aşağıdaki kurallara kesinlikle uy:
       "source_name": null,
       "period": null,
       "session": null,
+      "section_type": null,
       "document_type": "tutanak"
     },
     "removed_words": ["2000 yılından önce", "yapılan"]
@@ -256,6 +298,7 @@ Aşağıdaki kurallara kesinlikle uy:
       "source_name": null,
       "period": null,
       "session": null,
+      "section_type": null,
       "document_type": null
     },
     "removed_words": ["1990 yılından sonra"]
@@ -274,6 +317,7 @@ Aşağıdaki kurallara kesinlikle uy:
       "source_name": null,
       "period": null,
       "session": null,
+      "section_type": null,
       "document_type": "tutanak"
     },
     "removed_words": ["1990 ile 2000 yılları arasındaki"]
@@ -292,6 +336,7 @@ Aşağıdaki kurallara kesinlikle uy:
       "source_name": null,
       "period": null,
       "session": null,
+      "section_type": null,
       "document_type": null
     },
     "removed_words": []

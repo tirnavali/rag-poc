@@ -1011,6 +1011,36 @@ deployment_blocks:
 `retrieval` bloğundaki `reranker.model` değeri, `settings.py`'deki `RERANK_MODEL` env var'ının
 önünde gelir — YAML tanımlıysa settings fallback devreye girmez.
 
+#### Uzak OpenAI-uyumlu Endpoint (LiteLLM/vLLM)
+
+Bir `deployment_blocks` girdisi, yerel Ollama yerine uzak bir **OpenAI-uyumlu proxy**'ye
+(LiteLLM, vLLM'in kendi OpenAI sunucusu, vb.) de yönlendirilebilir — `api_type: openai` ekleyin:
+
+```yaml
+deployment_blocks:
+  remote-01:
+    host: http://10.20.24.16:4000/v1   # tam base_url (/v1 dahil)
+    api_type: openai                    # varsayılan: ollama
+    api_key: ollama                     # varsayılan; sunucu doğrulamıyorsa önemsiz
+    purpose: "answering (qwen3.6-35b)"
+    models:
+      answer: qwen3.6-35b
+    timeout_seconds: 180                 # uzun üretimler (4096 token) için Ollama bloklarından daha geniş tutulmalı
+    max_num_predict: 4096
+```
+
+`BlockClient` (`src/common/llm_client_pool.py`) bu bloklar için `ChatOllama` yerine
+`langchain_openai.ChatOpenAI` kullanır; `chat()`'in `options`/`format`/`think` parametreleri
+otomatik OpenAI eşdeğerine çevrilir (`temperature`/`max_tokens`, `response_format`,
+`extra_body.chat_template_kwargs.enable_thinking`). Herhangi bir agent adımı (`filter_extractor`,
+`answering`, `planner`, ...) bu bloğa `block: remote-01` ile atanabilir — çağıran kodda
+(`tools.py`, `orchestrator.py`) hiçbir değişiklik gerekmez.
+
+> **Kısıtlamalar:**
+> - `max_num_ctx` / `keep_alive` bu blok tipinde yok sayılır (context sunucu tarafında sabit, Ollama'nın idle-unload kavramı geçerli değil).
+> - `langchain_openai`, vLLM/Qwen3'ün `reasoning_content` alanını yüzeye çıkarmıyor — bu blok üzerinden çalışan adımlar için "thinking" trace'i her zaman boş görünür (yanıt metni etkilenmez).
+> - Gerekli paketler: `openai`, `langchain-openai` (`requirements.txt`'e eklendi; `langchain-openai`'ı **0.3.x** hattında tutun — güncel sürüm `langchain-core>=1.0` istiyor ve proje `0.3.86`'da kilitli).
+
 ### Trace Çıktısı
 
 Her sorgu için faz bazlı gecikme ve metadata `PipelineTracer` ile konsola basılır:
@@ -1052,7 +1082,7 @@ Her sorgu için faz bazlı gecikme ve metadata `PipelineTracer` ile konsola bas�
 | `src/agent/tracer.py` | `PipelineTracer` — faz bazlı gözlemlenebilirlik |
 | `src/agent/schemas.py` | Pydantic kontratlar (`SearchPlan`, `AgentOutput`, ...) |
 | `src/config/pipeline_loader.py` | `pipeline.yaml` → `PipelineConfig` |
-| `src/common/llm_client_pool.py` | `LLMClientPool` — blok başına Ollama client (retry/timeout) |
+| `src/common/llm_client_pool.py` | `LLMClientPool` — blok başına client (retry/timeout); `api_type: ollama` (`ChatOllama`) veya `openai` (`ChatOpenAI`, uzak LiteLLM/vLLM) |
 
 ---
 
@@ -1490,7 +1520,7 @@ Bu panel üzerinden:
 | Bileşen | Teknoloji |
 |---|---|
 | Embedding | `nomic-embed-text-v2-moe` (Ollama) / `jinaai/jina-embeddings-v3/v4` (HuggingFace) |
-| LLM | `gemma4:latest` (Ollama) |
+| LLM | Ollama (yerel) veya OpenAI-uyumlu uzak proxy — LiteLLM/vLLM (`api_type: openai`, bkz. Agentic Pipeline → Deployment Config) |
 | Vektör arama | ChromaDB (embedded, PersistentClient) — ANN |
 | Çapraz-koleksiyon füzyon | Reciprocal Rank Fusion (RRF, k=60) — vektör sonuçları |
 | Reranker | Cross-encoder (`mmarco-mMiniLMv2`, çok dilli) |

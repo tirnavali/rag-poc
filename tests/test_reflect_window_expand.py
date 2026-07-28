@@ -266,10 +266,23 @@ def test_window_expand_repeat_guard(monkeypatch):
 
 def test_window_expand_config_defaults():
     we = load_pipeline_config().reflect.window_expand
-    assert we.enabled is False
+    # global anahtar açık (2026-07-21) — strateji başına window_expand flag'i gate'ler
+    assert we.enabled is True
     assert we.neighbor_radius == 2
     assert we.max_neighbors_per_hop == 8
     assert we.anchor_count == 1
+
+
+def test_max_dry_hops_config_default():
+    # Çözülemeyen-hop iptali global açık: default 1 = ilk verimsiz hop'ta kes.
+    assert load_pipeline_config().reflect.max_dry_hops == 1
+
+
+def test_max_dry_hops_config_parses_and_disables():
+    from src.config.pipeline_loader import ReflectConfig
+    assert ReflectConfig({"max_dry_hops": 2}).max_dry_hops == 2
+    assert ReflectConfig({"max_dry_hops": 0}).max_dry_hops == 0   # kill-switch
+    assert ReflectConfig({}).max_dry_hops == 1                     # kod default
 
 
 def test_strategy_window_expand_flag_parsed():
